@@ -27,9 +27,14 @@ Every trading day:
    site's load is metered behind the same connection and settled at the same prices, so it does not
    change what each battery MWh earns; it limits what the battery can do.
 
+Energy still stored at the end of the trading day is valued at what it would cost to buy back (the
+mean of the day's 8 cheapest planning prices / eta), so the battery holds its charge instead of
+cycling when the spread does not pay for losses and wear; the next day starts where this one ended.
+Plans assume the site may draw `load_margin` more than forecast, so the battery can still charge in
+time for the capacity obligation when the site is busier than expected.
+
 Assumptions: price-taker; RoCoF ($0) not offered; enabled FCESS must be deliverable for
-`fcess_sustain_h` and its activation energy is ignored; a day's plan has no terminal value for stored
-energy, and the next day starts from wherever the battery ended.
+`fcess_sustain_h` and its activation energy is ignored.
 """
 
 from dataclasses import dataclass
@@ -124,13 +129,14 @@ def _structure(n: int, bat: Battery):
 
 
 def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float | None = None, floor=None,
-         site: Site | None = None, load=None) -> dict:
+         site: Site | None = None, load=None, terminal_value: float = 0.0) -> dict:
     """Best schedule for the remaining n intervals on the given prices.
 
     price_e: $/MWh per interval; price_f: {product: $/MW/h} or None for energy only; budget: MWh the
     battery may still discharge today; floor: minimum stored MWh at the end of each interval; site,
-    load: the connection limits and the site's load (MW) per interval. Returns the schedule and its
-    value at these prices (energy + FCESS - wear).
+    load: the connection limits and the site's load (MW) per interval; terminal_value: $ per MWh
+    still stored at the end. Returns the schedule and its value at these prices
+    (energy + FCESS - wear + stored energy left).
     """
     n = len(price_e)
     P, E = bat.power_mw, bat.energy_mwh
@@ -153,6 +159,7 @@ def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float
     if price_f is not None:
         for k, name in enumerate(FCESS):
             cost[(4 + k) * n:(5 + k) * n] = -np.asarray(price_f[name], float) * DT
+    cost[3 * n - 1] = -terminal_value
     integrality = np.r_[np.zeros(3 * n), np.ones(n), np.zeros(4 * n)]
     res = milp(cost, constraints=LinearConstraint(A, lb, ub), bounds=Bounds(lo, hi), integrality=integrality)
     if res.status != 0:
@@ -163,8 +170,14 @@ def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float
     out["energy_value"] = float((pe * (d - c)).sum() * DT)
     out["fcess_value"] = float(sum((np.asarray(price_f[k], float) * out[k]).sum() for k in FCESS) * DT) if price_f is not None else 0.0
     out["wear"] = float(bat.degradation_per_mwh * d.sum() * DT)
-    out["value"] = out["energy_value"] + out["fcess_value"] - out["wear"]
+    out["stored_value"] = float(terminal_value * out["soc"][-1])
+    out["value"] = out["energy_value"] + out["fcess_value"] - out["wear"] + out["stored_value"]
     return out
+
+
+def stored_energy_value(bat: Battery, price_e) -> float:
+    """$ per MWh still stored at the end of the day: what buying it back would cost (cheapest 4 hours / eta)."""
+    return max(0.0, float(np.sort(np.asarray(price_e, float))[:8].mean())) / bat.eta
 
 
 def charge_room(bat: Battery, site: Site | None = None, load=None) -> np.ndarray:
@@ -218,6 +231,15 @@ def nowcast(fc_e, t: int, price_now: float, half_life: float = 1.0) -> np.ndarra
     return fc_e[t + 1:] + (price_now - fc_e[t]) * 0.5 ** (k / half_life)
 
 
+def nowcast_fcess(fc_f, t: int, now: dict | None) -> dict | None:
+    """FCESS planning prices for intervals t+1.., nudged towards the 5-min prices just seen the same way."""
+    if fc_f is None:
+        return None
+    if now is None:
+        return {k: np.asarray(fc_f[k], float)[t + 1:] for k in FCESS}
+    return {k: np.maximum(nowcast(fc_f[k], t, now[k]), OFFER_EPS) for k in FCESS}
+
+
 def offer_prices(strat: Strategy, fc_e) -> np.ndarray:
     """"forecast" rule: sell early only if the price beats alpha x the best forecast price later today."""
     if not strat.offer:
@@ -228,9 +250,11 @@ def offer_prices(strat: Strategy, fc_e) -> np.ndarray:
 
 
 def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, budget: float, planned: float,
-                      sell: float, fc_e, fc_f, price_now: float, window, risk, site, load_fc, room) -> tuple[float, float]:
+                      sell: float, fc_e, fc_f, price_now: float, window, risk, site, load_fc, room,
+                      terminal_value: float = 0.0, fcess_now: dict | None = None) -> tuple[float, float]:
     """"value" rule: offer price for the rest of interval t from re-planning the rest of the day twice,
-    running at the planned power until the interval ends or selling at `sell` MW instead.
+    running at the planned power until the interval ends or selling at `sell` MW instead. Energy and
+    FCESS forecasts are both nudged towards the prices just seen (fcess_now: 5-min FCESS prices).
 
     Returns (offer price, the FCESS part of the value lost per MWh sold).
     """
@@ -241,7 +265,7 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
     lost = lost_fcess = 0.0
     if t < N - 1:
         fc_next = nowcast(fc_e, t, price_now)
-        f_next = None if fc_f is None else {k: np.asarray(fc_f[k], float)[t + 1:] for k in FCESS}
+        f_next = nowcast_fcess(fc_f, t, fcess_now)
         l_next = None if site is None else np.asarray(load_fc, float)[t + 1:]
         branches = []
         for power in (planned, sell):
@@ -249,7 +273,8 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
             s1 = min(max(s1, 0.0), bat.energy_mwh)
             b1 = budget - max(power, 0.0) * rem
             try:
-                branches.append(plan(bat, fc_next, f_next, s1, b1, plan_floor(bat, t + 1, s1, window, risk, strat, room), site, l_next))
+                branches.append(plan(bat, fc_next, f_next, s1, b1, plan_floor(bat, t + 1, s1, window, risk, strat, room),
+                                     site, l_next, terminal_value))
             except RuntimeError:
                 return np.inf, 0.0
         lost = branches[0]["value"] - branches[1]["value"]
@@ -259,26 +284,30 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
 
 
 def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=None, risk=None, s_start=0.0, p5_f=None,
-            site: Site | None = None, load_fc=None, load_act=None):
+            site: Site | None = None, load_fc=None, load_act=None, load_margin: float | None = None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     fc_e/rtp: 48 forecast / actual energy prices; fc_f/act_f: {product: 48 prices} or fc_f=None for
-    energy only; p5 / p5_f: 288 actual 5-min energy / {raise product: FCESS} prices; window: capacity
+    energy only; p5 / p5_f: 288 actual 5-min energy / {FCESS product: price} prices; window: capacity
     obligation slots or None; risk: 48 spike probabilities; site, load_fc / load_act: the connection
-    and the site's forecast / actual load (MW) per interval. Returns (summary dict, per-interval log).
+    and the site's forecast / actual load (MW) per interval; load_margin overrides site.load_margin
+    (0 when the load is known). Returns (summary dict, per-interval log).
     """
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, bat.fcess_sustain_h
     fcess = fc_f is not None
-    lf = None if site is None else np.asarray(load_fc, float)
+    if site is not None:
+        load_margin = site.load_margin if load_margin is None else load_margin
+    lf = None if site is None else np.asarray(load_fc, float) * (1 + load_margin)  # what plans assume the site draws
     la = np.zeros(N) if site is None else np.asarray(load_act, float)
     imp_room = np.full(N, np.inf) if site is None else site.import_limit_mw - la  # most net charging, MW
     exp_room = np.full(N, np.inf) if site is None else site.export_limit_mw + la  # most net discharging, MW
     room = charge_room(bat, site, lf)
     value_rule = strat.offer and strat.offer_rule == "value"
     k_offer = np.full(N, np.inf) if value_rule else offer_prices(strat, fc_e)
-    offer_fcess = np.full(N, np.nan)
+    offer_fcess, offer_mwh = np.full(N, np.nan), np.zeros(N)
+    tv = stored_energy_value(bat, fc_e)
     floor = plan_floor(bat, 0, s_start, window, risk, strat, room)
-    morning = cur = plan(bat, fc_e, fc_f, s_start, None, floor, site, lf)
+    morning = cur = plan(bat, fc_e, fc_f, s_start, None, floor, site, lf, tv)
     cur_t0, s, budget = 0, s_start, bat.cycles_per_day * E
     shortfall = site_short = wear = 0.0
     energy, soc = np.zeros(N), np.zeros(N)
@@ -297,8 +326,9 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
             price = p5[t * STEPS + j]
             if strat.offer and price >= strat.k_min and sellable > max(pw, 0.0) + 1e-6:
                 if not k_ready:
+                    f_now = None if p5_f is None or not fcess else {k: p5_f[k][t * STEPS + j] for k in FCESS}
                     k_offer[t], offer_fcess[t] = value_offer_price(
-                        bat, strat, t, j, s, budget, pw, sellable, fc_e, fc_f, price, window, risk, site, lf, room)
+                        bat, strat, t, j, s, budget, pw, sellable, fc_e, fc_f, price, window, risk, site, lf, room, tv, f_now)
                     k_ready = True
                 margin = price - k_offer[t]
                 if margin >= 0:
@@ -307,6 +337,7 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
                     raise_price = (sum(cur[k][i] * p5_f[k][t * STEPS + j] for k in RAISE) / r_plan
                                    if p5_f is not None and r_plan > 1e-9 else 0.0)
                     if margin * (sellable - max(pw, 0.0)) >= raise_price * raise_lost:
+                        offer_mwh[t] += (sellable - max(pw, 0.0)) * DT5
                         pw, triggered[t] = sellable, True
             if pw <= 0 and s - pw * DT5 * eta < keep:
                 # obligation safety: stored energy is at the least that can still be refilled in time
@@ -334,13 +365,14 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
         soc[t] = s
         if triggered[t] and t < N - 1:
             cur_t0 = t + 1
-            args = (nowcast(fc_e, t, p5[t * STEPS + STEPS - 1]),
-                    {k: np.asarray(fc_f[k], float)[cur_t0:] for k in FCESS} if fcess else None, s, budget)
+            last = t * STEPS + STEPS - 1
+            f_now = None if p5_f is None or not fcess else {k: p5_f[k][last] for k in FCESS}
+            args = (nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget)
             rest = None if lf is None else lf[cur_t0:]
             try:
-                cur = plan(bat, *args, plan_floor(bat, cur_t0, s, window, risk, strat, room), site, rest)
+                cur = plan(bat, *args, plan_floor(bat, cur_t0, s, window, risk, strat, room), site, rest, tv)
             except RuntimeError:
-                cur = plan(bat, *args, None, site, rest)
+                cur = plan(bat, *args, None, site, rest, tv)
             replanned[cur_t0] = True
     energy_rev = float((np.asarray(rtp) * energy).sum())
     fcess_rev = float(sum((np.asarray(act_f[k]) * mw_h[k]).sum() for k in FCESS)) if fcess else 0.0
@@ -351,8 +383,10 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
     log = pd.DataFrame({
         "slot": np.arange(N), "forecast": fc_e, "rtp": rtp, "max_5min_price": np.asarray(p5).reshape(N, STEPS).max(axis=1),
         "plan_net": morning["net"], "plan_soc": morning["soc"], "floor": floor, "offer_price": k_offer,
-        "offer_fcess": offer_fcess, "risk": np.nan if risk is None else risk, "energy_mwh": energy, "soc": soc,
-        "triggered": triggered, "replanned": replanned, "site_load_fc": np.nan if lf is None else lf,
+        "offer_fcess": offer_fcess, "offer_mwh": offer_mwh, "stored_value": tv, "soc_start": s_start,
+        "risk": np.nan if risk is None else risk, "energy_mwh": energy, "soc": soc,
+        "triggered": triggered, "replanned": replanned,
+        "site_load_fc": np.nan if lf is None else lf / (1 + load_margin), "site_load_plan": np.nan if lf is None else lf,
         "site_load": la if site is not None else np.nan, **{f"{k}_mw": mw_h[k] / DT for k in FCESS},
     })
     return summary, log
@@ -377,29 +411,35 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, win
     wear = bat.degradation_per_mwh
     lines = []
     if site is not None:
-        lines.append(f"Site: load {log['site_load_fc'].min():.2f}-{log['site_load_fc'].max():.2f} MW expected, sharing a "
-                     f"{site.import_limit_mw:.1f} MW import / {site.export_limit_mw:.1f} MW export connection with the battery.")
+        lines.append(f"Site: load {log['site_load_fc'].min():.2f}-{log['site_load_fc'].max():.2f} MW expected (planned with "
+                     f"{site.load_margin:.0%} spare for forecast error), sharing a {site.import_limit_mw:.1f} MW import / "
+                     f"{site.export_limit_mw:.1f} MW export connection with the battery.")
+    lines.append(f"Starts the day with {log['soc_start'].iloc[0]:.1f} of {bat.energy_mwh:.1f} MWh stored.")
     act = np.where(log["plan_net"] > 0.01, "discharge", np.where(log["plan_net"] < -0.01, "charge", "idle"))
     for i, j, a in _runs(list(act)):
-        if a == "idle":
-            continue
         power = log["plan_net"].iloc[i:j].abs().to_numpy()
+        if a == "idle" or power.sum() * DT < 0.05:
+            continue
         price = f"forecast ${fc[i:j].min():.0f}-{fc[i:j].max():.0f}/MWh"
         if a == "charge":
             later = fc[j:].max() if j < N else -np.inf
             if (later - wear) * bat.round_trip > fc[i:j].mean():
                 why = (f"selling later at up to ${later:.0f} still pays after the {1 - bat.round_trip:.0%} round-trip "
                        f"loss and ${wear:.0f}/MWh wear")
-            elif window is not None and j <= window[0]:
+            elif window is not None and i < window[0]:
                 why = f"the spread does not cover losses and wear, but the battery must be full by {clock[window[0]]} for the capacity obligation"
+            elif strat.risk_threshold is not None:
+                why = "keeps energy for the spike reserve"
             else:
-                why = "keeps energy behind the FCESS raise offer and the reserve"
+                why = "cheap energy kept for later; stored energy counts at what it would cost to buy back"
             if site is not None:
-                load = log["site_load_fc"].iloc[i:j].to_numpy()
+                load = log["site_load_plan"].iloc[i:j].to_numpy()
                 cap = np.minimum(bat.power_mw, site.import_limit_mw - load)
                 if (cap < bat.power_mw - 0.05).any() and (power >= cap - 0.02).all():
-                    why += (f"; charging is held to {power.min():.1f}-{power.max():.1f} MW because the site itself draws "
-                            f"{load.min():.1f}-{load.max():.1f} MW of the {site.import_limit_mw:.1f} MW connection")
+                    expected = log["site_load_fc"].iloc[i:j]
+                    why += (f"; charging is held to {power.min():.2f}-{power.max():.2f} MW because the site is expected to draw "
+                            f"{expected.min():.2f}-{expected.max():.2f} MW (plus the safety margin) of the "
+                            f"{site.import_limit_mw:.1f} MW connection")
         else:
             in_window = window is not None and window[0] <= i < window[1]
             why = "paced so the capacity obligation stays covered" if in_window else "the best forecast prices left for the energy on hand"
@@ -434,14 +474,16 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, win
         lines.append(f"FCESS: spare headroom offered at $0, on average {raise_mw:.2f} MW raise and {lower_mw:.2f} MW lower.")
     for i, j, trig in _runs(list(log["triggered"])):
         if trig:
-            sold = log["energy_mwh"].iloc[i:j].clip(lower=0).sum() - log["plan_net"].iloc[i:j].clip(lower=0).sum() * DT
             lines.append(f"{clock[i]}-{clock[j]} the price reached up to ${log['max_5min_price'].iloc[i:j].max():.0f}: the standing "
-                         f"offer sold about {max(sold, 0):.2f} MWh more than planned, and the rest of the day was re-planned.")
-    done_dis, done_chg = log["energy_mwh"].clip(lower=0).sum(), -log["energy_mwh"].clip(upper=0).sum()
-    plan_dis, plan_chg = log["plan_net"].clip(lower=0).sum() * DT, -log["plan_net"].clip(upper=0).sum() * DT
+                         f"offer sold {log['offer_mwh'].iloc[i:j].sum():.2f} MWh more than planned, and the rest of the day was re-planned.")
+    done_dis, done_chg = log["energy_mwh"].clip(lower=0).sum(), abs(log["energy_mwh"].clip(upper=0).sum())
+    plan_dis, plan_chg = log["plan_net"].clip(lower=0).sum() * DT, abs(log["plan_net"].clip(upper=0).sum()) * DT
     if abs(done_dis - plan_dis) > 0.05 or abs(done_chg - plan_chg) > 0.05:
         lines.append(f"Executed in the end: discharged {done_dis:.1f} MWh and charged {done_chg:.1f} MWh "
                      f"(morning plan: {plan_dis:.1f} and {plan_chg:.1f}).")
+    if log["soc"].iloc[-1] > 0.05:
+        lines.append(f"Ends the day holding {log['soc'].iloc[-1]:.1f} MWh, counted at ${log['stored_value'].iloc[0]:.0f}/MWh "
+                     f"(what buying it back would cost): selling it for less, after losses and wear, would not pay.")
     lines.append(f"Result: ${summary['energy']:.0f} energy + ${summary['fcess']:.0f} FCESS - ${summary['wear']:.0f} wear "
                  f"= ${summary['total']:.0f}.")
     return lines

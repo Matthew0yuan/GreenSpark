@@ -18,6 +18,7 @@ import pandas as pd
 class Site:
     import_limit_mw: float = 1.2  # most the connection may draw from the grid
     export_limit_mw: float = 1.0  # most it may send to the grid
+    load_margin: float = 0.16     # plans assume the site may draw this much more than forecast (2x example noise)
 
 
 def example_load(ts: pd.DatetimeIndex, noise: float = 0.08, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
