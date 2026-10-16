@@ -20,13 +20,15 @@ Run:  .venv/bin/python -m vpp.aemo_correction
 """
 
 import os
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
 from vpp.data import PROCESSED, PRODUCTS, ROOT, trading_date
-from vpp.evaluate import TEST_START
+from vpp.evaluate import TEST_MONTHS, TEST_START, period_of
 
 REPORTS = ROOT / "reports"
 
@@ -42,8 +44,26 @@ WEATHER = [
 LGB_PARAMS = dict(
     objective="l1", n_estimators=400, learning_rate=0.03, num_leaves=31, min_child_samples=50,
     subsample=0.8, subsample_freq=1, colsample_bytree=0.8, verbose=-1,
-    random_state=0, n_jobs=max(1, (os.cpu_count() or 2) // 2),
+    random_state=0, n_jobs=1,
 )
+# Monthly refits are independent, so they train in parallel threads (LightGBM releases the GIL),
+# one LightGBM thread each.
+N_WORKERS = os.cpu_count() or 1
+
+
+def monthly_refits(data: pd.DataFrame, days_ahead: int, start: pd.Timestamp,
+                   fit_predict: Callable[[pd.Series, pd.Series], pd.Series]) -> pd.Series:
+    """Walk-forward: for every month from `start`, fit_predict(train, test) on boolean row masks."""
+    def one_month(month_start: pd.Timestamp) -> pd.Series | None:
+        month_end = month_start + pd.offsets.MonthBegin(1)
+        # labels must be known when the month's first forecast is issued
+        train = data["target_date"] < month_start - pd.Timedelta(days=days_ahead)
+        test = (data["target_date"] >= month_start) & (data["target_date"] < month_end)
+        return fit_predict(train, test) if test.any() else None
+
+    months = pd.date_range(start.normalize(), data["target_date"].max(), freq="MS")
+    with ThreadPoolExecutor(N_WORKERS) as pool:
+        return pd.concat([p for p in pool.map(one_month, months) if p is not None])
 
 
 def trading_slot(idx: pd.DatetimeIndex) -> np.ndarray:
@@ -131,17 +151,12 @@ def walk_forward(frame: pd.DataFrame, product: str, days_ahead: int, weather: bo
     data = frame[(frame["days_ahead"] == days_ahead) & frame[f"actual_{product}"].notna()]
     cols = features_for(product, weather) if cols is None else cols
     target = data[f"actual_{product}"] - (data[f"aemo_{product}"] if residual else 0)
-    preds = []
-    for month_start in pd.date_range(start.normalize(), data["target_date"].max(), freq="MS"):
-        month_end = month_start + pd.offsets.MonthBegin(1)
-        # labels must be known when the month's first forecast is issued
-        train = data["target_date"] < month_start - pd.Timedelta(days=days_ahead)
-        test = (data["target_date"] >= month_start) & (data["target_date"] < month_end)
-        if not test.any():
-            continue
+
+    def fit_predict(train: pd.Series, test: pd.Series) -> pd.Series:
         model = lgb.LGBMRegressor(**LGB_PARAMS).fit(data.loc[train, cols], target[train])
-        preds.append(pd.Series(model.predict(data.loc[test, cols]), index=data.index[test]))
-    return pd.concat(preds)
+        return pd.Series(model.predict(data.loc[test, cols]), index=data.index[test])
+
+    return monthly_refits(data, days_ahead, start, fit_predict)
 
 
 def score(err: pd.Series) -> dict:
@@ -170,12 +185,13 @@ def main() -> None:
             }
             ok = pd.concat(methods, axis=1).notna().all(axis=1)
             actual = sub[f"actual_{p}"][ok]
+            test = ok & (period_of(sub["target_date"]) == "test")  # metrics on test months only
             for name, fc in methods.items():
-                rows.append({"days_ahead": days_ahead, "product": p, "method": name, "n": int(ok.sum()),
-                             **score(fc[ok] - actual)})
+                rows.append({"days_ahead": days_ahead, "product": p, "method": name, "n": int(test.sum()),
+                             **score(fc[test] - sub[f"actual_{p}"][test])})
             if p == "energy":
-                errs = pd.DataFrame({k: (v[ok] - actual).abs() for k, v in methods.items()})
-                by_slot.append(errs.groupby(sub.loc[ok, "ts"].dt.strftime("%H:%M")).mean().add_suffix(f"_d{days_ahead}"))
+                errs = pd.DataFrame({k: (v[test] - sub[f"actual_{p}"][test]).abs() for k, v in methods.items()})
+                by_slot.append(errs.groupby(sub.loc[test, "ts"].dt.strftime("%H:%M")).mean().add_suffix(f"_d{days_ahead}"))
             forecasts.append(sub.loc[ok, ["issue_date", "ts", "days_ahead"]].assign(
                 product=p, actual=actual, baseline=methods["baseline"][ok], profile28=methods["profile28"][ok],
                 aemo=methods["aemo"][ok], aemo_ml=methods["aemo+ml"][ok], aemo_ml_wx=methods["aemo+ml+wx"][ok]))
@@ -190,8 +206,7 @@ def main() -> None:
     mae["skill_vs_baseline"] = 1 - mae["aemo+ml+wx"] / mae["baseline"]
     mae["skill_vs_profile28"] = 1 - mae["aemo+ml+wx"] / mae["profile28"]
     mae["weather_gain"] = 1 - mae["aemo+ml+wx"] / mae["aemo+ml"]
-    scored = frame.loc[frame["target_date"] >= TEST_START.normalize()].dropna(subset=["actual_energy"])
-    print(f"Test: target trading days {scored['target_date'].min().date()} -> {scored['target_date'].max().date()}, walk-forward monthly refits")
+    print(f"Test months: {', '.join(TEST_MONTHS)}; walk-forward monthly refits from {TEST_START.date()}")
     print("MAE ($/MWh energy, $/MW/h FCESS); skill = 1 - MAE/MAE_ref\n")
     print(mae.round(3).to_string())
     print("\nRMSE:")

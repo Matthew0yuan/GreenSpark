@@ -13,6 +13,7 @@ import pandas as pd
 
 from vpp import aemo_correction as ac
 from vpp.data import PROCESSED, PRODUCTS
+from vpp.evaluate import period_of
 
 FORECAST_START = pd.Timestamp("2025-04-01 08:00")  # first day of the validation period
 FCESS = ["reg_raise", "cont_raise", "reg_lower", "cont_lower"]  # RoCoF always clears at $0
@@ -47,8 +48,9 @@ def main() -> None:
     fc = build()
     fc.to_parquet(OUT)
     err = (fc["energy"] - fc["actual_energy"]).abs()
-    for name, lo, hi in [("validation", "2025-04-01", "2025-10-01"), ("test", "2025-10-01", "2100-01-01")]:
-        m = (fc["target_date"] >= lo) & (fc["target_date"] < hi)
+    period = period_of(fc["target_date"])
+    for name in ("validation", "test"):
+        m = period == name
         print(f"{name}: {fc.loc[m, 'target_date'].nunique()} days, energy MAE {err[m].mean():.2f} "
               f"(yesterday {(fc.loc[m, 'yday_energy'] - fc.loc[m, 'actual_energy']).abs().mean():.2f})")
     print(f"saved {OUT}")

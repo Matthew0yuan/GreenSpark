@@ -6,12 +6,22 @@ A forecast is a DataFrame indexed like the actuals with one column per product.
 import numpy as np
 import pandas as pd
 
-# Held-out test window: capacity year 2025-26 onwards. Models may only train on data before it.
+# First month the Q2A models forecast (walk-forward, refit monthly on everything known by then).
 TEST_START = pd.Timestamp("2025-10-01 08:00")
+# Test months: every other month of 2025-26. Every other trading day from 2025-04 is validation, so
+# both periods cover the market with FCESS income and the one without it.
+TEST_MONTHS = ("2025-10", "2025-12", "2026-02", "2026-04", "2026-06", "2026-08")
 
 
-def test_slice(df: pd.DataFrame, start: pd.Timestamp = TEST_START, end: pd.Timestamp | None = None) -> pd.DataFrame:
-    return df.loc[start:end]
+def period_of(trading_day) -> np.ndarray:
+    """'test' for trading days in TEST_MONTHS, 'validation' otherwise."""
+    months = pd.DatetimeIndex(trading_day).strftime("%Y-%m")
+    return np.where(np.isin(months, TEST_MONTHS), "test", "validation")
+
+
+def test_slice(df: pd.DataFrame) -> pd.DataFrame:
+    """Intervals (30-min index) whose trading day is in a test month."""
+    return df[period_of((df.index - pd.Timedelta(hours=8)).normalize()) == "test"]
 
 
 def metrics(actual: pd.DataFrame, forecast: pd.DataFrame) -> pd.DataFrame:
