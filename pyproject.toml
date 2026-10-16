@@ -1,0 +1,14 @@
+[project]
+name = "vpp-optimiser"
+version = "0.1.0"
+description = "GreenSpark Hackathon 2026 Q2: WEM price forecaster and market-stacking dispatcher"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "numpy>=2.0",
+    "lightgbm>=4.5",
+    "highspy>=1.8",
+    "matplotlib>=3.9",
+    "scikit-learn>=1.9.1",
+]
