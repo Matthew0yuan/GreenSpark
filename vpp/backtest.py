@@ -31,9 +31,11 @@ import pandas as pd
 from vpp import dispatch as dp
 from vpp import site as st
 from vpp.data import PROCESSED, ROOT
+from vpp.evaluate import period_of
 
 REPORTS = ROOT / "reports"
-PERIODS = {"validation": ("2025-04-01", "2025-09-30"), "test": ("2025-10-01", "2026-10-15")}
+FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-15"  # each day is validation or test: vpp.evaluate.TEST_MONTHS
+PERIODS = ("validation", "test")
 H, HALF = pd.Timedelta(hours=8), pd.Timedelta("30min")
 WEAR = 30.0  # A$/MWh discharged, central assumption
 SITE = st.Site()
@@ -67,12 +69,12 @@ def load_days() -> list[dict]:
     esroi = pd.read_parquet(PROCESSED / "esroi.parquet").set_index("trading_date")
     fc = pd.read_parquet(PROCESSED / "forecast_dispatch.parquet").set_index("ts")
     risk = pd.read_parquet(PROCESSED / "spike_risk.parquet").set_index("ts")["p_spike"]
-    first, last = pd.Timestamp(PERIODS["validation"][0]) + H, pd.Timestamp(PERIODS["test"][1]) + H + pd.Timedelta(days=1)
+    first, last = pd.Timestamp(FIRST_DAY) + H, pd.Timestamp(LAST_DAY) + H + pd.Timedelta(days=1)
     ts_all = pd.date_range(first, last, freq="30min", inclusive="left")
     load_fc, load_act = (pd.Series(x, index=ts_all) for x in st.example_load(ts_all))
     planning = lambda x: np.maximum(x, 0) + dp.OFFER_EPS  # noqa: E731  FCESS headroom offered at $0
     days = []
-    for day in pd.date_range(PERIODS["validation"][0], PERIODS["test"][1]):
+    for day in pd.date_range(FIRST_DAY, LAST_DAY):
         ts = pd.date_range(day + H, periods=dp.N, freq="30min")
         a, f = df30.reindex(ts), fc.reindex(ts)
         ts5 = pd.date_range(day + H, periods=dp.N * dp.STEPS, freq="5min")
@@ -123,10 +125,6 @@ def _run(task: tuple[str, str, bool]):
         if keep_logs:
             logs[d["day"]] = log
     return scenario, name, rows, logs
-
-
-def period_of(day: pd.Series) -> np.ndarray:
-    return np.where(day >= pd.Timestamp(PERIODS["test"][0]), "test", "validation")
 
 
 def bootstrap_ci(diff: np.ndarray, n: int = 4000, seed: int = 0) -> tuple[float, float]:

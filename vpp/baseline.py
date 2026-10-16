@@ -10,7 +10,7 @@ Run:  .venv/bin/python -m vpp.baseline
 import pandas as pd
 
 from vpp.data import PROCESSED, PRODUCTS, ROOT
-from vpp.evaluate import mae_by_hour, metrics, test_slice
+from vpp.evaluate import TEST_MONTHS, mae_by_hour, metrics, test_slice
 
 REPORTS = ROOT / "reports"
 
@@ -32,7 +32,7 @@ def main() -> None:
 
     mae_by_hour(actual, test_slice(naive_forecast(df30, 1))).to_csv(REPORTS / "baseline_mae_by_hour.csv")
 
-    print(f"Test window: {actual.index[0]} -> {actual.index[-1]}  ({len(actual) // 48} trading days, 30-min intervals)")
+    print(f"Test months: {', '.join(TEST_MONTHS)}  ({len(actual) // 48} trading days, 30-min intervals)")
     print("Prices in $/MWh (energy) or $/MW/h (FCESS)\n")
     print(table.round(2).to_string())
 

@@ -15,6 +15,7 @@ from sklearn.metrics import roc_auc_score
 
 from vpp import aemo_correction as ac
 from vpp.data import PROCESSED, trading_date
+from vpp.evaluate import period_of
 from vpp.forecast import FORECAST_START
 
 SPIKE = 200.0  # $/MWh
@@ -46,15 +47,12 @@ def walk_forward_risk(f: pd.DataFrame, days_ahead: int = 0, start: pd.Timestamp 
     data = f[(f["days_ahead"] == days_ahead) & f["actual_energy"].notna()]
     cols = ac.features_for("energy", weather=True) + EXTRA
     y = (data["actual_energy"] >= SPIKE).astype(int)
-    preds = []
-    for month_start in pd.date_range(start.normalize(), data["target_date"].max(), freq="MS"):
-        train = data["target_date"] < month_start - pd.Timedelta(days=days_ahead)
-        test = (data["target_date"] >= month_start) & (data["target_date"] < month_start + pd.offsets.MonthBegin(1))
-        if not test.any():
-            continue
+
+    def fit_predict(train: pd.Series, test: pd.Series) -> pd.Series:
         clf = lgb.LGBMClassifier(**CLF_PARAMS).fit(data.loc[train, cols], y[train])
-        preds.append(pd.Series(clf.predict_proba(data.loc[test, cols])[:, 1], index=data.index[test]))
-    return pd.concat(preds)
+        return pd.Series(clf.predict_proba(data.loc[test, cols])[:, 1], index=data.index[test])
+
+    return ac.monthly_refits(data, days_ahead, start, fit_predict)
 
 
 def main() -> None:
@@ -65,8 +63,8 @@ def main() -> None:
     p = walk_forward_risk(f)
     out = f.loc[p.index, ["issue_date", "ts", "days_ahead", "target_date", "actual_energy"]].assign(p_spike=p)
     out.sort_values("ts").reset_index(drop=True).to_parquet(OUT)
-    for name, lo, hi in [("validation", "2025-04-01", "2025-10-01"), ("test", "2025-10-01", "2100-01-01")]:
-        x = out[(out["target_date"] >= lo) & (out["target_date"] < hi)]
+    for name in ("validation", "test"):
+        x = out[period_of(out["target_date"]) == name]
         spike = x["actual_energy"] >= SPIKE
         print(f"{name}: {spike.sum()} spike intervals ({spike.mean():.1%}), AUC {roc_auc_score(spike, x['p_spike']):.3f}, "
               f"mean risk {x['p_spike'].mean():.3f}, share of intervals with risk >= 0.05/0.10/0.20: "
