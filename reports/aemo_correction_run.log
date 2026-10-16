@@ -1,0 +1,49 @@
+Test: target trading days 2025-10-01 -> 2026-10-15, walk-forward monthly refits
+MAE ($/MWh energy, $/MW/h FCESS); skill = 1 - MAE/MAE_ref
+
+method                 baseline  profile28    aemo  aemo+ml  aemo+ml+wx  skill_vs_baseline  skill_vs_profile28  weather_gain
+days_ahead product                                                                                                          
+0          cont_lower     2.998      2.950   3.520    2.887       3.010             -0.004              -0.020        -0.042
+           cont_raise     4.040      4.115  11.414    3.997       4.142             -0.025              -0.007        -0.036
+           energy        26.232     24.513  28.836   18.910      18.567              0.292               0.243         0.018
+           reg_lower      2.541      2.477   3.168    2.405       2.543             -0.000              -0.026        -0.057
+           reg_raise      2.986      2.952   6.372    2.551       2.557              0.143               0.134        -0.003
+           rocof          0.000      0.000   0.000    0.000       0.000                NaN                 NaN           NaN
+1          cont_lower     3.432      2.988   4.624    2.912       3.117              0.092              -0.043        -0.071
+           cont_raise     4.268      4.173  30.713    5.584       5.823             -0.364              -0.395        -0.043
+           energy        30.766     24.820  87.330   25.599      25.231              0.180              -0.017         0.014
+           reg_lower      2.883      2.509   4.277    2.546       2.634              0.087              -0.050        -0.034
+           reg_raise      3.150      2.983  18.246    3.258       3.230             -0.026              -0.083         0.009
+           rocof          0.000      0.000   0.000    0.000       0.000                NaN                 NaN           NaN
+
+RMSE:
+method                 baseline  profile28    aemo  aemo+ml  aemo+ml+wx
+days_ahead product                                                     
+0          cont_lower      8.91       7.24   34.65    19.18       19.52
+           cont_raise     14.96      11.30   61.07    23.57       23.34
+           energy         49.26      40.91   71.18    39.41       38.65
+           reg_lower       7.82       6.27   35.38    17.86       19.62
+           reg_raise      26.15      19.30   50.78    24.23       23.96
+           rocof           0.00       0.00    0.00     0.00        0.00
+1          cont_lower      9.79       7.30   30.86    11.90       12.66
+           cont_raise     15.24      11.36  135.23    28.95       29.46
+           energy         54.00      41.27  208.10    61.49       62.22
+           reg_lower       8.45       6.31   26.92     8.96        8.78
+           reg_raise      27.18      19.36   87.80    28.98       27.80
+           rocof           0.00       0.00    0.00     0.00        0.00
+
+Bias (forecast - actual):
+method                 baseline  profile28   aemo  aemo+ml  aemo+ml+wx
+days_ahead product                                                    
+0          cont_lower      0.01       0.38   0.44     0.51        0.88
+           cont_raise      0.01       0.49   8.30    -0.35       -0.06
+           energy          0.00      -0.34   8.38    -4.18       -4.54
+           reg_lower       0.01       0.27   0.53     0.26        0.62
+           reg_raise       0.00       0.20   3.62    -0.90       -0.81
+           rocof           0.00       0.00   0.00     0.00        0.00
+1          cont_lower      0.05       0.41   1.83     0.49        0.90
+           cont_raise      0.02       0.53  27.64     0.98        1.54
+           energy          0.00      -0.37  68.54    -1.71       -1.44
+           reg_lower       0.03       0.29   2.00     0.37        0.66
+           reg_raise       0.00       0.22  15.95    -0.62       -0.70
+           rocof           0.00       0.00   0.00     0.00        0.00
