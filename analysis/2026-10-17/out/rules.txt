@@ -1,0 +1,16 @@
+=== fit set T: 143 cases, 1214 controls
+leaf 3: energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h <= 201.9
+leaf 4: energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h > 201.9
+leaf 6: energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h <= 89.27
+leaf 7: energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h > 89.27
+leaf 9: energy_last30 > 94.42 且 hist_h_since_spike <= 0.75
+leaf 11: energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 <= 0.005833
+leaf 12: energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 > 0.005833
+=== fit set V: 36 cases, 329 controls
+leaf 3: energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h <= -134.8
+leaf 4: energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h > -134.8
+leaf 6: energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h <= 215.6
+leaf 7: energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h > 215.6
+leaf 10: energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h <= -405.6
+leaf 11: energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h > -405.6
+leaf 12: energy_last30 > 118.4 且 p5_n150_5h > 15.5

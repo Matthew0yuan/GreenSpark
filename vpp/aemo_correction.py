@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from vpp.data import PROCESSED, PRODUCTS, ROOT, trading_date
-from vpp.evaluate import TEST_MONTHS, TEST_START, period_of
+from vpp.evaluate import TEST_MONTHS, TEST_START, TRAIN_END, period_of
 
 REPORTS = ROOT / "reports"
 
@@ -56,8 +56,9 @@ def monthly_refits(data: pd.DataFrame, days_ahead: int, start: pd.Timestamp,
     """Walk-forward: for every month from `start`, fit_predict(train, test) on boolean row masks."""
     def one_month(month_start: pd.Timestamp) -> pd.Series | None:
         month_end = month_start + pd.offsets.MonthBegin(1)
-        # labels must be known when the month's first forecast is issued
-        train = data["target_date"] < month_start - pd.Timedelta(days=days_ahead)
+        # labels must be known when the month's first forecast is issued, and no later than TRAIN_END
+        train = ((data["target_date"] < month_start - pd.Timedelta(days=days_ahead))
+                 & (data["target_date"] <= TRAIN_END))
         test = (data["target_date"] >= month_start) & (data["target_date"] < month_end)
         return fit_predict(train, test) if test.any() else None
 
@@ -206,7 +207,8 @@ def main() -> None:
     mae["skill_vs_baseline"] = 1 - mae["aemo+ml+wx"] / mae["baseline"]
     mae["skill_vs_profile28"] = 1 - mae["aemo+ml+wx"] / mae["profile28"]
     mae["weather_gain"] = 1 - mae["aemo+ml+wx"] / mae["aemo+ml"]
-    print(f"Test months: {', '.join(TEST_MONTHS)}; walk-forward monthly refits from {TEST_START.date()}")
+    print(f"Test months: {', '.join(TEST_MONTHS)}; walk-forward monthly refits from {TEST_START.date()}, "
+          f"trained on data up to {TRAIN_END.date()} at most")
     print("MAE ($/MWh energy, $/MW/h FCESS); skill = 1 - MAE/MAE_ref\n")
     print(mae.round(3).to_string())
     print("\nRMSE:")

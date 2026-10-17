@@ -30,6 +30,8 @@ DATASETS = {
     "market-requirements": "market-requirements-csv",
     # Q2B: capacity credit obligation windows for storage
     "esr-obligation-intervals": "electric-storage-resource-obligation-intervals",
+    # spike diagnostics: 5-min output per facility, one file per month, published the next morning
+    "facility-scada": "facility-scada-csv",
 }
 
 

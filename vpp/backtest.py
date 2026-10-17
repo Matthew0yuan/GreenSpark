@@ -12,6 +12,10 @@ Strategies:
   forecast+offer          ... plus the standing spike offer at 1.2x the best forecast price later
   forecast+offer(value)   ... with the offer priced instead by re-planning the rest of the day with and
                           without the sale, so it includes the FCESS the energy would back
+The forecast-based strategies add HURDLE $/MWh to the wear in every decision (vpp.dispatch). With
+forecast errors, trades that only just pay on the forecast lose on the actual prices, so they mostly
+keep their charge for price spikes and the capacity obligation. HURDLE was chosen on the validation
+months from 0-150 $/MWh (2026-10-16): the monthly choice below earns most at 75, flat from 50 to 150.
 Which of forecast / forecast+offer / forecast+offer(value) to run is chosen month by month: each
 month uses the one that earned most over the previous LOOKBACK days, so the choice only ever uses the
 past and follows the market when it changes (FCESS was rich in 2025 and nearly gone in 2026). A
@@ -38,13 +42,15 @@ FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-15"  # each day is validation or te
 PERIODS = ("validation", "test")
 H, HALF = pd.Timedelta(hours=8), pd.Timedelta("30min")
 WEAR = 30.0  # A$/MWh discharged, central assumption
+HURDLE = 75.0  # A$/MWh margin for forecast error in forecast-based decisions, never settled
 SITE = st.Site()
 STRATEGIES = {
     "perfect": ("actual", dp.Strategy("perfect")),
     "yesterday": ("yesterday", dp.Strategy("yesterday")),
-    "forecast": ("forecast", dp.Strategy("forecast")),
-    "forecast+offer": ("forecast", dp.Strategy("forecast+offer", offer=True)),
-    "forecast+offer(value)": ("forecast", dp.Strategy("forecast+offer(value)", offer=True, offer_rule="value")),
+    "forecast": ("forecast", dp.Strategy("forecast", hurdle_per_mwh=HURDLE)),
+    "forecast+offer": ("forecast", dp.Strategy("forecast+offer", offer=True, hurdle_per_mwh=HURDLE)),
+    "forecast+offer(value)": ("forecast", dp.Strategy("forecast+offer(value)", offer=True, offer_rule="value",
+                                                      hurdle_per_mwh=HURDLE)),
 }
 CORE = ["perfect", "forecast", "forecast+offer", "forecast+offer(value)"]
 CANDIDATES = ["forecast", "forecast+offer", "forecast+offer(value)"]

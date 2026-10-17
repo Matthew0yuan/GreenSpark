@@ -1,0 +1,19 @@
+check,value,expect,note
+rows using a pd record with available_at > issue_time,0,0,
+rows without any pd record,379,-,"of 104,340"
+rows using a st record with available_at > issue_time,0,0,
+rows without any st record,2776,-,"of 104,340"
+rows using a wx record with available_at > issue_time,0,0,
+rows without any wx record,11770,-,"of 104,340"
+rows using a out record with available_at > issue_time,0,0,
+rows without any out record,0,-,"of 104,340"
+rows using a out_prev record with available_at > issue_time,0,0,
+rows without any out_prev record,0,-,"of 104,340"
+issues on the fallback pre-dispatch run (age > 2h),8,-,D+0 uses D-1's run; D+1 has no AEMO values those days
+issues with no outage snapshot,0,-,
+pd_req differs from a brute-force as-of lookup (500 random rows),0,0,
+p_prev1 differs from RTP at the same slot of D-1 (500 random rows),0,0,
+features identical to a label,0,0,
+predictions from a model trained on labels within EMBARGO_DAYS of its month,0,0,
+predictions from a model trained on labels after TRAIN_END,0,0,
+predictions issued before their model's month,0,0,

@@ -1,0 +1,43 @@
+fit,leaf,rule,period,cases,controls,case_coverage,control_coverage
+T,3,energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h <= 201.9,train,0,390,0.0,0.3212520593080725
+T,4,energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h > 201.9,train,2,20,0.013986013986013986,0.016474464579901153
+T,6,energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h <= 89.27,train,0,127,0.0,0.10461285008237232
+T,7,energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h > 89.27,train,20,165,0.13986013986013987,0.13591433278418452
+T,9,energy_last30 > 94.42 且 hist_h_since_spike <= 0.75,train,0,113,0.0,0.09308072487644152
+T,11,energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 <= 0.005833,train,23,196,0.16083916083916083,0.1614497528830313
+T,12,energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 > 0.005833,train,98,203,0.6853146853146853,0.1672158154859967
+T,3,energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h <= 201.9,validation,1,50,0.02702702702702703,0.13812154696132597
+T,4,energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h > 201.9,validation,0,6,0.0,0.016574585635359115
+T,6,energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h <= 89.27,validation,1,17,0.02702702702702703,0.04696132596685083
+T,7,energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h > 89.27,validation,0,70,0.0,0.19337016574585636
+T,9,energy_last30 > 94.42 且 hist_h_since_spike <= 0.75,validation,0,8,0.0,0.022099447513812154
+T,11,energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 <= 0.005833,validation,9,86,0.24324324324324326,0.23756906077348067
+T,12,energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 > 0.005833,validation,26,125,0.7027027027027027,0.3453038674033149
+T,3,energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h <= 201.9,test,0,44,0.0,0.2018348623853211
+T,4,energy_last30 <= 94.42 且 reg_raise_last30 <= 0.17 且 underlying_mw_d1h > 201.9,test,0,1,0.0,0.0045871559633027525
+T,6,energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h <= 89.27,test,0,4,0.0,0.01834862385321101
+T,7,energy_last30 <= 94.42 且 reg_raise_last30 > 0.17 且 energy_max5h > 89.27,test,0,10,0.0,0.045871559633027525
+T,9,energy_last30 > 94.42 且 hist_h_since_spike <= 0.75,test,0,14,0.0,0.06422018348623854
+T,11,energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 <= 0.005833,test,7,103,0.30434782608695654,0.4724770642201835
+T,12,energy_last30 > 94.42 且 hist_h_since_spike > 0.75 且 reg_raise_last30 > 0.005833,test,16,42,0.6956521739130435,0.1926605504587156
+V,3,energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h <= -134.8,train,0,0,0.0,0.0
+V,4,energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h > -134.8,train,51,839,0.35664335664335667,0.6911037891268533
+V,6,energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h <= 215.6,train,10,83,0.06993006993006994,0.06836902800658978
+V,7,energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h > 215.6,train,11,37,0.07692307692307693,0.030477759472817133
+V,10,energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h <= -405.6,train,0,0,0.0,0.0
+V,11,energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h > -405.6,train,53,201,0.3706293706293706,0.1655683690280066
+V,12,energy_last30 > 118.4 且 p5_n150_5h > 15.5,train,18,54,0.1258741258741259,0.044481054365733116
+V,3,energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h <= -134.8,validation,1,14,0.02702702702702703,0.03867403314917127
+V,4,energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h > -134.8,validation,0,170,0.0,0.4696132596685083
+V,6,energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h <= 215.6,validation,1,44,0.02702702702702703,0.12154696132596685
+V,7,energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h > 215.6,validation,6,16,0.16216216216216217,0.04419889502762431
+V,10,energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h <= -405.6,validation,0,28,0.0,0.07734806629834254
+V,11,energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h > -405.6,validation,14,64,0.3783783783783784,0.17679558011049723
+V,12,energy_last30 > 118.4 且 p5_n150_5h > 15.5,validation,15,26,0.40540540540540543,0.0718232044198895
+V,3,energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h <= -134.8,test,0,9,0.0,0.04128440366972477
+V,4,energy_last30 <= 118.4 且 reg_raise_last30 <= 6.898 且 withdrawal_mw_d1h > -134.8,test,2,120,0.08695652173913043,0.5504587155963303
+V,6,energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h <= 215.6,test,0,1,0.0,0.0045871559633027525
+V,7,energy_last30 <= 118.4 且 reg_raise_last30 > 6.898 且 unscheduled_demand_mw_d1h > 215.6,test,0,1,0.0,0.0045871559633027525
+V,10,energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h <= -405.6,test,5,40,0.21739130434782608,0.1834862385321101
+V,11,energy_last30 > 118.4 且 p5_n150_5h <= 15.5 且 withdrawal_mw_min5h > -405.6,test,3,12,0.13043478260869565,0.05504587155963303
+V,12,energy_last30 > 118.4 且 p5_n150_5h > 15.5,test,13,35,0.5652173913043478,0.16055045871559634

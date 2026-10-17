@@ -1,0 +1,106 @@
+"""Feature registry: what each feature is, why it might help, where it comes from and when it is public.
+
+vpp.spike.report adds the measured columns (missing share per period, strongest rank correlation with a
+time/price feature) and writes reports/spike/feature_registry.csv.
+"""
+
+PD = "AEMO Reference Pre-Dispatch, run labelled 08:00 of D (public ~08:35); for D+0 targets falls back to D-1's run"
+ST = "ST PASA report of D-1 (content as at 11:00 D-1, uploaded ~11:07-11:37 D-1)"
+OUT = "Real-Time Outage snapshot listed before 09:00 D (normally 08:30, listed 08:31); Capacity Credits per Capacity Year"
+WX = "Open-Meteo Previous Runs, ECMWF IFS 0.25; newest vintage with init + 8h <= T (12Z D-1 for most targets, 18Z D-2 for 18-24 UTC)"
+PRICE = "WEM 30-min RTP and 5-min prices of trading days up to D-1 (end 08:00 D)"
+CAL = "Calendar of the target interval"
+
+# name: (group, formula, unit, mechanism, source, in main backtest, note)
+FEATURES = {
+    "slot": ("time", "half-hour of the trading day (0 = 08:00)", "-", "spikes cluster at the evening peak and, from 2026, late night", CAL, True, ""),
+    "dow": ("time", "day of week of the target trading day", "-", "weekday demand", CAL, True, ""),
+    "month": ("time", "month of the target trading day", "-", "season: heat, winter peaks, wind/solar", CAL, True, ""),
+    "weekend": ("time", "dow >= 5", "flag", "lower weekend demand", CAL, True, ""),
+    "p_prev1": ("price", "RTP of the same slot on D-1", "$/MWh", "persistence of the regime", PRICE, True, "for D+1 targets this is 2 days before"),
+    "p_prev7_mean": ("price", "mean RTP of the same slot, D-7..D-1", "$/MWh", "slot profile", PRICE, True, ""),
+    "p_prev7_max": ("price", "max RTP of the same slot, D-7..D-1", "$/MWh", "recent extremes at this slot", PRICE, True, ""),
+    "spk_slot_7": ("price", "spikes at the same slot, D-7..D-1", "count", "recurring spikes", PRICE, True, ""),
+    "spk_near_7": ("price", "spikes at slots s-1..s+1, D-7..D-1", "count", "recurring spikes, timing jitter", PRICE, True, ""),
+    "spk_slot_28": ("price", "spikes at the same slot, D-28..D-1", "count", "slower regime", PRICE, True, ""),
+    "p_day_max_prev1": ("price", "max RTP of D-1", "$/MWh", "yesterday's stress", PRICE, True, ""),
+    "p_day_mean_prev1": ("price", "mean RTP of D-1", "$/MWh", "price level", PRICE, True, ""),
+    "p_evening_prev1": ("price", "mean RTP 17:00-21:00 of D-1", "$/MWh", "evening tightness yesterday", PRICE, True, ""),
+    "p_max5_prev1": ("price", "max 5-min price of D-1", "$/MWh", "short spikes the 30-min average hides", PRICE, True, ""),
+    "spk_days_7": ("price", "days with a spike, D-7..D-1", "count", "spike regime", PRICE, True, ""),
+    "spk_int_7": ("price", "spike intervals, D-7..D-1", "count", "spike regime", PRICE, True, ""),
+    "spk_int_28": ("price", "spike intervals, D-28..D-1", "count", "slower regime", PRICE, True, ""),
+    "p_std_7": ("price", "mean of daily RTP std, D-7..D-1", "$/MWh", "volatility", PRICE, True, ""),
+    "h_since_spike": ("price", "hours from the end of the last spike interval (by 08:00 D) to T", "h", "clustering in time", PRICE, True, ""),
+    "pd_req": ("system", "marketServiceRequirements.energy at t", "MW", "energy scheduled supply must meet (operational demand net of rooftop PV)", PD, True, ""),
+    "pd_inservice": ("system", "inServiceQuantities.energyInjectionCapacity at t", "MW", "capacity in service", PD, True, "includes intermittent capacity; exact basis not documented"),
+    "pd_avail": ("system", "availableQuantities.energyInjectionCapacity at t", "MW", "probably capacity available but not in service (WEM terms)", PD, True,
+                 "NOT total available capacity: 817 MW vs 2,054 MW requirement at 17:00 2026-10-16; meaning unverified"),
+    "pd_withdraw": ("system", "dispatchTotal.energyWithdrawalCapacity at t", "MW", "scheduled charging/withdrawal", PD, True, ""),
+    "pd_deficit": ("system", "marketShortfalls.energyDeficit at t", "MW", "scheduled energy shortfall", PD, True, "almost always 0"),
+    "pd_headroom": ("system", "pd_inservice - pd_req", "MW", "spare in-service capacity: room for demand error or a trip", PD, True, ""),
+    "pd_headroom_all": ("system", "pd_inservice + pd_avail - pd_req", "MW", "spare capacity incl. capacity not yet in service", PD, True, "inherits pd_avail's uncertainty"),
+    "pd_day_headroom_min": ("system", "min pd_headroom over the target trading day", "MW", "tightest point of the day", PD, True, ""),
+    "pd_day_req_max": ("system", "max pd_req over the target trading day", "MW", "daily peak demand", PD, True, ""),
+    "pd_req_vs_daymax": ("system", "pd_req - pd_day_req_max", "MW", "position relative to the peak", PD, True, ""),
+    "pd_req_ramp1h": ("system", "pd_req(t) - pd_req(t-1h), same run", "MW", "ramp the fleet must follow", PD, True, "NaN for the first targets of D+0"),
+    "pd_req_ramp3h": ("system", "pd_req(t) - pd_req(t-3h), same run", "MW", "evening ramp", PD, True, "NaN for the first targets of D+0"),
+    "pd_age_h": ("system", "T - run time of the pre-dispatch run used", "h", "staleness (1h normally, 25h on fallback)", PD, True, ""),
+    "st_ref": ("system", "ST PASA Reference operational demand at t", "MW", "demand (week-ahead schedule basis)", ST, True, ""),
+    "st_high": ("system", "ST PASA High scenario demand at t", "MW", "upper scenario", ST, True, "a scenario, not a stated confidence bound"),
+    "st_low": ("system", "ST PASA Low scenario demand at t", "MW", "lower scenario", ST, True, "a scenario, not a stated confidence bound"),
+    "st_spread": ("system", "st_high - st_low", "MW", "demand uncertainty", ST, True, ""),
+    "st_minus_pd": ("system", "st_ref - pd_req", "MW", "disagreement between AEMO's two demand forecasts", f"{ST}; {PD}", True, ""),
+    "st_short_energy": ("system", "1 if the ST PASA report used flags an energy shortfall at t (any scenario, any limit), 0 if it covers t", "flag",
+                        "projected energy shortfall", ST, True, "positives ~never within 48h; schema changed 2026-06-25 (flags then sit 150-165h ahead)"),
+    "st_short_raise": ("system", "same for regulation/contingency raise", "flag", "FCESS raise shortfall competes with energy for capacity", ST, True,
+                       "rate differs between report formats"),
+    "st_short_energy_day": ("system", "energy shortfall flags in the target trading day", "count", "projected tight day", ST, True, ""),
+    "st_age_h": ("system", "T - 11:00 of the report day", "h", "staleness", ST, True, ""),
+    "out_loss_mw": ("outage", "sum over Scheduled Facilities of max(0, credits - lowest RAC of Approved/Accepted outages overlapping t)", "MW",
+                    "firm capacity removed", OUT, True, "credits as same-basis capacity; wind/solar excluded"),
+    "out_loss_forced_mw": ("outage", "out_loss_mw where the binding record is Forced", "MW", "unplanned losses", OUT, True, ""),
+    "out_loss_planned_mw": ("outage", "out_loss_mw where the binding record is Planned/Opportunistic", "MW", "planned maintenance", OUT, True, ""),
+    "out_n_gen": ("outage", "generating facilities with an outage overlapping t", "count", "breadth of outages", OUT, True, ""),
+    "out_n_full": ("outage", "generating facilities with RAC = 0 overlapping t", "count", "full outages", OUT, True, ""),
+    "out_pending_mw": ("outage", "loss from planned outages awaiting assessment", "MW", "possible extra loss", OUT, True, ""),
+    "out_new24_mw": ("outage", "loss from records first submitted in the last 24h", "MW", "new information", OUT, True, ""),
+    "out_rev_mw": ("outage", "out_loss_mw minus the same from the previous day's snapshot", "MW", "new outages, delayed returns", OUT, True, ""),
+    "out_now_mw": ("outage", "out_loss_mw at the interval containing T", "MW", "current state of the fleet", OUT, True, ""),
+    "out_forced24_n": ("outage", "facilities with a forced-outage record submitted in the last 24h", "count", "fleet reliability now", OUT, True, ""),
+    "out_age_h": ("outage", "T - snapshot label", "h", "staleness", OUT, True, ""),
+    "pd_req_rev": ("outage", "pd_req of D's run - of D-1's run, same target (D+0 only)", "MW", "demand revised up", PD, True, "NaN for D+1 (no earlier run covers it)"),
+    "pd_inservice_rev": ("outage", "pd_inservice of D's run - of D-1's run (D+0 only)", "MW", "capacity revised down", PD, True, "NaN for D+1"),
+    "st_ref_rev": ("outage", "st_ref of D-1's report - of D-2's report, same target", "MW", "demand revised up", ST, True, ""),
+    "wx_temp": ("weather", "Perth 2m temperature at t", "degC", "heat/cold drives demand", WX, True, "archive starts 2024-02"),
+    "wx_ghi": ("weather", "Perth shortwave radiation at t", "W/m2", "rooftop PV", WX, True, ""),
+    "wx_cloud": ("weather", "Perth cloud cover at t", "%", "rooftop PV", WX, True, ""),
+    "wx_wind_midwest": ("weather", "100m wind at the Mid West wind farms", "km/h", "wind output", WX, True, ""),
+    "wx_wind_merredin": ("weather", "100m wind at Collgar/Merredin", "km/h", "wind output", WX, True, ""),
+    "wx_tmax_day": ("weather", "max Perth temperature over the target trading day", "degC", "hot day", WX, True, ""),
+    "wx_ghi_day": ("weather", "mean Perth radiation over the target trading day", "W/m2", "PV energy", WX, True, ""),
+    "wx_wind_evening": ("weather", "mean wind of both areas 17-21h of the target day", "km/h", "wind at the peak", WX, True, ""),
+    "wx_age_h": ("weather", "T - initialisation of the vintage used", "h", "staleness", WX, True, ""),
+    "aemo_energy": ("aemo_price", "pre-dispatch energy price at t", "$/MWh", "AEMO's own price forecast", PD, True, "also scored alone as a baseline"),
+    "aemo_reg_raise": ("aemo_price", "pre-dispatch regulation raise price", "$/MW/h", "FCESS scarcity", PD, True, ""),
+    "aemo_reg_lower": ("aemo_price", "pre-dispatch regulation lower price", "$/MW/h", "FCESS", PD, True, ""),
+    "aemo_cont_raise": ("aemo_price", "pre-dispatch contingency raise price", "$/MW/h", "FCESS scarcity", PD, True, ""),
+    "aemo_cont_lower": ("aemo_price", "pre-dispatch contingency lower price", "$/MW/h", "FCESS", PD, True, ""),
+    "aemo_day_max": ("aemo_price", "max aemo_energy over the target trading day", "$/MWh", "tight day per AEMO", PD, True, ""),
+    "aemo_energy_rev": ("aemo_price", "aemo_energy of D's run - of D-1's run (D+0 only)", "$/MWh", "price outlook revised up", PD, True, ""),
+    "aemo_err1": ("aemo_error", "actual - AEMO D+0 forecast at the same slot on D-1", "$/MWh", "AEMO's current bias", f"{PD}; {PRICE}", True, ""),
+    "aemo_err7": ("aemo_error", "mean of that error, D-7..D-1", "$/MWh", "AEMO's bias", f"{PD}; {PRICE}", True, ""),
+    "aemo_abserr7": ("aemo_error", "mean absolute error, D-7..D-1", "$/MWh", "how far to trust AEMO now", f"{PD}; {PRICE}", True, ""),
+}
+
+# candidates considered and not built, or dropped, with the reason
+NOT_USED = {
+    "pd_demand / pd_dpv / pd_net": "demandLevel moves in 200 MW steps (a contingency input) and dpvLevel only exists from 2025-10-31",
+    "market advisories": "one current file: 138 advisories from 2026-05-19, latest version only; earlier versions cannot be reconstructed",
+    "network constraints, shadow prices": "in the pre-dispatch JSON (~120 MB per run), not extracted this round",
+    "offer stacks (cheap supply left, steepness)": "WEMDE offers are not in the public files checked",
+    "pre-dispatch AvailableCapacity scenario, week-ahead runs": "P1; not needed for a first round",
+    "market-wide battery state of charge": "not public",
+    "dispatch SCADA, actual demand/wind/solar": "known only after the fact: labels or diagnostics, never inputs",
+    "Case Input Data": "published a day late per its definition; availability not verified",
+}

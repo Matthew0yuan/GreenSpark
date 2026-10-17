@@ -11,6 +11,9 @@ TEST_START = pd.Timestamp("2025-10-01 08:00")
 # Test months: every other month of 2025-26. Every other trading day from 2025-04 is validation, so
 # both periods cover the market with FCESS income and the one without it.
 TEST_MONTHS = ("2025-10", "2025-12", "2026-02", "2026-04", "2026-06", "2026-08")
+# Last trading day any model trains on: refits after it reuse the same training data, so the models
+# are frozen from here and forecast the rest of the data without seeing it.
+TRAIN_END = pd.Timestamp("2026-07-16")
 
 
 def period_of(trading_day) -> np.ndarray:
