@@ -1,0 +1,5 @@
+days_ahead,period,B0,B1,B2,B3,B4,B5_weather,B5_aemo_price,B5_aemo_error,B5_all,existing_C,C_strict,C+stpasa,C+outage,C+stpasa+outage,C+price_extra,C_strict_w12,C+stpasa+outage_w12,aemo_price,yesterday,existing_price
+0,test,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,validation,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1,test,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1,validation,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

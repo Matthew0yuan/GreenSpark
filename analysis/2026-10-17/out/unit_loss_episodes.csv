@@ -1,0 +1,1306 @@
+facility,fuel,start,end,loss_mw,first_submitted,description,kind,submitted_after_h
+ALINTA_PNJ_U1,gas_base,2023-11-05 07:30:00,2023-11-05 08:25:00,142.45,2023-11-05 08:45:17.955955200,Technical limitation of the facility,other,1.2549877653333334
+ALINTA_PNJ_U1,gas_base,2023-11-05 10:00:00,2023-11-05 12:15:00,142.45,2023-11-06 12:15:36.265746800,Technical limitation of the facility,other,26.260073818555554
+ALINTA_PNJ_U1,gas_base,2023-11-05 14:15:00,2023-11-05 20:20:00,142.45,2023-11-06 09:40:26.356557400,Technical limitation of the facility,other,19.42398793261111
+ALINTA_PNJ_U1,gas_base,2024-04-09 06:40:00,2024-04-09 06:55:00,72.44999999999999,2024-04-09 09:50:12.425473800,Updated shutdown profile received from Site for major maintenance period ,other,3.1701181871666666
+ALINTA_PNJ_U1,gas_base,2024-06-06 07:00:00,2024-06-07 06:55:00,142.45,2024-06-05 15:04:14.418893200,"Outage Description: Major Inspection - extended due to weather conditions
+Operational Information: Pinjarra Unit 1 unavailable",other,-15.929328085222222
+ALINTA_PNJ_U1,gas_base,2024-06-25 07:40:00,2024-06-25 08:05:00,142.45,2024-06-25 09:25:22.005011700,Per 7.4.27 difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint and shut down profile,other,1.75611250325
+ALINTA_PNJ_U1,gas_base,2024-06-25 16:30:00,2024-06-26 10:55:00,142.45,2024-06-26 09:10:55.656252000,Unit outage extended - Unit RTS delayed from Outage 414634,other,16.682126736666667
+ALINTA_PNJ_U1,gas_base,2024-08-20 08:25:00,2024-08-20 08:40:00,52.44999999999999,2024-08-21 11:45:31.742157800,Technical limitation of the facility and as Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical const,other,27.34215059938889
+ALINTA_PNJ_U1,gas_base,2024-09-21 17:45:00,2024-09-21 17:45:00,74.24699999999999,2024-09-22 10:05:11.357035800,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint. Technical limitation of the facility.,other,16.3364880655
+ALINTA_PNJ_U1,gas_base,2024-09-23 09:00:00,2024-09-23 11:25:00,142.45,2024-09-24 10:34:20.920626800,Operational issues caused real time forced outage,other,25.57247795188889
+ALINTA_PNJ_U1,gas_base,2024-11-06 21:00:00,2024-11-07 16:25:00,142.45,2024-11-07 11:50:06.407684300,Operational issues caused real time forced outage. Cooling water line failure.,other,14.835113245638889
+ALINTA_PNJ_U1,gas_base,2024-12-10 08:20:00,2024-12-12 12:10:00,142.45,2024-12-11 12:21:18.532869200,Unit trip,trip,28.02181468588889
+ALINTA_PNJ_U1,gas_base,2025-03-15 17:40:00,2025-03-15 17:55:00,72.44999999999999,2025-03-16 11:42:10.176035400,"Technical limitation of the facility, Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint",other,18.036160009833335
+ALINTA_PNJ_U1,gas_base,2025-03-20 15:30:00,2025-03-20 17:40:00,136.68599999999998,2025-03-21 10:56:35.841314900,"Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint, commissioning test plan, unit returni",other,19.44328925413889
+ALINTA_PNJ_U1,gas_base,2025-03-22 23:20:00,2025-03-23 02:40:00,142.45,2025-03-23 14:05:59.496353600,Operational issues caused real time forced outage,other,14.766526764888889
+ALINTA_PNJ_U1,gas_base,2025-04-18 00:50:00,2025-04-18 15:55:00,142.45,2025-04-18 11:42:17.334762200,Unit trip,trip,10.87148187838889
+ALINTA_PNJ_U1,gas_base,2025-08-19 07:00:00,2025-08-19 10:45:00,68.74799999999999,2025-08-19 12:01:47.536563400,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,5.029871267611111
+ALINTA_PNJ_U1,gas_base,2025-08-22 07:00:00,2025-08-22 17:55:00,142.45,2025-08-22 10:09:45.028452400,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,3.1625079034444443
+ALINTA_PNJ_U1,gas_base,2025-08-23 14:00:00,2025-08-23 17:10:00,142.45,2025-08-24 09:26:52.227090500,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,19.447840858472222
+ALINTA_PNJ_U1,gas_base,2025-11-25 05:40:00,2025-11-25 06:55:00,135.45,2025-11-25 09:40:44.249061800,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,4.012291406055556
+ALINTA_PNJ_U1,gas_base,2025-11-28 18:00:00,2025-11-29 13:30:00,142.45,2025-11-27 09:45:49.640844900,Delay to RTS from outage 457318,other,-32.23621087641666
+ALINTA_PNJ_U1,gas_base,2026-03-03 07:30:00,2026-03-03 07:55:00,142.45,2026-03-03 11:22:04.273677900,Technical limitation of the facility,other,3.867853799416667
+ALINTA_PNJ_U1,gas_base,2026-03-21 09:00:00,2026-03-21 10:55:00,126.16,2026-03-22 09:59:25.279260600,"Unit slow to ramp up, Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint",other,24.990355350166666
+ALINTA_PNJ_U1,gas_base,2026-05-14 11:05:00,2026-05-14 13:05:00,52.44999999999999,2026-05-14 13:01:05.991312200,"high differential pressure across inlet filters, implosion doors opening. 90 MW max injection",other,1.9349975867222222
+ALINTA_PNJ_U1,gas_base,2026-09-21 06:50:00,2026-09-21 08:25:00,142.45,2026-09-21 12:53:36.728710900,"Technical limitation of the facility, Per ESM 7.4.27, the reason for the difference between the Enablement Minimum/Maximum and Low/High Breakpoint in Standing Data and this Real Time Market Submission",other,6.060202419694444
+ALINTA_PNJ_U1,gas_base,2026-09-22 17:00:00,2026-09-23 11:55:00,142.45,2026-09-22 18:11:11.236533600,Outage Description: Unit 1 - Water Wash.	 Operational Information: Pinjarra Unit 1 unavailable Replacement of outages #400911 and #400911. RTS pushed back due to noise restrictions.,other,1.1864545926666668
+ALINTA_PNJ_U1,gas_base,2026-10-13 07:30:00,2026-10-14 03:25:00,141.164,2026-10-13 07:13:10.687939300,Forced unit shutdown due to oil leak,other,-0.28036446130555553
+ALINTA_PNJ_U1,gas_base,2026-10-14 19:20:00,2026-10-17 08:55:00,141.164,2026-10-15 12:15:16.639852600,Operational issues caused real time forced outage,other,16.921288847944442
+ALINTA_PNJ_U2,gas_base,2023-10-19 11:15:00,2023-10-20 15:30:00,142.45,2023-10-20 12:45:30.396413500,Unit trip,trip,25.508443448194445
+ALINTA_PNJ_U2,gas_base,2023-10-20 16:30:00,2023-10-20 16:35:00,142.45,2023-10-21 09:05:22.723244000,Unit slow to ramp up,other,16.589645345555557
+ALINTA_PNJ_U2,gas_base,2023-10-20 17:15:00,2023-10-20 17:15:00,142.45,2023-10-21 09:05:23.483306800,Unit slow to ramp up,other,15.83985647411111
+ALINTA_PNJ_U2,gas_base,2023-10-21 15:20:00,2023-10-21 15:35:00,142.45,2023-10-22 09:10:10.065944500,Unit did not reach target due to ambient conditions,other,17.83612942902778
+ALINTA_PNJ_U2,gas_base,2023-10-25 17:05:00,2023-10-25 17:10:00,80.44999999999999,2023-10-26 16:15:13.878829900,"Inflexbile profiles offered as directed by AEMO for extension of CTP. However, CTP was not extended",other,23.170521897194444
+ALINTA_PNJ_U2,gas_base,2024-01-03 18:00:00,2024-01-04 11:40:00,142.45,2024-01-04 07:45:16.438270400,Operational issues caused real time forced outage,trip,13.754566186222222
+ALINTA_PNJ_U2,gas_base,2024-01-04 17:40:00,2024-01-04 17:40:00,142.45,2024-01-05 09:00:21.094485200,Unit slow to ramp up,other,15.339192912555557
+ALINTA_PNJ_U2,gas_base,2024-03-23 17:40:00,2024-03-25 08:55:00,142.45,2024-03-24 09:50:12.816528500,Technical limitation of the facility while ramping down before a planned outage,other,16.170226813472222
+ALINTA_PNJ_U2,gas_base,2024-03-25 14:30:00,2024-03-25 15:00:00,142.45,2024-03-26 15:10:09.776082200,Unit slow to ramp up,other,24.669382245055555
+ALINTA_PNJ_U2,gas_base,2024-03-25 15:45:00,2024-03-25 15:55:00,142.45,2024-03-26 15:10:11.461365700,Operational issues caused real time forced outage,other,23.41985037936111
+ALINTA_PNJ_U2,gas_base,2024-03-25 17:40:00,2024-03-25 17:40:00,142.45,2024-03-26 15:10:12.494705000,Unit slow to ramp up,other,21.50347075138889
+ALINTA_PNJ_U2,gas_base,2024-06-13 05:10:00,2024-06-13 17:40:00,142.45,2024-06-13 18:50:25.467184500,Unit trip,trip,13.673740884583333
+ALINTA_PNJ_U2,gas_base,2024-07-04 09:00:00,2024-07-04 10:45:00,87.44999999999999,2024-07-05 13:05:30.207181100,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,28.091724216972224
+ALINTA_PNJ_U2,gas_base,2024-09-28 17:40:00,2024-09-28 17:55:00,72.44999999999999,2024-09-29 11:16:04.945694200,Technical limitation of the facility,other,17.601373803944444
+ALINTA_PNJ_U2,gas_base,2024-09-30 09:00:00,2024-09-30 14:00:00,142.45,2024-10-01 13:36:48.533659400,Technical limitation of the facility,trip,28.613481572055555
+ALINTA_PNJ_U2,gas_base,2024-10-23 19:05:00,2024-10-24 00:40:00,142.45,2024-10-24 11:37:15.137915500,Unit trip,trip,16.537538309861112
+ALINTA_PNJ_U2,gas_base,2024-12-10 08:20:00,2024-12-13 13:25:00,142.45,2024-12-11 12:21:11.199720900,Unit trip,trip,28.01977770025
+ALINTA_PNJ_U2,gas_base,2025-03-22 17:40:00,2025-03-22 18:00:00,142.45,2025-03-23 14:05:11.504380000,Technical limitation of the facility,other,20.41986232777778
+ALINTA_PNJ_U2,gas_base,2025-03-25 13:00:00,2025-03-25 17:00:00,142.45,2025-03-26 12:10:07.043257500,Operational issues caused real time forced outage,other,23.168623127083332
+ALINTA_PNJ_U2,gas_base,2025-04-01 15:30:00,2025-04-01 19:30:00,142.45,2025-04-02 09:28:08.487909500,"Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint, Unit trip due to control valve issues",trip,17.969024419305555
+ALINTA_PNJ_U2,gas_base,2025-05-16 13:25:00,2025-05-16 17:25:00,142.45,2025-05-17 13:59:32.788439900,"Operational issues caused real time forced outage, Unit Trip",trip,24.57577456663889
+ALINTA_PNJ_U2,gas_base,2025-05-19 07:30:00,2025-05-19 07:55:00,142.45,2025-05-19 11:48:58.969564700,"Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint, unit shutdown for CTP",other,4.316380434638889
+ALINTA_PNJ_U2,gas_base,2025-05-19 12:00:00,2025-05-19 14:45:00,142.45,2025-05-20 10:50:06.330908200,"Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint, Technical limitation of the facility ",other,22.835091918944446
+ALINTA_PNJ_U2,gas_base,2025-05-21 14:00:00,2025-05-21 20:55:00,142.45,2025-05-22 13:42:02.855006500,"Operational issues caused real time forced outage, RTS delayed",trip,23.70079305736111
+ALINTA_PNJ_U2,gas_base,2025-09-09 08:30:00,2025-09-09 08:55:00,142.45,2025-09-10 10:24:45.951644400,Technical limitation of the facility while ramping down in preparation for a planned outage,other,25.912764345666666
+ALINTA_PNJ_U2,gas_base,2025-11-07 22:10:00,2025-11-07 22:25:00,57.44999999999999,2025-11-08 10:53:33.524909400,Technical limitation of the facility,other,12.725979141500002
+ALINTA_PNJ_U2,gas_base,2026-01-28 13:35:00,2026-01-28 18:25:00,142.45,2026-01-29 12:57:19.702186900,Unit trip,trip,23.37213949636111
+ALINTA_PNJ_U2,gas_base,2026-04-28 04:35:00,2026-04-29 13:55:00,142.45,2026-04-28 13:00:24.699889700,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint. Unit trip.,trip,8.42352774713889
+ALINTA_PNJ_U2,gas_base,2026-08-26 11:25:00,2026-08-26 15:00:00,142.45,2026-08-27 10:55:08.490266900,Unit trip,trip,23.502358407472222
+ALINTA_PNJ_U2,gas_base,2026-10-06 06:50:00,2026-10-06 08:25:00,142.447,2026-10-06 12:25:16.418966000,"The unit was coming down for plan outage, Per ESM 7.4.27, the reason for the difference between the Enablement Minimum/Maximum and Low/High Breakpoint in Standing Data and this Real Time Market Submis",other,5.587894157222222
+ALINTA_PNJ_U2,gas_base,2026-10-15 00:00:00,2026-10-15 05:25:00,142.447,2026-10-15 12:15:32.132211600,"Technical limitation of the facility, Unit slow to ramp up",other,12.258925614333334
+ALINTA_WGP_GT,peaker,2023-10-02 18:35:00,2023-10-02 18:45:00,196.0,2023-10-03 16:45:13.733079400,Unit  did not  follow target,other,22.170481410944443
+ALINTA_WGP_GT,peaker,2023-11-21 15:45:00,2023-11-21 15:45:00,60.0,2023-11-22 09:00:30.612860000,Unit slow to ramp up,other,17.25850357222222
+ALINTA_WGP_GT,peaker,2023-11-25 16:20:00,2023-11-25 16:20:00,60.0,2023-11-26 08:35:19.558726200,Unit slow to ramp up,other,16.2554329795
+ALINTA_WGP_GT,peaker,2023-11-27 18:30:00,2023-11-27 18:30:00,51.382000000000005,2023-11-28 08:45:18.087186400,Below minimum DI - unit not started due to potential damage to the equipment,other,14.255024218444445
+ALINTA_WGP_GT,peaker,2023-11-30 18:30:00,2023-11-30 18:35:00,64.1,2023-12-01 08:10:15.744767900,Unit slow to ramp up,other,13.671040213305556
+ALINTA_WGP_GT,peaker,2023-12-15 17:45:00,2023-12-15 17:45:00,59.077,2023-12-16 09:05:15.394334300,Below minimum DI - unit not started due to potential damage to the equipment,other,15.337609537305555
+ALINTA_WGP_GT,peaker,2024-01-13 18:30:00,2024-01-13 19:45:00,196.0,2024-01-14 08:45:16.854798700,Unit trip,trip,14.254681888527777
+ALINTA_WGP_GT,peaker,2024-02-01 14:20:00,2024-02-01 21:55:00,56.0,2024-02-02 09:10:27.409258700,Technical limitation of the facility,other,18.840947016305556
+ALINTA_WGP_GT,peaker,2024-02-05 08:00:00,2024-02-05 09:55:00,196.0,2024-02-06 08:20:19.823715300,Operational issues caused real time forced outage,other,24.338839920916666
+ALINTA_WGP_GT,peaker,2024-03-14 15:20:00,2024-03-14 15:55:00,196.0,2024-03-15 08:25:07.780105500,Unit trip,trip,17.08549447375
+ALINTA_WGP_GT,peaker,2024-03-19 01:00:00,2024-03-19 18:25:00,196.0,2024-03-19 14:00:19.543821400,Unit unavailable due to DBP CS10 Outage,other,13.005428839277778
+ALINTA_WGP_GT,peaker,2024-05-01 16:30:00,2024-05-01 17:30:00,196.0,2024-05-02 11:20:14.597084500,Operational issues caused real time forced outage,other,18.83738807902778
+ALINTA_WGP_GT,peaker,2024-06-04 21:10:00,2024-06-04 23:00:00,196.0,2024-06-05 11:05:16.929568900,Unit trip,trip,13.921369324694444
+ALINTA_WGP_GT,peaker,2024-08-09 19:10:00,2024-08-10 07:55:00,196.0,2024-08-10 10:27:35.722133200,Operational issues caused real time forced outage DBP issue,other,15.29325614811111
+ALINTA_WGP_GT,peaker,2024-09-05 17:55:00,2024-09-05 17:55:00,89.7,2024-09-06 09:06:04.465373000,Unit slow to ramp up,other,15.184573714722221
+ALINTA_WGP_GT,peaker,2024-10-06 07:30:00,2024-10-08 07:25:00,196.0,2024-10-05 14:37:21.983139100,DBP CS10 compressor station outage for planned annual maintenance work,other,-16.877226905805557
+ALINTA_WGP_GT,peaker,2024-10-14 20:35:00,2024-10-14 20:40:00,63.6,2024-10-15 12:37:45.176803000,Unit slow to ramp up,other,16.04588244527778
+ALINTA_WGP_GT,peaker,2024-10-15 16:00:00,2024-10-15 16:55:00,81.0,2024-10-16 10:56:00.465085700,Technical limitation of the facility,other,18.933462523805552
+ALINTA_WGP_GT,peaker,2024-10-15 17:50:00,2024-10-15 21:05:00,196.0,2024-10-16 10:56:10.242121500,Technical limitation of the facility,other,17.10284503375
+ALINTA_WGP_GT,peaker,2024-10-15 21:45:00,2024-10-15 22:00:00,196.0,2024-10-16 10:56:16.259353100,Technical limitation of the facility,other,13.187849820305557
+ALINTA_WGP_GT,peaker,2024-10-31 17:30:00,2024-11-01 06:55:00,196.0,2024-11-01 11:35:41.105845100,Forced Outage due to CS10 trip resulting in insufficient gas pressure,trip,18.09475162363889
+ALINTA_WGP_GT,peaker,2024-11-12 15:35:00,2024-11-12 15:55:00,196.0,2024-11-13 11:33:54.059127600,Service made unavailable due to planned outage shortened but due to gate closure unable to make available in RTM submission,other,19.981683091
+ALINTA_WGP_GT,peaker,2025-01-20 15:50:00,2025-01-20 16:50:00,196.0,2025-01-21 11:59:34.526175200,Unit trip,trip,20.15959060422222
+ALINTA_WGP_GT,peaker,2025-03-19 10:00:00,2025-03-19 13:00:00,196.0,2025-03-18 14:26:47.132395600,"Urgent fire protection panel repair
+ ",other,-19.553574334555556
+ALINTA_WGP_GT,peaker,2025-04-15 14:00:00,2025-04-15 14:00:00,56.1,2025-04-16 12:24:38.824958600,Unit slow to ramp up,other,22.410784710722222
+ALINTA_WGP_GT,peaker,2025-05-20 15:05:00,2025-05-20 15:05:00,60.69999999999999,2025-05-21 13:08:01.393987700,Unit slow to ramp up,other,22.050387218805554
+ALINTA_WGP_GT,peaker,2025-06-13 08:00:00,2025-06-13 16:00:00,196.0,2025-06-14 10:29:48.523594300,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,26.496812109527777
+ALINTA_WGP_GT,peaker,2025-06-23 06:00:00,2025-06-23 06:30:00,60.0,2025-06-23 11:56:50.400807600,"Technical limitation of the facility, unable to ramp up due to cooling water pump fault discovered during ramp up process",other,5.947333557666666
+ALINTA_WGP_GT,peaker,2025-07-11 16:00:00,2025-07-11 16:00:00,62.19999999999999,2025-07-12 12:05:31.260579700,Unit slow to ramp up,other,20.092016827694444
+ALINTA_WGP_GT,peaker,2025-07-21 10:15:00,2025-07-21 10:25:00,60.0,2025-07-22 11:09:37.750281200,Unit slow to ramp up.,other,24.910486189222222
+ALINTA_WGP_GT,peaker,2025-08-10 16:20:00,2025-08-10 18:30:00,196.0,2025-08-11 13:07:30.813202200,WGP 1 has failed to start due to a sync issue.,other,20.79189255616667
+ALINTA_WGP_GT,peaker,2025-09-12 12:00:00,2025-09-18 13:55:00,196.0,2025-09-11 16:50:19.122447000,"Outage Description: WP GT1 SCHEDULED MAINTENANCE	
+Operational Information: Unit unavailable
+Delayed return to service due incomplete outage works. Outage extension due to delay in relay protection wor",other,-19.161354875833332
+ALINTA_WGP_GT,peaker,2025-09-18 20:00:00,2025-09-18 20:00:00,51.656000000000006,2025-09-19 11:30:13.215438600,Unit slow to ramp up,other,15.503670955166665
+ALINTA_WGP_GT,peaker,2025-09-18 20:50:00,2025-09-18 20:55:00,60.0,2025-09-19 11:30:28.232400900,Unit slow to ramp up,other,14.67450900025
+ALINTA_WGP_GT,peaker,2025-10-10 06:00:00,2025-10-10 07:25:00,196.0,2025-10-11 09:36:12.467572200,We understood that the Unit needed to be offline due to a DBP compressor outage,other,27.6034632145
+ALINTA_WGP_GT,peaker,2025-10-23 17:30:00,2025-10-23 20:00:00,196.0,2025-10-24 11:14:14.222418500,"Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint, unit slow to ramp up.",trip,17.73728400513889
+ALINTA_WGP_GT,peaker,2025-12-30 14:40:00,2025-12-30 17:30:00,196.0,2025-12-30 14:59:09.884058300,GT01 is currently unavailable due to WP circuit breakers being tripped at Landwehr. A large bushfire has tripped the western power transmission line on the grid that U1 forms part of. Until western po,trip,0.3194122384166667
+ALINTA_WGP_GT,peaker,2026-03-05 13:35:00,2026-03-05 14:20:00,196.0,2026-03-06 08:44:52.663098500,"Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint, Unit slow to ramp up",trip,19.16462863847222
+ALINTA_WGP_GT,peaker,2026-03-07 13:15:00,2026-03-07 15:15:00,196.0,2026-03-08 08:23:18.144894700,"Unit trip as a result of bushfires affecting Western power equipment, resulting in unit being tripped off",trip,19.138373581861114
+ALINTA_WGP_GT,peaker,2026-04-15 07:30:00,2026-04-15 08:25:00,196.0,2026-04-15 06:49:58.152291800,"Landwher works increasing likelihood of a breaker trip on unit, especially if the unit is online",trip,-0.6671799189444444
+ALINTA_WGP_GT,peaker,2026-04-24 14:00:00,2026-04-24 14:05:00,196.0,2026-04-25 08:09:50.747795100,Unit RTS after FSNL testing within GC and unable to update bids and MXIN,other,18.16409660975
+ALINTA_WGP_GT,peaker,2026-06-02 12:35:00,2026-06-02 12:50:00,60.0,2026-06-03 08:17:42.203512400,Operational issues caused real time forced outage,other,19.711723197888887
+ALINTA_WGP_GT,peaker,2026-06-18 05:55:00,2026-06-18 06:05:00,59.05199999999999,2026-06-18 11:58:45.083924200,"Technical limitation of the facility, Per ESM 7.4.27, the reason for the difference between the Enablement Minimum/Maximum and Low/High Breakpoint in Standing Data and this Real Time Market Submission",other,6.0625233122777775
+ALINTA_WGP_GT,peaker,2026-07-06 05:25:00,2026-07-09 16:25:00,196.0,2026-07-06 09:05:10.498568300,Real time issue causing unit to trip. Data analysis has identified the circuit that contributed to the fault; targeted testing now underway. Unit remains offline until testing and any corrective works,trip,3.6695829356388887
+ALINTA_WGP_GT,peaker,2026-07-18 07:00:00,2026-07-18 07:00:00,60.19999999999999,2026-07-18 08:48:19.690465700,Unit slow to ramp up,other,1.8054695738055555
+ALINTA_WGP_GT,peaker,2026-08-09 17:00:00,2026-08-09 18:25:00,196.0,2026-08-10 12:03:00.705079800,Unit trip,trip,19.0501958555
+ALINTA_WGP_GT,peaker,2026-09-21 14:20:00,2026-09-22 00:15:00,196.0,2026-09-22 09:22:46.541092500,Operational issues caused real time forced outage,other,19.046261414583334
+ALINTA_WGP_GT,peaker,2026-10-13 16:05:00,2026-10-13 16:05:00,60.0,2026-10-14 13:24:45.785446600,"Unit slow to ramp and per ESM 7.4.27, the reason for the difference between the Enablement Minimum/Maximum and Low/High Breakpoint in Standing Data and this Real Time Market Submission is due to a tem",other,21.329384846277776
+ALINTA_WGP_U2,peaker,2023-10-02 18:35:00,2023-10-02 20:05:00,196.0,2023-10-03 16:45:21.977105200,Unit  did not  follow target,other,22.17277141811111
+ALINTA_WGP_U2,peaker,2023-11-08 18:00:00,2023-11-08 18:00:00,56.5,2023-11-09 09:15:25.618598700,Unit slow to ramp up,other,15.257116277416666
+ALINTA_WGP_U2,peaker,2023-11-12 16:00:00,2023-11-12 16:00:00,60.69999999999999,2023-11-13 08:20:16.184500900,Unit slow to ramp up,other,16.33782902802778
+ALINTA_WGP_U2,peaker,2023-11-12 19:15:00,2023-11-12 19:15:00,58.1,2023-11-13 08:20:32.363166200,Technical limitation of the facility,other,13.092323101722222
+ALINTA_WGP_U2,peaker,2023-11-18 06:00:00,2023-11-18 06:35:00,196.0,2024-09-09 11:59:16.435679700,User input error,other,7109.987898799916
+ALINTA_WGP_U2,peaker,2023-11-19 17:30:00,2023-11-19 17:50:00,196.0,2023-11-20 14:50:15.261719300,Unit slow to ramp up,other,21.337572699805555
+ALINTA_WGP_U2,peaker,2023-11-20 13:25:00,2023-11-20 13:25:00,196.0,2023-11-21 10:30:26.513400200,Unit slow to ramp up,other,21.090698166722223
+ALINTA_WGP_U2,peaker,2023-11-20 16:20:00,2023-11-20 16:25:00,196.0,2023-11-21 10:30:28.699853000,Unit slow to ramp up,other,18.174638848055555
+ALINTA_WGP_U2,peaker,2023-11-21 15:00:00,2023-11-21 15:05:00,196.0,2023-11-22 09:01:04.685514100,Unit slow to ramp up,other,18.01796819836111
+ALINTA_WGP_U2,peaker,2023-11-21 18:35:00,2023-11-21 18:35:00,196.0,2023-11-22 09:01:05.567806400,Unit slow to ramp up,other,14.434879946222223
+ALINTA_WGP_U2,peaker,2023-11-22 15:15:00,2023-11-22 15:40:00,196.0,2023-11-23 10:55:58.128032600,Unit slow to ramp up,other,19.68281334238889
+ALINTA_WGP_U2,peaker,2023-11-22 20:40:00,2023-11-22 20:45:00,196.0,2023-11-23 10:56:00.619673200,Unit slow to ramp up,other,14.266838798111111
+ALINTA_WGP_U2,peaker,2023-11-23 12:50:00,2023-11-23 13:00:00,196.0,2023-11-24 15:11:17.083797200,Unit slow to ramp up,other,26.354745499222222
+ALINTA_WGP_U2,peaker,2023-11-23 15:35:00,2023-11-23 16:05:00,196.0,2023-11-24 15:11:19.379263900,Unit slow to ramp up,other,23.60538312886111
+ALINTA_WGP_U2,peaker,2023-11-24 12:30:00,2023-11-24 12:40:00,196.0,2023-11-25 09:51:16.089796700,Unit slow to ramp up,other,21.354469387972223
+ALINTA_WGP_U2,peaker,2023-11-24 13:25:00,2023-11-24 13:25:00,196.0,2023-11-25 09:51:17.294122300,Unit slow to ramp up,other,20.438137256194445
+ALINTA_WGP_U2,peaker,2023-11-24 18:20:00,2023-11-24 18:40:00,196.0,2023-11-25 09:51:18.097623000,Below minimum DI - unit not started due to potential damage to the equipment,other,15.521693784166667
+ALINTA_WGP_U2,peaker,2023-11-25 18:50:00,2023-11-25 19:00:00,196.0,2023-11-26 08:35:26.855010100,Unit slow to ramp up,other,13.757459725027777
+ALINTA_WGP_U2,peaker,2023-11-25 21:00:00,2023-11-25 21:25:00,196.0,2023-11-26 08:35:28.440342900,Technical limitation of the facility,other,11.591233428583333
+ALINTA_WGP_U2,peaker,2023-12-01 17:10:00,2023-12-01 17:10:00,64.0,2023-12-02 08:30:57.060875300,Unit slow to ramp up,other,15.349183576472221
+ALINTA_WGP_U2,peaker,2023-12-16 16:00:00,2023-12-16 16:55:00,196.0,2023-12-17 08:20:21.998140500,Operational issues caused real time forced outage,other,16.339443927916665
+ALINTA_WGP_U2,peaker,2023-12-20 17:45:00,2023-12-20 17:50:00,59.400000000000006,2023-12-21 08:40:29.713306200,Unit slow to ramp up,other,14.924920362833333
+ALINTA_WGP_U2,peaker,2023-12-24 10:50:00,2023-12-24 12:55:00,196.0,2023-12-25 10:10:17.502444600,Unit trip,trip,23.3381951235
+ALINTA_WGP_U2,peaker,2024-01-05 06:05:00,2024-01-05 06:55:00,196.0,2024-01-05 09:00:22.787120800,Unit trip,trip,2.9229964224444442
+ALINTA_WGP_U2,peaker,2024-03-05 06:00:00,2024-03-05 06:10:00,196.0,2024-03-05 11:45:18.630327300,Per 7.4.27 difference between the Enablement Minimum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,5.755175090916667
+ALINTA_WGP_U2,peaker,2024-05-01 18:00:00,2024-05-01 18:05:00,196.0,2024-05-02 11:20:16.172586900,Operational issues caused real time forced outage,other,17.337825718583332
+ALINTA_WGP_U2,peaker,2024-06-09 17:25:00,2024-06-09 17:25:00,50.97800000000001,2024-06-10 09:40:15.968707900,Unit slow to ramp up,other,16.254435752194443
+ALINTA_WGP_U2,peaker,2024-06-13 04:50:00,2024-06-13 06:30:00,196.0,2024-06-13 18:51:06.257513300,Unit trip,trip,14.018404864805555
+ALINTA_WGP_U2,peaker,2024-07-12 09:00:00,2024-07-12 10:55:00,196.0,2024-07-13 10:25:15.360910300,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,25.420933586194447
+ALINTA_WGP_U2,peaker,2024-07-18 15:00:00,2024-07-18 16:25:00,196.0,2024-07-18 16:24:02.823496100,Extension of planned outage to perform an offline water wash of the compressor so it is clean for borescoping activities during the B-Inspection that starts on the 3rd August 2024.,other,1.4007843044722221
+ALINTA_WGP_U2,peaker,2024-08-08 16:00:00,2024-08-08 16:00:00,196.0,2024-08-09 12:16:32.898334300,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint and unit slow to ramp,other,20.275805092861113
+ALINTA_WGP_U2,peaker,2024-08-10 17:40:00,2024-08-12 12:50:00,196.0,2024-08-11 09:46:41.117282700,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint unit failed to start,other,16.111421467416665
+ALINTA_WGP_U2,peaker,2024-09-16 18:05:00,2024-09-16 18:55:00,196.0,2024-09-17 13:07:20.537600500,Insufficient gas pressure due to DBP's CS10 offline causing real time forced outage,other,19.03903822236111
+ALINTA_WGP_U2,peaker,2024-10-14 20:25:00,2024-10-14 22:00:00,196.0,2024-10-15 12:38:30.978661000,Operational issues caused real time forced outage,other,16.225271850277778
+ALINTA_WGP_U2,peaker,2024-10-16 18:00:00,2024-10-18 20:55:00,196.0,2024-10-16 11:54:32.037172500,"Risk of extension: MEDIUM
+Recall time: 12 hours
+Network switch requirement: NO",other,-6.091100785416667
+ALINTA_WGP_U2,peaker,2024-11-19 18:00:00,2024-11-20 15:10:00,196.0,2024-11-19 11:57:38.898129400,replacement of failed part,other,-6.039194964055556
+ALINTA_WGP_U2,peaker,2024-12-12 17:50:00,2024-12-12 19:25:00,196.0,2024-12-13 11:33:20.014414700,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,trip,17.722226226305555
+ALINTA_WGP_U2,peaker,2025-03-05 08:00:00,2025-03-06 13:20:00,196.0,2025-03-06 11:44:03.286054700,Operational issues caused real time forced outage,other,27.734246126305557
+ALINTA_WGP_U2,peaker,2025-03-19 10:00:00,2025-03-19 13:00:00,196.0,2025-03-18 14:30:20.286037100,Urgent fire protection panel repair,other,-19.494364989694446
+ALINTA_WGP_U2,peaker,2025-03-31 16:55:00,2025-03-31 18:25:00,82.0,2025-04-01 12:31:11.494215400,Max injection reduced due to DBP Pressure issues,other,19.60319283761111
+ALINTA_WGP_U2,peaker,2025-08-04 06:55:00,2025-08-04 06:55:00,196.0,2025-08-04 13:24:26.108487000,User input error,other,6.490585690833334
+ALINTA_WGP_U2,peaker,2025-08-05 06:55:00,2025-08-05 06:55:00,196.0,2025-08-05 12:24:18.598929800,User input error,other,5.488499702722222
+ALINTA_WGP_U2,peaker,2025-09-15 15:55:00,2025-09-15 16:25:00,196.0,2025-09-16 10:42:41.702390500,Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint,other,18.794917330694442
+ALINTA_WGP_U2,peaker,2025-09-16 04:10:00,2025-09-16 04:55:00,196.0,2025-09-16 16:54:37.790251000,Real time forced outage due to load switching requirement of site ,other,12.743830625277777
+ALINTA_WGP_U2,peaker,2025-09-16 15:45:00,2025-09-16 16:10:00,196.0,2025-09-17 13:25:22.355650700,Load switching required by site,other,21.67287656963889
+ALINTA_WGP_U2,peaker,2025-10-08 10:00:00,2025-10-08 10:05:00,60.0,2025-10-09 08:56:37.608114600,"Per 7.4.27 the difference between the Enablement Minimum/Maximum in Standing Data and this Real Time Market Submission is due to a temporary technical constraint, Unit slow to ramp up",other,22.943780031833334
+ALINTA_WGP_U2,peaker,2025-10-22 16:15:00,2025-10-22 16:15:00,59.24600000000001,2025-10-23 09:27:35.099890800,Unit slow to ramp up,other,17.209749969666667
+ALINTA_WGP_U2,peaker,2025-10-28 15:45:00,2025-10-28 15:45:00,60.0,2025-10-29 11:02:50.750613500,Unit slow to ramp up,other,19.297430725972223
+ALINTA_WGP_U2,peaker,2026-02-13 15:55:00,2026-02-13 17:00:00,196.0,2026-02-14 08:56:55.048766700,"Unit trip, Operational issues caused real time forced outage, WGP2 tripped on ramp up",trip,17.031957990749998
+ALINTA_WGP_U2,peaker,2026-05-09 18:00:00,2026-05-09 19:55:00,196.0,2026-05-09 17:04:00.510993800,"Delay of return to service from outage 475224, due to switching",other,-0.9331913906111111
+ALINTA_WGP_U2,peaker,2026-05-11 18:00:00,2026-05-11 18:55:00,196.0,2026-05-11 17:12:40.575421000,Delay in return to service from Outage #475224,other,-0.7887290497222222
+ALINTA_WGP_U2,peaker,2026-05-25 16:40:00,2026-05-26 14:55:00,196.0,2026-05-26 12:14:09.142393700,Forced Outage due to 330 kV breaker fault,other,19.569206220472225
+ALINTA_WGP_U2,peaker,2026-06-15 16:15:00,2026-06-15 16:45:00,196.0,2026-06-16 11:37:24.119939000,"The unit was available, but RTM Max Injection quantities could not be increased for passed intervals and intervals already within Gate Closure",other,19.37336664972222
+ALINTA_WGP_U2,peaker,2026-09-18 14:30:00,2026-09-18 14:30:00,196.0,2026-09-19 13:12:53.798589500,Technical limitation of the facility - unit coming back from an outage,other,22.714944052638888
+ALINTA_WGP_U2,peaker,2026-09-21 14:30:00,2026-09-24 07:55:00,196.0,2026-09-21 16:33:37.335486700,Western Power 330 kV Landwehr terminal issue,other,2.060370968527778
+ALINTA_WGP_U2,peaker,2026-10-12 16:45:00,2026-10-12 18:50:00,207.076,2026-10-13 13:10:42.891888100,Unit trip,trip,20.428581080027776
+ALINTA_WGP_U2,peaker,2026-10-13 15:50:00,2026-10-13 17:15:00,207.076,2026-10-14 13:24:36.605221800,Unit slow to ramp up,other,21.576834783833334
+BW1_BLUEWATERS_G2,coal,2023-11-25 23:15:00,2023-11-27 21:55:00,217.0,2023-11-27 15:54:12.396356400,Reduce load for boiler tube leak [13479],other,40.65344343233333
+BW1_BLUEWATERS_G2,coal,2023-11-30 15:30:00,2023-11-30 21:40:00,217.0,2023-12-01 12:19:05.051727700,Full Unit Trip due to two turbine control valves becoming disturbed. [13660],trip,20.81806992436111
+BW1_BLUEWATERS_G2,coal,2023-12-01 08:45:00,2023-12-01 21:55:00,77.0,2023-12-04 08:33:42.492842900,Main Control Valve issues. [13800],other,71.81180356747223
+BW1_BLUEWATERS_G2,coal,2023-12-02 22:00:00,2023-12-03 07:25:00,217.0,2023-12-04 08:35:51.320377000,Main Control Valve repairs extended. [13813],other,34.59758899361111
+BW1_BLUEWATERS_G2,coal,2024-03-20 22:00:00,2024-03-20 23:55:00,217.0,2024-03-21 09:57:51.081472500,Cooling water pump A&B discharge valve faults preventing pump start.,other,11.964189297916667
+BW1_BLUEWATERS_G2,coal,2024-03-21 03:15:00,2024-03-21 08:25:00,217.0,2024-03-21 08:27:45.138963200,"Mill D feeder fire, full unit trip",trip,5.212538600888888
+BW1_BLUEWATERS_G2,coal,2024-04-13 19:20:00,2024-04-13 19:55:00,113.0,2024-04-15 10:25:40.400686300,Mill D trip due to coal feeder belt trip.,trip,39.094555746194445
+BW1_BLUEWATERS_G2,coal,2024-05-04 22:20:00,2024-05-04 22:20:00,61.22800000000001,2024-05-06 08:31:24.304541000,Mill trip [21280],trip,34.19008459472222
+BW1_BLUEWATERS_G2,coal,2024-05-19 16:55:00,2024-05-24 06:50:00,217.0,2024-05-20 10:00:58.543440600,Reduce load for tube leak [22222],other,17.099595400166667
+BW1_BLUEWATERS_G2,coal,2024-06-27 16:00:00,2024-06-27 16:30:00,114.2,2024-06-28 11:30:14.524503800,Mills B & D trip due to no coal on belt [26505],trip,19.50403458438889
+BW1_BLUEWATERS_G2,coal,2024-07-03 18:05:00,2024-07-04 05:50:00,217.0,2024-07-04 10:17:21.690651100,2 Mill runback due to MCC A Switchboard incomer earth detection fault. [27211],trip,16.20602518086111
+BW1_BLUEWATERS_G2,coal,2024-07-04 08:30:00,2024-07-04 11:55:00,217.0,2024-07-05 14:26:14.450923800,Electrical fault causing full unit trip. [27240],trip,29.937347478833335
+BW1_BLUEWATERS_G2,coal,2024-08-20 10:45:00,2024-08-20 13:20:00,57.0,2024-08-21 15:31:34.564620700,Urgent Boiler Works  [31680],other,28.776267950194445
+BW1_BLUEWATERS_G2,coal,2024-08-27 10:35:00,2024-08-27 10:35:00,50.04599999999999,2024-08-28 10:59:12.366501900,FD Fan linked arm stopped air flow [32570],other,24.40343513941667
+BW1_BLUEWATERS_G2,coal,2024-09-21 16:50:00,2024-09-21 22:00:00,113.0,2024-09-22 12:31:07.815835300,Failed power supplying module on Cooling Water Pump A.,other,19.685504398694444
+BW1_BLUEWATERS_G2,coal,2025-01-08 10:00:00,2025-01-08 11:25:00,57.0,2025-01-09 12:25:57.446620700,Mill B inspection and repair due to internal obstruction  [45000],other,26.432624061305553
+BW1_BLUEWATERS_G2,coal,2025-01-08 14:00:00,2025-01-08 15:10:00,57.0,2025-01-09 12:27:52.700168700,Mill B inspection and repair due to internal obstruction. [45120],other,22.46463893575
+BW1_BLUEWATERS_G2,coal,2025-04-07 08:00:00,2025-04-07 15:55:00,77.0,2025-04-08 11:25:54.966202600,Contingency Reserve Raise unavailable during safety valve trevi testing,other,27.431935056277776
+BW1_BLUEWATERS_G2,coal,2025-04-08 06:00:00,2025-04-08 15:55:00,77.0,2025-04-08 11:28:54.329451700,Contingency Reserve Raise unavailable during safety valve trevi testing,other,5.481758181027778
+BW1_BLUEWATERS_G2,coal,2025-06-26 10:55:00,2025-06-26 14:25:00,217.0,2025-06-27 11:25:11.550864300,Loss of Essential Load Centre Switchboard power supply during Emergency Diesel Generator testing. Resulting in full unit trip.,trip,24.503208573416668
+BW1_BLUEWATERS_G2,coal,2025-06-26 19:20:00,2025-06-27 21:55:00,57.0,2025-06-27 11:30:22.733952500,"FD fan damper issue
+",other,16.17298165347222
+BW1_BLUEWATERS_G2,coal,2025-06-28 22:00:00,2025-06-29 07:55:00,217.0,2025-06-27 10:37:28.225102200,FD fan damper repairs,other,-35.37549302716667
+BW1_BLUEWATERS_G2,coal,2025-08-06 16:15:00,2025-08-06 16:35:00,58.6,2025-08-07 14:08:56.365590900,Mill trip [61182],trip,21.898990441916666
+BW1_BLUEWATERS_G2,coal,2025-08-25 10:50:00,2025-08-25 10:50:00,54.53200000000001,2025-08-26 13:40:58.740908700,Coal Quality Issues. [63253],other,26.849650252416666
+BW1_BLUEWATERS_G2,coal,2025-08-25 13:50:00,2025-08-25 19:00:00,93.93,2025-08-26 13:41:52.414896400,Coal Quality Issues. [63289],other,23.864559693444445
+BW1_BLUEWATERS_G2,coal,2025-08-25 19:50:00,2025-08-25 23:55:00,171.562,2025-08-26 13:43:36.676125400,Coal Quality Issues. [63361],other,17.893521145944444
+BW1_BLUEWATERS_G2,coal,2025-08-26 01:35:00,2025-08-26 20:25:00,131.779,2025-08-26 13:45:15.889818300,Coal Quality Issues. [63430],other,12.171080505083333
+BW1_BLUEWATERS_G2,coal,2025-09-12 15:40:00,2025-09-12 16:05:00,57.0,2025-09-15 14:27:42.693701700,Coal quality issues. [65283],other,70.79519269491666
+BW1_BLUEWATERS_G2,coal,2025-09-15 07:00:00,2025-09-16 21:55:00,217.0,2025-09-14 09:41:46.959689200,Main steam valve repair and GAH wash,other,-21.303622308555557
+BW1_BLUEWATERS_G2,coal,2025-09-17 11:00:00,2025-09-17 13:25:00,217.0,2025-09-17 15:40:17.929976300,Delayed return to service [65380],other,4.671647215638889
+BW1_BLUEWATERS_G2,coal,2025-09-18 21:00:00,2025-09-19 01:55:00,89.4,2025-09-19 09:45:14.928151400,Reduction in load due to coal availability. [65494],other,12.754146708722223
+BW1_BLUEWATERS_G2,coal,2025-09-19 22:00:00,2025-09-20 13:20:00,217.0,2025-09-22 10:02:18.932637500,Coal belt repairs [65638],other,60.03859239930556
+BW1_BLUEWATERS_G2,coal,2026-03-28 20:25:00,2026-03-29 13:35:00,139.0,2026-03-30 12:31:16.319707600,"Mill trip due to low dp and steam pressure
+",trip,40.10453325211111
+BW1_BLUEWATERS_G2,coal,2026-03-29 16:30:00,2026-03-30 07:55:00,67.0,2026-03-30 13:07:50.836831500,"Mill issues
+",other,20.63078800875
+BW1_BLUEWATERS_G2,coal,2026-03-31 05:10:00,2026-03-31 15:30:00,57.0,2026-03-31 08:47:32.730239100,High DP causing primary air duct issues [82678],other,3.62575839975
+BW1_BLUEWATERS_G2,coal,2026-04-07 08:35:00,2026-04-07 20:20:00,117.0,2026-04-07 09:54:28.976266500,Mill C trip and poor coal quality [84192],trip,1.3247156295833333
+BW1_BLUEWATERS_G2,coal,2026-05-21 07:50:00,2026-05-21 10:40:00,217.0,2026-05-21 10:57:01.306639600,Turbine trip during CTP [89724],trip,3.117029622111111
+BW1_BLUEWATERS_G2,coal,2026-05-21 18:25:00,2026-05-21 19:35:00,62.0,2026-05-22 14:39:32.748735900,Locked at 155MW to investigate Mill A issue [90076],other,20.242430204416664
+BW1_BLUEWATERS_G2,coal,2026-05-28 13:00:00,2026-06-02 06:35:00,217.0,2026-05-29 07:44:32.019306800,Full unit trip due to water leak causing high furnace pressure [90647],trip,18.74222758522222
+BW1_BLUEWATERS_G2,coal,2026-07-25 02:00:00,2026-07-25 02:40:00,217.0,2026-07-25 08:26:42.505575800,Outage extension of outage #482087 [94713],other,6.445140437722222
+BW1_BLUEWATERS_G2,coal,2026-07-25 09:45:00,2026-07-25 11:05:00,52.0,2026-07-27 12:31:15.411807300,Mill D trip.,trip,50.77094772425
+BW1_BLUEWATERS_G2,coal,2026-09-04 16:30:00,2026-09-04 19:55:00,217.0,2026-09-07 09:47:18.811848100,Mill C and Mill D trip due to NCOB [98022],trip,65.28855884669444
+BW2_BLUEWATERS_G1,coal,2023-11-12 21:30:00,2023-11-15 18:35:00,217.0,2023-11-13 13:56:14.462803000,"Investigation & testing of BW2 generator due to experiencing Neutral Grounding Earth Fault during the initial return to service  [11880]
+",other,16.437350778611112
+BW2_BLUEWATERS_G1,coal,2023-11-15 19:50:00,2023-11-15 20:30:00,217.0,2023-11-16 16:52:56.134358000,Unit trip due to High Pressure drum level [12074],trip,21.048926210555553
+BW2_BLUEWATERS_G1,coal,2023-11-16 08:00:00,2023-11-16 13:40:00,177.0,2023-11-17 16:14:36.321658800,Feedwater control valve leak [12140],other,32.243422683
+BW2_BLUEWATERS_G1,coal,2023-11-17 10:20:00,2023-11-17 11:05:00,137.0,2023-11-20 10:51:09.151313800,Mill trip due to blocked chute. [12480],trip,72.51920869827778
+BW2_BLUEWATERS_G1,coal,2023-11-22 08:10:00,2023-11-22 15:10:00,177.0,2023-11-23 16:15:44.829507300,Mill taken out to repair the large feed water valve,other,32.09578597425
+BW2_BLUEWATERS_G1,coal,2023-12-18 11:15:00,2023-12-18 11:55:00,217.0,2023-12-19 12:23:21.273246200,Delayed resync [14341],other,25.139242568388887
+BW2_BLUEWATERS_G1,coal,2024-01-14 13:25:00,2024-01-15 01:25:00,217.0,2024-01-15 12:32:09.501441700,2 mill runback due to cooling water pump A trip caused by a lightning strike [15521],trip,23.11930595602778
+BW2_BLUEWATERS_G1,coal,2024-02-16 13:30:00,2024-02-16 15:40:00,217.0,2024-02-19 09:33:44.675280200,Delay to re-sync due to boiler and drum level trip.,trip,68.06240980005555
+BW2_BLUEWATERS_G1,coal,2024-05-31 04:25:00,2024-05-31 04:25:00,81.19999999999999,2024-05-31 09:09:55.567269000,Mill trip due to belt slippage and blocked chute [23000],trip,4.748768685833333
+BW2_BLUEWATERS_G1,coal,2024-06-11 10:45:00,2024-06-11 11:15:00,113.0,2024-06-12 13:28:53.332949100,Mill C trip due to no coal on belt on Coal Feeder C [23897],trip,26.73148137475
+BW2_BLUEWATERS_G1,coal,2024-07-08 21:00:00,2024-07-08 21:05:00,217.0,2024-07-09 11:03:50.355833200,Primary air leak from Unit 2 GAH to be repaired.  [27504],other,14.063987731444445
+BW2_BLUEWATERS_G1,coal,2024-08-16 14:00:00,2024-08-16 14:00:00,53.6,2024-08-19 10:08:21.570013100,High fabric filter differential pressure [31500],other,68.13932500363889
+BW2_BLUEWATERS_G1,coal,2024-11-05 12:00:00,2024-11-05 15:45:00,217.0,2024-11-06 13:58:36.573211300,Interruption to the DCS control system network caused a unit protection trip [39460],trip,25.976825892027776
+BW2_BLUEWATERS_G1,coal,2024-11-19 09:00:00,2024-11-19 12:55:00,52.0,2024-11-19 07:49:56.536845000,Reduction in unit maximum capacity to ensure furnace pressure remains inside normal operating range,other,-1.1676286541666667
+BW2_BLUEWATERS_G1,coal,2024-12-02 04:00:00,2024-12-02 04:00:00,217.0,2024-12-02 12:26:38.063336800,GAH leak repair [41733],other,8.443906482444445
+BW2_BLUEWATERS_G1,coal,2024-12-08 00:30:00,2024-12-08 01:40:00,121.8,2024-12-09 07:48:55.704994700,Cooling water pump trip due to power supply failure. [42300],trip,31.31547360963889
+BW2_BLUEWATERS_G1,coal,2025-01-27 13:15:00,2025-01-27 15:25:00,67.0,2025-01-28 11:35:38.253227100,Reduction in unit maximum capacity due to fabric filter issues.  [46695],other,22.34395922975
+BW2_BLUEWATERS_G1,coal,2025-02-22 15:15:00,2025-02-24 00:55:00,217.0,2025-02-22 18:03:46.380035000,TCW leak full unit outage [48544],other,2.8128833430555558
+BW2_BLUEWATERS_G1,coal,2025-06-02 00:30:00,2025-06-02 01:05:00,52.875,2025-06-03 08:08:35.224647400,Mil C trip [55647],trip,31.64311795761111
+BW2_BLUEWATERS_G1,coal,2025-06-14 14:45:00,2025-06-14 16:05:00,52.0,2025-06-16 12:22:25.511006400,Mill trip due to no coal on belt,trip,45.62375305733333
+BW2_BLUEWATERS_G1,coal,2025-07-22 03:45:00,2025-07-22 04:20:00,57.0,2025-07-22 08:37:26.641570800,Mill B trip [59489],trip,4.874067103
+BW2_BLUEWATERS_G1,coal,2025-07-22 05:35:00,2025-07-22 05:35:00,61.0,2025-07-22 08:44:50.696475600,Mill B trip [59498],trip,3.1640823543333334
+BW2_BLUEWATERS_G1,coal,2025-07-23 04:30:00,2025-07-23 12:30:00,113.0,2025-07-23 14:19:26.817048600,"2 Mills tripped, capped at 2 Mill load",trip,9.824115846833333
+BW2_BLUEWATERS_G1,coal,2025-07-23 13:25:00,2025-07-23 16:20:00,58.0,2025-07-24 13:38:14.711788600,Mill B trip [59757],trip,24.220753274611113
+BW2_BLUEWATERS_G1,coal,2025-07-27 23:45:00,2025-07-28 00:00:00,62.400000000000006,2025-07-28 12:29:06.832170600,Mill D trip [60154],trip,12.7352311585
+BW2_BLUEWATERS_G1,coal,2025-08-05 13:00:00,2025-08-05 13:30:00,53.0,2025-08-06 11:20:29.657867700,Mill trip due to low primary air flow caused by a blockage within the mill. [61029],trip,22.34157162991667
+BW2_BLUEWATERS_G1,coal,2025-08-05 14:15:00,2025-08-05 23:55:00,57.0,2025-08-06 11:21:50.617838000,Mill trip due to low primary air flow caused by a blockage within the mill.,trip,21.114060510555557
+BW2_BLUEWATERS_G1,coal,2025-08-06 19:45:00,2025-08-06 20:05:00,54.178,2025-08-07 13:56:51.733535800,Mill trip [61174],trip,18.197703759944442
+BW2_BLUEWATERS_G1,coal,2025-08-12 21:50:00,2025-08-12 21:50:00,54.6,2025-08-13 07:15:21.700470500,Downward deviation due to poor coal quality [61641],other,9.42269457513889
+BW2_BLUEWATERS_G1,coal,2025-08-16 11:05:00,2025-08-16 22:35:00,119.0,2025-08-18 11:10:16.059082200,Pyrites chain conveyor breakdown [62130],other,48.087794189499995
+BW2_BLUEWATERS_G1,coal,2025-08-25 08:10:00,2025-08-26 12:10:00,217.0,2025-08-26 13:23:53.670148200,Coal Quality Issues. [62822],other,29.231575041166668
+BW2_BLUEWATERS_G1,coal,2025-08-26 13:55:00,2025-08-29 03:35:00,217.0,2025-08-27 10:22:51.849664200,Full unit trip [63560],trip,20.464402684499998
+BW2_BLUEWATERS_G1,coal,2025-08-29 06:00:00,2025-08-29 06:00:00,50.69999999999999,2025-08-29 11:38:22.597278000,Downward deviation due to poor coal quality. [63748],other,5.639610355
+BW2_BLUEWATERS_G1,coal,2025-08-29 07:00:00,2025-08-31 07:00:00,115.0,2025-08-29 11:17:45.745392700,Coal Quality Issues. [63736],other,4.296040386861112
+BW2_BLUEWATERS_G1,coal,2025-09-05 00:50:00,2025-09-05 00:50:00,69.4,2025-09-05 11:23:23.942084400, Mill trip due to coal feeder blockage. [64408],trip,10.556650579
+BW2_BLUEWATERS_G1,coal,2025-09-05 02:00:00,2025-09-05 13:15:00,67.0,2025-09-05 11:20:27.600961100, Mill trip due to faulty coal feeder [64407],trip,9.341000266972221
+BW2_BLUEWATERS_G1,coal,2025-09-08 21:00:00,2025-09-09 04:25:00,130.6,2025-09-09 10:13:12.718165700,Mill trip due to low primary airflow. [64754],trip,13.220199490472222
+BW2_BLUEWATERS_G1,coal,2025-09-09 06:40:00,2025-09-09 06:40:00,51.80000000000001,2025-09-09 12:00:17.116225300,Downward deviation due to boiler pressure issues. [64775],other,5.338087840361111
+BW2_BLUEWATERS_G1,coal,2025-09-09 10:45:00,2025-09-12 02:55:00,131.4,2025-09-10 11:19:42.124255400,Downward deviation due to high mill pressure. [64882],trip,24.578367848722223
+BW2_BLUEWATERS_G1,coal,2025-09-23 14:35:00,2025-09-23 15:10:00,67.0,2025-09-24 09:23:29.842822200,Unit instability. [65922],other,18.808289672833332
+BW2_BLUEWATERS_G1,coal,2025-09-23 16:15:00,2025-09-23 16:15:00,50.0,2025-09-24 09:18:13.080409800,Downward deviation due dropping to main steam pressure. [65904],other,17.053633447166668
+BW2_BLUEWATERS_G1,coal,2025-09-29 20:55:00,2025-09-29 21:05:00,67.80000000000001,2025-09-30 12:17:45.482326000,Downward deviation while taking mill out of service. [66362],other,15.37930064611111
+BW2_BLUEWATERS_G1,coal,2025-11-10 17:25:00,2025-11-10 17:25:00,78.07400000000001,2025-11-11 10:00:52.782169800,Forced outage Mill C Trip [68927],trip,16.597995047166666
+BW2_BLUEWATERS_G1,coal,2025-11-10 19:50:00,2025-11-10 19:55:00,70.148,2025-11-11 10:02:28.745697500,Forced outage Mill C Trip [68932],trip,14.207984915972222
+BW2_BLUEWATERS_G1,coal,2025-11-11 17:35:00,2025-11-11 19:25:00,52.0,2025-11-12 08:31:51.570695400,"ID Fan baring temp issues, holding ALR at 165MW [68940]",other,14.9476585265
+BW2_BLUEWATERS_G1,coal,2025-11-11 21:50:00,2025-11-12 00:55:00,217.0,2025-11-12 08:34:30.844129200,Full unit trip due to Turbine Protection Testing [69038],trip,10.741901147
+BW2_BLUEWATERS_G1,coal,2026-08-21 22:00:00,2026-08-22 07:55:00,217.0,2026-08-20 16:48:43.401280600,Steam leak repair,other,-29.187944088722222
+BW2_BLUEWATERS_G1,coal,2026-08-23 02:35:00,2026-08-23 04:35:00,217.0,2026-08-24 14:35:11.038117500,Unit trip during resynch [97215],trip,36.00306614375
+BW2_BLUEWATERS_G1,coal,2026-10-06 12:30:00,2026-10-08 09:45:00,217.0,2026-10-06 15:32:24.903408800,GAH repairs [99462],other,3.040250946888889
+BW2_BLUEWATERS_G1,coal,2026-10-08 15:20:00,2026-10-08 18:55:00,217.0,2026-10-09 11:52:44.950400000,Firing the boiler following WP network constraints [99811],other,20.545819555555557
+COCKBURN_CCG1,gas_base,2023-11-17 19:35:00,2023-11-17 19:55:00,240.0,2023-11-18 10:48:49.349813500,Unit unavailable on recall until 20:00 17/11/2023 following planned outage. ,other,15.230374948194443
+COCKBURN_CCG1,gas_base,2023-12-01 04:55:00,2023-12-01 06:20:00,240.0,2023-12-01 10:47:13.269285700,Unit Trip on low pulsations,trip,5.8703525793611115
+COCKBURN_CCG1,gas_base,2023-12-23 01:10:00,2023-12-23 01:10:00,91.705,2024-03-25 12:35:19.366689800,COCKBURN_CCG1: Energy: NonCompliance; ,noncompliance,2243.4220463027223
+COCKBURN_CCG1,gas_base,2024-01-08 00:05:00,2024-01-08 13:30:00,240.0,2024-01-09 09:38:18.757879100,Unit coming down for forced outage,other,33.55521052197222
+COCKBURN_CCG1,gas_base,2024-01-09 07:20:00,2024-01-09 15:55:00,240.0,2024-01-09 13:20:03.952375900,Protection outage,other,6.001097882194444
+COCKBURN_CCG1,gas_base,2024-02-02 22:35:00,2024-02-06 18:00:00,240.0,2024-02-05 13:44:05.491138900,COCKBURN_CCG1: Energy: NonCompliance; ,trip,63.15152531636111
+COCKBURN_CCG1,gas_base,2024-02-07 21:55:00,2024-02-07 22:00:00,85.33000000000001,2024-02-08 11:32:43.829253300,COCKBURN_CCG1: Energy: NonCompliance; ,noncompliance,13.62884145925
+COCKBURN_CCG1,gas_base,2024-02-09 10:05:00,2024-02-09 14:30:00,240.0,2024-02-09 14:17:32.093024400,"GT Trip – Unit Flame Out
+",trip,4.208914729
+COCKBURN_CCG1,gas_base,2024-02-29 09:30:00,2024-03-01 15:40:00,240.0,2024-02-29 10:49:19.008209400,"MCW Debris Filter Blockage
+",other,1.3219467248333334
+COCKBURN_CCG1,gas_base,2024-03-11 12:00:00,2024-03-13 22:45:00,240.0,2024-03-11 13:02:01.765575000,HP Feedwater Supply Leak,other,1.0338237708333333
+COCKBURN_CCG1,gas_base,2024-04-05 17:00:00,2024-04-08 11:55:00,240.0,2024-04-05 17:14:30.833714400,High vibration on feed water pump.,other,0.24189825399999998
+COCKBURN_CCG1,gas_base,2024-05-12 20:20:00,2024-05-12 20:30:00,51.0,2024-05-13 14:13:34.766688100,"Pulsation resulting in partial reduction 189mw
+",other,17.892990746694444
+COCKBURN_CCG1,gas_base,2024-06-03 13:15:00,2024-06-05 17:55:00,240.0,2024-06-04 14:18:35.173699600,"Unit unable to sync Partial 13mw
+",other,25.05977047211111
+COCKBURN_CCG1,gas_base,2024-06-09 22:00:00,2024-06-12 15:30:00,240.0,2024-06-07 16:03:26.852472400,"Due to process safety concerns on the feedwater system, Cockburn Power Station is advising forced outage requirement",other,-53.94254097988889
+COCKBURN_CCG1,gas_base,2024-06-22 13:45:00,2024-06-26 22:10:00,240.0,2024-06-24 10:26:25.786702900,"Valve Fault
+",other,44.690496306361105
+COCKBURN_CCG1,gas_base,2024-06-27 10:30:00,2024-06-27 16:25:00,240.0,2024-06-27 13:08:14.739271300,"Feedwater valve passing
+",other,2.6374275753611114
+COCKBURN_CCG1,gas_base,2024-06-28 12:05:00,2024-07-01 13:15:00,240.0,2024-06-28 13:18:44.558360400,"Feedwater PRV passing
+",other,1.229043989
+COCKBURN_CCG1,gas_base,2024-07-25 17:25:00,2024-07-26 10:20:00,240.0,2024-07-26 14:09:56.876884600,CKB GT SSD HMI Change out,other,20.749132467944445
+COCKBURN_CCG1,gas_base,2024-08-07 06:45:00,2024-08-07 18:10:00,240.0,2024-08-07 11:32:26.431027300,GT Rotor Barring Failure,other,4.790675285361111
+COCKBURN_CCG1,gas_base,2024-08-16 14:00:00,2024-08-16 14:15:00,240.0,2024-08-19 07:30:46.627457200,"Gas Turbine Ignition Failure
+",other,65.51295207144445
+COCKBURN_CCG1,gas_base,2024-08-28 03:30:00,2024-08-28 04:00:00,104.472,2024-08-28 11:16:24.622282400,Maximum capacity of 160mw,other,7.7735061895555555
+COCKBURN_CCG1,gas_base,2024-08-31 14:25:00,2024-08-31 14:35:00,240.0,2024-09-04 11:18:37.377493200,"Flame Out
+",other,92.89371597033333
+COCKBURN_CCG1,gas_base,2024-09-01 13:10:00,2024-09-01 13:20:00,240.0,2024-09-04 11:20:03.049006500,"Gas Valve Trip
+
+",trip,70.16751361291666
+COCKBURN_CCG1,gas_base,2024-09-05 14:45:00,2024-09-05 16:30:00,240.0,2024-09-06 14:22:34.901341700,COCKBURN_CCG1: Energy: NonCompliance; ,trip,23.626361483805553
+COCKBURN_CCG1,gas_base,2024-09-10 16:15:00,2024-09-11 20:00:00,240.0,2024-09-11 10:24:08.348304700,"Steam turbine trip block
+",trip,18.152318973527777
+COCKBURN_CCG1,gas_base,2024-10-25 07:10:00,2024-10-29 16:55:00,240.0,2024-10-24 07:32:12.583930600,B+,other,-23.629837797055558
+COCKBURN_CCG1,gas_base,2024-12-08 16:30:00,2024-12-08 16:30:00,70.0,2024-12-10 13:10:41.816642600,"Cockburn PLS Due to High Low Pulsations 
+",other,44.67828240072222
+COCKBURN_CCG1,gas_base,2024-12-09 21:10:00,2024-12-09 21:10:00,50.42400000000001,2024-12-10 09:13:03.301471700,COCKBURN_CCG1: Energy: NonCompliance; ,noncompliance,12.05091707547222
+COCKBURN_CCG1,gas_base,2025-03-02 13:40:00,2025-03-02 13:45:00,240.0,2025-03-12 14:06:38.768531000,"SSD Trip
+",trip,240.44410236972223
+COCKBURN_CCG1,gas_base,2025-04-08 19:50:00,2025-04-11 21:55:00,240.0,2025-04-09 10:28:00.060793400,No1 HP Feedwater Pump bearing issue,other,14.63335022038889
+COCKBURN_CCG1,gas_base,2025-04-25 17:00:00,2025-04-25 18:55:00,240.0,2025-04-25 15:25:10.455344000,inspection + valve works continuation,other,-1.580429071111111
+COCKBURN_CCG1,gas_base,2025-04-28 13:30:00,2025-04-28 14:00:00,240.0,2025-04-29 13:34:49.498500300,LP Feedwater bypass valve issue,other,24.080416250083335
+COCKBURN_CCG1,gas_base,2025-05-01 12:00:00,2025-05-01 16:55:00,240.0,2025-05-01 15:39:45.073728600,TBA,other,3.6625204801666666
+COCKBURN_CCG1,gas_base,2025-05-14 13:15:00,2025-05-14 13:20:00,240.0,2025-05-15 15:20:56.062241900,Vibration upon start-up,other,26.098906178305555
+COCKBURN_CCG1,gas_base,2025-05-15 12:15:00,2025-05-15 12:30:00,240.0,2025-05-16 09:56:53.529490300,"High vibration on start up
+",other,21.698202636194445
+COCKBURN_CCG1,gas_base,2025-05-18 13:50:00,2025-05-19 07:55:00,240.0,2025-05-19 12:22:07.163761500,GT High Vibrations ,other,22.535323267083335
+COCKBURN_CCG1,gas_base,2025-06-08 15:10:00,2025-06-08 15:55:00,240.0,2025-06-09 07:38:17.432327200,"Unit tripped due to the failure of the TAT Probe
+",trip,16.471508979777777
+COCKBURN_CCG1,gas_base,2025-07-03 15:10:00,2025-07-08 15:25:00,240.0,2025-07-04 09:27:34.191430100,Common services transformer fault causing unit to trip,trip,18.29283095280556
+COCKBURN_CCG1,gas_base,2025-07-09 13:25:00,2025-07-09 13:45:00,90.0,2025-07-10 10:23:41.032825500,Units return was managed post significant trip. Capacity held at 150mw for 15 mins,trip,20.97806467375
+COCKBURN_CCG1,gas_base,2025-07-29 09:45:00,2025-07-29 12:45:00,240.0,2025-07-29 11:03:43.687617300,"Failure of ST LP Control valve Vickers card
+",other,1.31213544925
+COCKBURN_CCG1,gas_base,2025-08-15 06:00:00,2025-08-15 15:55:00,240.0,2025-08-15 07:18:05.898189200,"Faulty limit indication on stage 1 blow off valve
+",other,1.301638385888889
+COCKBURN_CCG1,gas_base,2025-09-02 09:20:00,2025-09-02 15:25:00,240.0,2025-09-02 09:51:08.164586300,Faulty limit indication on GT safety device,other,0.5189346073055556
+COCKBURN_CCG1,gas_base,2025-10-09 21:10:00,2025-10-09 22:00:00,60.0,2025-10-10 09:34:16.061136500,Faulty WP switchyard comms for CB feedback caused ST to deload to approximately 1.8MW.,other,12.404461426805556
+COCKBURN_CCG1,gas_base,2026-01-05 21:10:00,2026-01-05 21:45:00,240.0,2026-01-06 07:10:58.749275400,Unit Trip on pulsations,trip,10.016319243166667
+COCKBURN_CCG1,gas_base,2026-02-08 16:00:00,2026-02-08 18:55:00,240.0,2026-02-09 08:56:20.239085800,"Unit Trip on pulsations from MBP 43 Prefill
+",trip,16.93895530161111
+COCKBURN_CCG1,gas_base,2026-02-15 11:25:00,2026-02-16 10:45:00,240.0,2026-02-16 08:03:51.699069700,Failure of GT Main Oil Pump No1 Switchgear.,other,20.647694186027778
+COCKBURN_CCG1,gas_base,2026-03-18 00:00:00,2026-03-18 04:25:00,240.0,2026-03-18 07:10:21.051500100,"Failure of MCW Pump #1 bearing cooling water feed.
+",other,7.172514305583333
+COCKBURN_CCG1,gas_base,2026-04-22 17:00:00,2026-04-22 17:40:00,240.0,2026-04-23 14:15:54.398412100,"Borescope inspection of the Cockburn compressor  
+",other,21.265110670027777
+COCKBURN_CCG1,gas_base,2026-06-18 13:30:00,2026-06-18 15:00:00,240.0,2026-06-18 14:12:07.580192400,Fail on startup - GT trip solenoid zone 1 failed  ,trip,0.7021056090000001
+COCKBURN_CCG1,gas_base,2026-07-23 20:00:00,2026-08-06 16:55:00,240.0,2026-07-20 13:32:46.206671100,Installation of new upgraded PLC for the Static Starting Device ,other,-78.45383148025
+COCKBURN_CCG1,gas_base,2026-08-22 19:10:00,2026-08-23 11:55:00,240.0,2026-08-24 07:33:44.923658400,MCW  water box  leak  ,other,36.395812127333336
+COLLIE_G1,coal,2023-10-05 16:20:00,2023-10-05 16:25:00,58.47800000000001,2025-05-03 20:19:11.840127100,COLLIE_G1: Energy: NonCompliance; ,other,13827.98662225753
+COLLIE_G1,coal,2023-10-08 22:55:00,2023-10-09 13:40:00,72.19999999999999,2024-06-25 13:43:50.892905900,COLLIE_G1: Energy: Availability; ,other,6254.814136918305
+COLLIE_G1,coal,2023-10-11 09:20:00,2023-10-11 09:20:00,54.62700000000001,2025-05-03 20:25:52.379390700,COLLIE_G1: Energy: NonCompliance; ,noncompliance,13691.097883164084
+COLLIE_G1,coal,2023-10-14 15:45:00,2023-10-14 16:15:00,152.566,2025-05-03 20:32:54.048420400,COLLIE_G1: Energy: NonCompliance; ,noncompliance,13612.798346783444
+COLLIE_G1,coal,2023-10-15 08:00:00,2023-10-15 08:00:00,89.89999999999998,2025-05-03 20:36:04.796807500,COLLIE_G1: Energy: NonCompliance; ,noncompliance,13596.60133244653
+COLLIE_G1,coal,2023-10-24 10:10:00,2023-10-31 12:00:00,317.2,2023-10-24 14:40:49.365995700,Restricted operation until maintenance window ,other,4.513712776583334
+COLLIE_G1,coal,2023-11-10 00:40:00,2023-11-10 00:40:00,61.39999999999998,2024-03-25 12:40:08.345697800,COLLIE_G1: Energy: NonCompliance; ,noncompliance,3276.0023182493887
+COLLIE_G1,coal,2023-11-23 01:30:00,2023-11-23 01:55:00,71.34699999999998,2024-03-25 12:38:14.054973000,COLLIE_G1: Energy: NonCompliance; ,noncompliance,2963.1372374925004
+COLLIE_G1,coal,2023-11-23 06:40:00,2023-11-23 06:40:00,61.09100000000001,2024-03-25 12:43:21.626662600,COLLIE_G1: Energy: NonCompliance; ,noncompliance,2958.056007406278
+COLLIE_G1,coal,2023-11-25 05:10:00,2023-11-25 05:10:00,52.620000000000005,2024-03-25 12:43:07.432163700,COLLIE_G1: Energy: NonCompliance; ,noncompliance,2911.5520644899166
+COLLIE_G1,coal,2023-12-04 07:00:00,2023-12-10 01:55:00,317.2,2024-03-25 12:48:45.661829600,COLLIE_G1: Energy: Availability; RoCoF,other,2693.8126838415556
+COLLIE_G1,coal,2023-12-11 16:50:00,2023-12-11 21:05:00,70.19999999999999,2023-12-12 09:49:18.400738200,Mill issues,other,16.9884446495
+COLLIE_G1,coal,2023-12-13 21:40:00,2023-12-15 22:55:00,101.30599999999998,2023-12-19 13:39:13.734908400,FCESS Capability Review,other,135.98714858566666
+COLLIE_G1,coal,2023-12-16 15:00:00,2023-12-16 22:35:00,89.594,2023-12-18 14:00:02.626140700,Mill issues,other,47.000729483527785
+COLLIE_G1,coal,2023-12-17 16:30:00,2023-12-18 09:10:00,99.37099999999998,2023-12-18 14:06:19.324557800,Mill issues,other,21.605367932722224
+COLLIE_G1,coal,2024-01-03 18:00:00,2024-01-10 11:30:00,317.2,2023-12-28 13:03:11.749067000,Non-deferrable maintenance on HP heater,other,-148.9467363702778
+COLLIE_G1,coal,2024-01-11 16:35:00,2024-01-11 17:40:00,70.19999999999999,2024-01-18 08:45:30.299710200,FCESS Capability Review,other,160.17508325283336
+COLLIE_G1,coal,2024-01-18 07:55:00,2024-01-22 17:55:00,67.19999999999999,2024-01-18 12:51:05.365688700,Mill restrictions,other,4.934823802416666
+COLLIE_G1,coal,2024-02-04 05:45:00,2024-02-04 05:45:00,60.15999999999997,2024-03-25 12:37:15.231487400,COLLIE_G1: Energy: NonCompliance; ,noncompliance,1206.870897635389
+COLLIE_G1,coal,2024-02-06 17:10:00,2024-02-07 13:15:00,88.84199999999998,2024-02-07 13:37:04.827325400,Mill restrictions,other,20.45134092372222
+COLLIE_G1,coal,2024-02-07 14:40:00,2024-02-08 14:35:00,97.152,2024-02-08 15:02:24.511431600,Mill restrictions,other,24.373475397666667
+COLLIE_G1,coal,2024-02-25 00:50:00,2024-02-25 00:50:00,63.89999999999998,2024-03-21 13:27:51.670715200,COLLIE_G1: Energy: NonCompliance; ,noncompliance,612.631019643111
+COLLIE_G1,coal,2024-03-07 13:20:00,2024-03-07 23:55:00,317.2,2024-03-19 07:09:33.614053200,COLLIE_G1: Energy: NonCompliance; ,other,281.8260039036667
+COLLIE_G1,coal,2024-03-08 11:00:00,2024-03-25 23:55:00,217.688,2024-03-08 14:24:15.059794300,Restricted operation due to loss of a CW pump,other,3.4041832761944444
+COLLIE_G1,coal,2024-06-10 16:40:00,2024-06-10 16:45:00,88.89999999999998,2024-06-21 06:38:49.162350300,COLLIE_G1: Energy: NonCompliance; ,noncompliance,253.98032287508335
+COLLIE_G1,coal,2024-06-18 22:40:00,2024-06-19 03:40:00,317.2,2024-06-19 17:06:59.247339200,Unit trip,trip,18.449790927555554
+COLLIE_G1,coal,2024-06-23 17:45:00,2024-06-26 08:55:00,67.19999999999999,2024-06-24 07:55:47.409222500,Output limited,other,14.179835895138888
+COLLIE_G1,coal,2024-08-08 05:45:00,2024-08-08 16:40:00,135.2,2024-08-09 13:28:48.301331000,Generation restricted,other,31.730083703055556
+COLLIE_G1,coal,2024-08-10 23:50:00,2024-08-10 23:50:00,62.10999999999999,2024-08-12 15:16:56.369861700,COLLIE_G1: Energy: NonCompliance; ,noncompliance,39.44899162825
+COLLIE_G1,coal,2024-08-28 16:50:00,2024-08-29 12:20:00,137.2,2024-08-29 04:24:25.832260100,3 Precip TR sets OOS,other,11.573842294472223
+COLLIE_G1,coal,2024-09-02 17:10:00,2024-09-02 22:30:00,70.19999999999999,2024-09-03 04:31:21.488862600,4th Mill Unit Trip ,trip,11.3559691285
+COLLIE_G1,coal,2024-09-26 08:55:00,2024-09-28 07:25:00,317.2,2024-09-26 09:31:56.023107000,Steam leak,other,0.6155619741666667
+COLLIE_G1,coal,2024-09-28 17:45:00,2024-09-30 16:55:00,96.08999999999996,2024-09-30 07:23:29.074394800,Mill out of service,other,37.641409554111114
+COLLIE_G1,coal,2024-10-10 12:30:00,2024-10-11 05:30:00,317.2,2024-10-10 13:29:05.218854600,Inspection and assessment of vibration issue,other,0.9847830151666668
+COLLIE_G1,coal,2024-10-31 06:50:00,2024-10-31 06:50:00,63.89999999999998,2024-11-01 07:24:32.312764600,COLLIE_G1: Energy: NonCompliance; ,noncompliance,24.57564243461111
+COLLIE_G1,coal,2024-10-31 15:10:00,2024-11-02 00:35:00,317.2,2024-11-01 10:18:22.680709200,Turbine trip block hydraulic fault,trip,19.13963353033333
+COLLIE_G1,coal,2024-11-06 17:20:00,2024-11-11 08:55:00,165.2,2024-11-07 08:14:27.133213000,limited to 2 mill operation - PA fan issues,other,14.907537003611111
+COLLIE_G1,coal,2024-12-07 09:00:00,2024-12-11 07:20:00,317.2,2024-12-07 13:29:44.773623700,Boiler feed pump failure,other,4.495770451027778
+COLLIE_G1,coal,2024-12-15 07:50:00,2024-12-15 07:50:00,63.89999999999998,2024-12-16 07:50:25.077740200,COLLIE_G1: Energy: NonCompliance; ,noncompliance,24.006966038944444
+COLLIE_G1,coal,2024-12-24 22:25:00,2024-12-24 22:25:00,62.89999999999998,2024-12-27 12:42:52.909455300,COLLIE_G1: Energy: NonCompliance; ,noncompliance,62.29803040425
+COLLIE_G1,coal,2024-12-30 07:10:00,2024-12-30 07:15:00,63.89999999999998,2025-01-02 11:12:29.104445500,COLLIE_G1: Energy: NonCompliance; ,noncompliance,76.04141790152778
+COLLIE_G1,coal,2024-12-30 09:45:00,2024-12-30 11:45:00,317.2,2025-10-31 13:02:47.608992000,Retrospective Outage. Unit Fully Unavailable.,other,7323.296558053333
+COLLIE_G1,coal,2025-01-04 04:50:00,2025-01-04 04:50:00,63.89999999999998,2025-01-06 10:31:53.917058100,COLLIE_G1: Energy: NonCompliance; ,noncompliance,53.69831029391666
+COLLIE_G1,coal,2025-02-11 09:40:00,2025-02-11 09:40:00,63.56999999999999,2025-02-12 07:45:50.307178600,COLLIE_G1: Energy: NonCompliance; ,noncompliance,22.09730754961111
+COLLIE_G1,coal,2025-02-21 08:30:00,2025-02-21 08:35:00,73.89999999999998,2025-02-24 06:54:35.790288100,COLLIE_G1: Energy: NonCompliance; ,noncompliance,70.40994174669444
+COLLIE_G1,coal,2025-03-01 18:40:00,2025-03-08 11:10:00,317.2,2025-03-04 11:21:15.596425300,Boiler feed pump issues ,other,64.68766567369444
+COLLIE_G1,coal,2025-03-11 12:00:00,2025-03-20 11:05:00,317.2,2025-03-11 13:02:28.402899800,Boiler feed pump booster vibration and Low load feedwater control valve,other,1.041223027722222
+COLLIE_G1,coal,2025-03-23 18:00:00,2025-03-24 12:45:00,116.44299999999998,2025-03-24 07:30:21.938776800,COLLIE_G1: Energy: NonCompliance; ,other,13.506094104666667
+COLLIE_G1,coal,2025-04-13 01:15:00,2025-04-13 01:15:00,54.52999999999997,2025-04-14 07:23:31.306416200,COLLIE_G1: Energy: NonCompliance; ,noncompliance,30.142029560055555
+COLLIE_G1,coal,2025-04-22 09:25:00,2025-04-23 03:20:00,317.2,2025-10-31 13:05:37.003519500,Retrospective Outage. Unit Fully Unavailable.,other,4611.676945422083
+COLLIE_G1,coal,2025-05-10 06:50:00,2025-05-10 06:50:00,62.89999999999998,2025-05-12 10:24:12.270648800,COLLIE_G1: Energy: NonCompliance; ,noncompliance,51.570075180222226
+COLLIE_G1,coal,2025-05-16 20:50:00,2025-05-16 20:50:00,63.89999999999998,2025-05-19 07:44:58.327685700,COLLIE_G1: Energy: NonCompliance; ,noncompliance,58.91620213491667
+COLLIE_G1,coal,2025-06-01 09:40:00,2025-06-04 05:05:00,317.2,2025-06-01 10:29:47.122865400,Safety valve inspection and repair - fault identified during CTP 429 following PO 406204,other,0.8297563515
+COLLIE_G1,coal,2025-06-15 10:20:00,2025-06-15 10:20:00,57.11599999999999,2025-06-17 08:52:27.482586900,Dispatch Non Compliance,other,46.54096738525
+COLLIE_G1,coal,2025-07-08 13:45:00,2025-07-09 22:20:00,317.2,2025-07-08 14:04:27.076733900,Ash Disposal System Restriction,other,0.32418798163888884
+COLLIE_G1,coal,2025-07-23 19:15:00,2025-07-29 18:55:00,67.19999999999999,2025-07-24 07:35:46.393424300,Load restricted to manage emissions,other,12.346220395638888
+COLLIE_G1,coal,2025-08-06 02:05:00,2025-08-06 02:05:00,93.266,2025-08-07 09:18:01.853713200,COLLIE_G1: Energy: NonCompliance; ,noncompliance,31.217181587000002
+COLLIE_G1,coal,2025-08-10 09:10:00,2025-08-10 09:10:00,89.70999999999998,2025-08-11 07:19:24.906348900,COLLIE_G1: Energy: NonCompliance; ,noncompliance,22.15691843025
+COLLIE_G1,coal,2025-08-31 21:30:00,2025-09-01 04:00:00,137.2,2025-09-01 15:39:19.445440800,"Electrostatic Precipitator Restriction
+
+Amendments made 09/10/25",other,18.155401511333334
+COLLIE_G1,coal,2025-09-18 23:20:00,2025-10-11 19:25:00,317.2,2025-09-19 09:22:35.708648200,"Boiler Tube Leak. Ongoing investigation.
+Planned at this stage. Aligns with the CTP  commencement of statutory safety relief valve testing after overhaul of Drum SRV 702. 				
+
+Amendments made 9/10/20",other,10.043252402277778
+COLLIE_G1,coal,2025-10-31 06:15:00,2025-11-07 17:15:00,317.2,2025-10-31 14:01:24.674086300,Unknown at this stage however investigation continuing to determine causational factors. Fault now rectified and available for recall 17:19:59 07/11/25,other,7.773520579527778
+COLLIE_G1,coal,2025-12-03 07:50:00,2025-12-03 07:50:00,63.31999999999999,2025-12-08 13:19:07.676327900,COLLIE_G1: Energy: NonCompliance; ,noncompliance,125.48546564663889
+COLLIE_G1,coal,2025-12-16 00:20:00,2025-12-16 09:25:00,152.2,2025-12-17 08:50:04.257209800,Partial derate due to safety valve malfunction,other,32.501182558277776
+COLLIE_G1,coal,2026-01-01 15:40:00,2026-01-01 18:35:00,165.2,2026-01-02 09:07:59.927188100,COLLIE_G1: ContingencyRaise,other,17.466646441138888
+COLLIE_G1,coal,2026-01-16 07:45:00,2026-01-16 07:45:00,51.110000000000014,2026-01-19 06:24:50.555894300,COLLIE_G1: Energy: NonCompliance; ,noncompliance,70.66404330397222
+COLLIE_G1,coal,2026-01-23 07:35:00,2026-01-23 07:35:00,89.72999999999999,2026-01-27 05:44:18.698333100,COLLIE_G1: Energy: NonCompliance; ,noncompliance,94.15519398141667
+COLLIE_G1,coal,2026-02-09 11:35:00,2026-02-09 13:20:00,70.19999999999999,2026-02-10 13:50:37.207985000,Restricted load period on 9th Feb was due to a mill trip when the outlet dampers closed due to a faulty solenoid. Reduced to 3 mills. ,trip,26.260335551388888
+COLLIE_G1,coal,2026-03-09 07:50:00,2026-03-09 07:50:00,63.89999999999998,2026-03-19 13:26:43.717469600,COLLIE_G1: Energy: NonCompliance; ,noncompliance,245.61214374155557
+COLLIE_G1,coal,2026-03-17 10:00:00,2026-03-20 06:55:00,97.255,2026-03-19 13:27:01.547072400,COLLIE_G1: Energy: Availability; ,other,51.45042974233333
+COLLIE_G1,coal,2026-03-20 09:40:00,2026-03-22 11:55:00,67.19999999999999,2026-03-23 05:59:53.458921300,COLLIE_G1: Energy: Availability; ,other,68.33151636702779
+COLLIE_G1,coal,2026-03-23 14:35:00,2026-04-16 11:15:00,83.679,2026-03-25 06:06:44.058973700,COLLIE_G1: Energy: Availability; ,other,39.52890527047222
+COLLIE_G1,coal,2026-06-01 17:00:00,2026-06-08 15:55:00,317.2,2026-05-27 10:55:38.795264500,"Additional maintenance work required, MME extended beyond planned outage.  Amended to end 11:55 to align with approved CTP 780. ",other,-126.07255687097222
+COLLIE_G1,coal,2026-06-14 00:30:00,2026-06-19 07:35:00,317.2,2026-06-15 15:50:22.132030400,"Operational restriction, bottom ash system.",other,39.33948111955556
+COLLIE_G1,coal,2026-06-30 14:40:00,2026-06-30 15:25:00,70.19999999999999,2026-07-03 09:27:16.968861400,COLLIE_G1: ContingencyRaise,other,66.78804690594444
+COLLIE_G1,coal,2026-07-04 18:50:00,2026-07-04 20:30:00,70.19999999999999,2026-07-07 08:36:01.726927900,COLLIE_G1: ContingencyRaise,other,61.767146368861106
+COLLIE_G1,coal,2026-07-16 15:30:00,2026-07-26 05:35:00,317.2,2026-07-17 07:34:12.311581400,COLLIE_G1: Energy: Availability; ,other,16.07008655038889
+COLLIE_G1,coal,2026-08-11 14:15:00,2026-08-31 04:50:00,317.2,2026-08-12 06:33:13.516638800,Commencement of desync due to mechanical failure,other,16.30375462188889
+COLLIE_G1,coal,2026-08-31 06:10:00,2026-08-31 11:05:00,200.28,2026-09-01 15:08:25.677654900,COLLIE_G1: Energy: NonCompliance; ,other,32.973799348583334
+COLLIE_G1,coal,2026-09-09 19:20:00,2026-09-10 16:45:00,105.116,2026-09-16 07:35:41.326076700,Reduced availably capacity due to non-compliant stack emission test ,other,156.26147946575
+COLLIE_G1,coal,2026-09-11 15:50:00,2026-09-17 06:55:00,110.488,2026-09-12 08:13:32.893543600,COLLIE_G1: Energy: NonCompliance; ,other,16.392470428777777
+COLLIE_G1,coal,2026-09-24 07:00:00,2026-09-24 07:50:00,317.2,2026-09-23 12:14:42.639948500,Additional time to planned outage RTS due to delay in declaring unit available for recall. ,other,-18.75482223652778
+KEMERTON_GT11,peaker,2023-10-02 12:40:00,2023-10-02 12:40:00,58.1,2024-06-25 13:53:55.334215100,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,6409.232037281972
+KEMERTON_GT11,peaker,2023-10-06 15:15:00,2023-10-06 15:20:00,68.874,2024-06-25 13:53:44.442667000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,6310.645678518611
+KEMERTON_GT11,peaker,2023-10-09 04:25:00,2023-10-09 04:30:00,58.05,2024-06-25 13:53:31.427516900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,6249.475396532473
+KEMERTON_GT11,peaker,2023-10-13 16:10:00,2023-10-13 16:10:00,61.637,2024-06-25 13:52:47.602242000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,6141.713222845
+KEMERTON_GT11,peaker,2023-10-17 18:30:00,2023-10-17 18:30:00,53.2,2024-06-25 13:52:28.097823000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,6043.374471617501
+KEMERTON_GT11,peaker,2023-10-19 17:45:00,2023-10-19 17:45:00,59.135000000000005,2024-06-25 13:52:25.088870500,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,5996.123635797361
+KEMERTON_GT11,peaker,2023-10-24 10:25:00,2023-10-24 10:25:00,155.0,2023-10-25 18:18:59.513517100,Unit Trip. Kemerton_GT11 Unavailable from 1025-1030.  ,trip,31.89986486586111
+KEMERTON_GT11,peaker,2023-10-24 11:05:00,2023-10-24 11:05:00,155.0,2024-03-21 14:09:26.711015900,"KEMERTON_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,3579.0740863933056
+KEMERTON_GT11,peaker,2023-10-24 16:50:00,2023-10-24 21:15:00,155.0,2023-10-30 09:16:16.377559400,Unit trip on start up,trip,136.43788265538888
+KEMERTON_GT11,peaker,2023-11-27 15:25:00,2023-11-28 08:00:00,155.0,2023-11-28 09:43:52.683334800,Lube oil leak,other,18.314634259666665
+KEMERTON_GT11,peaker,2023-12-06 08:00:00,2023-12-08 15:55:00,155.0,2024-06-25 13:53:38.015422000,"KEMERTON_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,4853.893893172778
+KEMERTON_GT11,peaker,2023-12-10 19:40:00,2023-12-10 20:55:00,155.0,2024-06-25 13:53:05.782506500,KEMERTON_GT11: Energy: NonCompliance; ,other,4746.218272918472
+KEMERTON_GT11,peaker,2023-12-12 14:10:00,2023-12-12 14:10:00,68.29,2024-06-25 13:52:36.186924900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,4703.710051923584
+KEMERTON_GT11,peaker,2023-12-13 17:05:00,2023-12-13 17:10:00,63.402,2024-06-25 13:52:33.966306900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,4676.792768418583
+KEMERTON_GT11,peaker,2023-12-14 10:30:00,2023-12-14 10:35:00,62.493,2024-06-25 13:33:07.516217700,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,4659.0520878382495
+KEMERTON_GT11,peaker,2023-12-16 14:30:00,2023-12-16 14:35:00,155.0,2023-12-18 16:38:53.035055000,Delay in unit synchronisation.,other,50.14806529305555
+KEMERTON_GT11,peaker,2023-12-20 16:50:00,2023-12-20 16:55:00,70.284,2024-03-21 14:23:00.652266000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,2205.550181185
+KEMERTON_GT11,peaker,2023-12-21 21:15:00,2023-12-21 22:00:00,155.0,2024-06-25 13:25:43.449140700,"KEMERTON_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,4480.178735872417
+KEMERTON_GT11,peaker,2024-01-09 17:25:00,2024-01-09 17:25:00,59.069,2024-01-12 14:55:59.027588100,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,69.51639655225
+KEMERTON_GT11,peaker,2024-01-11 18:50:00,2024-01-11 18:50:00,58.20399999999999,2024-01-12 14:43:23.831161000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,19.889953100277776
+KEMERTON_GT11,peaker,2024-01-12 16:45:00,2024-01-12 17:45:00,155.0,2024-01-12 16:52:16.145007800,Unit trip,trip,0.12115139105555554
+KEMERTON_GT11,peaker,2024-01-16 15:40:00,2024-01-16 15:45:00,66.258,2024-01-17 19:27:35.945766600,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,27.7933182685
+KEMERTON_GT11,peaker,2024-01-30 16:00:00,2024-01-30 16:00:00,63.44,2024-01-31 19:42:53.358596500,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,27.71482183236111
+KEMERTON_GT11,peaker,2024-02-14 16:00:00,2024-02-14 16:00:00,64.976,2024-02-15 05:50:11.434387100,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,13.836509551972222
+KEMERTON_GT11,peaker,2024-02-16 07:00:00,2024-02-16 07:00:00,57.359,2024-02-17 22:23:43.807247400,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,39.39550201316666
+KEMERTON_GT11,peaker,2024-02-17 15:45:00,2024-02-17 15:45:00,67.87,2024-02-18 19:20:39.545366600,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,27.594318157388887
+KEMERTON_GT11,peaker,2024-02-18 14:35:00,2024-02-18 14:35:00,74.945,2024-02-20 05:25:51.829685900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,38.847730468305556
+KEMERTON_GT11,peaker,2024-02-26 17:15:00,2024-02-26 17:40:00,155.0,2024-02-27 04:57:29.912824000,Unit tripped on start.,trip,11.708309117777777
+KEMERTON_GT11,peaker,2024-03-03 12:25:00,2024-03-03 12:50:00,155.0,2024-03-08 06:12:22.742253200,"Unit 11 tripped on load – Instrumentation fault
+",trip,113.78965062588888
+KEMERTON_GT11,peaker,2024-03-03 17:05:00,2024-03-03 17:05:00,63.93600000000001,2024-03-04 06:12:08.888514900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,13.119135698583333
+KEMERTON_GT11,peaker,2024-03-06 16:35:00,2024-03-06 16:35:00,67.835,2024-03-07 02:02:34.407394800,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,9.459557609666668
+KEMERTON_GT11,peaker,2024-03-07 13:25:00,2024-03-07 13:25:00,68.662,2024-03-08 01:57:09.957833300,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,12.536099398138889
+KEMERTON_GT11,peaker,2024-03-24 18:50:00,2024-03-24 18:50:00,62.36,2024-03-25 06:37:18.563820000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,11.78848995
+KEMERTON_GT11,peaker,2024-03-26 16:05:00,2024-03-26 16:05:00,66.468,2024-03-27 02:55:12.723626700,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,10.836867674083333
+KEMERTON_GT11,peaker,2024-04-13 18:00:00,2024-04-13 18:15:00,155.0,2024-04-15 06:02:40.385205600,Unit tripped after Synchronization – Electrical fault.,trip,36.044551446
+KEMERTON_GT11,peaker,2024-05-02 16:40:00,2024-05-02 17:20:00,155.0,2024-05-03 03:21:02.268191000,Kemerton 11 Failed to Start - Electrical Fault ,other,10.68396338638889
+KEMERTON_GT11,peaker,2024-05-10 16:55:00,2024-05-10 17:05:00,61.42,2024-05-11 00:30:50.134703400,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,7.597259639833333
+KEMERTON_GT11,peaker,2024-05-18 17:30:00,2024-05-18 17:35:00,60.665000000000006,2024-05-19 00:26:06.025422600,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,6.935007061833333
+KEMERTON_GT11,peaker,2024-05-27 05:50:00,2024-05-27 11:20:00,155.0,2024-05-27 11:27:43.467408700,Unit Tripped on Start Up,trip,5.628740946861111
+KEMERTON_GT11,peaker,2024-06-03 15:45:00,2024-06-03 15:45:00,51.14,2024-06-04 03:42:30.029783400,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,11.9583416065
+KEMERTON_GT11,peaker,2024-08-07 18:20:00,2024-08-07 18:30:00,155.0,2024-08-08 03:20:49.688436000,Unit tripped on start.,trip,9.013802343333333
+KEMERTON_GT11,peaker,2024-08-25 16:55:00,2024-08-25 17:05:00,58.05,2024-08-26 02:41:42.113002700,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,9.778364722972222
+KEMERTON_GT11,peaker,2024-09-05 17:45:00,2024-09-05 17:45:00,73.2,2024-09-06 04:24:35.390936600,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,10.659830815722222
+KEMERTON_GT11,peaker,2025-01-20 12:20:00,2025-01-20 12:25:00,72.546,2025-01-21 14:14:06.341054200,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,25.901761403944445
+KEMERTON_GT11,peaker,2025-03-26 15:05:00,2025-03-26 15:05:00,72.07,2025-03-27 14:40:17.525110000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,23.588201419444445
+KEMERTON_GT11,peaker,2025-06-30 17:15:00,2025-06-30 17:55:00,155.0,2025-07-01 02:10:08.716577300,"KEMERTON_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,8.919087938138889
+KEMERTON_GT11,peaker,2025-07-01 10:45:00,2025-07-01 11:05:00,155.0,2025-07-01 12:24:57.097381300,Loss of read to start,other,1.6658603836944446
+KEMERTON_GT11,peaker,2025-07-05 09:05:00,2025-07-06 08:20:00,155.0,2025-07-06 09:42:33.037400500,"	
+Loss of ready to start (ABB Protection relay card fault)",other,24.62584372236111
+KEMERTON_GT11,peaker,2025-07-13 14:30:00,2025-07-13 14:30:00,58.1,2025-07-14 01:20:32.043960200,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,10.842234433388889
+KEMERTON_GT11,peaker,2025-07-15 15:55:00,2025-07-15 15:55:00,57.650000000000006,2025-07-16 03:08:57.439641200,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,11.232622122555556
+KEMERTON_GT11,peaker,2025-07-19 09:55:00,2025-07-19 18:50:00,155.0,2025-07-22 16:25:40.787205500,Western Power Protection trip (GT12 Aux TX),trip,78.51132977930556
+KEMERTON_GT11,peaker,2025-07-21 07:00:00,2025-07-21 07:20:00,58.05,2025-07-22 00:32:31.797960900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,17.54216610025
+KEMERTON_GT11,peaker,2025-07-21 17:10:00,2025-07-22 11:55:00,155.0,2025-07-22 17:24:57.260225600,Control system issue,other,24.249238951555554
+KEMERTON_GT11,peaker,2025-08-19 08:00:00,2025-08-19 13:30:00,155.0,2025-09-23 14:42:32.920202300,Unavailable on Distillate,other,846.7091445006389
+KEMERTON_GT11,peaker,2025-08-19 17:00:00,2025-08-19 19:40:00,155.0,2025-09-23 14:47:43.558619300,Unavailable on Distillate,trip,837.7954329498056
+KEMERTON_GT11,peaker,2025-08-21 20:35:00,2025-08-22 00:20:00,155.0,2025-09-23 14:55:51.718703800,Unavailable on Distillate,other,786.3476996399444
+KEMERTON_GT11,peaker,2025-08-26 05:05:00,2025-08-26 05:05:00,53.2,2025-09-23 15:10:05.005012100,Unavailable on Distillate,other,682.0847236144723
+KEMERTON_GT11,peaker,2025-09-16 03:55:00,2025-09-16 03:55:00,70.0,2025-09-17 09:37:51.571970900,KEMERTON_GT11: Energy: NonCompliance; ,other,29.71432554747222
+KEMERTON_GT11,peaker,2025-09-23 10:00:00,2025-09-23 10:00:00,54.83,2025-09-24 00:45:51.153968500,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,14.764209435694445
+KEMERTON_GT11,peaker,2025-09-26 08:35:00,2025-09-26 08:40:00,53.3,2025-09-27 00:30:27.134271500,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,15.924203964305555
+KEMERTON_GT11,peaker,2025-10-14 11:40:00,2025-10-14 12:35:00,155.0,2025-10-14 20:27:42.433011200,Loss of ready to start,other,8.795120280888888
+KEMERTON_GT11,peaker,2025-11-06 06:55:00,2025-11-06 06:55:00,58.1,2025-11-09 00:53:20.221981900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,65.97228388386111
+KEMERTON_GT11,peaker,2025-12-14 13:25:00,2025-12-14 13:25:00,66.136,2026-03-25 01:04:46.764678100,"Unit unavailable on distillate
+",other,2411.662990188361
+KEMERTON_GT11,peaker,2025-12-16 15:20:00,2025-12-16 17:35:00,155.0,2026-03-25 01:19:02.779731900,"Unit unavailable on distillate
+",other,2361.984105481083
+KEMERTON_GT11,peaker,2025-12-22 13:15:00,2025-12-22 13:45:00,80.406,2025-12-23 00:43:25.682634600,KEMERTON_GT11: Energy: NonCompliance; ,other,11.473800731833334
+KEMERTON_GT11,peaker,2025-12-22 14:30:00,2025-12-22 14:35:00,80.634,2026-03-25 01:24:09.351072000,Unit unavailable on distillate,other,2218.90259752
+KEMERTON_GT11,peaker,2025-12-25 16:55:00,2025-12-25 17:05:00,71.5,2025-12-26 00:44:44.871292900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,7.829130914694444
+KEMERTON_GT11,peaker,2025-12-30 15:50:00,2025-12-31 03:05:00,155.0,2025-12-31 02:30:31.867005400,"KEMERTON_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,10.675518612611112
+KEMERTON_GT11,peaker,2026-02-05 08:00:00,2026-02-05 11:55:00,155.0,2026-03-25 01:14:55.142489200,Unit unavailable on distillate,other,1145.2486506914445
+KEMERTON_GT11,peaker,2026-02-17 07:00:00,2026-02-17 13:55:00,155.0,2026-03-25 01:06:55.589544600,Unit unavailable on distillate,other,858.1154415401667
+KEMERTON_GT11,peaker,2026-03-07 17:30:00,2026-03-07 17:30:00,63.115,2026-03-08 00:45:50.104241800,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,7.263917844944444
+KEMERTON_GT11,peaker,2026-06-02 14:45:00,2026-06-03 18:10:00,155.0,2026-06-03 05:29:56.369634900,DCS failure ,other,14.74899156525
+KEMERTON_GT11,peaker,2026-06-05 12:15:00,2026-06-05 12:15:00,58.2,2026-06-06 01:09:44.250308500,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,12.91229175236111
+KEMERTON_GT11,peaker,2026-06-06 18:00:00,2026-06-06 21:35:00,155.0,2026-06-07 03:09:21.100034000,Unit tripped on start. ,trip,9.155861120555556
+KEMERTON_GT11,peaker,2026-06-18 11:10:00,2026-06-18 11:20:00,58.0,2026-06-19 01:51:22.729651200,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,14.689647125333334
+KEMERTON_GT11,peaker,2026-06-19 11:30:00,2026-06-20 13:30:00,155.0,2026-06-19 11:42:30.953618300,Jacking oil pump and turning gear fault investigation,other,0.20859822730555555
+KEMERTON_GT11,peaker,2026-06-23 06:35:00,2026-06-23 06:55:00,58.05,2026-06-24 00:36:58.774130700,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,18.032992814083336
+KEMERTON_GT11,peaker,2026-07-02 16:30:00,2026-07-02 16:45:00,58.2,2026-07-03 02:04:28.314128900,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,9.574531702472221
+KEMERTON_GT11,peaker,2026-07-23 14:35:00,2026-07-23 15:05:00,155.0,2026-07-24 02:04:49.827795000,"KEMERTON_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,11.4971743875
+KEMERTON_GT11,peaker,2026-08-04 02:20:00,2026-08-04 03:30:00,155.0,2026-08-04 04:13:21.370458300,Failed to start,other,1.8892695717499999
+KEMERTON_GT11,peaker,2026-08-17 23:35:00,2026-08-17 23:40:00,58.05,2026-08-18 03:35:33.901668000,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,4.00941713
+KEMERTON_GT11,peaker,2026-08-26 16:05:00,2026-08-26 17:10:00,155.0,2026-08-27 11:30:34.475068800,Start signal lost - SIS ventilation fault,other,19.42624307466667
+KEMERTON_GT11,peaker,2026-09-08 13:00:00,2026-09-08 14:55:00,155.0,2026-09-08 12:45:18.566151100,System Restart Services Testing,other,-0.24484273580555557
+KEMERTON_GT11,peaker,2026-09-26 16:10:00,2026-09-26 16:15:00,75.0,2026-09-27 00:52:17.958525200,KEMERTON_GT11: Energy: NonCompliance; ,noncompliance,8.704988479222223
+KEMERTON_GT12,peaker,2023-10-01 17:00:00,2023-10-01 17:00:00,53.2,2023-10-02 17:38:36.062404100,Generation below generation target,other,24.643350667805556
+KEMERTON_GT12,peaker,2023-10-02 18:30:00,2023-10-02 20:20:00,155.0,2024-06-25 13:45:07.950942300,KEMERTON_GT12: Energy: NonCompliance; ,trip,6403.252208595083
+KEMERTON_GT12,peaker,2023-10-13 15:55:00,2023-10-13 15:55:00,61.568,2024-06-25 13:47:25.095727400,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,6141.873637702055
+KEMERTON_GT12,peaker,2023-10-14 16:10:00,2023-10-14 16:10:00,65.782,2024-06-25 13:47:24.015278400,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,6117.623337577333
+KEMERTON_GT12,peaker,2023-10-18 17:00:00,2023-10-18 17:00:00,54.22,2024-06-25 13:47:14.353662900,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,6020.787320461917
+KEMERTON_GT12,peaker,2023-10-19 05:00:00,2023-10-19 05:05:00,58.2,2024-06-25 13:47:09.395569900,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,6008.78594321386
+KEMERTON_GT12,peaker,2023-10-25 16:25:00,2023-10-25 16:25:00,64.184,2024-03-21 13:25:07.558889100,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,3549.002099691417
+KEMERTON_GT12,peaker,2023-12-04 08:00:00,2023-12-04 09:55:00,155.0,2024-03-21 14:06:53.512569200,"KEMERTON_GT12: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,2598.114864602556
+KEMERTON_GT12,peaker,2023-12-08 13:00:00,2023-12-08 15:55:00,155.0,2024-03-21 14:06:51.783506100,"KEMERTON_GT12: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,2497.1143843072496
+KEMERTON_GT12,peaker,2023-12-11 16:45:00,2023-12-11 16:45:00,65.558,2024-03-21 14:06:49.921586600,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,2421.3638671073886
+KEMERTON_GT12,peaker,2023-12-15 09:50:00,2023-12-15 10:05:00,63.42100000000001,2024-03-21 14:10:48.354572700,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,2332.3467651590836
+KEMERTON_GT12,peaker,2023-12-20 17:00:00,2023-12-20 17:00:00,70.168,2024-03-21 14:11:55.241051500,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,2205.198678069861
+KEMERTON_GT12,peaker,2024-01-06 18:25:00,2024-01-06 18:25:00,58.42100000000001,2024-01-12 14:57:58.394455300,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,140.5495540153611
+KEMERTON_GT12,peaker,2024-01-08 15:25:00,2024-01-08 15:25:00,61.982,2024-01-12 14:59:25.296361100,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,95.57369343363888
+KEMERTON_GT12,peaker,2024-01-11 17:00:00,2024-01-11 17:00:00,59.71,2024-01-12 15:00:10.010100800,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,22.002780583555555
+KEMERTON_GT12,peaker,2024-01-14 15:55:00,2024-01-14 15:55:00,65.229,2024-01-15 22:49:21.359026800,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,30.905933063
+KEMERTON_GT12,peaker,2024-03-06 16:45:00,2024-03-06 16:45:00,67.985,2024-03-07 02:03:00.120291000,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,9.300033414166666
+KEMERTON_GT12,peaker,2024-03-26 17:40:00,2024-03-26 17:40:00,63.745000000000005,2024-03-27 02:55:24.550987700,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,9.256819718805556
+KEMERTON_GT12,peaker,2024-04-01 17:50:00,2024-04-01 18:10:00,155.0,2024-04-03 14:19:52.058606100,Instrumentation fault - unit tripped. ,trip,44.497794057250005
+KEMERTON_GT12,peaker,2024-07-02 20:00:00,2024-07-05 15:55:00,155.0,2024-07-02 16:19:41.051097000,Forced outage following commissioning test plan for additional insulation installation works. ,other,-3.6719302508333334
+KEMERTON_GT12,peaker,2024-07-16 17:30:00,2024-07-16 17:35:00,58.05,2024-07-17 01:27:19.487778200,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,7.955413271722223
+KEMERTON_GT12,peaker,2024-09-26 17:25:00,2024-09-26 22:10:00,155.0,2024-09-27 10:15:49.196884400,exhaust thermocouple fault,other,16.846999134555556
+KEMERTON_GT12,peaker,2024-10-28 17:25:00,2024-10-28 17:35:00,63.583,2024-10-29 01:15:39.900223700,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,7.844416728805555
+KEMERTON_GT12,peaker,2025-06-19 17:20:00,2025-06-19 18:35:00,155.0,2025-06-20 05:22:52.549100800,KEMERTON_GT12: Energy: NonCompliance; ,trip,12.04793030577778
+KEMERTON_GT12,peaker,2025-07-08 15:55:00,2025-07-08 17:20:00,155.0,2025-07-09 00:57:27.287646100,"KEMERTON_GT12: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower",other,9.040913235027778
+KEMERTON_GT12,peaker,2025-07-19 09:55:00,2025-07-19 18:50:00,155.0,2025-07-22 16:27:33.934624600,Western Power Protection trip (GT12 Aux TX),trip,78.54275961794444
+KEMERTON_GT12,peaker,2025-08-19 08:00:00,2025-08-19 13:30:00,155.0,2025-09-23 15:15:57.269086400,Unavailable on Distillate,other,847.2659080795555
+KEMERTON_GT12,peaker,2025-09-07 17:45:00,2025-09-07 17:55:00,58.2,2025-09-23 15:25:14.794572200,Unavailable on Distillate,other,381.6707762700555
+KEMERTON_GT12,peaker,2025-09-14 18:45:00,2025-09-15 16:55:00,155.0,2025-09-23 14:06:49.175374600,Unavailable on Distillate,other,211.36365982627777
+KEMERTON_GT12,peaker,2025-10-14 11:35:00,2025-10-14 13:00:00,155.0,2025-10-14 20:31:03.682170100,Loss of Ready to Start,other,8.934356158361112
+KEMERTON_GT12,peaker,2025-12-03 07:45:00,2025-12-03 08:10:00,155.0,2025-12-03 10:50:59.570742400,Start signal lost,other,3.0998807617777775
+KEMERTON_GT12,peaker,2025-12-09 06:25:00,2025-12-09 06:30:00,55.547,2025-12-10 03:35:01.897400200,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,21.16719372227778
+KEMERTON_GT12,peaker,2025-12-09 07:05:00,2025-12-09 07:30:00,83.2,2025-12-10 03:34:19.608678300,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,20.48878018841667
+KEMERTON_GT12,peaker,2025-12-22 06:30:00,2025-12-22 07:15:00,58.05,2025-12-23 00:44:35.637848000,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,18.243232735555555
+KEMERTON_GT12,peaker,2025-12-30 15:55:00,2025-12-31 03:05:00,155.0,2025-12-31 02:30:59.688268200,"KEMERTON_GT12: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,10.599913407833332
+KEMERTON_GT12,peaker,2026-06-02 14:45:00,2026-06-02 18:10:00,155.0,2026-06-03 05:29:52.090246000,Comms fault DCS failure,other,14.747802846111112
+KEMERTON_GT12,peaker,2026-06-14 15:20:00,2026-06-14 19:40:00,155.0,2026-06-15 04:04:26.314538600,KEMERTON_GT12: Energy: NonCompliance; ,other,12.74064292738889
+KEMERTON_GT12,peaker,2026-06-16 17:30:00,2026-06-16 20:05:00,155.0,2026-06-17 01:12:15.461312700,KEMERTON_GT12: Energy: NonCompliance; ,other,7.704294809083334
+KEMERTON_GT12,peaker,2026-06-22 06:15:00,2026-06-22 06:25:00,57.95,2026-06-23 00:46:57.596292200,KEMERTON_GT12: Energy: NonCompliance;  Unit unavailable on diesel due to issues on startup. ,noncompliance,18.532665636722225
+KEMERTON_GT12,peaker,2026-06-23 05:00:00,2026-06-23 05:25:00,57.85,2026-06-24 00:36:25.828047800,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,19.60717445772222
+KEMERTON_GT12,peaker,2026-06-30 06:15:00,2026-06-30 06:25:00,57.444,2026-07-01 01:29:01.214681300,KEMERTON_GT12: Energy: NonCompliance; ,noncompliance,19.233670744805554
+KEMERTON_GT12,peaker,2026-07-23 14:35:00,2026-07-23 15:05:00,155.0,2026-07-24 02:05:08.473673100,"KEMERTON_GT12: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,11.502353798083334
+KEMERTON_GT12,peaker,2026-09-08 13:00:00,2026-09-08 14:55:00,155.0,2026-09-08 12:45:57.909250800,System Restart Services Testing,other,-0.233914097
+KWINANA_GT2,peaker,2023-11-10 12:55:00,2023-11-10 13:00:00,72.16,2024-03-25 13:28:47.874927000,KWINANA_GT2: Energy: NonCompliance; ,noncompliance,3264.5632985908333
+KWINANA_GT2,peaker,2023-11-22 14:10:00,2023-11-23 10:15:00,98.5,2023-11-23 09:55:43.136153800,Western Power breaker fault,other,19.761982264944447
+KWINANA_GT2,peaker,2023-11-26 20:30:00,2023-11-26 22:55:00,98.5,2023-11-27 11:35:08.998510300,"GT Trip, CCW Heat Exchanger Temp HI HI, Gen Air Inlet Temp HI HI, Total NOx Corrected HI HI",trip,15.085832919527778
+KWINANA_GT2,peaker,2024-01-05 07:30:00,2024-01-05 07:30:00,76.5,2024-01-05 10:24:22.609368700,AGC was disabled to reset Emissions/Environmental problem alarm (NOX). Unit restricted to 22 MW ,other,2.906280380194444
+KWINANA_GT2,peaker,2024-01-07 15:10:00,2024-01-07 15:10:00,72.56,2024-03-25 13:28:34.468921000,KWINANA_GT2: Energy: NonCompliance; ,noncompliance,1870.3095747002778
+KWINANA_GT2,peaker,2024-02-14 10:40:00,2024-02-14 14:20:00,98.5,2024-02-14 11:13:57.629699200,Cooling system inspection/repair,other,0.5660082497777777
+KWINANA_GT2,peaker,2024-04-10 11:30:00,2024-04-10 14:35:00,98.5,2024-04-11 08:20:23.772319200,"KWINANA_GT2: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,20.839936755333333
+KWINANA_GT2,peaker,2024-05-10 17:00:00,2024-05-18 14:25:00,98.5,2024-05-06 07:45:32.977200600,"Outage Description: BI + CI + ES
+
+",other,-105.2408396665
+KWINANA_GT2,peaker,2024-06-04 10:45:00,2024-06-04 13:30:00,71.5,2024-06-04 14:13:05.066108500,"Western Power Modbus Link 1 & Link 2 Comm Failure Capacity restricted to 27mw
+",other,3.4680739190277774
+KWINANA_GT2,peaker,2024-08-31 14:50:00,2024-09-02 10:55:00,98.5,2024-09-02 10:27:38.029086100,"Network trip which has tripped KWGT2
+",trip,43.627230301694446
+KWINANA_GT2,peaker,2024-10-12 19:55:00,2024-10-12 23:15:00,71.5,2024-10-14 13:07:10.693832000,Western power Modbus Link 1 & 2 Comms Failure. No ESS. Capacity held to 27mw,other,41.20297050888889
+KWINANA_GT2,peaker,2024-11-08 19:00:00,2024-11-14 16:55:00,98.5,2024-11-05 14:29:57.403454700,"Outage Description: BI PI IC ES TX SUT PROT SWGR COMP IPB HSE
+Operational Information: BI PI IC ES TX SUT PROT SWGR COMP IPB HSE",other,-76.50072126258333
+KWINANA_GT2,peaker,2024-11-21 11:35:00,2024-11-21 14:25:00,98.5,2024-11-21 12:43:56.396939600,"Tube Leak Repair
+",other,1.148999149888889
+KWINANA_GT2,peaker,2024-11-26 13:25:00,2024-11-26 14:05:00,98.5,2024-11-27 09:04:30.028130400,"Unit set point error - requires investigation
+",other,19.65834114733333
+KWINANA_GT2,peaker,2025-01-01 12:15:00,2025-01-01 12:20:00,98.5,2025-01-02 07:41:30.577475100,"GT Trip on Start Up 
+",trip,19.441827076416665
+KWINANA_GT2,peaker,2025-01-18 22:00:00,2025-01-19 08:25:00,98.5,2025-01-18 22:59:45.386301500,"Unit tripped while desynching.
+Air purge to the power turbine forward bearing. Currently there is a lockout timer till 19/01 2:45am, after which the operators can have a look to see what is wrong with",trip,0.9959406393055557
+KWINANA_GT2,peaker,2025-01-29 12:30:00,2025-01-29 12:35:00,98.5,2025-01-29 17:01:13.222977000,Gt Trip on start up ,trip,4.520339715833333
+KWINANA_GT2,peaker,2025-01-31 05:45:00,2025-01-31 06:50:00,98.5,2025-01-31 09:15:46.089356400,Failed to start,other,3.512802599
+KWINANA_GT2,peaker,2025-02-02 05:05:00,2025-02-02 08:20:00,98.5,2025-02-03 09:47:45.777837900,"Extended cool down, crank bearing temp hi, MLO Cooling
+",other,28.71271606608333
+KWINANA_GT2,peaker,2025-02-03 15:10:00,2025-02-03 15:25:00,98.5,2025-02-04 08:19:49.965549400,"Tripped During Start-Up
+",trip,17.16387931927778
+KWINANA_GT2,peaker,2025-02-03 19:55:00,2025-02-04 07:10:00,98.5,2025-02-04 08:17:01.788783300,"Tripped during scheduled shutdown
+",trip,12.367163550916667
+KWINANA_GT2,peaker,2025-02-04 14:45:00,2025-02-04 15:40:00,98.5,2025-02-05 07:30:44.166682100,"Failed to start and Synchronise
+",other,16.762268522805556
+KWINANA_GT2,peaker,2025-02-12 05:20:00,2025-02-12 06:50:00,98.5,2025-02-12 09:16:59.923118200,"Failed to start during starting sequence, due to Power Turbine FWD bearing purge valve feedback.",other,3.9499786439444446
+KWINANA_GT2,peaker,2025-02-13 09:00:00,2025-02-13 09:45:00,98.5,2025-02-13 09:23:19.919675500,Investigate Hydraulic Oil System,other,0.3888665765277778
+KWINANA_GT2,peaker,2025-02-13 15:00:00,2025-02-13 15:05:00,98.5,2025-02-14 07:50:09.081003100,"Function test and reset alarms.
+",other,16.835855834194444
+KWINANA_GT2,peaker,2025-03-04 02:45:00,2025-03-04 03:05:00,98.5,2025-03-04 09:11:42.136591300,VBV2 Position error,other,6.445037942027778
+KWINANA_GT2,peaker,2025-03-26 13:20:00,2025-03-26 13:25:00,98.5,2025-03-27 07:41:31.565767500,"GT Trip on start up
+",trip,18.358768268749998
+KWINANA_GT2,peaker,2025-04-25 09:00:00,2025-04-25 15:40:00,98.5,2025-04-28 12:13:18.649098600,Unit Tripped on Shut Down – Techs to Investigate,trip,75.22184697183334
+KWINANA_GT2,peaker,2025-06-06 17:45:00,2025-06-07 12:40:00,98.5,2025-06-09 07:52:26.912843200,"Hydraulic issue
+",other,62.124142456444446
+KWINANA_GT2,peaker,2025-07-23 17:30:00,2025-07-23 17:45:00,98.5,2025-07-24 11:12:40.700469000,"GT Tripped on start up
+",trip,17.711305685833334
+KWINANA_GT2,peaker,2025-08-13 16:40:00,2025-08-13 16:55:00,98.5,2025-08-14 10:17:32.050085500,"KWGT2 Tripped on start up 
+",trip,17.625569468194445
+KWINANA_GT2,peaker,2025-08-17 15:55:00,2025-08-17 15:55:00,65.35,2025-08-18 11:47:30.024447900,KWINANA_GT2: Energy: NonCompliance; ,noncompliance,19.875006791083333
+KWINANA_GT2,peaker,2025-08-20 16:55:00,2025-08-20 17:25:00,98.5,2025-08-21 14:27:22.186192700,"Trip on start up
+",trip,21.539496164638887
+KWINANA_GT2,peaker,2025-09-11 16:35:00,2025-09-11 16:45:00,98.5,2025-09-12 07:40:31.770044600,GT Trip ,trip,15.092158345722222
+KWINANA_GT2,peaker,2025-09-16 15:55:00,2025-09-16 17:45:00,98.5,2025-09-17 10:12:47.265590300,"Gt Trip
+",trip,18.29646266397222
+KWINANA_GT2,peaker,2025-09-22 16:45:00,2025-09-22 17:00:00,98.5,2025-09-23 07:57:55.333320200,"Trip on start-up. Internal valve position error
+",trip,15.215370366722222
+KWINANA_GT2,peaker,2025-10-01 17:10:00,2025-10-01 17:10:00,63.197,2025-10-02 15:43:33.111560400,KWINANA_GT2: Energy: NonCompliance; ,noncompliance,22.559197655666665
+KWINANA_GT2,peaker,2025-10-09 16:45:00,2025-10-09 16:55:00,98.5,2025-10-09 17:34:58.733366900,Short FO - Gas Comp BOV issue,other,0.8329814908055555
+KWINANA_GT2,peaker,2025-11-07 19:30:00,2025-11-10 11:55:00,98.5,2025-11-10 07:33:25.948407800,"BI PI IC ES GI HSE
+",other,60.057207891055555
+KWINANA_GT2,peaker,2025-12-03 23:10:00,2025-12-04 05:40:00,98.5,2025-12-04 12:57:31.113481300,"Gas Compressor PLC failure. 
+",other,13.791975967027778
+KWINANA_GT2,peaker,2025-12-13 00:40:00,2025-12-13 06:55:00,98.5,2025-12-16 09:52:12.468710800,"Loss of ready to start, SLO tank level low, start permissive lockout
+",other,81.20346353077778
+KWINANA_GT2,peaker,2025-12-23 22:45:00,2025-12-24 00:45:00,98.5,2025-12-24 07:41:34.880118200,"Both MLO Air/Oil Separator Fan Failed 
+",other,8.943022255055554
+KWINANA_GT2,peaker,2026-01-11 16:20:00,2026-01-12 13:20:00,98.5,2026-01-12 08:59:34.260024800," GT Trip on start up 
+",trip,16.659516673555554
+KWINANA_GT2,peaker,2026-03-14 17:00:00,2026-03-18 17:55:00,98.5,2026-03-16 08:19:47.820277900,"HI Turbine Enclosure temperature
+",other,39.32995007719445
+KWINANA_GT2,peaker,2026-03-28 01:50:00,2026-03-28 14:45:00,98.5,2026-03-30 12:57:59.052625300,"Gas Comp E-stops & Fire system activated by possible water ingress
+",other,59.13307017369445
+KWINANA_GT2,peaker,2026-04-11 14:55:00,2026-04-11 14:55:00,67.873,2026-04-13 09:02:34.966660100,KWINANA_GT2: Energy: NonCompliance; ,noncompliance,42.126379627805555
+KWINANA_GT2,peaker,2026-04-12 14:10:00,2026-04-12 14:10:00,50.086,2026-04-13 09:02:31.634944700,KWINANA_GT2: Energy: NonCompliance; ,noncompliance,18.875454151305554
+KWINANA_GT2,peaker,2026-04-14 11:20:00,2026-04-14 16:05:00,98.5,2026-04-14 13:12:25.172034200,Unit tripped on startup,trip,1.8736588983888889
+KWINANA_GT2,peaker,2026-04-14 23:25:00,2026-04-15 00:40:00,98.5,2026-04-15 12:41:07.978394200,Tripped on Shutdown,trip,13.268882887277778
+KWINANA_GT2,peaker,2026-04-16 06:00:00,2026-04-16 12:05:00,98.5,2026-04-16 11:49:29.193853600,"Unit trip.
+Drain Valve liquid fuel manifold position fault",trip,5.824776070444445
+KWINANA_GT2,peaker,2026-05-04 23:00:00,2026-05-12 22:55:00,98.5,2026-04-30 15:12:26.493094800,Forced outage extension of BI+IC+ES outage due to HPC repair works ,other,-103.792640807
+KWINANA_GT2,peaker,2026-05-14 23:25:00,2026-05-15 17:25:00,98.5,2026-05-18 08:22:52.310943300,Tripped on shutdown  ,trip,80.96453081758334
+KWINANA_GT2,peaker,2026-06-13 07:40:00,2026-06-13 07:40:00,98.5,2026-06-15 16:00:47.095957500,"KWINANA_GT2: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,56.34641554375
+KWINANA_GT2,peaker,2026-06-26 08:35:00,2026-06-26 13:50:00,98.5,2026-06-26 09:40:31.989611300,Unit tripped  - Under investigation ,trip,1.0922193364722221
+KWINANA_GT2,peaker,2026-06-26 17:15:00,2026-06-26 18:50:00,98.5,2026-06-29 17:30:17.551164700,Unit tripped on startup,trip,72.25487532352778
+KWINANA_GT2,peaker,2026-07-13 09:15:00,2026-07-13 09:25:00,74.71000000000001,2026-07-14 08:50:26.639171200,KWINANA_GT2: Energy: NonCompliance; ,noncompliance,23.590733103111113
+KWINANA_GT2,peaker,2026-09-09 05:15:00,2026-09-09 05:55:00,98.5,2026-09-09 09:16:44.670148200,Low compressed air pressure ,other,4.029075041166667
+KWINANA_GT2,peaker,2026-09-29 12:20:00,2026-09-29 14:35:00,98.5,2026-09-30 11:54:42.926451000,Intermittent Loss of Ready to start,other,23.578590680833337
+KWINANA_GT2,peaker,2026-10-06 06:30:00,2026-10-06 16:55:00,106.763,2026-10-06 09:16:35.527870000,Investigate oil leak,other,2.7765355194444443
+KWINANA_GT2,peaker,2026-10-07 11:00:00,2026-10-07 11:50:00,106.763,2026-10-08 09:37:19.649369200,Forced outage extra works  ,other,22.622124824777774
+KWINANA_GT3,peaker,2023-11-10 07:05:00,2023-11-10 07:50:00,99.2,2023-11-10 15:25:32.703011700,NOx rollback. Unit limited to 25mw,other,8.34241750325
+KWINANA_GT3,peaker,2023-11-10 13:00:00,2023-11-10 13:00:00,71.53,2024-03-25 13:27:46.808940200,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,3264.463002483389
+KWINANA_GT3,peaker,2023-11-22 11:40:00,2023-11-22 11:45:00,74.2,2023-11-22 13:05:15.663021000,NOx Rollback Alarm,other,1.4210175058333334
+KWINANA_GT3,peaker,2023-12-13 17:30:00,2023-12-13 17:40:00,72.2,2024-03-25 13:25:06.173834400,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,2467.918381620667
+KWINANA_GT3,peaker,2023-12-15 15:25:00,2023-12-15 15:25:00,71.11,2024-03-25 13:24:48.477464200,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,2421.9967992956113
+KWINANA_GT3,peaker,2023-12-20 17:50:00,2023-12-20 17:50:00,53.790000000000006,2024-03-25 13:24:46.512141300,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,2299.579586705917
+KWINANA_GT3,peaker,2023-12-24 15:20:00,2023-12-24 15:20:00,50.1,2024-03-25 13:24:45.444178300,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,2206.0792900495276
+KWINANA_GT3,peaker,2023-12-29 15:25:00,2023-12-29 15:55:00,99.2,2024-01-02 15:02:10.163121200,High and low level electrical severity alarms,other,95.61948975588889
+KWINANA_GT3,peaker,2024-01-15 16:30:00,2024-01-15 16:55:00,83.2,2024-01-16 07:38:16.241189000,Loss of NOX water (PS3 derate timer activated) ,other,15.137844774722222
+KWINANA_GT3,peaker,2024-01-16 14:35:00,2024-01-16 14:55:00,83.2,2024-01-17 09:44:55.176184300,Loss of NOX water (PS3 derate timer activated) ,other,19.16532671786111
+KWINANA_GT3,peaker,2024-02-15 15:05:00,2024-02-15 17:10:00,99.2,2024-02-15 15:06:32.435801900,1000 hour PT Stage 5 inspection ,other,0.025676611638888888
+KWINANA_GT3,peaker,2024-02-15 21:00:00,2024-02-16 15:45:00,99.2,2024-02-15 16:12:46.961753900,1000 hour PT Stage 5 inspection ,other,-4.786955068361111
+KWINANA_GT3,peaker,2024-05-02 17:50:00,2024-05-02 18:55:00,99.2,2024-05-03 10:44:49.045217200,"GT Trip due to suspected lightning strike
+",trip,16.913623671444444
+KWINANA_GT3,peaker,2024-06-04 10:45:00,2024-06-04 13:30:00,72.2,2024-06-04 14:14:07.526513200,"Western Power Modbus Link 1 & Link 2 Comm Failure Capacity restricted to 27mw
+",other,3.4854240314444445
+KWINANA_GT3,peaker,2024-10-24 19:00:00,2024-11-01 12:55:00,99.2,2024-10-23 09:30:08.849875100,"Outage Description: BI PI IC ES TX SUT PROT SWGR IPB
+Operational Information: BI PI IC ES TX SUT PROT SWGR IPB",other,-33.49754170136111
+KWINANA_GT3,peaker,2024-11-05 12:00:00,2024-11-05 12:10:00,99.2,2024-11-05 12:59:01.230463000,"Missed start-up as per schedule 
+",other,0.9836751286111111
+KWINANA_GT3,peaker,2024-11-05 14:45:00,2024-11-05 17:35:00,99.2,2024-11-06 07:52:48.055969700,Tripped while on commissioning ,trip,17.13001554713889
+KWINANA_GT3,peaker,2024-11-07 09:30:00,2024-11-07 16:05:00,99.2,2024-11-07 09:29:25.664501400,"Water Leak Repair
+",other,-0.0095376385
+KWINANA_GT3,peaker,2024-11-17 23:15:00,2024-11-17 23:50:00,75.2,2024-11-22 14:16:36.267096100,NOX alarm. Load down to reset the NOx and restart the NOx Pump ,other,111.02674086002779
+KWINANA_GT3,peaker,2024-12-12 13:35:00,2024-12-12 13:35:00,74.2,2024-12-13 11:51:41.852457400,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,22.27829234927778
+KWINANA_GT3,peaker,2025-01-01 05:50:00,2025-01-01 05:55:00,99.2,2025-01-02 07:40:24.916056900,"GT Trip on Start Up 
+",trip,25.840254460249998
+KWINANA_GT3,peaker,2025-01-02 04:50:00,2025-01-02 05:30:00,99.2,2025-01-02 07:42:18.710570300,"GT Trip on Start Up 
+",trip,2.8718640473055554
+KWINANA_GT3,peaker,2025-01-03 03:40:00,2025-01-03 05:15:00,99.2,2025-01-03 09:34:58.080009200,"GT Trip on Start Up 
+",trip,5.916133335888889
+KWINANA_GT3,peaker,2025-01-23 11:10:00,2025-01-23 11:10:00,66.36500000000001,2025-01-28 13:27:03.840370600,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,122.28440010294445
+KWINANA_GT3,peaker,2025-02-08 16:50:00,2025-02-08 16:50:00,63.143,2025-02-10 08:20:38.104937100,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,39.51058470475
+KWINANA_GT3,peaker,2025-02-17 00:05:00,2025-02-17 08:00:00,99.2,2025-02-17 08:21:00.767379600,"GT Trip
+",trip,8.266879827666667
+KWINANA_GT3,peaker,2025-02-17 20:40:00,2025-02-17 20:40:00,91.165,2025-02-18 14:30:47.131123700,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,17.846425312138887
+KWINANA_GT3,peaker,2025-02-23 17:20:00,2025-02-23 17:40:00,99.2,2025-02-24 09:20:56.583088900,"VBV1 and VBV2 trip
+",trip,16.015717524694445
+KWINANA_GT3,peaker,2025-02-26 18:25:00,2025-02-26 18:25:00,57.307,2025-02-27 08:11:27.223784300,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,13.774228828972221
+KWINANA_GT3,peaker,2025-03-01 17:45:00,2025-03-01 21:00:00,99.2,2025-03-04 08:52:16.822306500,GT Trip during operation ,trip,63.12133952958333
+KWINANA_GT3,peaker,2025-03-12 11:15:00,2025-03-14 14:20:00,99.2,2025-03-12 11:31:16.314346000,"High bearing temperature
+",other,0.27119842944444444
+KWINANA_GT3,peaker,2025-03-14 19:35:00,2025-03-14 19:40:00,70.404,2025-03-18 11:41:51.786869900,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,88.11438524163889
+KWINANA_GT3,peaker,2025-03-17 09:45:00,2025-03-17 10:05:00,99.2,2025-03-17 12:59:59.722718700,"GT Trip on start up 
+",trip,3.249922977416667
+KWINANA_GT3,peaker,2025-03-18 15:40:00,2025-03-18 15:50:00,99.2,2025-03-19 08:14:54.041543600,"GT Trip upon start up 
+",trip,16.581678206555555
+KWINANA_GT3,peaker,2025-03-18 17:05:00,2025-03-18 17:15:00,99.2,2025-03-19 08:11:10.953820900,"KWGT3 Trip on start up 
+",trip,15.103042728027779
+KWINANA_GT3,peaker,2025-04-06 17:35:00,2025-04-06 18:00:00,99.2,2025-04-07 10:44:05.283218600,"KWGT3 Trip on startup 
+",trip,17.15146756072222
+KWINANA_GT3,peaker,2025-04-07 23:55:00,2025-04-08 00:10:00,99.2,2025-04-09 10:15:19.047635800,Unit loss ready to start – High temp alarm active,other,34.33862434327778
+KWINANA_GT3,peaker,2025-04-09 13:55:00,2025-04-09 15:15:00,99.2,2025-04-09 13:54:20.848241900,"Extension to Planed outage (441199/2), Filter exchange",other,-0.010875488361111112
+KWINANA_GT3,peaker,2025-04-21 15:45:00,2025-04-21 15:50:00,99.2,2025-04-22 12:32:38.552634800,KWGT3 tripped on start up ,trip,20.794042398555554
+KWINANA_GT3,peaker,2025-05-02 18:05:00,2025-05-05 16:50:00,99.2,2025-05-05 08:12:06.258737400,"Strut Tube Inspection
+",other,62.11840520483333
+KWINANA_GT3,peaker,2025-05-07 10:55:00,2025-05-07 11:40:00,99.2,2025-05-08 10:46:17.046959900,TFD had 23MW for a single interval (10:55am) so the unit dispatched. PCR stopped the unit before running up and synchronising however the cooldown crank time had activated therefore the unit was unava,other,23.85473526663889
+KWINANA_GT3,peaker,2025-06-06 18:35:00,2025-06-06 18:35:00,53.93,2025-06-09 08:33:25.810443400,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,61.973836234277776
+KWINANA_GT3,peaker,2025-06-13 12:35:00,2025-06-13 13:25:00,99.2,2025-06-13 14:02:24.808231500,"Hot air leak on intercooler 
+",other,1.4568911754166667
+KWINANA_GT3,peaker,2025-07-21 06:30:00,2025-07-21 17:10:00,99.2,2025-07-21 08:58:01.549109500,"Gas Supply Issue
+",other,2.467096974861111
+KWINANA_GT3,peaker,2025-07-24 05:15:00,2025-07-24 12:55:00,99.2,2025-07-24 10:26:21.237628800,Gas Compressor Fault,other,5.189232674666667
+KWINANA_GT3,peaker,2025-07-24 15:45:00,2025-07-24 15:45:00,67.74000000000001,2025-07-25 09:10:48.250113500,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,17.43006947597222
+KWINANA_GT3,peaker,2025-07-25 04:30:00,2025-07-25 14:25:00,99.2,2025-07-25 07:14:59.457946300,"Gas Compressor issue on start up
+",other,2.7498494295277776
+KWINANA_GT3,peaker,2025-07-30 05:25:00,2025-07-30 05:55:00,99.2,2025-07-30 10:03:02.859285400,Tripped on start up,trip,4.634127579277778
+KWINANA_GT3,peaker,2025-07-30 16:35:00,2025-07-30 16:50:00,75.97,2025-07-31 12:58:55.881608900,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,20.398856002472222
+KWINANA_GT3,peaker,2025-08-21 11:25:00,2025-08-21 15:20:00,99.2,2025-08-21 14:51:54.912785300,"Oil Leak Detected
+",other,3.4485868848055556
+KWINANA_GT3,peaker,2025-08-22 05:20:00,2025-08-22 05:30:00,99.2,2025-08-22 11:32:25.415219700,"Trip on start up
+",trip,6.20705978325
+KWINANA_GT3,peaker,2025-08-23 13:55:00,2025-08-23 14:10:00,99.2,2025-08-25 10:36:20.910835400,"GT Trip On Start up
+",trip,44.68914189872222
+KWINANA_GT3,peaker,2025-08-28 17:00:00,2025-08-28 17:50:00,99.2,2025-08-29 10:23:31.801345900,Sys Trip,trip,17.392167040527777
+KWINANA_GT3,peaker,2025-08-29 12:10:00,2025-08-29 12:10:00,64.99000000000001,2025-09-01 12:54:17.310251900,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,72.7381417366389
+KWINANA_GT3,peaker,2025-09-11 14:25:00,2025-09-11 15:10:00,99.2,2025-09-12 07:39:12.136628800,Strut 7 Bracket repairs,other,17.236704619111112
+KWINANA_GT3,peaker,2025-09-13 16:45:00,2025-09-13 16:45:00,67.32000000000001,2025-09-15 10:44:21.279115600,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,41.989244198777776
+KWINANA_GT3,peaker,2025-09-21 17:05:00,2025-09-21 17:10:00,99.2,2025-09-22 07:48:01.508129100,"Gas comp trip on start-up
+",trip,14.717085591416668
+KWINANA_GT3,peaker,2025-09-23 18:25:00,2025-09-23 18:40:00,99.2,2025-09-24 07:43:11.309125000,"Tripped on Start up 
+",trip,13.30314142361111
+KWINANA_GT3,peaker,2025-09-24 16:50:00,2025-09-24 16:50:00,63.454,2025-09-25 07:41:53.340741800,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,14.864816872722223
+KWINANA_GT3,peaker,2025-10-10 06:35:00,2025-10-10 15:35:00,99.2,2025-10-10 09:48:24.674029600,GT3 tripped while online,trip,3.223520563777778
+KWINANA_GT3,peaker,2025-10-18 12:20:00,2025-10-18 12:30:00,99.2,2025-10-20 10:43:26.603098400,Unit lost ready to start due to being impacted by Gt2 outage work,other,46.39072308288889
+KWINANA_GT3,peaker,2025-10-26 13:15:00,2025-10-27 05:55:00,99.2,2025-10-27 13:26:34.618800100,"Vibration Monitoring Analysis post felling event
+",other,24.192949666694442
+KWINANA_GT3,peaker,2025-10-28 09:00:00,2025-10-28 11:40:00,99.2,2025-10-28 13:34:32.987794500,"No Available air dryers
+",other,4.575829942916667
+KWINANA_GT3,peaker,2025-10-28 13:45:00,2025-10-28 14:05:00,99.2,2025-10-28 14:34:42.418735900,"Loss of Ready to Start 
+",other,0.828449648861111
+KWINANA_GT3,peaker,2025-10-31 20:00:00,2025-11-04 00:55:00,99.2,2025-11-03 07:12:50.460492700,"Damage to ITP Blading
+",other,59.21401680352778
+KWINANA_GT3,peaker,2025-11-24 22:00:00,2025-11-25 21:55:00,99.2,2025-11-25 14:34:54.413919800,Adding HSE + EX to existing work scopes (BI PI IC ES GI COMP),other,16.581781644388887
+KWINANA_GT3,peaker,2025-11-28 07:30:00,2025-11-28 07:45:00,99.2,2025-11-28 10:17:09.176968500,"Lost ready to start
+",other,2.7858824912499998
+KWINANA_GT3,peaker,2025-12-24 08:40:00,2025-12-24 08:40:00,99.2,2025-12-24 09:04:06.253667500,"Auto to manual to start oil pump to fault find
+",other,0.4017371298611111
+KWINANA_GT3,peaker,2025-12-24 15:55:00,2025-12-24 15:55:00,67.935,2025-12-29 12:42:27.223687000,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,116.79089546861111
+KWINANA_GT3,peaker,2025-12-25 16:55:00,2025-12-25 18:00:00,99.2,2025-12-29 08:58:01.858736000,"Fail to start
+",other,88.05051631555557
+KWINANA_GT3,peaker,2025-12-26 01:05:00,2025-12-26 06:40:00,99.2,2025-12-29 09:00:43.699581700,"Unit trip on shutdown
+",trip,79.92880543936111
+KWINANA_GT3,peaker,2026-01-03 18:30:00,2026-01-03 20:30:00,99.2,2026-01-05 09:08:16.964367300,"24vdc Battery Charger Fault 
+",other,38.63804565758333
+KWINANA_GT3,peaker,2026-01-30 21:00:00,2026-01-31 15:55:00,99.2,2026-02-02 16:08:30.060923200,"KWINANA_GT3: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,67.14168358977778
+KWINANA_GT3,peaker,2026-01-31 16:50:00,2026-01-31 16:55:00,72.83500000000001,2026-02-02 11:56:30.415857000,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,43.10844884916667
+KWINANA_GT3,peaker,2026-02-19 10:00:00,2026-02-19 14:55:00,99.2,2026-02-19 10:52:48.718027300,"Trip on start up | Intercooler Systems Failure
+",trip,0.8801994520277777
+KWINANA_GT3,peaker,2026-02-27 13:30:00,2026-02-28 13:30:00,99.2,2026-02-27 14:30:45.047047100," Unit at full speed no load but would not synchronise 
+",other,1.0125130686388888
+KWINANA_GT3,peaker,2026-03-05 10:40:00,2026-03-05 10:40:00,59.31,2026-03-06 09:30:19.725657200,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,22.838812682555556
+KWINANA_GT3,peaker,2026-03-19 07:15:00,2026-03-19 07:15:00,67.63900000000001,2026-03-20 08:16:31.040368400,KWINANA_GT3: Energy: NonCompliance; ,noncompliance,25.025288991222222
+KWINANA_GT3,peaker,2026-03-29 20:00:00,2026-03-30 11:55:00,99.2,2026-03-30 12:59:05.228751400,"Electrical Problem High Severity Gen Rotor Ground fault & Fire/Gas system failure alarms active on start-up. Unit shutdown safely prior to sync
+",other,16.984785764277778
+KWINANA_GT3,peaker,2026-04-24 10:55:00,2026-04-24 11:20:00,99.2,2026-04-24 13:08:27.826054900,"Loss of Ready to Start. Compressed Air System Fault
+",other,2.224396126361111
+KWINANA_GT3,peaker,2026-04-24 13:30:00,2026-04-24 14:30:00,99.2,2026-04-24 15:07:16.163404300,"Flame detector fault
+",other,1.6211565011944447
+KWINANA_GT3,peaker,2026-05-26 23:00:00,2026-05-30 15:55:00,99.2,2026-05-26 10:24:51.302923100,BI+IC+ES			 ,other,-12.585749188027778
+KWINANA_GT3,peaker,2026-06-01 14:45:00,2026-06-06 06:55:00,99.2,2026-06-02 10:05:56.665384800,Fault investigation ,other,19.349073718
+KWINANA_GT3,peaker,2026-06-08 17:00:00,2026-06-13 06:55:00,99.2,2026-06-08 11:02:23.455008400,Generator Fault,other,-5.960151386555555
+KWINANA_GT3,peaker,2026-06-15 17:00:00,2026-10-05 14:25:00,99.2,2026-06-08 11:04:20.574549300,Generator Fault,other,-173.92761818075
+KWINANA_GT3,peaker,2026-10-10 09:30:00,2026-10-10 11:10:00,106.804,2026-10-12 08:40:01.268940000,Loss of ready to start | SLO tank low level ,other,47.16701915
+KWINANA_GT3,peaker,2026-10-12 07:45:00,2026-10-15 16:55:00,106.804,2026-10-12 08:41:04.098460600,Leak detected ,other,0.9344717946111112
+MUJA_G6,coal,2023-10-23 14:30:00,2023-10-27 07:55:00,193.0,2023-10-19 13:03:39.260648800,M6 planned IME outage delayed. CTP to follow for plan post Sync time. Cold commissioning occurring during this window as well.,other,-97.43909426422222
+MUJA_G6,coal,2023-11-09 08:45:00,2023-11-09 14:45:00,113.0,2024-06-25 13:58:42.356982400,"MUJA_G6: ContingencyRaise, ContingencyLower",other,5501.228432495111
+MUJA_G6,coal,2023-11-15 06:00:00,2023-11-16 15:25:00,193.0,2023-11-14 09:55:45.707357300,"Forced outage
+Loss of indication of critical valve and standing AVR issue to repair. Will prevent unit cycle. Requires fix before M7 planned outage.
+
+Steam leak required immediate repairs. Outage revi",other,-20.070636845194446
+MUJA_G6,coal,2023-11-26 10:05:00,2023-11-26 12:15:00,152.0,2023-12-09 11:56:43.841992200,Capability restricted due to loss of B mill. Restricted to 60MW for duration. ,other,313.86217833116666
+MUJA_G6,coal,2023-12-10 06:30:00,2023-12-18 15:30:00,193.0,2023-12-10 06:47:25.330213000,"Condenser tube leak requiring repair.
+
+Revised outage entry. Condenser tube leak repaired and returned to service however During unit run-up/recall a leak on an intercept valve on control oil system h",other,0.2903695036111111
+MUJA_G6,coal,2024-01-06 12:10:00,2024-01-12 12:00:00,193.0,2024-01-07 11:21:53.970512800,"When unit removed for routine Cycle FW valve 344 failed in operation, seized. This valve is part of the safety system and unit permissive. Required repaired to return to service. Additionally the cond",other,23.198325142444446
+MUJA_G6,coal,2024-01-13 16:40:00,2024-01-13 20:00:00,68.0,2024-01-15 15:53:55.421828100,"MUJA_G6: Energy: Availability; ContingencyRaise, ContingencyLower",other,47.23206161891667
+MUJA_G6,coal,2024-01-27 15:50:00,2024-01-27 17:35:00,50.0,2024-01-28 08:21:43.880719800,Unit in high pressure swings due to sudden load changes. Spoken to trader about stabilising load but continuing to oscillate.,other,16.5288557555
+MUJA_G6,coal,2024-03-18 06:50:00,2024-03-20 11:00:00,193.0,2024-03-18 10:14:08.419949600,Partial outage - Boiler valve steam leak,other,3.4023388748888888
+MUJA_G6,coal,2024-04-01 09:50:00,2024-04-01 16:50:00,193.0,2024-04-01 10:39:18.764392600,FD Fan Issues,other,0.8218789979444444
+MUJA_G6,coal,2024-04-10 08:15:00,2024-04-19 09:55:00,193.0,2024-04-10 14:47:38.175216200,Unit Boiler Tube Leak and Auxiliary repairs.,other,6.543937560055556
+MUJA_G6,coal,2024-04-20 16:20:00,2024-04-21 13:25:00,193.0,2024-04-21 10:28:59.695406700,Partial outage - Unit load restricted ,other,18.14991539075
+MUJA_G6,coal,2024-05-06 07:55:00,2024-05-07 15:45:00,193.0,2024-05-07 06:28:44.586574600,Unit removal from service,other,22.56238515961111
+MUJA_G6,coal,2024-05-18 21:55:00,2024-05-23 14:50:00,193.0,2024-05-19 10:13:08.958519700,Forced outage - Steam leak,other,12.302488477694444
+MUJA_G6,coal,2024-06-01 16:45:00,2024-06-01 19:55:00,193.0,2024-06-02 06:20:25.282322000,Turbine Issues on RTS,other,13.590356200555556
+MUJA_G6,coal,2024-07-09 19:15:00,2024-07-16 08:25:00,193.0,2024-07-10 14:11:12.954227000,Boiler Outage,other,18.93693172972222
+MUJA_G6,coal,2024-07-19 06:30:00,2024-07-19 19:55:00,72.86,2024-07-20 09:55:27.115927800,Partial load restriction,other,27.424198868833333
+MUJA_G6,coal,2024-08-26 20:50:00,2024-08-26 21:05:00,53.0,2024-08-27 13:14:14.816748100,Mill Trip,trip,16.404115763361112
+MUJA_G6,coal,2024-09-08 14:30:00,2024-09-08 15:50:00,193.0,2024-09-09 05:38:17.503004400,"Delayed Synchronisation time due to a high Turbine IP Differential.
+
+This occurred during RTS process following M6 cycling for midday trough.",other,15.138195279
+MUJA_G6,coal,2024-09-09 09:30:00,2024-09-09 16:10:00,123.0,2024-09-10 05:36:10.060017100,Stage C CEMS Stack Testing,other,20.102794449194445
+MUJA_G7,coal,2023-10-17 09:45:00,2023-10-17 10:35:00,79.655,2024-06-25 13:58:02.908278600,"MUJA_G7: ContingencyRaise, ContingencyLower",other,6052.2174745218335
+MUJA_G7,coal,2023-11-26 11:45:00,2023-11-27 15:10:00,91.155,2023-11-26 12:28:32.636779000,"Restricted to two mill load, no spare mill available after equipment breakdown",other,0.7257324386111111
+MUJA_G7,coal,2023-12-10 08:00:00,2023-12-11 07:55:00,207.155,2024-06-25 14:05:45.547209600,"MUJA_G7: Energy: Availability; ContingencyRaise, ContingencyLower, RoCoF",other,4758.095985336001
+MUJA_G7,coal,2023-12-15 15:35:00,2023-12-23 16:10:00,207.155,2023-12-14 12:58:54.734021700,"Rotary air heater requires immediate repair of damaged equipment prior to return of service. Unit unavailable. 
+
+Revised end time, delays to repairs. Also, outage end time adjusted to correctly includ",other,-26.60146277175
+MUJA_G7,coal,2023-12-24 14:15:00,2023-12-24 19:55:00,63.35900000000001,2023-12-27 12:00:13.638371800,MUJA_G7: Energy: Availability; ,other,69.75378843661112
+MUJA_G7,coal,2023-12-25 05:55:00,2023-12-25 10:35:00,63.35900000000001,2023-12-27 11:57:23.937332600,MUJA_G7: Energy: Availability; ,other,54.03998259238889
+MUJA_G7,coal,2024-01-02 20:50:00,2024-01-03 10:05:00,63.35900000000001,2024-01-04 06:23:11.851303000,Mill Tripped. Drive fault. Repaired and returned to service. ,trip,33.55329202861111
+MUJA_G7,coal,2024-02-04 04:30:00,2024-02-04 14:55:00,207.155,2024-02-02 15:24:49.875029000,Unit 7 required out of service for repairs. Turbine Trip Block SIL test cannot be completed which forces the unit offline. AVR channel fault/failure and card to replace to ensure unit reliability. ,trip,-37.08614582527778
+MUJA_G7,coal,2024-03-11 17:45:00,2024-03-11 18:05:00,61.875,2024-03-12 06:27:27.673547700,Mill Trip load and fcess reduced for duration.,trip,12.707687096583332
+MUJA_G7,coal,2024-03-15 22:15:00,2024-03-15 23:30:00,77.155,2024-03-16 06:44:09.482340500,"Droop unavailable, loss coal flow on feeder A. Spare mill warming to replace it. 2 mill load for duration",other,8.485967316805555
+MUJA_G7,coal,2024-03-16 11:30:00,2024-03-21 09:25:00,207.155,2024-03-16 13:51:55.435936900,Boiler tube leak,other,2.365398871361111
+MUJA_G7,coal,2024-04-01 00:20:00,2024-04-02 17:20:00,207.155,2024-04-01 08:29:52.773307500,"Machine Isolator Fault
+Returned to service 17:20 2/04/2024. ",other,8.164659252083334
+MUJA_G7,coal,2024-04-18 13:00:00,2024-04-18 13:20:00,87.155,2024-04-19 13:03:00.022323700,Turbine Valve Testing,other,24.050006201027777
+MUJA_G7,coal,2024-06-19 14:25:00,2024-06-21 06:05:00,127.155,2024-06-20 06:27:09.994865200,Steam Control Issues,other,16.036109684777777
+MUJA_G7,coal,2024-07-12 13:45:00,2024-07-15 10:40:00,82.755,2024-07-12 13:57:25.938865300,Partial Load Restriction - Blr Tube Leak,other,0.2072052403611111
+MUJA_G7,coal,2024-07-24 06:55:00,2024-07-24 09:10:00,100.955,2024-07-24 16:46:07.982047400,Unit partial load restriction. Mill OOS,other,9.852217235388888
+MUJA_G7,coal,2024-11-30 11:05:00,2024-11-30 16:15:00,71.0,2024-12-01 09:33:56.908813200,FD Fan,other,22.482474670333335
+MUJA_G7,coal,2024-12-17 10:05:00,2024-12-17 10:50:00,211.0,2024-12-18 06:53:30.464864000,Synchronisation delayed during Unit RTS.,other,20.80846246222222
+MUJA_G7,coal,2024-12-18 11:15:00,2024-12-20 22:55:00,211.0,2024-12-18 09:51:00.515223000,Boiler Issues,other,-1.3998568825
+MUJA_G7,coal,2024-12-25 04:10:00,2024-12-25 09:25:00,101.0,2024-12-26 08:02:45.935752000,Max Output 110MW sent out - FD Fan W DE Bearing high temperature,other,27.87942659777778
+MUJA_G7,coal,2024-12-26 01:50:00,2024-12-28 15:10:00,71.0,2024-12-27 05:36:16.699208800,FD Fan West OOS due to Fan DE bearing fault.,other,27.771305335777775
+MUJA_G7,coal,2025-01-06 02:00:00,2025-01-10 05:10:00,132.0,2025-01-07 09:12:51.776571100,FD Fan West unavailable,other,31.21438238086111
+MUJA_G7,coal,2025-03-21 05:20:00,2025-03-21 09:00:00,51.0,2025-03-22 06:12:40.648283300,Coal Quality / Mill Issues,other,24.877957856472225
+MUJA_G7,coal,2025-06-19 09:40:00,2025-06-25 07:55:00,211.0,2025-06-20 06:45:29.965898200,"MUJA_G7: Energy: Availability; ContingencyRaise, ContingencyLower, RoCoF",other,21.091657193944442
+MUJA_G7,coal,2025-07-12 09:25:00,2025-07-15 15:45:00,211.0,2025-07-13 06:43:21.257454300,MUJA_G7: Energy: Availability; ,other,21.305904848416667
+MUJA_G7,coal,2025-08-16 01:25:00,2025-08-16 04:40:00,71.0,2025-08-17 10:37:51.630242300,Coal Bunker Fires.  One Mill unavailable (Mill Major Overhaul).   Risk of Mill tripping whilst running hot coal out of Bunker D.,trip,33.21434173397222
+MUJA_G7,coal,2025-08-29 21:45:00,2025-08-30 17:30:00,132.0,2025-08-30 06:13:31.861277600,FD Fan and Mill D Maintenance,other,8.475517021555556
+MUJA_G7,coal,2025-09-06 01:00:00,2025-09-06 01:00:00,99.23,2025-09-07 09:53:49.335139700,MUJA_G7: Energy: NonCompliance; ,noncompliance,32.897037538805556
+MUJA_G7,coal,2025-09-06 02:15:00,2025-09-06 02:15:00,99.27,2025-09-07 09:54:30.087844300,MUJA_G7: Energy: NonCompliance; ,noncompliance,31.658357734527776
+MUJA_G7,coal,2025-09-06 06:00:00,2025-09-06 06:00:00,102.96,2025-09-07 09:57:36.021752700,AEMO target dispatch setpoint change > 10MW for the 5 min trading interval (15.56MW).,other,27.96000604241667
+MUJA_G7,coal,2025-09-06 08:20:00,2025-09-06 08:20:00,111.25,2025-09-07 10:14:55.759987100,AEMO target dispatch setpoint change > 10MW for the 5 min trading interval (21.85MW).,other,25.915488885305557
+MUJA_G7,coal,2025-09-06 09:45:00,2025-09-06 09:45:00,101.77,2025-09-07 10:16:07.709595900,AEMO target dispatch setpoint change > 10MW for the 5 min trading interval (14.98MW).,other,24.518808221083333
+MUJA_G7,coal,2025-09-06 14:10:00,2025-09-06 14:10:00,100.83,2025-09-07 10:17:03.366959800,AEMO target dispatch setpoint change > 10MW for the 5 min trading interval (18.63MW).,other,20.117601933277776
+MUJA_G7,coal,2025-09-22 10:15:00,2025-09-22 15:40:00,121.0,2025-09-25 15:35:47.938636900,Operator selected wrong mode on TFD (see TFD on 23rd for correct mode made by traders(). This triggered a Capacity change rather than operational mode change between Muja and Traders,other,77.34664962136111
+MUJA_G7,coal,2025-09-26 22:50:00,2025-09-26 23:30:00,111.1,2025-09-27 06:15:36.790848800,MUJA_G7: Energy: NonCompliance; ,noncompliance,7.426886346888889
+MUJA_G7,coal,2025-09-27 08:05:00,2025-09-27 08:05:00,109.03,2025-09-28 14:06:34.739761900,Discrepancy noted between TFD and PI data (time end interval used for forced outage confirmation).,other,30.026316600527778
+MUJA_G7,coal,2025-09-27 15:45:00,2025-09-27 15:45:00,110.28,2025-09-28 14:13:53.238118300,Discrepancy noted for the Dispatch Target Setpoint between TFD and PI data (@ period time end interval used for forced outage confirmation).,other,22.48145503286111
+MUJA_G7,coal,2025-10-11 16:15:00,2025-10-11 16:15:00,129.82,2025-10-12 07:38:44.146408000,MUJA_G7: Energy: NonCompliance; ,noncompliance,15.395596224444445
+MUJA_G7,coal,2025-11-06 07:45:00,2025-11-06 07:45:00,52.80000000000001,2025-11-07 08:53:48.071887100,East Superheat Spray Valve being repaired.,other,25.146686635305556
+MUJA_G7,coal,2025-11-08 19:50:00,2025-11-08 23:10:00,132.0,2025-11-09 06:06:43.347457100,"MUJA_G7: Energy: Availability; ContingencyRaise, ContingencyLower",other,10.27870762697222
+MUJA_G7,coal,2025-11-25 10:30:00,2025-11-25 11:10:00,126.0,2025-11-26 06:39:18.184526300,MUJA_G7: Energy: Availability; ,other,20.155051257305555
+MUJA_G7,coal,2025-11-28 13:15:00,2025-11-28 13:50:00,120.18,2025-11-29 06:26:15.424150200,MUJA_G7: Energy: Availability; ,other,17.1876178195
+MUJA_G7,coal,2025-11-29 08:00:00,2025-11-29 15:55:00,151.0,2025-11-28 15:18:45.497198600,Superheat Spray and Reheat Spray Valves Repairs,other,-16.687361889277778
+MUJA_G7,coal,2025-11-30 19:05:00,2025-11-30 20:15:00,51.0,2025-12-01 06:14:16.175903300,MUJA_G7: Energy: Availability; ,other,11.154493306472222
+MUJA_G7,coal,2025-12-03 09:00:00,2025-12-03 17:25:00,71.0,2025-12-04 07:37:00.222643200,MUJA_G7: Energy: Availability; ,other,22.616728512
+MUJA_G7,coal,2025-12-14 15:00:00,2025-12-15 14:55:00,211.0,2025-12-15 09:53:44.286696200,"MUJA_G7: Energy: Availability; ContingencyRaise, ContingencyLower, RoCoF",other,18.895635193388888
+MUJA_G7,coal,2025-12-16 23:25:00,2025-12-22 14:25:00,211.0,2025-12-17 06:12:54.703791500,MUJA_G7: Energy: NonCompliance; ,other,6.798528830972222
+MUJA_G7,coal,2026-02-06 08:45:00,2026-02-06 14:35:00,121.0,2026-02-07 06:35:28.791087900,MUJA_G7: Energy: Availability; ,other,21.84133085775
+MUJA_G7,coal,2026-02-09 12:00:00,2026-02-11 11:50:00,131.0,2026-02-10 06:24:25.970501600,MUJA_G7: Energy: Availability; ,other,18.40721402822222
+MUJA_G7,coal,2026-02-19 14:45:00,2026-02-19 19:20:00,61.0,2026-02-20 11:45:58.319857600,Capability Change Emissions Issues,other,21.016199960444446
+MUJA_G7,coal,2026-02-26 01:30:00,2026-02-26 06:40:00,76.0,2026-02-27 06:11:24.036105800,MUJA_G7: Energy: Availability; ,other,28.690010029388887
+MUJA_G7,coal,2026-03-04 16:00:00,2026-03-04 19:25:00,63.0,2026-03-05 09:57:23.256393300,MUJA_G7: Energy: Availability; ,other,17.95646010925
+MUJA_G7,coal,2026-03-12 08:00:00,2026-03-12 10:15:00,121.0,2026-03-13 07:47:05.046741500,MUJA_G7: Energy: Availability; ,other,23.784735205972222
+MUJA_G7,coal,2026-05-06 09:30:00,2026-05-07 23:20:00,211.0,2026-05-07 09:36:25.691063000,Unit restricted prior to removal from service,other,24.10713640638889
+MUJA_G7,coal,2026-05-18 07:55:00,2026-05-19 14:30:00,111.68,2026-05-19 06:08:17.205755700,MUJA_G7: Energy: Availability; ,other,22.221446043249998
+MUJA_G7,coal,2026-05-25 08:35:00,2026-05-25 09:00:00,92.96,2026-05-26 08:52:45.241707800,No CR/CL - Mill trip,trip,24.29590047438889
+MUJA_G7,coal,2026-10-05 16:25:00,2026-10-12 09:45:00,211.0,2026-10-06 12:49:49.474830000,Steam Range Control Issues,other,20.413743008333334
+MUJA_G8,coal,2023-10-01 15:45:00,2023-10-01 16:30:00,123.1,2023-10-02 16:05:34.074445600,Unit restricted at 100MW. Inflexible. contingency raise and lower unavailable for duration. SECA instrument failure,other,24.34279845711111
+MUJA_G8,coal,2023-10-01 17:15:00,2023-10-02 14:30:00,83.7,2023-12-03 05:31:47.741262200,MSV Testing,other,1500.279928128389
+MUJA_G8,coal,2023-10-23 09:10:00,2023-10-23 09:10:00,134.0,2024-06-25 14:05:25.095315000,MUJA_G8: Energy: NonCompliance; ,noncompliance,5908.9236375875
+MUJA_G8,coal,2023-10-23 09:50:00,2023-10-23 09:50:00,140.957,2024-06-25 14:05:24.127092300,MUJA_G8: Energy: NonCompliance; ,noncompliance,5908.256701970084
+MUJA_G8,coal,2023-12-18 12:25:00,2023-12-18 12:30:00,71.0,2025-06-18 21:12:51.782485500,Energy FO + ESS FO,other,13160.797717357085
+MUJA_G8,coal,2023-12-21 07:30:00,2023-12-21 14:25:00,87.4,2023-12-20 15:50:35.776801800,"Partial outage, unit restricted to 135MW sent out. Droop response limited to +/-10MW for duration also. FD fan reg bearing linkage broken. Loss of fan flow control for boiler stability. 
+revised, outa",other,-15.656728666166668
+MUJA_G8,coal,2024-01-05 04:30:00,2024-01-05 11:00:00,131.0,2024-01-05 15:02:33.146436200,"Droop unavailable, boiler tripped to manual, loss of feedpump due to valve position issue and loss of mill. ",trip,10.542540676722222
+MUJA_G8,coal,2024-01-28 17:00:00,2024-01-28 17:55:00,74.0,2024-01-29 15:57:15.316417800,inflexible due to feedwater swings,other,22.9542545605
+MUJA_G8,coal,2024-02-03 00:00:00,2024-02-03 17:55:00,211.0,2024-02-02 14:55:41.146397300,"Depac Isolation valve failed, cannot pressurise depac. Un-able to repair depac with unit in service. Boiler to be force cooled to carry out repairs.",other,-9.071903778527778
+MUJA_G8,coal,2024-02-21 08:40:00,2024-02-21 10:00:00,115.82,2024-02-21 15:57:05.160066200,"Mill OOS, restricted to 2 mill load for duration. ",other,7.284766685055555
+MUJA_G8,coal,2024-05-23 08:30:00,2024-05-23 16:55:00,58.0,2024-05-24 10:05:27.586254800,CR and CL unavailable for duration and MW restricted,other,25.59099618188889
+MUJA_G8,coal,2024-05-30 11:05:00,2024-05-30 11:05:00,60.83000000000001,2024-05-31 06:00:45.544735000,Energy Non-compliance during Operation Valve Testing,other,18.929317981944447
+MUJA_G8,coal,2024-05-31 06:45:00,2024-06-14 20:55:00,211.0,2024-05-31 14:12:53.969060800,Partial Forced Outage,trip,7.464991405777777
+MUJA_G8,coal,2024-06-19 14:05:00,2024-06-19 14:05:00,53.1,2024-06-20 06:17:39.820057300,Unit RTS,other,16.21106112702778
+MUJA_G8,coal,2024-06-19 15:45:00,2024-06-19 16:05:00,55.1,2024-06-20 06:16:34.022985700,Unit RTS,other,14.526117496027778
+MUJA_G8,coal,2024-07-24 09:50:00,2024-07-24 17:30:00,86.0,2024-07-24 17:52:33.536011600,Partial load restriction. 3rd mill unavailable,other,8.042648892111112
+MUJA_G8,coal,2024-08-26 15:25:00,2024-09-01 07:55:00,211.0,2024-08-26 14:10:44.019223800,Economiser Tube Leak,other,-1.2377724378333332
+MUJA_G8,coal,2024-12-04 22:05:00,2024-12-07 15:05:00,211.0,2024-12-04 08:54:24.371292300,Boiler Repairs,other,-13.176563529916667
+MUJA_G8,coal,2024-12-12 15:45:00,2024-12-12 16:15:00,62.69999999999999,2024-12-13 10:23:55.789843600,"Dispatch Non Compliant, CR/CL Unavailable",other,18.64883051211111
+MUJA_G8,coal,2024-12-13 22:20:00,2024-12-13 23:55:00,101.0,2024-12-14 10:32:53.187470900,Steam Temperature Control Issues Bid in as Inflexible CR / CL actually still I/S,other,12.214774297472221
+MUJA_G8,coal,2024-12-30 14:00:00,2025-01-01 03:55:00,211.0,2024-12-29 08:47:36.278310300,Boiler  Maintenance - Tube Leak,other,-29.20658935825
+MUJA_G8,coal,2025-02-10 08:10:00,2025-02-10 09:05:00,101.0,2025-02-11 06:14:16.546464700,Partial outage (mill trip) CR/CL OOS,trip,22.07126290686111
+MUJA_G8,coal,2025-03-01 11:25:00,2025-03-01 19:25:00,121.0,2025-03-02 06:16:11.252313400,MUJA_G8: Energy: Availability; ,other,18.853125642611108
+MUJA_G8,coal,2025-03-10 20:00:00,2025-03-11 13:00:00,93.0,2025-03-11 06:24:28.084541300,MUJA_G8: Energy: Availability; ,other,10.407801261472223
+MUJA_G8,coal,2025-03-14 18:15:00,2025-03-14 19:10:00,126.67,2025-03-15 11:31:12.586479400,MUJA_G8: Energy: NonCompliance; ,trip,17.270162910944446
+MUJA_G8,coal,2025-03-14 21:10:00,2025-03-15 13:55:00,51.0,2025-03-15 11:59:45.639455400,Mill Issues - Unit Capped at 160MW  (Sent Out).,other,14.829344293166667
+MUJA_G8,coal,2025-03-16 09:20:00,2025-03-17 23:55:00,96.0,2025-03-17 07:53:53.736969600,MUJA_G8: Energy: Availability; ,other,22.564926936
+MUJA_G8,coal,2025-06-10 14:40:00,2025-06-10 16:15:00,133.55,2025-06-11 09:01:10.431237200,Mill Trip CR / CL OOS ,trip,18.352897565888888
+MUJA_G8,coal,2025-06-24 10:45:00,2025-06-24 11:10:00,71.0,2025-06-25 06:23:47.509752600,MUJA_G8: Energy: NonCompliance;  - Mill Trip,trip,19.646530486833335
+MUJA_G8,coal,2025-07-12 09:45:00,2025-07-16 08:55:00,156.06,2025-07-12 10:57:55.044261700,Partial Forced outage until unit 7 returned to service,other,1.2152900726944444
+MUJA_G8,coal,2025-11-25 10:30:00,2025-11-25 11:10:00,126.0,2025-11-26 06:39:25.218742300,MUJA_G8: Energy: Availability; ,other,20.157005206194444
+MUJA_G8,coal,2025-11-27 09:50:00,2025-11-30 07:55:00,211.0,2025-11-28 06:55:24.191778500,MUJA_G8: Energy: Availability; ,other,21.090053271805555
+MUJA_G8,coal,2025-12-06 21:00:00,2025-12-07 08:55:00,211.0,2025-12-07 13:45:44.741053600,Fuel Issues unable to proceed with run up.,other,16.762428070444447
+MUJA_G8,coal,2025-12-13 04:00:00,2025-12-21 15:30:00,211.0,2025-12-14 06:46:38.011181400,MUJA_G8: Energy: Availability; ,other,26.777225328166665
+MUJA_G8,coal,2026-02-18 18:30:00,2026-02-18 19:30:00,91.0,2026-02-19 09:54:28.388144400,MUJA_G8: Energy: Availability; ,other,15.407885595666666
+MUJA_G8,coal,2026-02-19 14:40:00,2026-02-19 15:25:00,51.0,2026-02-20 13:09:41.745012200,CEMS Alarm - Exceeding dust limits,other,22.494929170055556
+MUJA_G8,coal,2026-02-19 16:20:00,2026-02-19 17:00:00,66.0,2026-02-20 14:02:41.468903600,CEMS Alarm - Exceeding dust limits,other,21.71151913988889
+MUJA_G8,coal,2026-02-20 16:40:00,2026-02-20 19:10:00,71.0,2026-02-21 13:27:15.176072600,CEMS Alarm - Exceeding dust limits,other,20.78754890905556
+MUJA_G8,coal,2026-05-23 03:45:00,2026-05-23 03:45:00,91.549,2026-05-24 07:33:35.866280300,MUJA_G8: Energy: NonCompliance; ,noncompliance,27.80996285563889
+MUJA_G8,coal,2026-05-24 18:10:00,2026-05-24 18:55:00,135.80200000000002,2026-05-25 07:36:26.014737500,CR CL unavailable,other,13.440559649305555
+MUJA_G8,coal,2026-07-11 06:50:00,2026-07-11 14:40:00,109.65,2026-07-12 07:18:01.194885400,MUJA_G8: Energy: NonCompliance; ,other,24.466998579277774
+MUJA_G8,coal,2026-07-13 21:55:00,2026-07-13 21:55:00,67.25,2026-07-14 06:31:19.217387200,MUJA_G8: Energy: NonCompliance; ,noncompliance,8.60533816311111
+MUJA_G8,coal,2026-07-20 11:55:00,2026-07-20 14:15:00,211.0,2026-07-21 14:50:04.925048100,Oil Gun Jammed in Boiler while attempting to fire up.,other,26.918034735583333
+MUJA_G8,coal,2026-08-04 09:15:00,2026-08-17 06:55:00,211.0,2026-08-05 06:02:05.103006100,MUJA_G8: Energy: Availability; ,other,20.78475083502778
+NAMKKN_MERR_SG1,peaker,2023-11-28 08:05:00,2023-11-28 15:30:00,82.0,2023-11-27 12:25:15.410994300,"HV corrective works (confirmed by planning team via email).
+
+- For the outage on the 28/11/23, please submit a forced outage. Given the timing of the outages, only one outage on the 28/11 and 29/11 ma",other,-19.66238583491667
+NAMKKN_MERR_SG1,peaker,2023-11-29 15:30:00,2023-11-29 16:30:00,82.0,2023-11-30 12:45:44.729264400,"The work we are doing under this outage has had some minor delays and site was not able to be back online and available by the scheduled 1530 time. 
+Advised AEMO that they are running late and that th",other,21.262424795666664
+NAMKKN_MERR_SG1,peaker,2024-07-26 07:35:00,2024-07-26 08:55:00,82.0,2024-07-29 13:50:52.128009300,"ME unable to synchronize, affecting both GTs resulting in a full plant outage",other,78.26448000258333
+NAMKKN_MERR_SG1,peaker,2024-08-20 05:35:00,2024-08-20 06:05:00,82.0,2024-08-20 11:12:23.340749000,Physical issues on site resulting in GT1 being unable to sync and meet dispatch instructions,other,5.623150208055555
+NAMKKN_MERR_SG1,peaker,2024-08-21 18:15:00,2024-08-21 18:35:00,82.0,2024-08-22 11:52:51.862123600,Mechanical fault delaying the start.,other,17.63107281211111
+NAMKKN_MERR_SG1,peaker,2024-12-11 19:45:00,2024-12-11 19:45:00,81.81,2024-12-12 12:42:21.986624800,Site issue - GT2 tripped.,trip,16.956107395777778
+NAMKKN_MERR_SG1,peaker,2024-12-12 14:00:00,2024-12-12 14:10:00,82.0,2024-12-13 11:20:40.377209500,Site issue - GT2 tripped.,trip,21.34454922486111
+NAMKKN_MERR_SG1,peaker,2024-12-13 02:30:00,2024-12-13 03:35:00,82.0,2024-12-13 11:26:09.466868600,Site issue - GT1 and GT2 tripped.,trip,8.935963019055556
+NAMKKN_MERR_SG1,peaker,2024-12-25 18:30:00,2025-01-03 17:15:00,82.0,2024-12-25 18:33:23.075063600,"Due to issue on high voltage equipment on site, the site is unavailable until further notice. End interval brought forward due to issue being solved earlier than originally forecasted.",other,0.056409739888888887
+NAMKKN_MERR_SG1,peaker,2025-01-20 18:25:00,2025-01-20 18:45:00,79.74,2025-01-21 13:15:14.442689000,GT 2 tripped,trip,18.83734519138889
+NAMKKN_MERR_SG1,peaker,2025-02-05 19:05:00,2025-02-06 14:15:00,82.0,2025-02-05 20:24:24.839129700,Site unable to respond to AEMO network constraint. ,other,1.3235664249166665
+NAMKKN_MERR_SG1,peaker,2025-08-25 21:15:00,2025-08-25 22:45:00,82.0,2025-08-26 16:25:46.542866000,"Both GTs were having issues syncing after being called on to generate - based on compliance data received from site AEMO DIs started from 21:15 AWST. From 21:15 AWST to 22:40 AWST, the GTs were not ab",other,19.179595240555557
+NAMKKN_MERR_SG1,peaker,2026-01-05 17:30:00,2026-01-05 17:35:00,56.760000000000005,2026-01-06 12:48:10.344776100,"GT2 tripped while generating - currently investigating the cause of the issue. Noting the unit was available for 17:45 starting DI.
+
+RAC calculated as = CAP - (Target - Gen) = 82 - (70 - 25.24) = 37.2",trip,19.302873548916665
+NAMKKN_MERR_SG1,peaker,2026-01-08 18:20:00,2026-01-08 18:20:00,51.010000000000005,2026-01-09 10:00:19.556704400,GT2 tripped. Investigating the cause of the issue.,trip,15.672099084555555
+NAMKKN_MERR_SG1,peaker,2026-02-16 16:00:00,2026-02-17 17:00:00,82.0,2026-02-17 14:28:48.333383600,Electrical Fault at Merredin Power Station that took full plant offline.,other,22.480092606555555
+NEWGEN_KWINANA_CCG1,gas_base,2023-10-04 14:30:00,2023-10-04 14:30:00,52.900000000000034,2023-10-05 11:22:43.494535500,"Delayed re-start of plant following resynch, due to an issue following the sync of the Gas Turbine. ",other,20.87874848208333
+NEWGEN_KWINANA_CCG1,gas_base,2023-10-11 20:00:00,2023-10-11 20:00:00,50.5,2023-10-12 15:09:26.545861900,GT synced but did not automatically ramp up,other,19.157373850527776
+NEWGEN_KWINANA_CCG1,gas_base,2023-11-23 18:40:00,2023-11-25 19:35:00,334.8,2023-11-24 11:32:07.479166000,Reduced output due to loss of supplementary firing [13164],other,16.868744212777777
+NEWGEN_KWINANA_CCG1,gas_base,2024-02-12 10:50:00,2024-02-12 12:35:00,324.0,2024-02-13 11:59:15.366639700,Western Power Signal Loss [17220],other,25.15426851102778
+NEWGEN_KWINANA_CCG1,gas_base,2024-03-06 11:30:00,2024-03-06 17:35:00,334.8,2024-03-07 15:17:08.297740700,Unavailable to replace feedwater stop valve [18440],other,27.785638261305557
+NEWGEN_KWINANA_CCG1,gas_base,2024-03-17 14:30:00,2024-03-17 14:30:00,52.60000000000002,2024-03-18 16:21:24.697329400,Delayed GT ramp-up than scheduled [18860],other,25.85686036927778
+NEWGEN_KWINANA_CCG1,gas_base,2024-11-13 12:50:00,2024-11-13 13:00:00,137.8,2024-11-14 16:29:42.540335200,Inflexibility flag used due to testing [40140],other,27.66181675977778
+NEWGEN_KWINANA_CCG1,gas_base,2024-11-13 13:35:00,2024-11-13 13:55:00,117.8,2024-11-14 16:29:45.479287400,Inflexibility flag used due to testing [40143],other,26.912633135388887
+NEWGEN_KWINANA_CCG1,gas_base,2024-12-17 15:00:00,2024-12-17 15:15:00,167.8,2024-12-18 10:57:37.290897700,Steam Turbine trip [43240],trip,19.960358582694447
+NEWGEN_KWINANA_CCG1,gas_base,2025-01-27 13:35:00,2025-01-27 14:25:00,327.8,2025-01-28 09:54:33.181160200,Delayed return to service [46691],other,20.325883655611108
+NEWGEN_KWINANA_CCG1,gas_base,2025-03-21 12:15:00,2025-03-21 12:15:00,53.0,2025-03-24 09:06:53.828431300,Incorrect RTM submission [50594],other,68.86495234202778
+NEWGEN_KWINANA_CCG1,gas_base,2025-04-17 16:00:00,2025-04-18 07:55:00,177.8,2025-04-22 09:05:02.952306800,Water cooling issues,other,113.08415341855556
+NEWGEN_KWINANA_CCG1,gas_base,2025-04-23 14:10:00,2025-04-23 23:55:00,162.8,2025-04-24 12:07:18.383957000,Further reduction to maintain average allowable discharge temperature of cooling water [52920],other,21.955106654722222
+NEWGEN_KWINANA_CCG1,gas_base,2025-08-03 13:55:00,2025-08-03 13:55:00,210.9,2025-08-04 14:58:33.692173700,FO due to AEMO setpoint issue [60803],other,25.05935893713889
+NEWGEN_KWINANA_CCG1,gas_base,2025-08-19 04:50:00,2025-08-19 06:25:00,77.80000000000001,2025-08-19 08:37:12.262348000,Supplementary firing burner ignition transformer fail.,other,3.7867395411111113
+NEWGEN_KWINANA_CCG1,gas_base,2025-10-20 14:00:00,2025-10-21 01:55:00,327.8,2025-10-21 08:58:45.713710100,Delay return to service during CTP due to failure of SDG. [67629],other,18.97936491947222
+NEWGEN_KWINANA_CCG1,gas_base,2025-10-21 22:00:00,2025-10-21 22:10:00,247.7,2025-10-22 13:22:02.888934800,ST trip during CTP [67723],trip,15.367469148555555
+NEWGEN_KWINANA_CCG1,gas_base,2025-10-21 23:10:00,2025-10-22 00:25:00,327.8,2025-10-22 12:12:23.254081000,Plant trip caused by GT trip during CTP. [67680],trip,13.039792800277777
+NEWGEN_KWINANA_CCG1,gas_base,2025-10-22 02:30:00,2025-10-22 03:55:00,327.8,2025-10-22 13:19:24.909973300,Plant trip caused by flame failures during CTP [67722],trip,10.823586103694444
+NEWGEN_KWINANA_CCG1,gas_base,2025-10-22 20:00:00,2025-10-22 20:00:00,71.40000000000003,2025-10-23 12:07:42.866266700,Dispatch non-compliance to maintain generation system security during CTP [67740],other,16.128573962972222
+NEWGEN_KWINANA_CCG1,gas_base,2025-10-24 09:15:00,2025-10-24 09:55:00,327.8,2025-10-27 14:08:22.857794600,Full Unit trip due to gas switchover settings issue. [68061],trip,76.88968272072222
+NEWGEN_KWINANA_CCG1,gas_base,2025-10-24 12:05:00,2025-10-24 12:40:00,177.8,2025-10-27 14:13:54.791198700,Dispatch Inflexibility. [68066],other,74.14855311075
+NEWGEN_KWINANA_CCG1,gas_base,2025-11-11 14:20:00,2025-11-11 15:25:00,327.8,2025-11-12 10:47:13.804574900,Unit Trip due to GT flame out. [69128],trip,20.45383460413889
+NEWGEN_KWINANA_CCG1,gas_base,2025-12-06 14:30:00,2025-12-06 15:05:00,299.0,2025-12-07 12:01:05.754615500,Low HP drum level trip on startup [71168],trip,21.518265170972224
+NEWGEN_KWINANA_CCG1,gas_base,2026-01-31 23:10:00,2026-02-01 00:25:00,327.8,2026-02-01 09:04:27.884473700,Full unit trip due to gas valve trip [76455],trip,9.90774568713889
+NEWGEN_KWINANA_CCG1,gas_base,2026-02-22 14:10:00,2026-02-22 14:30:00,327.8,2026-02-22 14:47:47.109560400,GT trip on resynch [78200],trip,0.6297526556666667
+NEWGEN_KWINANA_CCG1,gas_base,2026-02-22 17:15:00,2026-02-22 20:40:00,207.8,2026-02-23 07:40:10.655832200,ST Trip [78808],trip,14.419626620055555
+NEWGEN_KWINANA_CCG1,gas_base,2026-02-24 17:40:00,2026-02-24 19:10:00,327.8,2026-02-25 09:41:20.876759400,Full unit trip due to gas valve issue. [79495],trip,16.0224657665
+NEWGEN_KWINANA_CCG1,gas_base,2026-02-25 13:55:00,2026-02-25 14:05:00,101.3,2026-02-26 10:12:33.786680700,ST Trip [79840],trip,20.292718522416667
+NEWGEN_KWINANA_CCG1,gas_base,2026-06-07 07:50:00,2026-06-07 07:50:00,50.60000000000002,2026-06-07 08:35:00.581464500,Dispatch non-compliance on desynch to ensure GT in barring [91570],other,0.7501615179166666
+NEWGEN_KWINANA_CCG1,gas_base,2026-06-08 20:45:00,2026-06-08 21:40:00,57.80000000000001,2026-06-09 10:20:26.086639400,Cooling water pump issue,other,13.590579622055555
+NEWGEN_KWINANA_CCG1,gas_base,2026-06-10 22:50:00,2026-06-10 23:55:00,167.8,2026-06-11 10:14:55.039127400,Reducing load for allowable discharge of temperature of cooling water,other,11.4152886465
+NEWGEN_KWINANA_CCG1,gas_base,2026-07-08 12:15:00,2026-07-08 13:10:00,87.80000000000001,2026-07-08 14:27:53.549050100,PLC card change [93748],other,2.214874736138889
+NEWGEN_KWINANA_CCG1,gas_base,2026-08-10 13:30:00,2026-08-10 14:25:00,77.80000000000001,2026-08-10 15:25:51.939144800,GT egatrol modbus fault [95802],other,1.9310942068888888
+NEWGEN_NEERABUP_GT1,peaker,2024-02-15 16:00:00,2024-02-15 16:00:00,167.60000000000002,2024-02-16 13:25:51.599097500,"AEMO AGC Linear Ramp signal @ 15:55, instantaneous +20.5MW, contributed to this shortfall ",other,21.430999749305556
+NEWGEN_NEERABUP_GT1,peaker,2024-05-02 20:45:00,2024-05-02 20:45:00,151.60000000000002,2024-05-03 15:20:18.019386500,"Generation shortfall, high DI started the LAG unit that had not got to FSNL before the DI reduced to below single unit capability, LAG unit hence did not Synchronise, but linear ramping signal still w",other,18.588338718472222
+NEWGEN_NEERABUP_GT1,peaker,2024-06-04 17:40:00,2024-06-04 17:40:00,52.60000000000002,2024-06-05 12:52:03.801306500,"AEMO AGC comms failure the day prior, resulted in a High FDMWSP (320MW) from the day prior comms issues, upon unit started by AGC look ahead, AGC logic incorrectly ramped due this high FDMWSP value. ",other,19.20105591847222
+NEWGEN_NEERABUP_GT1,peaker,2024-09-26 20:15:00,2024-09-26 20:20:00,236.05,2024-09-27 15:58:59.553115700,"Undegenerating due to Neerabup being ""Constrained ON"", with a DI change from 14.4MW to 171MW in one interval (hence generation shortfall as our maximum ramp rate is 10MW/min",other,19.733209198805554
+NEWGEN_NEERABUP_GT1,peaker,2024-09-27 19:35:00,2024-09-27 19:35:00,181.6,2024-09-30 11:58:40.202634300,Incorrect AGC ramp rate signals sent to Newgen outside of units operating capability,other,64.39450073175
+NEWGEN_NEERABUP_GT1,peaker,2024-12-07 05:00:00,2024-12-09 14:25:00,330.6,2024-12-07 18:59:16.891577900,"Miss-communication of Outage 430432 that was rejected, however the Outage commenced & Western Power Outage isolated the 330kV NBT-GNN transmission Thus Neerabup cannot generate. Neerabup also commence",other,13.988025438305556
+NEWGEN_NEERABUP_GT1,peaker,2025-01-24 08:10:00,2025-01-24 17:10:00,330.6,2025-02-03 20:40:27.468619400,"Refer to outages #436163 & 436176 that were entered 24/01/2025, ""Facility fully offline"" was selected seemed to have glitched from selected to not selected, thus 342MW RAC incorrectly submitted, spott",other,252.50763017205557
+NEWGEN_NEERABUP_GT1,peaker,2025-11-11 19:30:00,2025-11-12 18:15:00,330.6,2025-11-11 23:25:47.052527200,"GT12 Protection Relay fault, initiated WP's GNN91 Intertrip of the 330kV line, Both units unavailable.",trip,3.929736813111111
+NEWGEN_NEERABUP_GT1,peaker,2026-05-17 14:30:00,2026-05-24 14:55:00,159.60000000000002,2026-05-17 14:00:24.975313000,GT11 - Gas control valve fault ,other,-0.4930624130555556
+PERTHENERGY_KWINANA_GT1,peaker,2023-10-16 16:05:00,2023-10-17 10:05:00,54.5,2023-10-18 16:11:25.153049600,Forced Outage,other,48.10698695822222
+PERTHENERGY_KWINANA_GT1,peaker,2023-11-06 17:00:00,2023-11-07 14:55:00,109.0,2023-11-07 09:39:37.457473700,Force Outage,other,16.660404853805556
+PERTHENERGY_KWINANA_GT1,peaker,2023-11-07 17:35:00,2023-11-08 09:00:00,81.75,2023-11-21 08:35:04.100613500,Forced Outage,other,327.00113905930556
+PERTHENERGY_KWINANA_GT1,peaker,2023-12-04 17:00:00,2023-12-05 13:10:00,81.75,2023-12-14 10:33:34.142912600,Forced Outage - 100B Ignition lead and Spark plug failure,other,233.55948414238887
+PERTHENERGY_KWINANA_GT1,peaker,2023-12-05 17:00:00,2023-12-06 11:40:00,109.0,2023-12-14 10:37:40.610635700,Forced Outage - 100B light off failure and engine exhaust smoking - fault finding required,other,209.62794739880556
+PERTHENERGY_KWINANA_GT1,peaker,2024-02-12 06:00:00,2024-02-13 14:00:00,54.5,2024-02-12 16:48:12.225095500,GT200B Forced Outage - control system and safety system configuration issue,other,10.80339585986111
+PERTHENERGY_KWINANA_GT1,peaker,2024-05-02 17:50:00,2024-05-02 18:20:00,54.5,2024-05-02 18:43:24.210378100,"GT100 Unit Drive back, load drop drive back protection. ",other,0.8900584383611111
+PERTHENERGY_KWINANA_GT1,peaker,2024-06-28 18:00:00,2024-06-29 07:30:00,54.5,2024-06-28 17:06:45.250726600,Planned Outage: 414341-2 delays,other,-0.8874303537222222
+PERTHENERGY_KWINANA_GT1,peaker,2024-07-02 13:50:00,2024-07-06 07:25:00,109.0,2024-07-02 15:07:54.057224500,GTG100 Filter Housing Repairs ,trip,1.2983492290277778
+PERTHENERGY_KWINANA_GT1,peaker,2024-07-23 12:00:00,2024-07-23 14:55:00,54.5,2024-07-23 09:52:25.089237100,Opportunistic maintenance.,other,-2.1263641008055556
+PERTHENERGY_KWINANA_GT1,peaker,2024-07-25 16:10:00,2024-07-25 17:20:00,109.0,2024-07-26 08:14:09.399338000,GT Gas Fuel Issues,other,16.06927759388889
+PERTHENERGY_KWINANA_GT1,peaker,2024-08-01 06:30:00,2024-08-01 12:40:00,54.5,2024-08-01 07:16:34.463368300,GTG100A Forced Outage - Gas Valve fault,other,0.7762398245277778
+PERTHENERGY_KWINANA_GT1,peaker,2024-08-19 10:45:00,2024-08-19 11:45:00,109.0,2024-08-19 10:45:02.994362100,Unit issue.,other,0.00083176725
+PERTHENERGY_KWINANA_GT1,peaker,2024-08-26 09:45:00,2024-08-26 10:45:00,109.0,2024-08-26 09:58:52.035888000,"Isolating transformer.
+
+Isolation on GT100 finished early at 10:44AM.",other,0.23112108
+PERTHENERGY_KWINANA_GT1,peaker,2024-09-04 17:00:00,2024-09-04 17:35:00,54.5,2024-09-05 08:44:11.976996600,GTG100 light off issue,other,15.736660276833334
+PERTHENERGY_KWINANA_GT1,peaker,2024-09-09 14:05:00,2024-09-09 14:15:00,54.5,2024-09-11 09:07:55.956598400,Unit driveback,other,43.04887683288889
+PERTHENERGY_KWINANA_GT1,peaker,2024-09-12 08:45:00,2024-09-12 13:45:00,54.5,2024-09-12 08:51:37.614030800,GTG100 on forced outage due to leaking oil lines replacement,other,0.1104483418888889
+PERTHENERGY_KWINANA_GT1,peaker,2024-09-25 06:30:00,2024-09-25 07:25:00,54.5,2024-09-25 06:55:21.404259300,Sensor Fault on GTG200 generator oil system,other,0.42261229424999996
+PERTHENERGY_KWINANA_GT1,peaker,2024-10-09 10:30:00,2024-10-09 14:35:00,54.5,2024-10-09 10:32:34.448890300,Oil leak to one of the units,other,0.04290246952777777
+PERTHENERGY_KWINANA_GT1,peaker,2024-10-12 16:30:00,2024-10-14 12:00:00,54.5,2024-10-12 16:38:25.667364100,GTG100 on forced outage due to an oil leak.,other,0.14046315669444445
+PERTHENERGY_KWINANA_GT1,peaker,2024-10-17 11:25:00,2024-10-18 15:00:00,54.5,2024-10-17 12:31:11.069359700,GTG100 trip,trip,1.1030748221388889
+PERTHENERGY_KWINANA_GT1,peaker,2024-10-25 15:05:00,2024-10-26 03:05:00,109.0,2024-10-25 13:48:01.763555500,Continuation of Outage #426894,other,-1.2828434568055556
+PERTHENERGY_KWINANA_GT1,peaker,2024-10-30 16:25:00,2024-10-30 17:35:00,54.5,2024-10-30 16:39:12.204377800,Half-station outage - Unit GTG200 Fault identified.,other,0.23672343827777778
+PERTHENERGY_KWINANA_GT1,peaker,2024-12-10 19:30:00,2024-12-11 08:40:00,54.5,2024-12-10 19:38:11.403012500,GT200 forced outage,other,0.13650083680555555
+PERTHENERGY_KWINANA_GT1,peaker,2024-12-11 10:25:00,2024-12-11 11:00:00,54.5,2024-12-11 11:03:52.315256700,GT200 Calibration ,other,0.6478653490833334
+PERTHENERGY_KWINANA_GT1,peaker,2025-01-19 15:00:00,2025-01-20 10:00:00,54.5,2025-01-19 15:03:57.955574400,GT100 Lube oil transmitter failure ,other,0.06609877066666667
+PERTHENERGY_KWINANA_GT1,peaker,2025-01-20 17:05:00,2025-01-24 12:30:00,54.5,2025-01-20 17:05:41.770204100,Hydraulic issues.,other,0.011602834472222223
+PERTHENERGY_KWINANA_GT1,peaker,2025-01-31 11:00:00,2025-01-31 13:45:00,54.5,2025-01-31 10:56:26.010773500,Blown sensing line on GT200,other,-0.05944145180555556
+PERTHENERGY_KWINANA_GT1,peaker,2025-02-05 13:40:00,2025-02-06 12:45:00,109.0,2025-02-05 13:41:45.708705200,Gas detector alarm requires investigation.,other,0.029363529222222223
+PERTHENERGY_KWINANA_GT1,peaker,2025-03-20 14:00:00,2025-03-20 14:55:00,54.5,2025-03-20 15:03:51.982680400,Water wash of engines prior to the following weeks outage.,other,1.0644396334444444
+PERTHENERGY_KWINANA_GT1,peaker,2025-04-09 18:00:00,2025-05-11 11:55:00,109.0,2025-04-11 09:09:32.040076100,Inspection of GT200 due to a generator fault,trip,39.15890002113889
+PERTHENERGY_KWINANA_GT1,peaker,2025-05-27 22:35:00,2025-05-28 07:20:00,54.5,2025-05-28 08:10:23.695378800,GTG200 starter issue.,other,9.589915383000001
+PERTHENERGY_KWINANA_GT1,peaker,2025-05-30 10:00:00,2025-05-30 10:35:00,54.5,2025-05-30 11:55:38.944147300,GTG100 borescope inspection ,other,1.927484485361111
+PERTHENERGY_KWINANA_GT1,peaker,2025-06-04 19:35:00,2025-06-04 20:10:00,109.0,2025-06-04 20:17:59.903150600,GTG 200 trip on shutdown.,trip,0.7166397640555556
+PERTHENERGY_KWINANA_GT1,peaker,2025-06-05 09:00:00,2025-06-09 11:00:00,81.75,2025-06-05 13:39:41.364602900,Engine breakdown,other,4.6614901674722224
+PERTHENERGY_KWINANA_GT1,peaker,2025-06-10 08:45:00,2025-06-10 09:00:00,81.75,2025-06-10 09:06:40.136728500,Drop Load detect trip on GTG200,trip,0.36114909124999994
+PERTHENERGY_KWINANA_GT1,peaker,2025-06-20 09:35:00,2025-06-20 13:20:00,81.75,2025-06-20 09:38:35.606000100,GT200A Borescope and oil leak fix.,other,0.05989055558333333
+PERTHENERGY_KWINANA_GT1,peaker,2025-07-03 10:00:00,2025-07-03 11:50:00,81.75,2025-07-02 12:08:38.930311500,GTG200 borescope inspection ,other,-21.855852691250004
+PERTHENERGY_KWINANA_GT1,peaker,2025-07-23 00:05:00,2025-07-23 00:55:00,54.5,2025-07-23 08:39:01.414032400,Trip during coastdown,trip,8.567059453444445
+PERTHENERGY_KWINANA_GT1,peaker,2025-07-23 21:40:00,2025-07-23 22:15:00,54.5,2025-07-24 09:32:31.623825800,Trip on shut-down on 200B. ,trip,11.875451062722222
+PERTHENERGY_KWINANA_GT1,peaker,2025-07-28 10:30:00,2025-07-28 15:00:00,81.75,2025-07-28 10:40:27.886558900,Fault finding on GT200a.,other,0.17441293302777777
+PERTHENERGY_KWINANA_GT1,peaker,2025-08-14 15:00:00,2025-08-20 13:10:00,109.0,2025-08-14 17:23:01.440059700,Issues with switch gear in the HV yard,other,2.3837333499166666
+PERTHENERGY_KWINANA_GT1,peaker,2025-08-25 19:00:00,2025-08-26 06:00:00,54.5,2025-08-25 18:59:15.034908100,Cab heater trial issues for GT200A,other,-0.012490303305555554
+PERTHENERGY_KWINANA_GT1,peaker,2025-09-10 19:30:00,2025-09-11 10:25:00,54.5,2025-09-10 19:54:23.695105700,GT200B trip due to high EGT.,trip,0.4065819738055556
+PERTHENERGY_KWINANA_GT1,peaker,2025-09-16 21:35:00,2025-09-16 22:30:00,54.5,2025-09-16 21:51:33.843535600,GT100B tripped during shut down,trip,0.2760676487777778
+PERTHENERGY_KWINANA_GT1,peaker,2025-10-08 16:55:00,2025-10-09 08:40:00,109.0,2025-10-08 17:19:11.014024500,GT200B EGT 3 instrument fault.,other,0.40305945125
+PERTHENERGY_KWINANA_GT1,peaker,2025-10-09 15:35:00,2025-10-09 16:30:00,81.75,2025-10-09 16:47:48.777001000,Unit tripped,trip,1.2135491669444445
+PERTHENERGY_KWINANA_GT1,peaker,2025-10-17 15:15:00,2025-10-22 09:10:00,109.0,2025-10-17 15:07:20.743448200,"Gt200A cracked HPT blades, awaiting OEM recommendations, unit is not to be run whilst waiting for OEM advice.",other,-0.12757126438888888
+PERTHENERGY_KWINANA_GT1,peaker,2025-11-05 19:45:00,2025-11-06 06:55:00,54.5,2025-11-05 19:54:41.716612600,GTG100 Driveback,other,0.16158794794444442
+PERTHENERGY_KWINANA_GT1,peaker,2025-11-17 19:00:00,2025-11-18 08:00:00,109.0,2025-11-17 18:50:43.786720300,Gas detector alarm on site.,other,-0.15450368880555557
+PERTHENERGY_KWINANA_GT1,peaker,2025-11-25 13:35:00,2025-11-25 16:55:00,54.5,2025-11-25 14:09:07.897723000,Continuation of GTG100 Mee Fog Maintenance. outage#457815,other,0.5688604786111111
+PERTHENERGY_KWINANA_GT1,peaker,2025-11-27 17:30:00,2025-11-28 07:55:00,54.5,2025-11-27 18:01:36.276445900,EGT Failure,other,0.5267434571944445
+PERTHENERGY_KWINANA_GT1,peaker,2025-11-28 17:00:00,2025-12-01 13:55:00,54.5,2025-11-28 17:11:46.404299300,SIL trip on GTG100,trip,0.19622341647222225
+PERTHENERGY_KWINANA_GT1,peaker,2025-12-14 15:45:00,2025-12-14 16:25:00,109.0,2025-12-14 16:15:23.752586300,Powerstation tripped due to drop load detected.,trip,0.5065979406388889
+PERTHENERGY_KWINANA_GT1,peaker,2025-12-14 19:05:00,2025-12-15 06:55:00,54.5,2025-12-14 19:03:41.268340500,Flame out.,other,-0.02186990541666667
+PERTHENERGY_KWINANA_GT1,peaker,2025-12-25 18:05:00,2025-12-26 15:30:00,54.5,2025-12-25 18:09:23.847195700,GT200A tripped due to a failed gas fuel flow meter,trip,0.07329088769444445
+PERTHENERGY_KWINANA_GT1,peaker,2025-12-29 07:05:00,2025-12-29 12:35:00,54.5,2025-12-29 07:19:35.308670900,"Change out of GT200A gas fuel flow meter, will trip whole package.",trip,0.24314129747222224
+PERTHENERGY_KWINANA_GT1,peaker,2026-01-02 18:20:00,2026-01-02 19:15:00,109.0,2026-01-02 18:41:12.836165100,Drop load event tripped GTG100. GTG200A SIL trip on startup.,trip,0.35356560141666665
+PERTHENERGY_KWINANA_GT1,peaker,2026-01-03 16:45:00,2026-01-05 14:10:00,54.5,2026-01-03 16:59:27.548825000,GT100 EGT issues,other,0.2409857847222222
+PERTHENERGY_KWINANA_GT1,peaker,2026-01-06 14:10:00,2026-01-22 11:35:00,109.0,2026-01-06 14:35:14.217705100,Unit GTG100 tripped and requires a borescope.,trip,0.42061602919444446
+PERTHENERGY_KWINANA_GT1,peaker,2026-01-22 12:25:00,2026-01-23 10:30:00,109.0,2026-01-22 12:32:44.316504900,NH Dot problem,other,0.12897680691666666
+PERTHENERGY_KWINANA_GT1,peaker,2026-01-23 11:55:00,2026-02-02 14:05:00,109.0,2026-01-23 11:38:44.976255400,NH Dot Problem,trip,-0.27083992905555554
+PERTHENERGY_KWINANA_GT1,peaker,2026-02-26 08:35:00,2026-02-26 09:10:00,109.0,2026-02-26 08:38:44.367322600,Unit Trip,trip,0.062324256277777774
+PERTHENERGY_KWINANA_GT1,peaker,2026-03-10 13:00:00,2026-03-10 13:10:00,109.0,2026-03-10 13:03:13.785001600,Operational issues,other,0.05382916711111111
+PERTHENERGY_KWINANA_GT1,peaker,2026-04-21 13:15:00,2026-04-24 17:55:00,109.0,2026-04-21 13:17:29.611525600,HV switching fault,other,0.04155875711111111
+PERTHENERGY_KWINANA_GT1,peaker,2026-04-28 15:10:00,2026-04-28 15:55:00,54.5,2026-04-28 15:12:17.665345400,GTG200 trip on shutdown,trip,0.03824037372222222
+PERTHENERGY_KWINANA_GT1,peaker,2026-05-29 07:00:00,2026-05-29 11:55:00,54.5,2026-05-29 06:28:46.428211200,GTG200 repairs,other,-0.520436608
+PERTHENERGY_KWINANA_GT1,peaker,2026-05-31 08:50:00,2026-05-31 09:20:00,54.5,2026-05-31 09:42:58.119437600,Drop load detection GT200,other,0.8828109548888888
+PERTHENERGY_KWINANA_GT1,peaker,2026-06-10 07:00:00,2026-06-10 12:30:00,109.0,2026-06-10 07:26:48.950524200,GT200 forced outage,other,0.44693070116666667
+PERTHENERGY_KWINANA_GT1,peaker,2026-06-11 15:00:00,2026-06-15 07:55:00,109.0,2026-06-11 15:08:58.719790500,GTG200 tripped,trip,0.14964438625
+PERTHENERGY_KWINANA_GT1,peaker,2026-06-17 12:30:00,2026-06-25 14:10:00,54.5,2026-06-17 12:41:29.640316300,GT200 water injection meter and PT oil hose failures.,other,0.19156675452777777
+PERTHENERGY_KWINANA_GT1,peaker,2026-06-29 05:35:00,2026-07-03 05:55:00,54.5,2026-06-30 11:26:02.003527700,GT200 water flow meter issues ,other,29.850556535472222
+PERTHENERGY_KWINANA_GT1,peaker,2026-07-16 08:45:00,2026-07-16 14:10:00,109.0,2026-07-16 08:57:09.384959500,Gas compliance testing returning GT200A to service.,other,0.20260693319444445
+PERTHENERGY_KWINANA_GT1,peaker,2026-07-20 14:30:00,2026-07-20 14:45:00,109.0,2026-07-20 15:06:57.228256100,GTG200 trip on startup.,trip,0.6158967378055556
+PERTHENERGY_KWINANA_GT1,peaker,2026-07-23 10:10:00,2026-07-23 13:35:00,109.0,2026-07-23 13:48:19.421086200,Gas Shut-off Valve issue,other,3.6387280795
+PERTHENERGY_KWINANA_GT1,peaker,2026-07-27 11:35:00,2026-07-27 14:35:00,109.0,2026-07-27 16:03:54.456811900,Gas valve fault investigation.,other,4.481793558861111
+PERTHENERGY_KWINANA_GT1,peaker,2026-07-31 10:00:00,2026-07-31 11:55:00,109.0,2026-07-31 09:52:55.182129800,An opportunistic outage as the deadline for submitting an opportunistic outage has already passed.,other,-0.11800496394444444
+PERTHENERGY_KWINANA_GT1,peaker,2026-09-04 15:25:00,2026-09-07 09:15:00,54.5,2026-09-04 15:27:15.365196200,GT100 software issues.,other,0.03760144338888889
+PERTHENERGY_KWINANA_GT1,peaker,2026-09-17 07:00:00,2026-09-17 08:45:00,81.75,2026-09-17 06:58:59.615445100,"Require changing  out a CAB heat exchanger on GT200A, that is currently defective. require half station outage to change out. unit will be changed as soon as possible and return to service.",other,-0.016773487472222223
+PERTHENERGY_KWINANA_GT1,peaker,2026-09-28 09:35:00,2026-09-29 07:20:00,54.5,2026-09-28 14:33:38.904496100,GT100A tripped due to a failed TE1601 Cab HX sensor failure.,trip,4.977473471138889
+PERTHENERGY_KWINANA_GT1,peaker,2026-09-30 13:15:00,2026-10-02 14:05:00,109.0,2026-09-30 13:20:05.295576200,unit tripped (GT100),trip,0.08480432672222223
+PERTHENERGY_KWINANA_GT1,peaker,2026-10-05 12:40:00,2026-10-19 15:55:00,109.0,2026-10-05 12:58:56.730568700,GT100 tripped on shutdown.,trip,0.31575849130555556
+PINJAR_GT10,peaker,2023-10-01 08:05:00,2023-10-11 10:55:00,110.5,2023-10-02 15:50:11.805035300,Generator Trip,trip,31.753279176472223
+PINJAR_GT10,peaker,2023-10-18 12:00:00,2023-10-25 08:00:00,110.5,2023-10-18 13:46:07.751105600,Generator protection trips,trip,1.7688197515555557
+PINJAR_GT10,peaker,2023-10-25 09:15:00,2023-10-25 09:15:00,92.8,2024-03-25 14:26:05.930605900,PINJAR_GT10: Energy: NonCompliance; ,noncompliance,3653.184980723861
+PINJAR_GT10,peaker,2023-11-10 12:55:00,2023-11-10 12:55:00,53.681,2024-03-25 13:16:51.260591700,PINJAR_GT10: Energy: NonCompliance; ,noncompliance,3264.36423905325
+PINJAR_GT10,peaker,2023-11-27 09:00:00,2023-11-27 09:35:00,110.5,2023-11-27 11:38:53.510249000,Lookahead mis-match. Unit restarted after coasting down,other,2.648197291388889
+PINJAR_GT10,peaker,2023-12-07 13:30:00,2023-12-07 13:30:00,63.469,2024-03-25 13:14:41.028920300,PINJAR_GT10: Energy: NonCompliance; ,noncompliance,2615.744730255639
+PINJAR_GT10,peaker,2024-01-05 16:05:00,2024-01-05 16:25:00,110.5,2024-01-06 18:34:35.497630600,Master Protective Trip,trip,26.49319378627778
+PINJAR_GT10,peaker,2024-01-23 18:00:00,2024-01-25 15:45:00,110.5,2024-01-23 21:45:50.541619600,Gas Ratio Valve Position Trouble / Firing Too Long ,other,3.7640393387777777
+PINJAR_GT10,peaker,2024-01-30 15:15:00,2024-01-30 15:25:00,110.5,2024-01-31 07:14:50.501301300,"Delay in Synchronizing, should have been synch @ 1515H 
+",other,15.997361472583332
+PINJAR_GT10,peaker,2024-02-09 13:55:00,2024-02-09 21:10:00,59.38,2024-02-12 14:14:39.383039200,"No ess during communication fault
+",other,72.32760639977778
+PINJAR_GT10,peaker,2024-02-23 14:50:00,2024-02-24 09:55:00,110.5,2024-02-26 07:34:37.135878200,Staring Motor Protective Lockout,other,64.74364885505555
+PINJAR_GT10,peaker,2024-02-28 22:10:00,2024-02-29 08:50:00,110.5,2024-02-29 07:24:48.492030300,Starting Device trip,trip,9.24680334175
+PINJAR_GT10,peaker,2024-04-08 17:00:00,2024-04-09 12:55:00,110.5,2024-04-09 06:28:56.520743600,"Fire Panels Faults
+",other,13.482366873222222
+PINJAR_GT10,peaker,2024-07-16 06:40:00,2024-07-16 06:55:00,110.5,2024-07-16 09:42:14.807228900,"P2 Gas Pressure High 
+",other,3.037446452472222
+PINJAR_GT10,peaker,2024-07-16 07:30:00,2024-07-19 15:45:00,110.5,2024-07-16 09:42:52.263212300,"P2 Gas Pressure High 
+",other,2.214517558972222
+PINJAR_GT10,peaker,2024-09-04 17:00:00,2024-09-07 17:10:00,110.5,2024-09-03 09:52:46.094454500,"PI, Borescope and Gas Valve Replacement",other,-31.120529318194446
+PINJAR_GT10,peaker,2025-01-11 12:25:00,2025-01-11 16:20:00,110.5,2025-01-13 09:13:42.093985200,"Auxiliary Motor Overload tripped unit off
+",trip,44.811692773666664
+PINJAR_GT10,peaker,2025-01-11 17:05:00,2025-01-12 14:10:00,110.5,2025-01-13 09:14:26.489206400,"Auxiliary Motor Overload tripped unit off
+",trip,40.157358112888886
+PINJAR_GT10,peaker,2025-01-16 18:45:00,2025-01-17 09:50:00,110.5,2025-01-17 08:41:13.015081400,"Tripped during operation, pressurisation fan failure suspected issue
+",trip,13.936948633722222
+PINJAR_GT10,peaker,2025-01-24 12:05:00,2025-01-28 15:55:00,110.5,2025-01-24 14:40:20.520425300,Pressurization Fan failure ,other,2.589033451472222
+PINJAR_GT10,peaker,2025-01-31 20:15:00,2025-02-03 08:25:00,110.5,2025-02-03 09:30:49.111719000,"Loss of DC power to controller
+",other,61.26364214416667
+PINJAR_GT10,peaker,2025-02-13 08:30:00,2025-02-13 11:35:00,110.5,2025-02-13 09:28:50.715462400,"Pressurisation Fan Failed
+",other,0.9807542951111111
+PINJAR_GT10,peaker,2025-06-03 17:00:00,2025-07-14 07:55:00,110.5,2025-05-28 09:54:42.338865000,"EXH I+GBI+Trfr Leak+Cooling Flush + generator warranty inspection
+**outage extension due to critical emergent works**",other,-151.08823920416665
+PINJAR_GT10,peaker,2025-07-18 08:30:00,2025-07-21 07:55:00,110.5,2025-07-18 11:26:53.138591300,"Exciter electrical fault
+",other,2.9480940531388886
+PINJAR_GT10,peaker,2025-07-21 10:45:00,2025-07-24 16:15:00,110.5,2025-07-21 11:27:28.942874600,"System checks post CTP
+",other,0.7080396873888889
+PINJAR_GT10,peaker,2025-07-28 01:10:00,2025-07-31 15:05:00,110.5,2025-07-28 06:57:12.610485400,"Unit protective trip
+",trip,5.7868362459444445
+PINJAR_GT10,peaker,2025-08-04 16:10:00,2025-08-04 16:35:00,110.5,2025-08-05 08:59:11.738340300,"Tripped on Start-up
+",trip,16.81992731675
+PINJAR_GT10,peaker,2025-08-09 13:40:00,2025-08-09 14:25:00,110.5,2025-08-11 10:59:41.414424700,"Starting Motor Protective Lockout
+",other,45.32817067352778
+PINJAR_GT10,peaker,2025-08-11 06:30:00,2025-08-11 11:25:00,110.5,2025-08-11 10:52:26.684047100,"Master Protective Trip / Failure to Ignite 
+",trip,4.374078901972222
+PINJAR_GT10,peaker,2025-09-01 07:05:00,2025-09-24 15:55:00,110.5,2025-09-01 10:21:42.262691100,High vibration trip on startup,trip,3.2784063030833335
+PINJAR_GT10,peaker,2025-10-16 16:00:00,2025-10-21 14:50:00,110.5,2025-10-16 11:32:23.591321500,"Oil leak detected @ the Turbine Compartment Oil drain 
+",other,-4.460113521805556
+PINJAR_GT10,peaker,2025-11-09 15:20:00,2025-11-10 17:55:00,110.5,2025-11-10 07:39:11.244120600,"Jacking oil Pressure switch fault
+",other,16.3197900335
+PINJAR_GT10,peaker,2025-11-10 22:25:00,2025-11-19 13:15:00,110.5,2025-11-11 11:09:45.634896800,"Jacking oil Pressure switch fault
+",other,12.746009693555557
+PINJAR_GT10,peaker,2025-12-06 17:50:00,2025-12-08 15:00:00,110.5,2025-12-08 10:07:53.605003500,"GT Trip / Master protective trip / SUT 8 Protection Trip
+",trip,40.29822361208333
+PINJAR_GT10,peaker,2025-12-15 10:50:00,2025-12-15 10:55:00,56.738,2025-12-16 10:39:14.689962600,PINJAR_GT10: Energy: NonCompliance; ,noncompliance,23.820747211833332
+PINJAR_GT10,peaker,2026-01-08 10:55:00,2026-01-08 11:25:00,110.5,2026-01-08 11:58:32.958893600,"Unit tripped on start up for ROCOF 
+",trip,1.0591552482222222
+PINJAR_GT10,peaker,2026-01-17 12:45:00,2026-01-18 11:25:00,110.5,2026-01-19 08:28:28.157177700,"Starting Motor Protective Lockout 
+",other,43.72448810491667
+PINJAR_GT10,peaker,2026-01-21 21:45:00,2026-01-22 08:35:00,110.5,2026-01-22 07:43:57.921572000,"Inlet guide vane servo trouble
+",other,9.982755992222222
+PINJAR_GT10,peaker,2026-02-01 08:30:00,2026-02-01 09:40:00,110.5,2026-02-02 08:08:08.270173500,"Tripped on start up
+",trip,23.635630603750002
+PINJAR_GT10,peaker,2026-02-05 10:30:00,2026-02-05 13:55:00,110.5,2026-02-06 07:51:12.803691300,"Unit tripped on start up
+",trip,21.353556580916667
+PINJAR_GT10,peaker,2026-02-05 15:00:00,2026-02-06 15:15:00,110.5,2026-02-06 07:52:03.285314500,"Unit tripped on start up
+",trip,16.867579254027778
+PINJAR_GT10,peaker,2026-02-11 17:55:00,2026-02-13 13:25:00,110.5,2026-02-12 07:21:16.815026500,"Electrical protection trip
+",trip,13.438004174027778
+PINJAR_GT10,peaker,2026-04-08 15:00:00,2026-04-08 16:05:00,110.5,2026-04-09 18:00:58.634850500,NDT Testing,other,27.016287458472224
+PINJAR_GT10,peaker,2026-04-11 11:45:00,2026-04-14 15:15:00,110.5,2026-04-13 09:00:09.486634000,Crack on the Gear Box,other,45.25263517611111
+PINJAR_GT10,peaker,2026-04-15 09:40:00,2026-04-24 16:55:00,110.5,2026-04-15 12:43:04.836166000,Gearbox Crack,other,3.051343379444444
+PINJAR_GT10,peaker,2026-04-27 15:55:00,2026-04-30 14:30:00,110.5,2026-04-28 10:13:03.721621900,Turbine incomplete sequence  ,other,18.30103378386111
+PINJAR_GT10,peaker,2026-05-07 02:45:00,2026-05-07 06:55:00,110.5,2026-05-07 08:36:23.140779200,Motor control centre undervoltage ,other,5.856427994222222
+PINJAR_GT10,peaker,2026-06-30 13:25:00,2026-06-30 16:55:00,110.5,2026-07-01 12:38:45.691702000,NDT Testing Required,other,23.22935880611111
+PINJAR_GT10,peaker,2026-07-24 16:25:00,2026-07-24 16:25:00,110.5,2026-07-27 11:39:17.534905900,AUX LO Pump still running delayed sync time ,other,67.23820414052777
+PINJAR_GT10,peaker,2026-08-25 08:00:00,2026-08-25 08:55:00,110.5,2026-08-25 08:20:50.762390600,Early isolations to assistance with SIM OPS ,other,0.34743399738888886
+PINJAR_GT11,peaker,2023-10-01 08:05:00,2023-10-13 18:00:00,124.0,2023-09-28 15:52:23.786609200,"EI+GI+MO+SUT+PROT Major outage 
+Unit offline undergoing alignment and balancing testing",other,-64.21005927522222
+PINJAR_GT11,peaker,2023-10-17 10:45:00,2023-12-04 06:55:00,124.0,2023-10-18 09:34:05.114607600,EI+GI+MO+SUT+PROT Major outage ,other,22.818087391
+PINJAR_GT11,peaker,2023-12-04 17:30:00,2023-12-06 06:55:00,124.0,2023-12-05 19:02:29.457460900,Bearing Drain Temperature High   ,other,25.54151596136111
+PINJAR_GT11,peaker,2023-12-16 13:10:00,2023-12-16 15:35:00,124.0,2023-12-18 09:37:21.906986100,"Earth Trip, Lube Oil Header Temperature alarm",trip,44.45608527391666
+PINJAR_GT11,peaker,2024-01-29 11:50:00,2024-01-29 12:10:00,124.0,2024-01-29 13:36:07.054921200,"Unit Protection Operated 
+",other,1.768626367
+PINJAR_GT11,peaker,2024-01-29 12:50:00,2024-01-29 12:50:00,124.0,2024-01-29 13:36:54.964200700,"Unit Protection Operated 
+",other,0.7819345001944445
+PINJAR_GT11,peaker,2024-01-30 15:30:00,2024-01-30 16:15:00,124.0,2024-01-31 07:05:22.289743400,"“T” Microprocessor change out
+",other,15.589524928722222
+PINJAR_GT11,peaker,2024-01-30 16:50:00,2024-01-31 12:20:00,124.0,2024-01-31 07:06:28.224133000,"“T” Microprocessor change out / Failed to Synchronize 
+",other,14.274506703611111
+PINJAR_GT11,peaker,2024-01-31 14:20:00,2024-01-31 14:55:00,124.0,2024-02-01 09:12:54.824245700,"Generator Breaker Trip
+",trip,18.881895623805555
+PINJAR_GT11,peaker,2024-02-09 13:55:00,2024-02-09 21:10:00,70.376,2024-02-12 14:13:22.279782600,"No ess during communication fault
+",other,72.3061888285
+PINJAR_GT11,peaker,2024-03-01 16:55:00,2024-03-01 17:30:00,124.0,2024-03-05 11:00:28.175894500,"Fogging Pump Issue
+",other,90.09115997069443
+PINJAR_GT11,peaker,2024-03-06 07:45:00,2024-03-06 15:55:00,124.0,2024-03-06 08:23:54.393525300,"Unit Not Ready To Start After Shutdown 
+",other,0.6484426459166667
+PINJAR_GT11,peaker,2024-03-09 04:20:00,2024-03-09 11:00:00,124.0,2024-03-09 20:32:10.079821900,"Unit control system status – Not ready to start
+",other,16.202799950527776
+PINJAR_GT11,peaker,2024-03-12 06:20:00,2024-03-12 06:45:00,124.0,2024-03-13 10:33:37.979822200,"IGV Servo position trouble - System reset and operated as required
+",other,28.227216617277776
+PINJAR_GT11,peaker,2024-03-21 05:15:00,2024-03-21 16:05:00,124.0,2024-03-21 07:21:27.251066600,"Inlet Guide Vane Position Servo Trouble 
+",other,2.107569740722222
+PINJAR_GT11,peaker,2024-03-23 20:35:00,2024-03-24 09:45:00,124.0,2024-03-25 07:44:24.417938400,"Lube oil low level trip
+",trip,35.156782760666665
+PINJAR_GT11,peaker,2024-03-29 18:20:00,2024-03-29 19:55:00,124.0,2024-04-02 09:47:10.589275500,"Unit Trip
+",trip,87.45294146541666
+PINJAR_GT11,peaker,2024-04-15 14:00:00,2024-04-15 15:00:00,124.0,2024-04-15 15:01:23.781300500,"DBP 12 monthly maintenance
+",other,1.0232725834722223
+PINJAR_GT11,peaker,2024-05-15 16:45:00,2024-05-17 11:50:00,124.0,2024-05-16 07:25:12.532970600,"Exhaust Fans Failed 
+Unit available from 11:53 17/05/2024. 
+",other,14.670148047388889
+PINJAR_GT11,peaker,2024-05-20 12:50:00,2024-06-22 12:05:00,124.0,2024-05-20 13:45:10.635404800,"high temperature alarms
+",other,0.9196209457777778
+PINJAR_GT11,peaker,2024-06-28 10:50:00,2024-06-28 12:10:00,124.0,2024-06-28 13:19:53.885974600,"Master Protective Trip/Turbine Trip (Low Oil level GCB) 
+",trip,2.498301659611111
+PINJAR_GT11,peaker,2024-07-12 18:20:00,2024-07-12 18:50:00,124.0,2024-07-15 10:58:03.695710000,"Tripped on high severity / Master Protective trip
+",trip,64.63435991944445
+PINJAR_GT11,peaker,2024-08-07 14:50:00,2024-08-08 08:40:00,124.0,2024-08-08 09:22:46.553764700,DBP gas valve trip,trip,18.546264934638888
+PINJAR_GT11,peaker,2024-09-03 10:00:00,2024-09-03 10:30:00,124.0,2024-09-03 13:41:52.079114600,"AEMO Scada dispatch Issue causing unit to shutdown 
+",other,3.697799754055555
+PINJAR_GT11,peaker,2024-09-10 16:30:00,2024-09-10 16:30:00,50.263000000000005,2024-09-11 11:38:26.959510000,PINJAR_GT11: Energy: NonCompliance; ,noncompliance,19.14082208611111
+PINJAR_GT11,peaker,2024-09-27 14:20:00,2024-10-23 14:00:00,124.0,2024-09-28 02:26:20.475065500,Generator Breaker Hydraulic Motor ,other,12.105687518194445
+PINJAR_GT11,peaker,2024-11-25 17:00:00,2024-12-05 14:00:00,124.0,2024-11-25 13:52:03.495205200,"3 monthly exhaust inspection and generator borescope
+**Rescheduled from 10/11 start date due to reserve margin issues**
+",other,-3.132362443
+PINJAR_GT11,peaker,2024-12-05 21:55:00,2024-12-06 09:10:00,124.0,2024-12-06 06:59:26.531967300,"Starting Motor Device Trip 
+",trip,9.074036657583333
+PINJAR_GT11,peaker,2024-12-11 20:00:00,2024-12-11 20:10:00,59.249,2024-12-12 06:23:41.073285300,PINJAR_GT11: Energy: NonCompliance; ,noncompliance,10.39474257925
+PINJAR_GT11,peaker,2024-12-12 10:50:00,2024-12-12 10:50:00,53.205,2024-12-13 07:42:24.328208200,PINJAR_GT11: Energy: NonCompliance; ,noncompliance,20.873424502277775
+PINJAR_GT11,peaker,2025-02-24 14:50:00,2025-02-24 16:40:00,124.0,2025-02-25 11:49:58.655701600,"PINJAR_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,20.99962658377778
+PINJAR_GT11,peaker,2025-02-27 11:35:00,2025-03-01 09:55:00,124.0,2025-02-28 08:10:19.401472000,"Oil leak on SUT insulator bushing
+",other,20.58872263111111
+PINJAR_GT11,peaker,2025-10-08 14:50:00,2025-10-09 12:35:00,123.7,2025-10-09 08:57:02.919426300,"PINJAR_GT11: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,18.117477618416668
+PINJAR_GT11,peaker,2026-01-11 17:40:00,2026-01-30 09:55:00,123.7,2026-01-12 08:45:12.107318400,"Unit tripped on start up 
+",trip,15.086696477333334
+PINJAR_GT11,peaker,2026-01-30 21:15:00,2026-02-09 13:55:00,123.7,2026-02-02 08:12:03.191627600,"Unit tripped Co2 initiated in load gear compartment
+",trip,58.95088656322222
+PINJAR_GT11,peaker,2026-02-09 17:05:00,2026-02-10 11:55:00,123.7,2026-02-10 07:58:54.402692200,"Unit tripped Co2 initiated in load gear compartment
+",trip,14.898445192277777
+PINJAR_GT11,peaker,2026-02-13 10:50:00,2026-02-13 15:15:00,123.7,2026-02-13 12:39:34.905649800,"Unit tripped on start up
+",trip,1.8263626805
+PINJAR_GT11,peaker,2026-02-19 19:15:00,2026-02-20 14:10:00,123.7,2026-02-20 09:46:18.551352800,"Oil Leak in Load Compartment 
+",other,14.521819820222223
+PINJAR_GT11,peaker,2026-03-10 04:45:00,2026-03-10 05:10:00,123.7,2026-03-10 06:42:49.674660700,"Unit did not sync online 
+",other,1.963798516861111
+PINJAR_GT11,peaker,2026-05-04 15:10:00,2026-05-05 11:00:00,123.7,2026-05-04 16:01:28.295159900,Gas Valve ESD,other,0.8578597666388889
+PINJAR_GT11,peaker,2026-05-15 00:15:00,2026-05-15 08:00:00,123.7,2026-05-15 07:49:48.122174300,Failure to Start during Start-up  ,other,7.580033937305555
+PINJAR_GT11,peaker,2026-05-17 16:10:00,2026-05-18 10:55:00,123.7,2026-05-18 08:18:12.529690300,Gas Fuel Pressure Low ,other,16.13681380286111
+PINJAR_GT11,peaker,2026-06-03 16:35:00,2026-06-04 10:35:00,123.7,2026-06-04 09:19:37.542123000,Failure to Ignite ,other,16.743761700833332
+PINJAR_GT11,peaker,2026-06-05 01:00:00,2026-06-05 01:35:00,123.7,2026-06-05 09:30:36.111165400,Failure to start ,other,8.510030879277778
+PINJAR_GT11,peaker,2026-06-05 11:40:00,2026-06-06 14:55:00,123.7,2026-06-05 13:12:55.538430400,Failure to Ignite  ,other,1.5487606751111112
+PINJAR_GT11,peaker,2026-06-08 10:15:00,2026-06-10 11:55:00,123.7,2026-06-08 11:28:39.790868900,Failure to ignite ,other,1.2277196858055555
+PINJAR_GT11,peaker,2026-07-24 15:35:00,2026-07-25 16:20:00,123.7,2026-07-27 11:34:50.182740000,Electrical AVR issue ,other,67.99727298333333
+PINJAR_GT11,peaker,2026-08-25 17:10:00,2026-08-26 07:55:00,123.7,2026-08-26 07:30:44.454199200,Fuel Pressure Low ,other,14.345681722
+PINJAR_GT11,peaker,2026-09-28 18:10:00,2026-09-29 12:30:00,123.7,2026-09-29 10:37:17.271682600,Lube Oil Level Low Trip,trip,16.454797689611112
+PINJAR_GT11,peaker,2026-09-29 18:00:00,2026-10-14 10:55:00,123.7,2026-09-30 12:05:40.514520300,"Repair Cooler Bundle Leak, Inspect & Repair CDS pit pump ",other,18.094587366749998
+PINJAR_GT11,peaker,2026-10-14 14:00:00,2026-10-19 16:55:00,123.35,2026-10-14 09:54:20.090575600,Oil Leak - Gasket Replacement ,other,-4.094419284555555
+PINJAR_GT9,peaker,2023-11-10 12:55:00,2023-11-10 12:55:00,58.858,2024-03-21 13:39:36.915489000,PINJAR_GT9: Energy: NonCompliance; ,noncompliance,3168.743587635833
+PINJAR_GT9,peaker,2023-11-16 09:55:00,2023-11-17 17:20:00,111.0,2023-11-17 07:07:44.910651800,Unit Failed to start. Under investigation,other,21.212475181055556
+PINJAR_GT9,peaker,2023-11-19 11:20:00,2023-11-19 11:35:00,111.0,2023-11-20 11:36:23.371446400,Failed to Sync,other,24.27315873511111
+PINJAR_GT9,peaker,2023-12-15 09:15:00,2024-04-08 07:25:00,111.0,2023-12-18 09:29:42.908167200,Generator Trip,trip,72.24525226866666
+PINJAR_GT9,peaker,2024-07-14 17:00:00,2025-01-20 07:55:00,111.0,2024-04-16 11:01:21.563030300,Generator Trip,trip,-2141.9773436026944
+PINJAR_GT9,peaker,2025-01-24 12:55:00,2025-01-27 14:15:00,111.0,2025-01-28 13:19:14.139431500,"PINJAR_GT9: RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,96.40392761986111
+PINJAR_GT9,peaker,2025-01-28 00:00:00,2025-01-29 17:25:00,111.0,2025-01-29 12:01:59.239430800,PINJAR_GT9: Energy: Availability; ,other,36.03312206411111
+PINJAR_GT9,peaker,2025-02-09 07:20:00,2025-02-09 07:40:00,111.0,2025-02-10 09:28:48.180630900,"Unit 9 received a 0mw signal for 1 trading period causing it to come offline 20mins earlier then planned 
+",other,26.146716841916664
+PINJAR_GT9,peaker,2025-02-16 17:05:00,2025-02-17 11:55:00,111.0,2025-02-17 07:37:03.936365700,"Instantaneous over current trip 3.3kv on starting motor 
+",trip,14.53442676825
+PINJAR_GT9,peaker,2025-02-23 17:20:00,2025-03-05 16:30:00,111.0,2025-02-24 09:22:50.960302800,"Starter motor overcurrent protection trip on start up
+",trip,16.047488973
+PINJAR_GT9,peaker,2025-03-17 00:50:00,2025-03-27 17:15:00,111.0,2025-03-17 07:43:48.692819100,Cooldown failed,other,6.896859116416667
+PINJAR_GT9,peaker,2025-03-28 08:00:00,2025-03-28 15:50:00,111.0,2025-03-28 08:11:10.343609600,"Torque converter issue
+",other,0.18620655822222223
+PINJAR_GT9,peaker,2025-03-31 08:00:00,2025-04-01 17:05:00,111.0,2025-03-31 08:37:13.099054000," Torque converter investigations 
+",other,0.6203052927777777
+PINJAR_GT9,peaker,2025-04-02 07:50:00,2025-04-07 06:55:00,111.0,2025-04-02 08:20:54.054301600," Torque converter investigations 
+",other,0.5150150837777777
+PINJAR_GT9,peaker,2025-04-15 17:00:00,2025-04-25 15:50:00,111.0,2025-04-16 10:57:21.358689300,unit still unavailable due to ongoing torque converter works,other,17.95593296925
+PINJAR_GT9,peaker,2025-05-05 05:45:00,2025-05-06 08:30:00,111.0,2025-05-05 07:54:49.454502500,"Starting device trip | Master protective trip on start up
+",trip,2.1637373618055555
+PINJAR_GT9,peaker,2025-05-15 21:45:00,2025-05-15 23:45:00,111.0,2025-05-16 09:12:42.113959900,"Unit missed slow roll on shutdown
+",other,11.461698322194446
+PINJAR_GT9,peaker,2025-05-20 10:40:00,2025-05-20 16:30:00,111.0,2025-05-21 09:26:00.766413800,"Loss of ready to start 
+",other,22.766879559388887
+PINJAR_GT9,peaker,2025-06-14 15:55:00,2025-07-08 15:15:00,111.0,2025-06-16 08:20:25.649388000,"Starting motor protective trip.
+",trip,40.42379149666667
+PINJAR_GT9,peaker,2025-07-12 16:40:00,2025-07-14 14:15:00,111.0,2025-07-14 08:04:37.429986700,"Gas Detector Fault
+",other,39.41039721852778
+PINJAR_GT9,peaker,2025-07-16 08:00:00,2025-07-16 08:10:00,111.0,2025-07-16 09:33:39.104809300,"Starting motor issue
+",other,1.5608624470277777
+PINJAR_GT9,peaker,2025-07-17 13:10:00,2025-07-17 13:20:00,111.0,2025-07-17 14:34:22.721946300,Slow Roll Issues ,other,1.40631165175
+PINJAR_GT9,peaker,2025-07-19 00:55:00,2025-07-19 01:05:00,111.0,2025-07-21 09:07:52.754147300,"Failed slow roll
+",other,56.21465392980556
+PINJAR_GT9,peaker,2025-07-19 07:50:00,2025-07-19 09:30:00,111.0,2025-07-21 09:04:56.420414900,"Loss of ready to start | slow roll fail
+",other,49.24900567080556
+PINJAR_GT9,peaker,2025-07-20 16:25:00,2025-07-22 12:15:00,111.0,2025-07-21 09:00:37.278721200,"Low SF6 Pressure 
+",other,16.593688533666665
+PINJAR_GT9,peaker,2025-07-23 00:20:00,2025-07-23 01:10:00,111.0,2025-07-23 08:12:02.481268000,"Fault on cooldown
+",other,7.867355907777777
+PINJAR_GT9,peaker,2025-07-28 10:50:00,2025-07-28 14:20:00,111.0,2025-07-28 13:08:59.251009600,"Slow Roll Fail
+",other,2.316458613777778
+PINJAR_GT9,peaker,2025-07-29 02:15:00,2025-07-29 02:25:00,111.0,2025-07-29 08:49:44.571504900,"Unit stopped following dispatch instructions but unable to stop and start within 5 minute interval. 
+",other,6.57904764025
+PINJAR_GT9,peaker,2025-07-30 12:00:00,2025-07-30 16:40:00,111.0,2025-07-30 16:19:14.562167900,Slow roll failed,other,4.320711713305555
+PINJAR_GT9,peaker,2025-08-03 08:40:00,2025-08-07 17:35:00,111.0,2025-08-04 09:11:44.461798700,"Master Protective Trip – CB SF6 Pressure Low 
+",trip,24.529017166305554
+PINJAR_GT9,peaker,2025-09-18 17:00:00,2025-09-20 09:55:00,111.0,2025-09-19 09:15:52.707828900,"Excessive oil detected at Compartment load Tunnel 
+",other,16.264641063583333
+PINJAR_GT9,peaker,2025-09-22 16:20:00,2025-09-23 14:05:00,111.0,2025-09-23 07:34:22.656325300,"Load shaft heat detector high temp trip
+",trip,15.239626757027777
+PINJAR_GT9,peaker,2025-09-25 06:50:00,2025-09-25 07:35:00,111.0,2025-09-25 07:44:39.402628800,"Fire protection trip
+",trip,0.9109451746666667
+PINJAR_GT9,peaker,2025-10-09 10:05:00,2025-10-09 10:30:00,110.5,2025-10-09 17:17:58.771088800,Short outage due to 0MW Dispatch instruction bringing unit offline earlier than scheduled ,other,7.216325302444445
+PINJAR_GT9,peaker,2025-10-18 11:30:00,2025-10-18 11:50:00,110.5,2025-10-20 10:38:17.652301200,Master Protective Lock out GT Trip ,trip,47.138236750333334
+PINJAR_GT9,peaker,2025-11-25 17:20:00,2025-11-26 10:40:00,110.5,2025-11-26 06:48:37.588674300,"Gas Detector Trip
+",trip,13.477107965083334
+PINJAR_GT9,peaker,2025-12-04 10:15:00,2025-12-04 10:40:00,110.5,2025-12-04 13:07:43.853672500,"Failed to start
+",other,2.878848242361111
+PINJAR_GT9,peaker,2025-12-12 16:05:00,2025-12-13 14:25:00,110.5,2025-12-15 09:14:11.568328600,"Master protective trip GCV servo trouble
+",trip,65.15321342461111
+PINJAR_GT9,peaker,2026-01-08 11:00:00,2026-01-08 11:25:00,110.5,2026-01-08 11:59:21.950638100,"Unit tripped on start up for ROCOF 
+",trip,0.9894307328055556
+PINJAR_GT9,peaker,2026-01-09 08:15:00,2026-01-09 16:20:00,110.5,2026-01-09 09:56:37.703278200,"Trip on start up 
+",trip,1.6938064661666665
+PINJAR_GT9,peaker,2026-01-23 07:45:00,2026-01-23 15:00:00,110.5,2026-01-23 08:50:00.863058500,"Tripped on start up when trying to sync. AVR/PMG generator fault
+",trip,1.0835730718055556
+PINJAR_GT9,peaker,2026-03-06 15:05:00,2026-03-09 11:55:00,110.5,2026-03-09 08:19:54.407999400,"Oil Leak in Accessories compartment. Low Lube Level Trip 
+",trip,65.2484466665
+PINJAR_GT9,peaker,2026-03-18 14:40:00,2026-03-19 07:15:00,110.5,2026-03-19 07:33:01.144625800,"Turbine shaft failure to break away
+",other,16.883651284944445
+PINJAR_GT9,peaker,2026-04-22 08:55:00,2026-04-22 09:55:00,110.5,2026-04-22 13:11:54.002009600,"Gas valve issues 
+",other,4.281667224888889
+PINJAR_GT9,peaker,2026-05-17 16:45:00,2026-05-18 09:25:00,110.5,2026-05-18 08:17:20.465583500,Unit tripped on start up – starting device tripped ,trip,15.539018217638889
+PINJAR_GT9,peaker,2026-05-18 13:40:00,2026-05-18 14:10:00,110.5,2026-05-18 14:07:36.805101800,Unit Protection High Severity trip ,trip,0.46022363938888894
+PINJAR_GT9,peaker,2026-05-18 17:05:00,2026-05-19 09:30:00,110.5,2026-05-19 14:09:12.353178400,Shutting down when combustion light off  ,other,21.07009810511111
+PINJAR_GT9,peaker,2026-06-08 07:45:00,2026-06-08 23:55:00,110.5,2026-06-09 09:53:08.632615400,"PINJAR_GT9: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,26.135731282055556
+PINJAR_GT9,peaker,2026-06-25 03:00:00,2026-06-25 07:55:00,110.5,2026-06-25 08:23:34.520868500,Compressor Inlet Thermocouple Disagree ,other,5.392922463472222
+PINJAR_GT9,peaker,2026-07-03 07:10:00,2026-07-03 07:55:00,110.5,2026-07-06 20:00:18.135567700,PINJAR_GT9: Energy: NonCompliance; ,other,84.83837099102779
+PINJAR_GT9,peaker,2026-07-10 10:00:00,2026-07-11 14:20:00,110.5,2026-07-11 14:35:13.743318200,45HT-1 and 45HT-2 gas detectors in turbine compartment has failed. Cable requires replacing.,other,28.58715092172222
+PINJAR_GT9,peaker,2026-07-11 19:15:00,2026-07-15 15:00:00,110.5,2026-07-12 08:04:42.956860900,"Unit High severity problem, High exhaust temperature spread trip, Master protective trip.",trip,12.828599128027777
+PINJAR_GT9,peaker,2026-07-17 13:05:00,2026-07-17 15:20:00,110.5,2026-07-17 13:54:09.813030300,Turbine Trip ,trip,0.8193925084166667
+PINJAR_GT9,peaker,2026-07-31 17:00:00,2026-08-01 11:55:00,110.5,2026-07-31 14:00:03.398314400,Exhaust work extension ,other,-2.999056023777778
+PINJAR_GT9,peaker,2026-08-02 18:15:00,2026-08-02 18:55:00,110.5,2026-08-03 14:39:22.717004700,"PINJAR_GT9: Energy: Availability; RegulationRaise, RegulationLower, ContingencyRaise, ContingencyLower, RoCoF",other,20.406310279083332
+PINJAR_GT9,peaker,2026-08-03 08:55:00,2026-08-03 12:30:00,110.5,2026-08-03 14:22:44.015335500,Failed to synchronise ,other,5.4622264820833335
+PRK_AG,peaker,2024-05-23 10:10:00,2024-05-23 10:15:00,59.748,2024-05-30 13:32:02.353890500,Unable to ramp up with such SHORT notice,other,171.3673205251389
+PRK_AG,peaker,2024-05-23 13:55:00,2024-05-23 14:20:00,59.748,2024-05-30 13:33:05.624034900,Unable to ramp up with such SHORT notice,other,167.63489556525
+PRK_AG,peaker,2024-05-23 15:15:00,2024-05-23 15:25:00,59.748,2024-05-30 13:33:48.215385800,Unable to ramp up with such SHORT notice,other,166.3133931627222
+PRK_AG,peaker,2024-06-24 16:40:00,2024-06-24 16:45:00,59.748,2024-06-27 17:14:17.531910100,Ramping slow,other,72.57153664169444
+PRK_AG,peaker,2024-12-10 14:00:00,2024-12-10 14:15:00,59.748,2024-12-10 14:30:34.821564600,"User error in formulating bids resulting in 3 MWs ""in service"" auto bid at the min price. 
+All units were ""available"" but none were online at the time thus we could not meet the dispatch target.
+
+",other,0.5096726568333334
+PRK_AG,peaker,2025-01-09 21:50:00,2025-01-09 22:25:00,59.748,2025-01-10 17:06:20.318786100,1 Unit failed on start-up requiring a fuel switch from both other units to comply with the DI issued by AEMO ,other,19.27231077391667
+PRK_AG,peaker,2025-02-08 16:15:00,2025-02-08 17:00:00,59.748,2025-02-11 15:41:35.568998800,Failed to meet target constraint DI,other,71.44321361077778

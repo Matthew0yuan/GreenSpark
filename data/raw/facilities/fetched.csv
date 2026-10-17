@@ -1,0 +1,4 @@
+manifest,file,url,generated_at,fetched_at,bytes
+capacity-credits-since-market-start,capacity-credits-since-market-start-up-to-capacity-year-2027.csv,https://data.wa.aemo.com.au/datafiles/capacity-credits-since-market-start/capacity-credits-since-market-start-up-to-capacity-year-2027.csv,Tue Oct 21 2025 12:05:00Z,2026-10-17T01:27:48,14841
+capacity-credits-since-market-start,capacity-credits-since-market-start-up-to-capacity-year-2026.csv,https://data.wa.aemo.com.au/datafiles/capacity-credits-since-market-start/capacity-credits-since-market-start-up-to-capacity-year-2026.csv,Thu Oct 16 2025 03:09:41Z,2026-10-17T01:27:49,13054
+post-facilities,facilities.csv,https://data.wa.aemo.com.au/datafiles/post-facilities/facilities.csv,Fri Oct 16 2026 06:30:18Z,2026-10-17T01:27:49,14314

@@ -8,7 +8,9 @@ Every trading day:
    obligation (full when the ESR obligation window opens, then enough stored energy to deliver the
    credited MW until it closes) and optionally a risk reserve (keep `reserve_mwh` stored in intervals
    whose spike risk is high). Every MWh discharged costs `degradation_per_mwh` of battery wear, so
-   the plan only cycles when the spread pays for losses and wear.
+   the plan only cycles when the spread pays for losses and wear. Decisions (the plan and the offer
+   price) also add the strategy's `hurdle_per_mwh`, a margin for forecast error that is never
+   settled: a trade that only just pays on the forecast tends to lose on the actual prices.
 2. Real time (every 5-min dispatch interval). Follow the plan, plus a standing offer to discharge
    more when the price reaches the offer price K_t:
      offer_rule "forecast": K_t = max(k_min, alpha x the highest forecast price later today).
@@ -83,6 +85,12 @@ class Strategy:
     alpha: float = 1.2                   # safety margin on what selling early gives up
     risk_threshold: float | None = None  # keep reserve_mwh stored in intervals with spike risk >= this
     reserve_mwh: float = 0.0
+    hurdle_per_mwh: float = 0.0          # $/MWh discharged added to the wear in decisions (plan, offer), not settled
+
+
+def decision_wear(bat: Battery, strat: Strategy) -> float:
+    """$ per MWh discharged that plans and offer prices charge themselves: wear plus the strategy's hurdle."""
+    return bat.degradation_per_mwh + strat.hurdle_per_mwh
 
 
 @lru_cache(maxsize=None)
@@ -129,17 +137,18 @@ def _structure(n: int, bat: Battery):
 
 
 def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float | None = None, floor=None,
-         site: Site | None = None, load=None, terminal_value: float = 0.0) -> dict:
+         site: Site | None = None, load=None, terminal_value: float = 0.0, wear_per_mwh: float | None = None) -> dict:
     """Best schedule for the remaining n intervals on the given prices.
 
     price_e: $/MWh per interval; price_f: {product: $/MW/h} or None for energy only; budget: MWh the
     battery may still discharge today; floor: minimum stored MWh at the end of each interval; site,
     load: the connection limits and the site's load (MW) per interval; terminal_value: $ per MWh
-    still stored at the end. Returns the schedule and its value at these prices
-    (energy + FCESS - wear + stored energy left).
+    still stored at the end; wear_per_mwh: $ per MWh discharged (default: the battery's wear).
+    Returns the schedule and its value at these prices (energy + FCESS - wear + stored energy left).
     """
     n = len(price_e)
     P, E = bat.power_mw, bat.energy_mwh
+    wear = bat.degradation_per_mwh if wear_per_mwh is None else wear_per_mwh
     A, lb, ub, idx = _structure(n, bat)
     lb, ub = lb.copy(), ub.copy()
     lb[idx["dyn0"]] = ub[idx["dyn0"]] = s_init
@@ -155,7 +164,7 @@ def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float
         lo[2 * n:3 * n] = np.minimum(floor, E)
     pe = np.asarray(price_e, float)
     cost = np.zeros(8 * n)
-    cost[:n], cost[n:2 * n] = pe * DT, (bat.degradation_per_mwh - pe) * DT
+    cost[:n], cost[n:2 * n] = pe * DT, (wear - pe) * DT
     if price_f is not None:
         for k, name in enumerate(FCESS):
             cost[(4 + k) * n:(5 + k) * n] = -np.asarray(price_f[name], float) * DT
@@ -169,7 +178,7 @@ def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float
     out = {"net": d - c, "soc": x[2 * n:3 * n], **{name: x[(4 + k) * n:(5 + k) * n] for k, name in enumerate(FCESS)}}
     out["energy_value"] = float((pe * (d - c)).sum() * DT)
     out["fcess_value"] = float(sum((np.asarray(price_f[k], float) * out[k]).sum() for k in FCESS) * DT) if price_f is not None else 0.0
-    out["wear"] = float(bat.degradation_per_mwh * d.sum() * DT)
+    out["wear"] = float(wear * d.sum() * DT)
     out["stored_value"] = float(terminal_value * out["soc"][-1])
     out["value"] = out["energy_value"] + out["fcess_value"] - out["wear"] + out["stored_value"]
     return out
@@ -262,6 +271,7 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
     extra = (sell - planned) * rem  # MWh more delivered to the grid by selling
     if extra <= 1e-9:
         return np.inf, 0.0
+    dw = decision_wear(bat, strat)
     lost = lost_fcess = 0.0
     if t < N - 1:
         fc_next = nowcast(fc_e, t, price_now)
@@ -274,12 +284,12 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
             b1 = budget - max(power, 0.0) * rem
             try:
                 branches.append(plan(bat, fc_next, f_next, s1, b1, plan_floor(bat, t + 1, s1, window, risk, strat, room),
-                                     site, l_next, terminal_value))
+                                     site, l_next, terminal_value, dw))
             except RuntimeError:
                 return np.inf, 0.0
         lost = branches[0]["value"] - branches[1]["value"]
         lost_fcess = branches[0]["fcess_value"] - branches[1]["fcess_value"]
-    wear_now = bat.degradation_per_mwh * (sell - max(planned, 0.0)) * rem
+    wear_now = dw * (sell - max(planned, 0.0)) * rem
     return max(strat.k_min, (strat.alpha * lost + wear_now) / extra), lost_fcess / extra
 
 
@@ -306,8 +316,9 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
     k_offer = np.full(N, np.inf) if value_rule else offer_prices(strat, fc_e)
     offer_fcess, offer_mwh = np.full(N, np.nan), np.zeros(N)
     tv = stored_energy_value(bat, fc_e)
+    dw = decision_wear(bat, strat)
     floor = plan_floor(bat, 0, s_start, window, risk, strat, room)
-    morning = cur = plan(bat, fc_e, fc_f, s_start, None, floor, site, lf, tv)
+    morning = cur = plan(bat, fc_e, fc_f, s_start, None, floor, site, lf, tv, dw)
     cur_t0, s, budget = 0, s_start, bat.cycles_per_day * E
     shortfall = site_short = wear = 0.0
     energy, soc = np.zeros(N), np.zeros(N)
@@ -370,9 +381,9 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
             args = (nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget)
             rest = None if lf is None else lf[cur_t0:]
             try:
-                cur = plan(bat, *args, plan_floor(bat, cur_t0, s, window, risk, strat, room), site, rest, tv)
+                cur = plan(bat, *args, plan_floor(bat, cur_t0, s, window, risk, strat, room), site, rest, tv, dw)
             except RuntimeError:
-                cur = plan(bat, *args, None, site, rest, tv)
+                cur = plan(bat, *args, None, site, rest, tv, dw)
             replanned[cur_t0] = True
     energy_rev = float((np.asarray(rtp) * energy).sum())
     fcess_rev = float(sum((np.asarray(act_f[k]) * mw_h[k]).sum() for k in FCESS)) if fcess else 0.0
@@ -408,7 +419,9 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, win
     """Plain-language account of one day: what the morning plan does and why, then what happened."""
     clock = pd.date_range("2000-01-01 08:00", periods=N + 1, freq="30min").strftime("%H:%M")
     fc = log["forecast"].to_numpy()
-    wear = bat.degradation_per_mwh
+    wear = decision_wear(bat, strat)
+    costs = (f"${bat.degradation_per_mwh:.0f}/MWh wear and a ${strat.hurdle_per_mwh:.0f}/MWh margin for forecast error"
+             if strat.hurdle_per_mwh else f"${wear:.0f}/MWh wear")
     lines = []
     if site is not None:
         lines.append(f"Site: load {log['site_load_fc'].min():.2f}-{log['site_load_fc'].max():.2f} MW expected (planned with "
@@ -425,7 +438,7 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, win
             later = fc[j:].max() if j < N else -np.inf
             if (later - wear) * bat.round_trip > fc[i:j].mean():
                 why = (f"selling later at up to ${later:.0f} still pays after the {1 - bat.round_trip:.0%} round-trip "
-                       f"loss and ${wear:.0f}/MWh wear")
+                       f"loss, {costs}")
             elif window is not None and i < window[0]:
                 why = f"the spread does not cover losses and wear, but the battery must be full by {clock[window[0]]} for the capacity obligation"
             elif strat.risk_threshold is not None:
@@ -464,7 +477,7 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, win
             f = f[np.isfinite(f)]
             lines.append(f"Standing offer: each time the price passed ${strat.k_min:.0f}, the rest of the day was re-planned with and "
                          f"without selling now; the battery sells early only if the price beats {strat.alpha:.1f}x what keeping the "
-                         f"energy is worth plus the wear. Offer prices today: ${k.min():.0f}-{k.max():.0f}/MWh, of which the "
+                         f"energy is worth plus {costs}. Offer prices today: ${k.min():.0f}-{k.max():.0f}/MWh, of which the "
                          f"FCESS the energy would back was up to ${strat.alpha * max(f.max(), 0.0):.0f}/MWh.")
         else:
             lines.append(f"Standing offer: the price never passed ${strat.k_min:.0f} while there was energy to sell, so no early sale was considered.")
