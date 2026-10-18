@@ -123,9 +123,9 @@ def _run(task: tuple[str, str, bool]):
     for d in _DAYS:
         pe, pf = d["prices"][source]
         load_fc = None if site is None else d["load_act" if source == "actual" else "load_fc"]
-        summary, log = dp.run_day(bat, strat, pe, pf, d["rtp"], d["act_f"], d["p5"], d["window"] if obligation else None,
-                                  d["risk"], soc, d["p5_f"], site, load_fc, None if site is None else d["load_act"],
-                                  0.0 if source == "actual" else None)
+        obligations = [dp.capacity_obligation(bat, d["window"])] if obligation else None
+        summary, log = dp.run_day(bat, strat, pe, pf, d["rtp"], d["act_f"], d["p5"], obligations, d["risk"], soc, d["p5_f"],
+                                  site, load_fc, None if site is None else d["load_act"], 0.0 if source == "actual" else None)
         soc = summary["soc_end"]
         rows.append({"scenario": scenario, "strategy": name, "day": d["day"], **summary})
         if keep_logs:
@@ -250,7 +250,8 @@ def main() -> None:
     d = next(x for x in days if x["day"] == example)
     summ = daily[(daily["scenario"] == "main") & (daily["strategy"] == pick) & (daily["day"] == example)].iloc[0].to_dict()
     print(f"\n=== currently chosen: {current}. Example explanation: {example.date()} ({pick}, main scenario)")
-    print("\n".join(dp.explain(logs[pick][example], summ, SCENARIOS["main"][0], STRATEGIES[pick][1], d["window"], SITE)))
+    bat = SCENARIOS["main"][0]
+    print("\n".join(dp.explain(logs[pick][example], summ, bat, STRATEGIES[pick][1], [dp.capacity_obligation(bat, d["window"])], SITE)))
 
 
 if __name__ == "__main__":
