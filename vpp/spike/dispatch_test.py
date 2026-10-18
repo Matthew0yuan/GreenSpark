@@ -68,8 +68,8 @@ def _run(task: tuple[str, str]) -> list[dict]:
     rows, soc = [], 0.0
     for d, risk in zip(_DAYS, _RISK[risk_name]):
         pe, pf = d["prices"]["forecast"]
-        summary, _ = dp.run_day(bat, strat, pe, pf, d["rtp"], d["act_f"], d["p5"], d["window"], risk, soc, d["p5_f"], site,
-                                d["load_fc"], d["load_act"], None)
+        summary, _ = dp.run_day(bat, strat, pe, pf, d["rtp"], d["act_f"], d["p5"], [dp.capacity_obligation(bat, d["window"])],
+                                risk, soc, d["p5_f"], site, d["load_fc"], d["load_act"], None)
         soc = summary["soc_end"]
         rows.append({"strategy": strat_name, "risk": risk_name, "day": d["day"], **summary})
     return rows

@@ -4,10 +4,10 @@ standing spike offer (+ optional risk reserve).
 Every trading day:
 1. Morning plan (08:15). A MILP schedules charging, discharging and FCESS enablement for the 48
    trading intervals on the forecast prices, within the battery's limits, a daily cycle budget, the
-   site's grid connection (the site's own load shares its import/export limits), the capacity
-   obligation (full when the ESR obligation window opens, then enough stored energy to deliver the
-   credited MW until it closes) and optionally a risk reserve (keep `reserve_mwh` stored in intervals
-   whose spike risk is high). Every MWh discharged costs `degradation_per_mwh` of battery wear, so
+   site's grid connection (the site's own load shares its import/export limits), the obligations
+   the battery has committed to (each holds back the stored energy it needs, see Obligation) and
+   optionally a risk reserve (keep `reserve_mwh` stored in intervals whose spike risk is high).
+   Every MWh discharged costs `degradation_per_mwh` of battery wear, so
    the plan only cycles when the spread pays for losses and wear. Decisions (the plan and the offer
    price) also add the strategy's `hurdle_per_mwh`, a margin for forecast error that is never
    settled: a trade that only just pays on the forecast tends to lose on the actual prices.
@@ -18,9 +18,9 @@ Every trading day:
                             of the day twice - keeping the energy, and selling it now - and offer at
                             the price that beats alpha x the value lost plus the wear of selling now.
                             The value lost covers everything the energy would still earn: later energy
-                            sales, the FCESS it would back, the obligation.
+                            sales, the FCESS it would back, the obligations.
    Energy and FCESS are co-optimised, so the extra discharge also has to beat the FCESS raise revenue
-   its headroom earns in that interval. It never sells energy the capacity obligation still needs
+   its headroom earns in that interval. It never sells energy the obligations still need
    (given how fast the site's connection lets it recharge), and it respects the connection's limits
    with the site's actual load. After an interval with such a sale the rest of the day is re-planned
    from the actual state of charge, with the forecast nudged towards the price just seen.
@@ -33,7 +33,7 @@ Energy still stored at the end of the trading day is valued at what it would cos
 mean of the day's 8 cheapest planning prices / eta), so the battery holds its charge instead of
 cycling when the spread does not pay for losses and wear; the next day starts where this one ended.
 Plans assume the site may draw `load_margin` more than forecast, so the battery can still charge in
-time for the capacity obligation when the site is busier than expected.
+time for its obligations when the site is busier than expected.
 
 Assumptions: price-taker; RoCoF ($0) not offered; enabled FCESS must be deliverable for
 `fcess_sustain_h` and its activation energy is ignored.
@@ -197,34 +197,63 @@ def charge_room(bat: Battery, site: Site | None = None, load=None) -> np.ndarray
     return bat.eta * rate * DT
 
 
-def obligation_need(bat: Battery, window: tuple[int, int], hours: float) -> float:
-    """Stored MWh the capacity obligation requires `hours` after 08:00 (window = first, end slot)."""
-    start, end = window[0] * DT, window[1] * DT
-    return bat.credited_mw * (end - hours) / bat.eta if start <= hours <= end else 0.0
+@dataclass(frozen=True)
+class Obligation:
+    """A commitment that holds stored energy back from trading: from trading interval `start` to
+    `end` (slots after 08:00) the battery must be able to deliver `mw`, so it must be ready when the
+    window opens.
+
+    event_hours=None: deliver until the window closes, as for capacity credits (the Reserve Capacity
+    Obligation in the ESR obligation window). event_hours=h: an event of up to h hours may be called
+    at any time in the window, as for a Supplementary Capacity or NCESS contract.
+    """
+    name: str
+    start: int
+    end: int
+    mw: float
+    event_hours: float | None = None
+
+    def need(self, bat: Battery, hours: float) -> float:
+        """Stored MWh it requires `hours` after 08:00."""
+        start, end = self.start * DT, self.end * DT
+        if not start <= hours <= end:
+            return 0.0
+        left = end - hours if self.event_hours is None else min(self.event_hours, end - hours)
+        return self.mw * left / bat.eta
 
 
-def keep_for_obligation(bat: Battery, window: tuple[int, int], hours: float, room=None) -> float:
-    """Stored MWh that cannot be sold at `hours`: before the window, what could not be recharged in
-    time (room = most MWh the battery can add per interval); inside it, what the obligation needs."""
-    start = window[0] * DT
-    if hours < start:
+def capacity_obligation(bat: Battery, window: tuple[int, int]) -> Obligation:
+    """Capacity credits: deliver the credited MW from the ESR obligation window's first slot until it ends."""
+    return Obligation("capacity", window[0], window[1], bat.credited_mw)
+
+
+def obligation_need(bat: Battery, obligations, hours: float) -> float:
+    """Stored MWh all obligations require `hours` after 08:00."""
+    return sum(o.need(bat, hours) for o in obligations)
+
+
+def keep_for_obligation(bat: Battery, obligations, hours: float, room=None) -> float:
+    """Stored MWh that cannot be sold at `hours`: what the obligations need now or, before a window
+    opens, what could not be recharged in time (room = most MWh the battery can add per interval)."""
+    keep = obligation_need(bat, obligations, hours)
+    for start in sorted({o.start for o in obligations if hours < o.start * DT}):
         if room is None:
-            refill = bat.eta * bat.power_mw * (start - hours)
+            refill = bat.eta * bat.power_mw * (start * DT - hours)
         else:
             t = int(hours // DT)
-            refill = room[t] * ((t + 1) * DT - hours) / DT + room[t + 1:window[0]].sum()
-        return max(0.0, bat.energy_mwh - refill)
-    return obligation_need(bat, window, hours)
+            refill = room[t] * ((t + 1) * DT - hours) / DT + room[t + 1:start].sum()
+        keep = max(keep, obligation_need(bat, obligations, start * DT) - refill)
+    return max(0.0, keep)
 
 
-def plan_floor(bat: Battery, t0: int, s_init: float, window=None, risk=None, strat: Strategy | None = None,
+def plan_floor(bat: Battery, t0: int, s_init: float, obligations=None, risk=None, strat: Strategy | None = None,
                room=None) -> np.ndarray:
-    """Minimum stored MWh at the end of intervals t0..N-1 from the obligation and the risk reserve,
+    """Minimum stored MWh at the end of intervals t0..N-1 from the obligations and the risk reserve,
     capped at what charging from s_init can reach."""
     t = np.arange(t0, N)
     floor = np.zeros(len(t))
-    if window is not None:
-        floor = np.maximum(floor, [obligation_need(bat, window, (k + 1) * DT) for k in t])
+    if obligations:
+        floor = np.maximum(floor, [obligation_need(bat, obligations, (k + 1) * DT) for k in t])
     if strat is not None and strat.risk_threshold is not None and risk is not None:
         risky_next = np.r_[np.asarray(risk)[t0 + 1:], 0.0] >= strat.risk_threshold
         floor = np.maximum(floor, np.where(risky_next, strat.reserve_mwh, 0.0))
@@ -259,7 +288,7 @@ def offer_prices(strat: Strategy, fc_e) -> np.ndarray:
 
 
 def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, budget: float, planned: float,
-                      sell: float, fc_e, fc_f, price_now: float, window, risk, site, load_fc, room,
+                      sell: float, fc_e, fc_f, price_now: float, obligations, risk, site, load_fc, room,
                       terminal_value: float = 0.0, fcess_now: dict | None = None) -> tuple[float, float]:
     """"value" rule: offer price for the rest of interval t from re-planning the rest of the day twice,
     running at the planned power until the interval ends or selling at `sell` MW instead. Energy and
@@ -283,7 +312,7 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
             s1 = min(max(s1, 0.0), bat.energy_mwh)
             b1 = budget - max(power, 0.0) * rem
             try:
-                branches.append(plan(bat, fc_next, f_next, s1, b1, plan_floor(bat, t + 1, s1, window, risk, strat, room),
+                branches.append(plan(bat, fc_next, f_next, s1, b1, plan_floor(bat, t + 1, s1, obligations, risk, strat, room),
                                      site, l_next, terminal_value, dw))
             except RuntimeError:
                 return np.inf, 0.0
@@ -293,13 +322,13 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
     return max(strat.k_min, (strat.alpha * lost + wear_now) / extra), lost_fcess / extra
 
 
-def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=None, risk=None, s_start=0.0, p5_f=None,
-            site: Site | None = None, load_fc=None, load_act=None, load_margin: float | None = None):
+def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligations=None, risk=None, s_start=0.0,
+            p5_f=None, site: Site | None = None, load_fc=None, load_act=None, load_margin: float | None = None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     fc_e/rtp: 48 forecast / actual energy prices; fc_f/act_f: {product: 48 prices} or fc_f=None for
-    energy only; p5 / p5_f: 288 actual 5-min energy / {FCESS product: price} prices; window: capacity
-    obligation slots or None; risk: 48 spike probabilities; site, load_fc / load_act: the connection
+    energy only; p5 / p5_f: 288 actual 5-min energy / {FCESS product: price} prices; obligations: the
+    day's Obligations or None; risk: 48 spike probabilities; site, load_fc / load_act: the connection
     and the site's forecast / actual load (MW) per interval; load_margin overrides site.load_margin
     (0 when the load is known). Returns (summary dict, per-interval log).
     """
@@ -317,7 +346,7 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
     offer_fcess, offer_mwh = np.full(N, np.nan), np.zeros(N)
     tv = stored_energy_value(bat, fc_e)
     dw = decision_wear(bat, strat)
-    floor = plan_floor(bat, 0, s_start, window, risk, strat, room)
+    floor = plan_floor(bat, 0, s_start, obligations, risk, strat, room)
     morning = cur = plan(bat, fc_e, fc_f, s_start, None, floor, site, lf, tv, dw)
     cur_t0, s, budget = 0, s_start, bat.cycles_per_day * E
     shortfall = site_short = wear = 0.0
@@ -331,7 +360,7 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
         k_ready = not value_rule
         for j in range(STEPS):
             hours = t * DT + (j + 1) * DT5
-            keep = keep_for_obligation(bat, window, hours, room) if window is not None else 0.0
+            keep = keep_for_obligation(bat, obligations, hours, room) if obligations else 0.0
             sellable = max(0.0, min(P, exp_room[t], (s - keep) * eta / DT5, budget / DT5))
             pw = min(cur["net"][i], sellable)
             price = p5[t * STEPS + j]
@@ -339,7 +368,7 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
                 if not k_ready:
                     f_now = None if p5_f is None or not fcess else {k: p5_f[k][t * STEPS + j] for k in FCESS}
                     k_offer[t], offer_fcess[t] = value_offer_price(
-                        bat, strat, t, j, s, budget, pw, sellable, fc_e, fc_f, price, window, risk, site, lf, room, tv, f_now)
+                        bat, strat, t, j, s, budget, pw, sellable, fc_e, fc_f, price, obligations, risk, site, lf, room, tv, f_now)
                     k_ready = True
                 margin = price - k_offer[t]
                 if margin >= 0:
@@ -371,8 +400,8 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
                     mw_h[k][t] += (cur[k][i] * raise_ok / r_plan if r_plan > 1e-9 else 0.0) * DT5
                 for k in LOWER:
                     mw_h[k][t] += (cur[k][i] * lower_ok / l_plan if l_plan > 1e-9 else 0.0) * DT5
-            if window is not None:
-                shortfall = max(shortfall, obligation_need(bat, window, hours) - s)
+            if obligations:
+                shortfall = max(shortfall, obligation_need(bat, obligations, hours) - s)
         soc[t] = s
         if triggered[t] and t < N - 1:
             cur_t0 = t + 1
@@ -381,7 +410,7 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, window=No
             args = (nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget)
             rest = None if lf is None else lf[cur_t0:]
             try:
-                cur = plan(bat, *args, plan_floor(bat, cur_t0, s, window, risk, strat, room), site, rest, tv, dw)
+                cur = plan(bat, *args, plan_floor(bat, cur_t0, s, obligations, risk, strat, room), site, rest, tv, dw)
             except RuntimeError:
                 cur = plan(bat, *args, None, site, rest, tv, dw)
             replanned[cur_t0] = True
@@ -415,13 +444,15 @@ def _runs(labels) -> list[tuple[int, int, object]]:
     return out
 
 
-def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, window=None, site: Site | None = None) -> list[str]:
+def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, obligations=None,
+            site: Site | None = None) -> list[str]:
     """Plain-language account of one day: what the morning plan does and why, then what happened."""
     clock = pd.date_range("2000-01-01 08:00", periods=N + 1, freq="30min").strftime("%H:%M")
     fc = log["forecast"].to_numpy()
     wear = decision_wear(bat, strat)
     costs = (f"${bat.degradation_per_mwh:.0f}/MWh wear and a ${strat.hurdle_per_mwh:.0f}/MWh margin for forecast error"
              if strat.hurdle_per_mwh else f"${wear:.0f}/MWh wear")
+    obligations = obligations or []
     lines = []
     if site is not None:
         lines.append(f"Site: load {log['site_load_fc'].min():.2f}-{log['site_load_fc'].max():.2f} MW expected (planned with "
@@ -436,11 +467,14 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, win
         price = f"forecast ${fc[i:j].min():.0f}-{fc[i:j].max():.0f}/MWh"
         if a == "charge":
             later = fc[j:].max() if j < N else -np.inf
+            ahead = [o for o in obligations if i < o.start]
             if (later - wear) * bat.round_trip > fc[i:j].mean():
                 why = (f"selling later at up to ${later:.0f} still pays after the {1 - bat.round_trip:.0%} round-trip "
                        f"loss, {costs}")
-            elif window is not None and i < window[0]:
-                why = f"the spread does not cover losses and wear, but the battery must be full by {clock[window[0]]} for the capacity obligation"
+            elif ahead:
+                o = min(ahead, key=lambda o: o.start)
+                why = (f"the spread does not cover losses and wear, but the battery must hold "
+                       f"{obligation_need(bat, obligations, o.start * DT):.1f} MWh by {clock[o.start]} for the {o.name} obligation")
             elif strat.risk_threshold is not None:
                 why = "keeps energy for the spike reserve"
             else:
@@ -454,12 +488,14 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, win
                             f"{expected.min():.2f}-{expected.max():.2f} MW (plus the safety margin) of the "
                             f"{site.import_limit_mw:.1f} MW connection")
         else:
-            in_window = window is not None and window[0] <= i < window[1]
-            why = "paced so the capacity obligation stays covered" if in_window else "the best forecast prices left for the energy on hand"
+            active = [o.name for o in obligations if o.start <= i < o.end]
+            why = (f"paced so the {' and '.join(active)} obligation{'s stay' if len(active) > 1 else ' stays'} covered"
+                   if active else "the best forecast prices left for the energy on hand")
         lines.append(f"{clock[i]}-{clock[j]} {a} {power.sum() * DT:.1f} MWh: {price}; {why}.")
-    if window is not None:
-        lines.append(f"Capacity obligation: full by {clock[window[0]]}, then enough stored energy to deliver "
-                     f"{bat.credited_mw:.2f} MW until {clock[window[1]]}.")
+    for o in obligations:
+        deliver = (f"enough stored energy to deliver {o.mw:.2f} MW until {clock[o.end]}" if o.event_hours is None else
+                   f"enough stored energy to deliver {o.mw:.2f} MW for up to {o.event_hours:g} h whenever called until {clock[o.end]}")
+        lines.append(f"{o.name.capitalize()} obligation: ready by {clock[o.start]}, then {deliver}.")
     if strat.risk_threshold is not None:
         risky = log["risk"].to_numpy() >= strat.risk_threshold
         for i, j, r in _runs(list(risky)):
