@@ -5,7 +5,9 @@ the import limit leaves room for after the site's load, and FCESS headroom has t
 limits.
 
 The hackathon data has no site meter data, so the backtest uses an example commercial site
-(example_load); use load_csv for a real site's 30-min load when one is available.
+(example_load); use load_csv for a real site's 30-min load when one is available. FACTORY is the
+project's site since 2026-10-19: the example site scaled to a factory of 3-9 MW, behind whose meter
+the 10 MW / 40 MWh battery sits (import 12 MW, export 10 MW; both assumed).
 """
 
 from dataclasses import dataclass
@@ -19,6 +21,10 @@ class Site:
     import_limit_mw: float = 1.2  # most the connection may draw from the grid
     export_limit_mw: float = 1.0  # most it may send to the grid
     load_margin: float = 0.16     # plans assume the site may draw this much more than forecast (2x example noise)
+    load_scale: float = 1.0       # the site's load is the example (or CSV) load times this
+
+
+FACTORY = Site(import_limit_mw=12.0, export_limit_mw=10.0, load_margin=0.16, load_scale=10.0)
 
 
 def example_load(ts: pd.DatetimeIndex, noise: float = 0.08, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:

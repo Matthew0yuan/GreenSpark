@@ -73,7 +73,7 @@ class Battery:
     @property
     def credited_mw(self) -> float:
         """Capacity credits: the power the battery can sustain for the duration requirement."""
-        return self.energy_mwh * self.eta / self.duration_req_h
+        return min(self.power_mw, self.energy_mwh * self.eta / self.duration_req_h)
 
 
 @dataclass(frozen=True)
@@ -94,8 +94,12 @@ def decision_wear(bat: Battery, strat: Strategy) -> float:
 
 
 @lru_cache(maxsize=None)
-def _structure(n: int, bat: Battery):
-    """Constraint matrix of an n-interval plan, plus the rows whose bounds are set per call."""
+def _structure(n: int, bat: Battery, kinds: tuple[str, ...] = ()):
+    """Constraint matrix of an n-interval plan, plus the rows whose bounds are set per call.
+
+    kinds: one entry per soft cap on net charging (see CapLayer): "slot" adds a slack column per
+    interval, "peak" one for the whole plan; each layer adds two rows per interval (net charging, and
+    net charging plus enabled FCESS lower, at most the cap plus its slack)."""
     P, E, eta = bat.power_mw, bat.energy_mwh, bat.eta
     kr, kl = bat.fcess_sustain_h / eta, bat.fcess_sustain_h * eta
     C, D, S, U, RR, CR, RL, CL = (np.arange(n) + k * n for k in range(8))
@@ -132,24 +136,42 @@ def _structure(n: int, bat: Battery):
         idx["raise_site"].append(add([D[t], C[t], RR[t], CR[t]], [1, -1, 1, 1], -np.inf, np.inf))
         idx["lower_site"].append(add([C[t], D[t], RL[t], CL[t]], [1, -1, 1, 1], -np.inf, np.inf))
     idx["budget"] = add(list(D), [DT] * n, 0, 0)
-    A = coo_matrix((vals, (rows, cols)), shape=(len(lb), 8 * n)).tocsr()
-    return A, np.array(lb, float), np.array(ub, float), {k: np.array(v) if isinstance(v, list) else v for k, v in idx.items()}
+    ncol, layer_rows, slack = 8 * n, [], []
+    for kind in kinds:
+        cols_l = np.arange(ncol, ncol + (n if kind == "slot" else 1))
+        ncol += len(cols_l)
+        r1, r2 = [], []
+        for t in range(n):
+            x = cols_l[t] if kind == "slot" else cols_l[0]
+            r1.append(add([C[t], D[t], x], [1, -1, -1], -np.inf, np.inf))
+            r2.append(add([C[t], D[t], RL[t], CL[t], x], [1, -1, 1, 1, -1], -np.inf, np.inf))
+        layer_rows.append((np.array(r1), np.array(r2)))
+        slack.append(cols_l)
+    A = coo_matrix((vals, (rows, cols)), shape=(len(lb), ncol)).tocsr()
+    idx = {k: np.array(v) if isinstance(v, list) else v for k, v in idx.items()}
+    idx["layers"], idx["slack"] = layer_rows, slack
+    return A, np.array(lb, float), np.array(ub, float), idx
 
 
 def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float | None = None, floor=None,
-         site: Site | None = None, load=None, terminal_value: float = 0.0, wear_per_mwh: float | None = None) -> dict:
+         site: Site | None = None, load=None, terminal_value: float = 0.0, wear_per_mwh: float | None = None,
+         layers=(), fcess_hi: dict | None = None) -> dict:
     """Best schedule for the remaining n intervals on the given prices.
 
     price_e: $/MWh per interval; price_f: {product: $/MW/h} or None for energy only; budget: MWh the
     battery may still discharge today; floor: minimum stored MWh at the end of each interval; site,
     load: the connection limits and the site's load (MW) per interval; terminal_value: $ per MWh
     still stored at the end; wear_per_mwh: $ per MWh discharged (default: the battery's wear).
+    layers: soft caps on net charging (charge - discharge, MW) as (cap (n,), kind, penalty): "slot"
+    pays `penalty` $/MWh over the cap in each interval, "peak" `penalty` $/MW on the largest excess;
+    the penalties steer the plan and are not part of its value. fcess_hi: {product: (n,) most MW
+    enabled} or None.
     Returns the schedule and its value at these prices (energy + FCESS - wear + stored energy left).
     """
     n = len(price_e)
     P, E = bat.power_mw, bat.energy_mwh
     wear = bat.degradation_per_mwh if wear_per_mwh is None else wear_per_mwh
-    A, lb, ub, idx = _structure(n, bat)
+    A, lb, ub, idx = _structure(n, bat, tuple(kind for _, kind, _ in layers))
     lb, ub = lb.copy(), ub.copy()
     lb[idx["dyn0"]] = ub[idx["dyn0"]] = s_init
     ub[idx["raise0"]], ub[idx["lower0"]] = s_init, E - s_init
@@ -158,18 +180,27 @@ def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float
         load = np.asarray(load, float)
         ub[idx["export"]] = ub[idx["raise_site"]] = site.export_limit_mw + load
         ub[idx["import"]] = ub[idx["lower_site"]] = site.import_limit_mw - load
-    lo = np.zeros(8 * n)
+    nx = A.shape[1]
+    lo = np.zeros(nx)
     hi = np.r_[np.full(2 * n, P), np.full(n, E), np.ones(n), np.full(4 * n, P if price_f is not None else 0.0)]
+    if nx > 8 * n:
+        hi = np.r_[hi, np.full(nx - 8 * n, np.inf)]
     if floor is not None:
         lo[2 * n:3 * n] = np.minimum(floor, E)
+    if fcess_hi is not None and price_f is not None:
+        for k, name in enumerate(FCESS):
+            hi[(4 + k) * n:(5 + k) * n] = np.clip(np.minimum(P, fcess_hi[name]), 0.0, None)
     pe = np.asarray(price_e, float)
-    cost = np.zeros(8 * n)
+    cost = np.zeros(nx)
     cost[:n], cost[n:2 * n] = pe * DT, (wear - pe) * DT
     if price_f is not None:
         for k, name in enumerate(FCESS):
             cost[(4 + k) * n:(5 + k) * n] = -np.asarray(price_f[name], float) * DT
     cost[3 * n - 1] = -terminal_value
-    integrality = np.r_[np.zeros(3 * n), np.ones(n), np.zeros(4 * n)]
+    for (cap, kind, penalty), (r1, r2), cols in zip(layers, idx["layers"], idx["slack"]):
+        ub[r1] = ub[r2] = np.asarray(cap, float)
+        cost[cols] = penalty * DT if kind == "slot" else penalty
+    integrality = np.r_[np.zeros(3 * n), np.ones(n), np.zeros(nx - 4 * n)]
     res = milp(cost, constraints=LinearConstraint(A, lb, ub), bounds=Bounds(lo, hi), integrality=integrality)
     if res.status != 0:
         raise RuntimeError(f"plan infeasible ({res.message}); s_init={s_init:.3f}, budget={budget}")
@@ -181,6 +212,9 @@ def plan(bat: Battery, price_e, price_f=None, s_init: float = 0.0, budget: float
     out["wear"] = float(wear * d.sum() * DT)
     out["stored_value"] = float(terminal_value * out["soc"][-1])
     out["value"] = out["energy_value"] + out["fcess_value"] - out["wear"] + out["stored_value"]
+    if layers:
+        out["penalty"] = float(cost[8 * n:] @ x[8 * n:])
+        out["slack"] = [x[cols] for cols in idx["slack"]]
     return out
 
 
@@ -189,12 +223,27 @@ def stored_energy_value(bat: Battery, price_e) -> float:
     return max(0.0, float(np.sort(np.asarray(price_e, float))[:8].mean())) / bat.eta
 
 
-def charge_room(bat: Battery, site: Site | None = None, load=None) -> np.ndarray:
-    """Most stored MWh the battery can add in each interval: full power, within the site's import room."""
+def charge_room(bat: Battery, site: Site | None = None, load=None, caps=None) -> np.ndarray:
+    """Most stored MWh the battery can add in each interval: full power, within the site's import room
+    and, if given, `caps` (MW the battery may charge under caps that rank above obligations)."""
     rate = np.full(N, bat.power_mw)
     if site is not None:
         rate = np.clip(np.minimum(rate, site.import_limit_mw - np.asarray(load, float)), 0.0, None)
+    if caps is not None:
+        rate = np.clip(np.minimum(rate, caps), 0.0, None)
     return bat.eta * rate * DT
+
+
+def _deliver_mwh(bat: Battery, mw: float, load, a: float, b: float) -> float:
+    """MWh the battery sends out from `a` to `b` hours after 08:00 to deliver `mw` net at the meter while
+    also supplying the site's load (MW per interval), at most its power."""
+    load = np.asarray(load, float)
+    total = 0.0
+    for k in range(int(a // DT), min(N, int(np.ceil(b / DT - 1e-9)))):
+        lo, hi = max(a, k * DT), min(b, (k + 1) * DT)
+        if hi > lo:
+            total += min(bat.power_mw, mw + load[k]) * (hi - lo)
+    return total
 
 
 @dataclass(frozen=True)
@@ -206,20 +255,30 @@ class Obligation:
     event_hours=None: deliver until the window closes, as for capacity credits (the Reserve Capacity
     Obligation in the ESR obligation window). event_hours=h: an event of up to h hours may be called
     at any time in the window, as for a Supplementary Capacity or NCESS contract.
+    at_meter: `mw` is net export at the site's meter, so while it delivers the battery also supplies the
+    site's load (a market obligation of a facility that contains the load). through_end: the need stays
+    at mw x event_hours to the end of the window instead of running down with it (a backup reserve).
     """
     name: str
     start: int
     end: int
     mw: float
     event_hours: float | None = None
+    at_meter: bool = False
+    through_end: bool = False
 
-    def need(self, bat: Battery, hours: float) -> float:
-        """Stored MWh it requires `hours` after 08:00."""
+    def need(self, bat: Battery, hours: float, load=None) -> float:
+        """Stored MWh it requires `hours` after 08:00; load: the site's planned load (MW per interval)."""
         start, end = self.start * DT, self.end * DT
         if not start <= hours <= end:
             return 0.0
-        left = end - hours if self.event_hours is None else min(self.event_hours, end - hours)
-        return self.mw * left / bat.eta
+        if self.through_end:
+            left = self.event_hours
+        else:
+            left = end - hours if self.event_hours is None else min(self.event_hours, end - hours)
+        if not self.at_meter or load is None:
+            return self.mw * left / bat.eta
+        return _deliver_mwh(bat, self.mw, load, hours, hours + left) / bat.eta
 
 
 def capacity_obligation(bat: Battery, window: tuple[int, int]) -> Obligation:
@@ -227,38 +286,128 @@ def capacity_obligation(bat: Battery, window: tuple[int, int]) -> Obligation:
     return Obligation("capacity", window[0], window[1], bat.credited_mw)
 
 
-def obligation_need(bat: Battery, obligations, hours: float) -> float:
+@dataclass(frozen=True, eq=False)
+class CapLayer:
+    """A soft cap on net import at the site's meter (site load + charging - discharging, MW per
+    interval; negative = the meter must export), or on the battery's own net charging if not at_meter.
+
+    kind "slot" pays `penalty` $/MWh over the cap in each interval, "peak" `penalty` $/MW on the day's
+    largest excess (a monthly demand charge). Penalties steer decisions and are never settled.
+    above_floors: the cap outranks the obligations' stored energy and the daily cycle budget (events,
+    contract maximum demand); otherwise only energy above what the obligations need is used for it.
+    """
+    name: str
+    cap: np.ndarray
+    kind: str = "slot"
+    penalty: float = 1e4
+    at_meter: bool = True
+    above_floors: bool = False
+
+    def limit(self, load) -> np.ndarray:
+        """Most net charging (MW) the cap allows per interval, given the site's load."""
+        cap = np.asarray(self.cap, float)
+        return cap - np.asarray(load, float) if self.at_meter and load is not None else cap
+
+
+@dataclass(frozen=True, eq=False)
+class Reveal:
+    """Information that arrives at the start of interval `slot`: a new energy / FCESS forecast from that
+    slot on, caps and obligations that start to apply, ones that stop (`drop`, by name), and MWh added
+    to the day's cycle budget. The rest of the day is re-planned from the actual state of charge."""
+    slot: int
+    label: str
+    energy: np.ndarray | None = None
+    fcess: dict | None = None
+    layers: tuple = ()
+    obligations: tuple = ()
+    drop: tuple = ()
+    budget_extra_mwh: float = 0.0
+
+
+@dataclass(frozen=True)
+class CapacityTest:
+    """Reserve Capacity refunds: in each 5-min dispatch interval of the window the facility must be able
+    to deliver rcoq_mw (net at the meter if at_meter) from its stored energy (12 x MWh for 5 minutes).
+    run_day reports the shortfall in MW x trading intervals; the refund price is applied by the caller."""
+    start: int
+    end: int
+    rcoq_mw: float
+    at_meter: bool = True
+
+
+@dataclass(frozen=True)
+class AvailabilityTest:
+    """A contract's availability: each trading interval of the service window is available if the
+    battery could deliver mw then - enough power (net of the site's load at the meter if
+    standby.at_meter) and what `standby` needs stored at its start - or, during a called event, if it
+    delivers at least min_delivery x mw (net export at the meter if standby.at_meter, else the
+    battery's own output). After the day's event it is not called again, so the rest of the window
+    counts as available."""
+    name: str
+    start: int
+    end: int
+    mw: float
+    standby: Obligation
+    events: tuple = ()
+    min_delivery: float = 0.9
+
+    def in_event(self, t: int) -> bool:
+        return any(a <= t < b for a, b in self.events)
+
+    def after_events(self, t: int) -> bool:
+        return bool(self.events) and t >= max(b for _, b in self.events)
+
+
+@dataclass(frozen=True, eq=False)
+class DayTerms:
+    """Everything a day's contracts and site bill add to the dispatcher (see run_day)."""
+    obligations: tuple = ()
+    layers: tuple = ()
+    reveals: tuple = ()
+    capacity: CapacityTest | None = None
+    availability: tuple = ()
+    fcess_hi: dict | None = None
+
+
+def obligation_need(bat: Battery, obligations, hours: float, load=None) -> float:
     """Stored MWh all obligations require `hours` after 08:00."""
-    return sum(o.need(bat, hours) for o in obligations)
+    return sum(o.need(bat, hours, load) for o in obligations)
 
 
-def keep_for_obligation(bat: Battery, obligations, hours: float, room=None) -> float:
+def keep_for_obligation(bat: Battery, obligations, hours: float, room=None, load=None) -> float:
     """Stored MWh that cannot be sold at `hours`: what the obligations need now or, before a window
     opens, what could not be recharged in time (room = most MWh the battery can add per interval)."""
-    keep = obligation_need(bat, obligations, hours)
+    keep = obligation_need(bat, obligations, hours, load)
     for start in sorted({o.start for o in obligations if hours < o.start * DT}):
         if room is None:
             refill = bat.eta * bat.power_mw * (start * DT - hours)
         else:
             t = int(hours // DT)
             refill = room[t] * ((t + 1) * DT - hours) / DT + room[t + 1:start].sum()
-        keep = max(keep, obligation_need(bat, obligations, start * DT) - refill)
+        keep = max(keep, obligation_need(bat, obligations, start * DT, load) - refill)
     return max(0.0, keep)
 
 
 def plan_floor(bat: Battery, t0: int, s_init: float, obligations=None, risk=None, strat: Strategy | None = None,
-               room=None) -> np.ndarray:
+               room=None, load=None, forced=None) -> np.ndarray:
     """Minimum stored MWh at the end of intervals t0..N-1 from the obligations and the risk reserve,
-    capped at what charging from s_init can reach."""
+    capped at what charging from s_init can reach (forced: MWh per interval that caps ranking above
+    the obligations take out, so the reachable energy can also fall)."""
     t = np.arange(t0, N)
     floor = np.zeros(len(t))
     if obligations:
-        floor = np.maximum(floor, [obligation_need(bat, obligations, (k + 1) * DT) for k in t])
+        floor = np.maximum(floor, [obligation_need(bat, obligations, (k + 1) * DT, load) for k in t])
     if strat is not None and strat.risk_threshold is not None and risk is not None:
         risky_next = np.r_[np.asarray(risk)[t0 + 1:], 0.0] >= strat.risk_threshold
         floor = np.maximum(floor, np.where(risky_next, strat.reserve_mwh, 0.0))
     step = np.full(len(t), bat.eta * bat.power_mw * DT) if room is None else np.asarray(room)[t0:]
-    return np.minimum(floor, np.minimum(s_init + np.cumsum(step), bat.energy_mwh))
+    if forced is None:
+        return np.minimum(floor, np.minimum(s_init + np.cumsum(step), bat.energy_mwh))
+    reach, s = np.empty(len(t)), s_init
+    for k, (up, down) in enumerate(zip(step, np.asarray(forced)[t0:])):
+        s = min(bat.energy_mwh, max(0.0, s + (up if down <= 0 else -down)))
+        reach[k] = s
+    return np.minimum(floor, reach)
 
 
 def nowcast(fc_e, t: int, price_now: float, half_life: float = 1.0) -> np.ndarray:
@@ -288,11 +437,12 @@ def offer_prices(strat: Strategy, fc_e) -> np.ndarray:
 
 
 def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, budget: float, planned: float,
-                      sell: float, fc_e, fc_f, price_now: float, obligations, risk, site, load_fc, room,
-                      terminal_value: float = 0.0, fcess_now: dict | None = None) -> tuple[float, float]:
+                      sell: float, fc_e, fc_f, price_now: float, replan, fcess_now: dict | None = None) -> tuple[float, float]:
     """"value" rule: offer price for the rest of interval t from re-planning the rest of the day twice,
     running at the planned power until the interval ends or selling at `sell` MW instead. Energy and
     FCESS forecasts are both nudged towards the prices just seen (fcess_now: 5-min FCESS prices).
+    replan(first interval, energy forecast, FCESS forecast, stored MWh, budget) returns the plan of the
+    rest of the day with the day's floors and caps, or None if there is none.
 
     Returns (offer price, the FCESS part of the value lost per MWh sold).
     """
@@ -305,25 +455,36 @@ def value_offer_price(bat: Battery, strat: Strategy, t: int, j: int, s: float, b
     if t < N - 1:
         fc_next = nowcast(fc_e, t, price_now)
         f_next = nowcast_fcess(fc_f, t, fcess_now)
-        l_next = None if site is None else np.asarray(load_fc, float)[t + 1:]
         branches = []
         for power in (planned, sell):
             s1 = s - power * rem / bat.eta if power > 0 else s - power * rem * bat.eta
             s1 = min(max(s1, 0.0), bat.energy_mwh)
             b1 = budget - max(power, 0.0) * rem
-            try:
-                branches.append(plan(bat, fc_next, f_next, s1, b1, plan_floor(bat, t + 1, s1, obligations, risk, strat, room),
-                                     site, l_next, terminal_value, dw))
-            except RuntimeError:
+            branch = replan(t + 1, fc_next, f_next, s1, b1)
+            if branch is None:
                 return np.inf, 0.0
-        lost = branches[0]["value"] - branches[1]["value"]
+            branches.append(branch)
+        # caps the sale would break later (their penalties) count as value lost
+        lost = (branches[0]["value"] - branches[0].get("penalty", 0.0)) - (branches[1]["value"] - branches[1].get("penalty", 0.0))
         lost_fcess = branches[0]["fcess_value"] - branches[1]["fcess_value"]
     wear_now = dw * (sell - max(planned, 0.0)) * rem
     return max(strat.k_min, (strat.alpha * lost + wear_now) / extra), lost_fcess / extra
 
 
+def _reveal(r: Reveal, t: int, fc_e, fc_f, obligations: list, layers: list, budget: float):
+    """Apply a Reveal at the start of interval t: forecasts from t on, obligations and caps, budget."""
+    if r.energy is not None:
+        fc_e = np.r_[np.asarray(fc_e, float)[:t], np.asarray(r.energy, float)[t:]]
+    if r.fcess is not None and fc_f is not None:
+        fc_f = {k: np.r_[np.asarray(fc_f[k], float)[:t], np.asarray(r.fcess[k], float)[t:]] for k in FCESS}
+    obligations = [o for o in obligations if o.name not in r.drop] + list(r.obligations)
+    layers = [x for x in layers if x.name not in r.drop] + list(r.layers)
+    return fc_e, fc_f, obligations, layers, budget + r.budget_extra_mwh
+
+
 def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligations=None, risk=None, s_start=0.0,
-            p5_f=None, site: Site | None = None, load_fc=None, load_act=None, load_margin: float | None = None):
+            p5_f=None, site: Site | None = None, load_fc=None, load_act=None, load_margin: float | None = None,
+            terms: DayTerms | None = None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     fc_e/rtp: 48 forecast / actual energy prices; fc_f/act_f: {product: 48 prices} or fc_f=None for
@@ -331,6 +492,15 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligatio
     day's Obligations or None; risk: 48 spike probabilities; site, load_fc / load_act: the connection
     and the site's forecast / actual load (MW) per interval; load_margin overrides site.load_margin
     (0 when the load is known). Returns (summary dict, per-interval log).
+
+    terms (DayTerms): what contracts and the site bill add - more obligations; soft caps on the meter
+    (CapLayer), enforced in real time in this order: caps above the obligations (may use any stored
+    energy, even past the cycle budget), the obligations' safety charging, the other caps (only from
+    energy above what the obligations need); information arriving during the day (Reveal: e.g. the
+    09:00 forecast after an 08:00 bridge plan, event notices), each followed by a re-plan from the
+    actual state of charge; and the capacity and availability tests. With terms the summary and log
+    also report the meter, the caps, the tests and plans that had to fall back (no floor, then no
+    caps). terms=None is the plain dispatcher of the 1 MW study, unchanged.
     """
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, bat.fcess_sustain_h
     fcess = fc_f is not None
@@ -340,27 +510,104 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligatio
     la = np.zeros(N) if site is None else np.asarray(load_act, float)
     imp_room = np.full(N, np.inf) if site is None else site.import_limit_mw - la  # most net charging, MW
     exp_room = np.full(N, np.inf) if site is None else site.export_limit_mw + la  # most net discharging, MW
-    room = charge_room(bat, site, lf)
+    full = terms is not None
+    terms = terms if full else DayTerms()
+    obls, layers, budget = list(obligations or []) + list(terms.obligations), list(terms.layers), bat.cycles_per_day * E
+    reveals = sorted(terms.reveals, key=lambda r: r.slot)
+    for r in reveals:
+        if r.slot <= 0:  # known before the morning plan
+            fc_e, fc_f, obls, layers, budget = _reveal(r, 0, fc_e, fc_f, obls, layers, budget)
+    reveals = [r for r in reveals if r.slot > 0]
+
+    def caps_state(layers):
+        """MW the battery may charge under the caps that outrank obligations, and the MWh per interval
+        those caps force out (None, None without such caps)."""
+        above = [x.limit(lf) for x in layers if x.above_floors]
+        if not above:
+            return None, None
+        lim = np.min(above, axis=0)
+        return np.clip(lim, 0.0, None), np.clip(-lim, 0.0, None) * DT / eta
+
+    charge_caps, forced = caps_state(layers)
+    room = charge_room(bat, site, lf, charge_caps)
     value_rule = strat.offer and strat.offer_rule == "value"
     k_offer = np.full(N, np.inf) if value_rule else offer_prices(strat, fc_e)
     offer_fcess, offer_mwh = np.full(N, np.nan), np.zeros(N)
     tv = stored_energy_value(bat, fc_e)
     dw = decision_wear(bat, strat)
-    floor = plan_floor(bat, 0, s_start, obligations, risk, strat, room)
-    morning = cur = plan(bat, fc_e, fc_f, s_start, None, floor, site, lf, tv, dw)
-    cur_t0, s, budget = 0, s_start, bat.cycles_per_day * E
+    fallbacks = 0
+
+    def replan(t0, fe, ff, s0, b0, ladder):
+        """Plan intervals t0.. from s0 stored and budget b0. ladder "offer": None if infeasible; "trigger":
+        then without the floor (the plain dispatcher's fallbacks); "full": then also without the caps."""
+        nonlocal fallbacks
+        rest = None if lf is None else lf[t0:]
+        lay = [(x.limit(lf)[t0:], x.kind, x.penalty) for x in layers]
+        fh = None if terms.fcess_hi is None else {k: np.asarray(v, float)[t0:] for k, v in terms.fcess_hi.items()}
+        floor = plan_floor(bat, t0, s0, obls, risk, strat, room, lf, forced)
+        tries = [(floor, lay)] + ([] if ladder == "offer" else [(None, lay)]) + ([(None, [])] if ladder == "full" and lay else [])
+        for k, (fl, ly) in enumerate(tries):
+            try:
+                out = plan(bat, fe, ff, s0, b0, fl, site, rest, tv, dw, ly, fh)
+            except RuntimeError:
+                if k < len(tries) - 1:
+                    continue
+                if ladder == "offer":
+                    return None
+                raise
+            fallbacks += k > 0
+            return out
+
+    def offer_replan(t0, fe, ff, s0, b0):
+        return replan(t0, fe, ff, s0, b0, "offer")
+
+    def rest_of(ff, t0):
+        return None if ff is None else {k: np.asarray(ff[k], float)[t0:] for k in FCESS}
+
+    floor = plan_floor(bat, 0, s_start, obls, risk, strat, room, lf, forced)
+    if full:
+        morning = cur = replan(0, fc_e, fc_f, s_start, budget, "full")
+    else:
+        morning = cur = plan(bat, fc_e, fc_f, s_start, None, floor, site, lf, tv, dw)
+    cur_t0, s = 0, s_start
     shortfall = site_short = wear = 0.0
     energy, soc = np.zeros(N), np.zeros(N)
     mw_h = {k: np.zeros(N) for k in FCESS}
     triggered, replanned = np.zeros(N, bool), np.zeros(N, bool)
+    meter, short_cap, plan_live, cap_min = np.zeros(N), np.zeros(N), np.zeros(N), np.full(N, np.inf)
+    imp_mwh = exp_mwh = self_mwh = 0.0
+    budget_low = budget
+    excess = {}                                    # cap name -> [MWh over, largest MW over]
+    tests = {a.name: [] for a in terms.availability}
     for t in range(N):
+        due = [r for r in reveals if r.slot == t]
+        if due:
+            for r in due:
+                fc_e, fc_f, obls, layers, budget = _reveal(r, t, fc_e, fc_f, obls, layers, budget)
+            charge_caps, forced = caps_state(layers)
+            room = charge_room(bat, site, lf, charge_caps)
+            tv = stored_energy_value(bat, fc_e)
+            if not value_rule:
+                k_offer[t:] = offer_prices(strat, fc_e)[t:]
+            cur, cur_t0, replanned[t] = replan(t, np.asarray(fc_e, float)[t:], rest_of(fc_f, t), s, budget, "full"), t, True
         i = t - cur_t0
         r_plan = sum(cur[k][i] for k in RAISE) if fcess else 0.0
         l_plan = sum(cur[k][i] for k in LOWER) if fcess else 0.0
         k_ready = not value_rule
+        s_open = s
+        if full:
+            plan_live[t] = cur["net"][i]
+            for x in layers:
+                cap_min[t] = min(cap_min[t], x.cap[t])
         for j in range(STEPS):
             hours = t * DT + (j + 1) * DT5
-            keep = keep_for_obligation(bat, obligations, hours, room) if obligations else 0.0
+            if terms.capacity is not None and terms.capacity.start <= t < terms.capacity.end:
+                # Reserve Capacity test at the start of the dispatch interval
+                can = min(P, 12 * s) - (la[t] if terms.capacity.at_meter else 0.0)
+                if site is not None:
+                    can = min(can, site.export_limit_mw)
+                short_cap[t] += max(0.0, terms.capacity.rcoq_mw - can) / STEPS
+            keep = keep_for_obligation(bat, obls, hours, room, lf) if obls else 0.0
             sellable = max(0.0, min(P, exp_room[t], (s - keep) * eta / DT5, budget / DT5))
             pw = min(cur["net"][i], sellable)
             price = p5[t * STEPS + j]
@@ -368,7 +615,7 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligatio
                 if not k_ready:
                     f_now = None if p5_f is None or not fcess else {k: p5_f[k][t * STEPS + j] for k in FCESS}
                     k_offer[t], offer_fcess[t] = value_offer_price(
-                        bat, strat, t, j, s, budget, pw, sellable, fc_e, fc_f, price, obligations, risk, site, lf, room, tv, f_now)
+                        bat, strat, t, j, s, budget, pw, sellable, fc_e, fc_f, price, offer_replan, f_now)
                     k_ready = True
                 margin = price - k_offer[t]
                 if margin >= 0:
@@ -382,9 +629,19 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligatio
             if pw <= 0 and s - pw * DT5 * eta < keep:
                 # obligation safety: stored energy is at the least that can still be refilled in time
                 pw = -min(P, max(-pw, (keep - s) / (eta * DT5)))
+            forced_mw = 0.0
+            for x in layers:  # caps on the meter, with the site's actual load
+                if not np.isfinite(x.cap[t]):
+                    continue
+                need_mw = la[t] - x.cap[t] if x.at_meter and site is not None else -x.cap[t]
+                if pw < need_mw:
+                    if x.above_floors:
+                        pw, forced_mw = need_mw, max(forced_mw, need_mw)
+                    else:
+                        pw = max(pw, min(need_mw, max(0.0, (s - keep) * eta / DT5)))
             pw = min(max(pw, -imp_room[t]), exp_room[t])  # the connection, with the site's actual load
             if pw > 0:
-                pw = min(pw, s * eta / DT5, budget / DT5)
+                pw = min(pw, s * eta / DT5, budget / DT5 if forced_mw <= 0 else max(budget / DT5, forced_mw))
                 s -= pw * DT5 / eta
                 budget -= pw * DT5
                 wear += bat.degradation_per_mwh * pw * DT5
@@ -393,6 +650,11 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligatio
                 s -= pw * DT5 * eta
             site_short = max(site_short, -imp_room[t] - pw)  # site import over the limit the battery could not cover
             energy[t] += pw * DT5
+            m = la[t] - pw  # MW drawn through the meter (negative: sent out)
+            meter[t] += m / STEPS
+            imp_mwh, exp_mwh = imp_mwh + max(m, 0.0) * DT5, exp_mwh + max(-m, 0.0) * DT5
+            self_mwh += min(la[t], max(pw, 0.0)) * DT5
+            budget_low = min(budget_low, budget)
             if fcess:
                 raise_ok = max(0.0, min(r_plan, P - pw, s * eta / tau, exp_room[t] - pw))
                 lower_ok = max(0.0, min(l_plan, P + pw, (E - s) / (eta * tau), imp_room[t] + pw))
@@ -400,19 +662,29 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligatio
                     mw_h[k][t] += (cur[k][i] * raise_ok / r_plan if r_plan > 1e-9 else 0.0) * DT5
                 for k in LOWER:
                     mw_h[k][t] += (cur[k][i] * lower_ok / l_plan if l_plan > 1e-9 else 0.0) * DT5
-            if obligations:
-                shortfall = max(shortfall, obligation_need(bat, obligations, hours) - s)
+            if obls:
+                shortfall = max(shortfall, obligation_need(bat, obls, hours, lf) - s)
         soc[t] = s
+        if full:
+            for x in layers:
+                if np.isfinite(x.cap[t]):
+                    over = max(0.0, (meter[t] if x.at_meter and site is not None else -energy[t] / DT) - x.cap[t])
+                    e = excess.setdefault(x.name, [0.0, 0.0])
+                    e[0], e[1] = e[0] + over * DT, max(e[1], over)
+            for a in terms.availability:
+                if a.start <= t < a.end:
+                    event = a.in_event(t)
+                    on_meter = a.standby.at_meter and site is not None
+                    got = -meter[t] if on_meter else energy[t] / DT
+                    power = min(P - la[t], site.export_limit_mw) if on_meter else min(P, exp_room[t])
+                    ok = ((got >= a.min_delivery * a.mw - 1e-6) if event else a.after_events(t) or
+                          (power >= a.mw - 1e-6 and s_open >= a.standby.need(bat, t * DT, lf) - 1e-6))
+                    tests[a.name].append((ok, event, min(max(got, 0.0), a.mw) * DT if event else 0.0, got / a.mw if event else np.nan))
         if triggered[t] and t < N - 1:
             cur_t0 = t + 1
             last = t * STEPS + STEPS - 1
             f_now = None if p5_f is None or not fcess else {k: p5_f[k][last] for k in FCESS}
-            args = (nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget)
-            rest = None if lf is None else lf[cur_t0:]
-            try:
-                cur = plan(bat, *args, plan_floor(bat, cur_t0, s, obligations, risk, strat, room), site, rest, tv, dw)
-            except RuntimeError:
-                cur = plan(bat, *args, None, site, rest, tv, dw)
+            cur = replan(cur_t0, nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget, "full" if full else "trigger")
             replanned[cur_t0] = True
     energy_rev = float((np.asarray(rtp) * energy).sum())
     fcess_rev = float(sum((np.asarray(act_f[k]) * mw_h[k]).sum() for k in FCESS)) if fcess else 0.0
@@ -429,6 +701,19 @@ def run_day(bat: Battery, strat: Strategy, fc_e, fc_f, rtp, act_f, p5, obligatio
         "site_load_fc": np.nan if lf is None else lf / (1 + load_margin), "site_load_plan": np.nan if lf is None else lf,
         "site_load": la if site is not None else np.nan, **{f"{k}_mw": mw_h[k] / DT for k in FCESS},
     })
+    if full:
+        summary.update({"max_import_mw": float(meter.max()), "import_mwh": imp_mwh, "export_mwh": exp_mwh,
+                        "self_mwh": self_mwh, "plan_fallbacks": fallbacks, "budget_overrun_mwh": max(0.0, -budget_low),
+                        "capacity_short_mw_ti": float(short_cap.sum())})
+        for name, (mwh, mw) in excess.items():
+            summary[f"excess_{name}_mwh"], summary[f"excess_{name}_mw"] = mwh, mw
+        for a in terms.availability:
+            rows = tests[a.name]
+            ratios = [r for *_, r in rows if np.isfinite(r)]
+            summary.update({f"{a.name}_window_ti": len(rows), f"{a.name}_available_ti": int(sum(r[0] for r in rows)),
+                            f"{a.name}_event_ti": int(sum(r[1] for r in rows)), f"{a.name}_event_mwh": float(sum(r[2] for r in rows)),
+                            f"{a.name}_min_delivery": min(ratios) if ratios else np.nan})
+        log = log.assign(meter_mw=meter, plan_net_live=plan_live, cap_mw=cap_min, capacity_short_mw=short_cap)
     return summary, log
 
 
@@ -444,9 +729,51 @@ def _runs(labels) -> list[tuple[int, int, object]]:
     return out
 
 
+def _explain_terms(log: pd.DataFrame, summary: dict, terms: DayTerms, clock, site: Site | None) -> list[str]:
+    """Lines for what a day's terms added: reveals, the meter, the caps, the capacity and availability tests."""
+    lines = []
+    soc = log["soc"].to_numpy()
+    for r in sorted(terms.reveals, key=lambda r: r.slot):
+        if r.slot > 0:
+            lines.append(f"{clock[r.slot]} {r.label}: the rest of the day was re-planned from the {soc[r.slot - 1]:.1f} MWh then stored.")
+    if site is not None:
+        top = int(np.argmax(log["meter_mw"].to_numpy()))
+        lines.append(f"Meter: {summary['import_mwh']:.1f} MWh in, {summary['export_mwh']:.1f} MWh out; the battery supplied "
+                     f"{summary['self_mwh']:.1f} MWh of the site's own load; highest import {summary['max_import_mw']:.2f} MW "
+                     f"at {clock[top]}.")
+    caps = {x.name: x for x in terms.layers}
+    caps.update({x.name: x for r in terms.reveals for x in r.layers})
+    for name, x in caps.items():
+        live = np.isfinite(np.asarray(x.cap, float))
+        spans = [f"{clock[i]}-{clock[j]}" for i, j, on in _runs(list(live)) if on]
+        level = np.asarray(x.cap, float)[live]
+        what = f"import at most {level.min():.2f} MW" if level.min() >= 0 else f"send out at least {-level.max():.2f} MW"
+        over = summary.get(f"excess_{name}_mw", 0.0)
+        kept = "kept" if over <= 1e-6 else f"missed by up to {over:.2f} MW ({summary[f'excess_{name}_mwh']:.2f} MWh)"
+        lines.append(f"Cap '{name}' ({what} at the meter, {', '.join(spans)}): {kept}.")
+    c = terms.capacity
+    if c is not None:
+        short = summary.get("capacity_short_mw_ti", 0.0)
+        lines.append(f"Capacity credits: able to deliver {c.rcoq_mw:.2f} MW{' net at the meter' if c.at_meter else ''} "
+                     f"{clock[c.start]}-{clock[c.end]}" + (": fully, no refund." if short <= 1e-9 else
+                                                          f": short {short:.2f} MW x trading intervals (refunded)."))
+    for a in terms.availability:
+        n, k, ev = summary[f"{a.name}_window_ti"], summary[f"{a.name}_available_ti"], summary[f"{a.name}_event_ti"]
+        line = f"{a.name}: available in {k} of {n} intervals of {clock[a.start]}-{clock[a.end]}"
+        if ev:
+            line += (f"; called for {ev} intervals, delivered {summary[f'{a.name}_event_mwh']:.1f} MWh, at worst "
+                     f"{summary[f'{a.name}_min_delivery']:.0%} of the {a.mw:.1f} MW asked")
+        lines.append(line + ".")
+    if summary.get("plan_fallbacks"):
+        lines.append(f"{summary['plan_fallbacks']} plan(s) could not meet every floor and cap and fell back.")
+    return lines
+
+
 def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, obligations=None,
-            site: Site | None = None) -> list[str]:
-    """Plain-language account of one day: what the morning plan does and why, then what happened."""
+            site: Site | None = None, terms: DayTerms | None = None) -> list[str]:
+    """Plain-language account of one day: what the morning plan does and why, then what happened.
+    Money the caller settles outside run_day (capacity credits, contracts, the site bill) is listed if
+    the summary carries it as ledger_* keys."""
     clock = pd.date_range("2000-01-01 08:00", periods=N + 1, freq="30min").strftime("%H:%M")
     fc = log["forecast"].to_numpy()
     wear = decision_wear(bat, strat)
@@ -533,6 +860,12 @@ def explain(log: pd.DataFrame, summary: dict, bat: Battery, strat: Strategy, obl
     if log["soc"].iloc[-1] > 0.05:
         lines.append(f"Ends the day holding {log['soc'].iloc[-1]:.1f} MWh, counted at ${log['stored_value'].iloc[0]:.0f}/MWh "
                      f"(what buying it back would cost): selling it for less, after losses and wear, would not pay.")
+    if terms is not None:
+        lines.extend(_explain_terms(log, summary, terms, clock, site))
     lines.append(f"Result: ${summary['energy']:.0f} energy + ${summary['fcess']:.0f} FCESS - ${summary['wear']:.0f} wear "
                  f"= ${summary['total']:.0f}.")
+    ledger = {k[len("ledger_"):]: v for k, v in summary.items() if k.startswith("ledger_") and k != "ledger_total"}
+    if ledger:
+        parts = " ".join(f"{'+' if v >= 0 else '-'} ${abs(v):.0f} {k.replace('_', ' ')}" for k, v in ledger.items())
+        lines.append(f"With the day's contracts and site bill: ${summary['total']:.0f} market {parts} = ${summary['ledger_total']:.0f}.")
     return lines

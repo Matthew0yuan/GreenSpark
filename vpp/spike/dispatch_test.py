@@ -64,7 +64,7 @@ def _run(task: tuple[str, str]) -> list[dict]:
     strat = base if risk_name == "none" else dp.Strategy(base.name, offer=base.offer, offer_rule=base.offer_rule,
                                                          hurdle_per_mwh=base.hurdle_per_mwh, risk_threshold=THRESHOLD,
                                                          reserve_mwh=RESERVE_MWH)
-    bat, site = bt.SCENARIOS["main"][0], bt.SITE
+    bat, site = bt.LEGACY["main"].bat, bt.SITE
     rows, soc = [], 0.0
     for d, risk in zip(_DAYS, _RISK[risk_name]):
         pe, pf = d["prices"]["forecast"]
