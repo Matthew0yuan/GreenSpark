@@ -18,11 +18,13 @@ Run:  python -m vpp.spike.dispatch_test MODEL   (MODEL = the D+1 model chosen on
 import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
 
 from vpp import backtest as bt
+from vpp import contracts as ct
 from vpp import dispatch as dp
 from vpp.data import PROCESSED
 from vpp.evaluate import period_of
@@ -30,8 +32,8 @@ from vpp.spike.metrics import OUT
 
 THRESHOLD, RESERVE_MWH = 0.20, 1.0
 STRATS = {
-    "forecast": dp.Strategy("forecast", hurdle_per_mwh=bt.HURDLE),
-    "forecast+offer(value)": dp.Strategy("forecast+offer(value)", offer=True, offer_rule="value", hurdle_per_mwh=bt.HURDLE),
+    "forecast": dp.Strategy("forecast"),
+    "forecast+offer(value)": dp.Strategy("forecast+offer(value)", offer=True, offer_rule="value"),
 }
 
 
@@ -60,16 +62,15 @@ def _init(days, risk):
 
 def _run(task: tuple[str, str]) -> list[dict]:
     strat_name, risk_name = task
-    base = STRATS[strat_name]
-    strat = base if risk_name == "none" else dp.Strategy(base.name, offer=base.offer, offer_rule=base.offer_rule,
-                                                         hurdle_per_mwh=base.hurdle_per_mwh, risk_threshold=THRESHOLD,
-                                                         reserve_mwh=RESERVE_MWH)
-    bat, site = bt.LEGACY["main"].bat, bt.SITE
+    strat = STRATS[strat_name]
+    prefs = bt.PREFS if risk_name == "none" else replace(bt.PREFS, risk_threshold=THRESHOLD, reserve_mwh=RESERVE_MWH)
+    asset, site = bt.LEGACY["main"].asset, bt.SITE
     rows, soc = [], 0.0
     for d, risk in zip(_DAYS, _RISK[risk_name]):
         pe, pf = d["prices"]["forecast"]
-        summary, _ = dp.run_day(bat, strat, pe, pf, d["rtp"], d["act_f"], d["p5"], [dp.capacity_obligation(bat, d["window"])],
-                                risk, soc, d["p5_f"], site, d["load_fc"], d["load_act"], None)
+        summary, _ = dp.run_day(asset, strat, prefs, pe, pf, d["rtp"], d["act_f"], d["p5"],
+                                [ct.capacity_obligation(asset.battery, d["window"])], risk, soc, d["p5_f"], site,
+                                d["load_fc"], d["load_act"])
         soc = summary["soc_end"]
         rows.append({"strategy": strat_name, "risk": risk_name, "day": d["day"], **summary})
     return rows

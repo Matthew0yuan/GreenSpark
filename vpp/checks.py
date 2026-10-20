@@ -57,7 +57,7 @@ def main() -> None:
     ok &= _result("I2 largest cap excess, log = summary", int((np.abs(worst - reported) > 1e-4).sum()), len(worst), "days")
 
     # I3
-    soc_bad = ((logs["soc"] < -TOL) | (logs["soc"] > bt.Q2B_BAT.energy_mwh + TOL)).sum()
+    soc_bad = ((logs["soc"] < -TOL) | (logs["soc"] > bt.Q2B_ASSET.battery.energy_mwh + TOL)).sum()
     ok &= _result("I3 stored energy within 0-40 MWh", int(soc_bad), len(logs), "intervals")
 
     # I4
@@ -70,15 +70,18 @@ def main() -> None:
         rep = daily[daily["scenario"] == "RCM netted 4h"].set_index(["strategy", "day"])["capacity_short_mw_ti"].reindex(summed.index)
         ok &= _result("I4 shortfall, log = summary", int((np.abs(summed - rep) > 1e-6).sum()), len(summed), "days")
         r = daily[daily["scenario"] == "RCM netted 4h"]
-        expect = bt.REFUND_FACTOR * r["day"].map(ct.rcp) / 365 / 8 * r["capacity_short_mw_ti"]
+        expect = np.array([ct.refund_rate(d, "esroi") for d in r["day"]]) * r["capacity_short_mw_ti"]
         ok &= _result("I4 refunds recompute", int((np.abs(expect - r["refund"]) > 1e-6).sum()), len(r), "days")
 
     # I5
-    specs = {"SCM 5 MW x 2h battery": ct.scm(5.0, 2.0, False), "NCESS AEMO 1.5 MW": ct.ncess_aemo(1.5)}
+    specs = {"SCM 5 MW (registered)": ct.scm(5.0), "NCESS Western Power 3 MW, calls 2 h": ct.ncess_wp(3.0, 2.0, 10)}
     for name, spec in specs.items():
-        r = daily[(daily["scenario"] == name) & (daily[f"{spec.name}_window_ti"].fillna(0) > 0)]
-        if len(r):
-            expect = spec.rate * spec.mw * r[f"{spec.name}_available_ti"] / r[f"{spec.name}_window_ti"]
+        unit = "5min" if spec.form == "registered" else "ti"
+        if f"{spec.name}_window_{unit}" not in daily:
+            continue
+        r = daily[(daily["scenario"] == name) & (daily[f"{spec.name}_window_{unit}"].fillna(0) > 0)]
+        if len(r) and spec.name != "ncess_wp":  # Western Power's season discount is checked by its own rule
+            expect = spec.rate * spec.mw * r[f"{spec.name}_available_{unit}"] / r[f"{spec.name}_window_{unit}"]
             ok &= _result(f"I5 {name} availability pay recomputes", int((np.abs(expect - r["contract"]) > 1e-6).sum()), len(r), "days")
 
     # I6
@@ -91,8 +94,21 @@ def main() -> None:
     # I7
     ev_cols = [c for c in daily.columns if c.endswith("_event_ti")]
     allowance = sum(daily[c].fillna(0) * 0.5 * 10.0 for c in ev_cols) if ev_cols else 0.0
-    over = daily["discharged_mwh"] > bt.Q2B_BAT.energy_mwh * bt.Q2B_BAT.cycles_per_day + allowance + daily["budget_overrun_mwh"] + 1e-6
+    budget = bt.Q2B_ASSET.battery.energy_mwh * bt.Q2B_ASSET.limits.cycles_per_day
+    over = daily["discharged_mwh"] > budget + allowance + daily["budget_overrun_mwh"] + 1e-6
     ok &= _result("I7 discharge within the budget", int(over.sum()), len(daily), "days")
+
+    # I9 information timing: no day's terms use anything before it is public
+    if "timing_errors" in daily:
+        ok &= _result("I9 information used only once public", int(daily["timing_errors"].fillna(0).sum()), len(daily), "days")
+
+    # I10 compliance: a plan short of a compliance requirement only when none could meet it, and then by
+    # the least; executed shortfall on the other days is what forecast error left (reported, not a failure)
+    if "plan_shortfall_mwh" in daily:
+        planned = daily["plan_shortfall_mwh"].fillna(0) > 1e-6
+        print(f"INFO  I10 days with a plan short of a compliance requirement (none could meet it): {int(planned.sum())} of {len(daily)}; "
+              f"largest {daily['plan_shortfall_mwh'].max():.2f} MWh; real-time shortfall on the other days, largest "
+              f"{daily.loc[~planned, 'obligation_shortfall_mwh'].max():.2f} MWh")
 
     # I8
     flips = [ct.rcp(pd.Timestamp("2025-09-30")) == ct.RCP[2024], ct.rcp(pd.Timestamp("2025-10-01")) == ct.RCP[2025],
