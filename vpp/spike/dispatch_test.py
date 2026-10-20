@@ -27,8 +27,8 @@ from vpp import backtest as bt
 from vpp import contracts as ct
 from vpp import dispatch as dp
 from vpp.data import PROCESSED
-from vpp.evaluate import period_of
 from vpp.spike.metrics import OUT
+from vpp.spike.protocol import period_of
 
 THRESHOLD, RESERVE_MWH = 0.20, 1.0
 STRATS = {

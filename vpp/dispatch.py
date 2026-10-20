@@ -511,7 +511,8 @@ def value_offer_price(asset: Asset, strat: Strategy, prefs: RiskPrefs, t: int, j
                       fcess_now: dict | None = None) -> tuple[float, float]:
     """"value" rule: offer price for the rest of interval t from re-planning the rest of the day twice,
     running at the planned power until the interval ends or selling at `sell` MW instead. Energy and
-    FCESS forecasts are both nudged towards the prices just seen (fcess_now: 5-min FCESS prices).
+    FCESS forecasts are both nudged towards the latest prices seen before the offer is made, those of the
+    previous 5-min step (price_now; fcess_now: its FCESS prices).
     replan(first interval, energy forecast, FCESS forecast, stored MWh, budget) returns the plan of the
     rest of the day with the day's floors and caps, or None if there is none.
 
@@ -759,9 +760,12 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             price = p5[t * STEPS + j]
             if strat.offer and price >= strat.k_min and sellable > max(pw, 0.0) + 1e-6:
                 if not k_ready:
-                    f_now = None if p5_f is None or not fcess else {k: p5_f[k][t * STEPS + j] for k in FCESS}
+                    # the offer is in before this step's prices exist: priced from the latest step already seen
+                    i5 = t * STEPS + j
+                    seen = p5[i5 - 1] if i5 > 0 else float(np.asarray(fc_e, float)[t])
+                    f_seen = None if p5_f is None or not fcess or i5 == 0 else {k: p5_f[k][i5 - 1] for k in FCESS}
                     k_offer[t], offer_fcess[t] = value_offer_price(
-                        asset, strat, prefs, t, j, s, budget, pw, sellable, fc_e, fc_f, price, offer_replan, f_now)
+                        asset, strat, prefs, t, j, s, budget, pw, sellable, fc_e, fc_f, seen, offer_replan, f_seen)
                     k_ready = True
                 margin = price - k_offer[t]
                 if margin >= 0:

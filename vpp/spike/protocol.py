@@ -20,15 +20,18 @@ Availability. A record may be used at issue time T only if available_at <= T (vp
 available_at per source from the evidence noted there). AVAILABILITY holds the central rule and DELAYED
 the sensitivity run with every source assumed later.
 
-Periods. As vpp.evaluate: test = TEST_MONTHS, every trading day from 2025-04-01 outside them is validation;
-models and calibrators train on labels up to TRAIN_END at most. Walk-forward with monthly refits; the
+Periods. The split this study was run on (2026-10-17), kept as it was: test = TEST_MONTHS, every trading
+day from 2025-04-01 outside them is validation; models and calibrators train on labels up to TRAIN_END at
+most. (vpp.evaluate moved to a strict time split on 2026-10-20; this study has not been re-run on it.) Walk-forward with monthly refits; the
 model for month M trains on target days before M - EMBARGO_DAYS (labels known, re-pricing settled).
 Out-of-sample predictions start at OOS_START so calibrators for 2025-04 have six months of history.
 """
 
+import numpy as np
 import pandas as pd
 
-from vpp.evaluate import TEST_MONTHS, TRAIN_END, period_of  # noqa: F401  (re-exported)
+TEST_MONTHS = ("2025-10", "2025-12", "2026-02", "2026-04", "2026-06", "2026-08")
+TRAIN_END = pd.Timestamp("2026-07-16")
 
 ISSUE = pd.Timedelta(hours=9)          # issue time after the start of the trading day's calendar date
 DAY_START = pd.Timedelta(hours=8)      # WEM trading day starts 08:00 AWST
@@ -54,6 +57,12 @@ DELAYED = {
     "outages": pd.Timedelta(hours=24),
     "weather": pd.Timedelta(hours=14),
 }
+
+
+def period_of(trading_day) -> np.ndarray:
+    """'test' for trading days in TEST_MONTHS, 'validation' otherwise."""
+    months = pd.DatetimeIndex(trading_day).strftime("%Y-%m")
+    return np.where(np.isin(months, TEST_MONTHS), "test", "validation")
 
 
 def issue_time(trading_day) -> pd.Timestamp:
