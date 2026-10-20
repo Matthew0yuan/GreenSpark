@@ -7,8 +7,8 @@ Features only use what is known at issue time: the 08:00 run itself, actual pric
 end of trading day D-1, and AEMO's errors on trading days that have already finished.
 
 Each (product, days_ahead) gets its own LightGBM model on the residual (actual - AEMO), with an
-L1 loss because we are scored on MAE. Walk-forward: refit at the start of every test month on
-all data whose actuals were known by then, then forecast that month.
+L1 loss because we are scored on MAE. Walk-forward: refit at the start of every month on all data
+whose actuals were known by then (never after TRAIN_END), then forecast that month.
 
 Two variants are fit side by side so the effect of weather is measured on identical rows:
   aemo+ml     AEMO forecast + recent prices/errors + calendar
@@ -34,7 +34,7 @@ import numpy as np
 import pandas as pd
 
 from vpp.data import PROCESSED, PRODUCTS, ROOT, trading_date
-from vpp.evaluate import TEST_MONTHS, TEST_START, TRAIN_END, period_of
+from vpp.evaluate import CUTOFF, TEST_START, TRAIN_END, period_of
 
 REPORTS = ROOT / "reports"
 
@@ -206,7 +206,7 @@ def main() -> None:
             }
             ok = pd.concat(methods, axis=1).notna().all(axis=1)
             actual = sub[f"actual_{p}"][ok]
-            test = ok & (period_of(sub["target_date"]) == "test")  # metrics on test months only
+            test = ok & (period_of(sub["target_date"]) == "test")  # metrics on the test only
             for name, fc in methods.items():
                 rows.append({"days_ahead": days_ahead, "product": p, "method": name, "n": int(test.sum()),
                              **score(fc[test] - sub[f"actual_{p}"][test])})
@@ -227,7 +227,7 @@ def main() -> None:
     mae["skill_vs_baseline"] = 1 - mae["aemo+ml+wx"] / mae["baseline"]
     mae["skill_vs_profile28"] = 1 - mae["aemo+ml+wx"] / mae["profile28"]
     mae["weather_gain"] = 1 - mae["aemo+ml+wx"] / mae["aemo+ml"]
-    print(f"Test months: {', '.join(TEST_MONTHS)}; walk-forward monthly refits from {TEST_START.date()}, "
+    print(f"Test: trading days from {CUTOFF.date()}; walk-forward monthly refits from {TEST_START.date()}, "
           f"trained on data up to {TRAIN_END.date()} at most")
     print("MAE ($/MWh energy, $/MW/h FCESS); skill = 1 - MAE/MAE_ref\n")
     print(mae.round(3).to_string())

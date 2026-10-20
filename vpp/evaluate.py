@@ -1,6 +1,12 @@
 """Forecast evaluation shared by the baseline and every model we try.
 
 A forecast is a DataFrame indexed like the actuals with one column per product.
+
+Split (from 2026-10-20): a strict time split at CUTOFF. Every model trains, and every choice is made, on
+trading days before CUTOFF (the backtests compare variants on those days: "validation"); the trading days
+from CUTOFF on are the test, scored once. Until 2026-10-20 the test was every other month of 2025-26 with
+validation months around them, so choices had seen data after the test months (reports/findings.md,
+section 16).
 """
 
 import numpy as np
@@ -8,22 +14,19 @@ import pandas as pd
 
 # First month the Q2A models forecast (walk-forward, refit monthly on everything known by then).
 TEST_START = pd.Timestamp("2025-10-01 08:00")
-# Test months: every other month of 2025-26. Every other trading day from 2025-04 is validation, so
-# both periods cover the market with FCESS income and the one without it.
-TEST_MONTHS = ("2025-10", "2025-12", "2026-02", "2026-04", "2026-06", "2026-08")
+CUTOFF = pd.Timestamp("2026-07-01")  # first test trading day
 # Last trading day any model trains on: refits after it reuse the same training data, so the models
-# are frozen from here and forecast the rest of the data without seeing it.
-TRAIN_END = pd.Timestamp("2026-07-16")
+# are frozen from here and forecast the test without seeing it.
+TRAIN_END = CUTOFF - pd.Timedelta(days=1)
 
 
 def period_of(trading_day) -> np.ndarray:
-    """'test' for trading days in TEST_MONTHS, 'validation' otherwise."""
-    months = pd.DatetimeIndex(trading_day).strftime("%Y-%m")
-    return np.where(np.isin(months, TEST_MONTHS), "test", "validation")
+    """'test' for trading days from CUTOFF on, 'validation' before."""
+    return np.where(pd.DatetimeIndex(trading_day) >= CUTOFF, "test", "validation")
 
 
 def test_slice(df: pd.DataFrame) -> pd.DataFrame:
-    """Intervals (30-min index) whose trading day is in a test month."""
+    """Intervals (30-min index) whose trading day is in the test."""
     return df[period_of((df.index - pd.Timedelta(hours=8)).normalize()) == "test"]
 
 

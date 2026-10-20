@@ -16,7 +16,8 @@ Strategies:
 The forecast-based strategies add HURDLE $/MWh to the wear in every decision (vpp.dispatch). With
 forecast errors, trades that only just pay on the forecast lose on the actual prices, so they mostly
 keep their charge for price spikes and the capacity obligation. HURDLE was chosen on the validation
-months from 0-150 $/MWh (2026-10-16): the monthly choice below earns most at 75, flat from 50 to 150.
+months of the old split from 0-150 $/MWh (2026-10-16): the monthly choice below earns most at 75, flat
+from 50 to 150. The 10 MW study re-checks it on the days before the cutoff (q2b_main).
 Which of forecast / forecast+offer / forecast+offer(value) to run is chosen month by month: each
 month uses the one that earned most over the previous LOOKBACK days, so the choice only ever uses the
 past and follows the market when it changes (FCESS was rich in 2025 and nearly gone in 2026). A
@@ -41,10 +42,10 @@ from vpp import dispatch as dp
 from vpp import site as st
 from vpp import site_bill as sb
 from vpp.data import PROCESSED, ROOT
-from vpp.evaluate import period_of
+from vpp.evaluate import CUTOFF, period_of
 
 REPORTS = ROOT / "reports"
-FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-15"  # each day is validation or test: vpp.evaluate.TEST_MONTHS
+FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-15"  # validation before vpp.evaluate.CUTOFF, test from it
 PERIODS = ("validation", "test")
 H, HALF = pd.Timedelta(hours=8), pd.Timedelta("30min")
 WEAR = 30.0  # A$/MWh discharged, central assumption
@@ -429,7 +430,7 @@ Q2B_STRATEGIES = ("perfect", "forecast", VALUE)
 HURDLES = (0.0, 25.0, 50.0, 100.0, 150.0)
 CMD_GRID = (11.0, 10.0, 9.0, 8.0, 7.0)
 REFUND_FACTOR = ct.REFUND_FACTOR
-SC_CHOICE_MONTHS = ("2026-01", "2026-03")  # validation months of the backtest's Hot Season
+SC_CHOICE_MONTHS = ("2025-12", "2026-01", "2026-02", "2026-03")  # the backtest's Hot Season, before the cutoff
 IRCR_SEASON = 2025                    # the 2025-26 Hot Season sets the factory's 2026-27 IRCR
 EXPORT_3MW = replace(st.FACTORY, export_limit_mw=3.0)
 
@@ -628,7 +629,8 @@ def contract_record(ledger: pd.DataFrame) -> pd.DataFrame:
 
 
 def q2b_summary(ledger: pd.DataFrame, bills: pd.DataFrame, ircr: pd.DataFrame) -> pd.DataFrame:
-    """$/day by scenario, strategy and period: daily items, the month's bill saving per day, the IRCR saving;
+    """$/day by scenario, strategy and period: daily items, the month's bill saving per day, the IRCR saving
+    (one Hot Season's result, counted only in the period that holds that season: the test has none);
     the worst 5% of days (mean of their daily ledger) and the worst day; compliance: planned shortfall (plans
     that could not meet every requirement, the largest in MWh), unplanned shortfall in real time (MWh),
     capacity shortfall and timing errors (information used before it was public; must be 0)."""
@@ -650,6 +652,8 @@ def q2b_summary(ledger: pd.DataFrame, bills: pd.DataFrame, ircr: pd.DataFrame) -
         s["enuc_months"] = bills[bills["enuc"] > 0].groupby(["scenario", "strategy", "period"]).size()
     if len(ircr):
         s = s.join(ircr.set_index(["scenario", "strategy"])["saving_per_year"].div(365).rename("ircr_saving"), on=["scenario", "strategy"])
+        held = period_of(pd.DatetimeIndex([f"{IRCR_SEASON}-12-01", f"{IRCR_SEASON + 1}-03-31"]))
+        s.loc[~np.isin(s.index.get_level_values("period"), held), "ircr_saving"] = 0.0
     s[["bill_saving", "ircr_saving", "enuc_months"]] = s.reindex(columns=["bill_saving", "ircr_saving", "enuc_months"]).fillna(0.0)
     s["value"] = s["ledger_total"] + s["bill_saving"] + s["ircr_saving"]
     return s
@@ -732,6 +736,8 @@ def q2b_main(days: list[dict]) -> None:
     show = ["days", "total", "capacity", "refund", "contract", "ledger_total", "bill_saving", "ircr_saving", "value",
             "worst_5pct_days", "max_import_mw", "plans_short", "plan_shortfall_mwh", "unplanned_shortfall_mwh", "enuc_months"]
     print("=== $/day by route (value strategy unless noted)")
+    print(f"(IRCR: the {IRCR_SEASON}-{IRCR_SEASON - 1999} Hot Season, before the cutoff; the test from {CUTOFF.date()} has no "
+          "Hot Season and scores no IRCR)")
     print(summary[show].round(1).to_string())
     print("\n=== contract record (called days, failed days, worst 90-day unavailability)")
     print(record.round(3).to_string(index=False))
