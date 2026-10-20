@@ -7,15 +7,23 @@ reports/tool_model.md section 4.1), urban zone substation, 10 km from it [resear
                      + administration 11,770.090 c/day
   CMD  < 7,000 kVA   68,033.118 c/day for the first 1,000 kVA + (28.576 + 2.178 x km) c/kVA/day x
                      (CMD - 1,000) + administration 6,758.157 c/day
-  There is no energy charge. If a month's highest half-hourly demand PD exceeds the CMD, the excess
-  network usage charge is ENUM x (PD - CMD) / CMD x that month's demand and demand-length charges
-  (ENUM = 1, 2.5 at a few substations). Demand is kVA: MW / power factor (0.95 assumed).
+  There is no energy charge. If a billing period's highest half-hourly demand PD exceeds the CMD, the
+  excess network usage charge is ENUM x (PD - CMD) / CMD x that period's demand and demand-length
+  charges (ENUM = 1, 2.5 at a few substations) [verified, reports/step0_terms.md section 4]. The
+  billing period follows the meter-read cycle; calendar months here are an approximation. Demand is kVA:
+  MW / power factor (0.95 assumed: the price list has no factor). No automatic CMD reset for repeated
+  excess was found. RT7 is import-only: exporting needs a separate entry or bidirectional service
+  whose cost is not modelled (vpp.contracts.Route.export_service). The metering charge is left out.
 IRCR (ESM Rules Appendix 5, glossary) [verified]: a meter's contribution is twice its median metered
   consumption (MWh per trading interval, so the median MW) in the 12 Peak SWIS Trading Intervals of
-  the preceding Hot Season: the 3 intervals with the highest Total Sent Out Generation on each of the
-  4 trading days with the highest maximum demand, 1 Dec - 1 Apr. Net export counts as 0. Operational
-  demand (demand_mw) stands in for Total Sent Out Generation. It sets the capacity cost of the next
-  capacity year, valued here at that year's Reserve Capacity Price per MW (vpp.contracts.RCP).
+  the preceding Hot Season - the 3 intervals with the highest Total Sent Out Generation on each of the
+  4 trading days with the highest maximum - times AEMO's monthly ratios (IRCR_RATIO). Net export of a
+  registered facility counts as 0. Settled here on AEMO's published intervals where known (2025-26),
+  else with operational demand (demand_mw) standing in for Total Sent Out Generation. It sets the
+  capacity cost of the next capacity year, valued at that year's Reserve Capacity Price per MW
+  (vpp.contracts.RCP). The 2026-27 IRCR is already set by 2025-26, so a battery installed now first
+  changes 2027-28 ($360,700/MW, under the formula starting 1 Oct 2027): the backtest's 2025-26 season
+  is an as-if.
 
 Peak-day rule (2026-10-19): AEMO's maximum energy requirement forecast for the trading day
 (vpp.spike.features pd_day_req_max) in the 08:00 pre-dispatch run, public by 09:00. A day is flagged
@@ -43,6 +51,15 @@ IRCR_THRESHOLD_MW = 3900.0   # same day
 IRCR_DAY_AHEAD_MW = 4025.0   # the day before
 IRCR_WIDE = (3600.0, 3500.0)  # sensitivity (same day, day before), set after seeing 2025-26
 IRCR_SLOTS = (18, 24)  # 17:00-20:00: all 12 peak intervals of 2023-24 .. 2025-26 start 17:00-19:00
+IRCR_RATIO = 1.57384368 * 0.99714480  # AEMO's TDL ratio x Total ratio for 2026-10 (a temperature-dependent load,
+                                      # the factory's default class) [verified; varies by month]
+OFFICIAL_PEAK_INTERVALS = {  # AEMO's published 12 Peak SWIS Trading Intervals (interval start, AWST) [verified]
+    2025: ["2026-01-21 18:00", "2026-01-21 18:30", "2026-01-21 19:00", "2026-02-01 18:00", "2026-02-01 18:30",
+           "2026-02-01 19:00", "2026-02-02 17:30", "2026-02-02 18:00", "2026-02-02 18:30", "2026-03-18 17:00",
+           "2026-03-18 17:30", "2026-03-18 18:00"],
+}
+IRCR_WINDOW_H = (IRCR_SLOTS[1] - IRCR_SLOTS[0]) / 2
+FLAG_QUANTILE = 0.9    # dynamic rule: tolerance = this quantile of past seasons' forecast shortfall (fixed beforehand)
 
 
 @dataclass(frozen=True)
@@ -86,7 +103,10 @@ def monthly_bills(meter: pd.Series, rt7: RT7) -> pd.DataFrame:
 
 
 def ircr_intervals(demand: pd.Series, season: int) -> pd.DatetimeIndex:
-    """The 12 Peak SWIS Trading Intervals of the Hot Season starting 1 Dec `season` (demand_mw as the stand-in)."""
+    """The 12 Peak SWIS Trading Intervals of the Hot Season starting 1 Dec `season`: AEMO's published ones
+    where known, else chosen on demand_mw as the stand-in."""
+    if season in OFFICIAL_PEAK_INTERVALS:
+        return pd.DatetimeIndex(OFFICIAL_PEAK_INTERVALS[season])
     s = demand[(demand.index >= f"{season}-12-01 08:00") & (demand.index < f"{season + 1}-04-01 08:00")]
     day = (s.index - pd.Timedelta(hours=8)).normalize()
     top_days = s.groupby(day).max().nlargest(4).index
@@ -104,6 +124,48 @@ def peak_day_predictor(days_ahead: int = 0) -> pd.Series:
     on the day (days_ahead 0) or on the day before (days_ahead 1), indexed by the day forecast."""
     t = pd.read_parquet(PROCESSED / "spike_table.parquet", columns=["target_date", "days_ahead", "pd_day_req_max"])
     return t[t["days_ahead"] == days_ahead].groupby("target_date")["pd_day_req_max"].max()
+
+
+def daily_max(series: pd.Series) -> pd.Series:
+    """Highest value of each trading day (08:00 to 08:00), indexed by the trading day."""
+    return series.groupby((series.index - pd.Timedelta(hours=8)).normalize()).max()
+
+
+def hot_season(days: pd.DatetimeIndex) -> np.ndarray:
+    """The Hot Season (1 Dec - 1 Apr, by the year it starts) of each day; -1 outside Dec-Mar."""
+    days = pd.DatetimeIndex(days)
+    return np.where(days.month == 12, days.year, np.where(days.month <= 3, days.year - 1, -1))
+
+
+def forecast_tolerance(predictor: pd.Series, actual: pd.Series, seasons, q: float = FLAG_QUANTILE) -> float:
+    """How far the forecast daily maximum falls short of the actual one on Hot Season days: the q-quantile
+    of (actual - forecast) in each of `seasons`, averaged. Use only seasons before the one it is applied to."""
+    df = pd.concat({"f": predictor, "a": actual}, axis=1).dropna()
+    s = hot_season(df.index)
+    return float(np.mean([(df["a"] - df["f"])[s == y].quantile(q) for y in seasons]))
+
+
+def dynamic_flags(predictor: pd.Series, actual: pd.Series, tol: float, lag: int) -> pd.DatetimeIndex:
+    """Hot Season days flagged as possible system peak days from the season so far. A day can only be one
+    of the season's 4 peak days if its maximum beats the 4th-highest so far, so a day is flagged if its
+    forecast (public at 09:00 on the day, lag 1, or on the day before, lag 2) reaches the 4th-highest
+    actual daily maximum of the season's days known by then, less tol; every day until 4 are known."""
+    df = pd.concat({"f": predictor, "a": actual}, axis=1)
+    df = df[hot_season(df.index) >= 0]
+    out = []
+    for _, g in df.groupby(hot_season(df.index)):
+        for i, d in enumerate(g.index):
+            known = g["a"].iloc[:max(0, i - (lag - 1))].dropna()
+            kth = known.nlargest(4).iloc[-1] if len(known) >= 4 else -np.inf
+            if pd.notna(g.loc[d, "f"]) and g.loc[d, "f"] >= kth - tol:
+                out.append(d)
+    return pd.DatetimeIndex(out)
+
+
+def peak_days_covered(meter: pd.Series, intervals: pd.DatetimeIndex) -> int:
+    """How many of the season's 4 peak days had no import in any of their 3 peak intervals."""
+    x = meter.reindex(intervals).clip(lower=0) <= 1e-6
+    return int(x.groupby((intervals - pd.Timedelta(hours=8)).normalize()).all().sum())
 
 
 def flag_days(threshold: float = IRCR_THRESHOLD_MW, predictor: pd.Series | None = None) -> pd.DatetimeIndex:

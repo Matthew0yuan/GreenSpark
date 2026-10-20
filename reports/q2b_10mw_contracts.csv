@@ -1,0 +1,3 @@
+scenario,strategy,contract,called_days,failed_days,most_failed_in_a_season,worst_90d_unavailable
+"NCESS Western Power 3 MW, calls 2 h",forecast+offer(value),ncess_wp,10,0,0,0.0
+SCM 5 MW (registered),forecast+offer(value),scm,0,0,0,0.7

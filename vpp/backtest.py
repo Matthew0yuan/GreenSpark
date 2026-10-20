@@ -35,6 +35,7 @@ from dataclasses import dataclass, replace
 import numpy as np
 import pandas as pd
 
+from vpp import config as cf
 from vpp import contracts as ct
 from vpp import dispatch as dp
 from vpp import site as st
@@ -49,42 +50,46 @@ H, HALF = pd.Timedelta(hours=8), pd.Timedelta("30min")
 WEAR = 30.0  # A$/MWh discharged, central assumption
 HURDLE = 75.0  # A$/MWh margin for forecast error in forecast-based decisions, never settled
 SITE = st.Site()
+# name -> (price source, how it decides, the risk preferences it fixes). Perfect foresight and yesterday's
+# prices carry no margin for forecast error; perfect foresight also knows the site's load.
 STRATEGIES = {
-    "perfect": ("actual", dp.Strategy("perfect")),
-    "yesterday": ("yesterday", dp.Strategy("yesterday")),
-    "forecast": ("forecast", dp.Strategy("forecast", hurdle_per_mwh=HURDLE)),
-    "forecast+offer": ("forecast", dp.Strategy("forecast+offer", offer=True, hurdle_per_mwh=HURDLE)),
-    "forecast+offer(value)": ("forecast", dp.Strategy("forecast+offer(value)", offer=True, offer_rule="value",
-                                                      hurdle_per_mwh=HURDLE)),
+    "perfect": ("actual", dp.Strategy("perfect"), {"hurdle_per_mwh": 0.0, "load_margin": 0.0}),
+    "yesterday": ("yesterday", dp.Strategy("yesterday"), {"hurdle_per_mwh": 0.0}),
+    "forecast": ("forecast", dp.Strategy("forecast"), {}),
+    "forecast+offer": ("forecast", dp.Strategy("forecast+offer", offer=True), {}),
+    "forecast+offer(value)": ("forecast", dp.Strategy("forecast+offer(value)", offer=True, offer_rule="value"), {}),
 }
 CORE = ["perfect", "forecast", "forecast+offer", "forecast+offer(value)"]
 CANDIDATES = ["forecast", "forecast+offer", "forecast+offer(value)"]
 LOOKBACK = pd.Timedelta(days=90)  # fixed, not tuned
-BAT = dp.Battery(degradation_per_mwh=WEAR)
+ASSET = cf.Asset(wear_per_mwh=WEAR)
+PREFS = cf.RiskPrefs(hurdle_per_mwh=HURDLE)  # the client's risk preferences in every scenario unless it says otherwise
 
 
 @dataclass(frozen=True)
 class Scenario:
-    """One backtest setting: the battery, the site behind its connection (None: no site) and, for the
-    legacy study, whether it holds the capacity obligation at its credited MW (battery only). route:
-    the 10 MW study's connection and commitments (vpp.contracts.Route); None for the legacy study."""
+    """One backtest setting: the battery as run (asset), the site behind its connection (None: no site)
+    and, for the legacy study, whether it holds the capacity obligation at its credited MW (battery
+    only). route: the 10 MW study's connection and commitments (vpp.contracts.Route); None for the
+    legacy study. prefs: the client's risk preferences."""
     name: str
-    bat: dp.Battery
+    asset: cf.Asset
     site: st.Site | None
     obligation: bool
     strategies: tuple[str, ...]
     route: ct.Route | None = None
+    prefs: cf.RiskPrefs = PREFS
 
 
 LEGACY = {s.name: s for s in [
-    Scenario("main", BAT, SITE, True, tuple(STRATEGIES)),
-    Scenario("no site", BAT, None, True, tuple(CORE)),
-    Scenario("import 1.5 MW", BAT, st.Site(import_limit_mw=1.5), True, tuple(CORE)),
-    Scenario("import 2.0 MW", BAT, st.Site(import_limit_mw=2.0), True, tuple(CORE)),
-    Scenario("no obligation", BAT, SITE, False, tuple(CORE)),
-    Scenario("wear $0", dp.Battery(degradation_per_mwh=0.0), SITE, True, tuple(CORE)),
-    Scenario("wear $15", dp.Battery(degradation_per_mwh=15.0), SITE, True, tuple(CORE)),
-    Scenario("wear $50", dp.Battery(degradation_per_mwh=50.0), SITE, True, tuple(CORE)),
+    Scenario("main", ASSET, SITE, True, tuple(STRATEGIES)),
+    Scenario("no site", ASSET, None, True, tuple(CORE)),
+    Scenario("import 1.5 MW", ASSET, st.Site(import_limit_mw=1.5), True, tuple(CORE)),
+    Scenario("import 2.0 MW", ASSET, st.Site(import_limit_mw=2.0), True, tuple(CORE)),
+    Scenario("no obligation", ASSET, SITE, False, tuple(CORE)),
+    Scenario("wear $0", cf.Asset(wear_per_mwh=0.0), SITE, True, tuple(CORE)),
+    Scenario("wear $15", cf.Asset(wear_per_mwh=15.0), SITE, True, tuple(CORE)),
+    Scenario("wear $50", cf.Asset(wear_per_mwh=50.0), SITE, True, tuple(CORE)),
 ]}
 
 
@@ -146,25 +151,37 @@ def _init_worker(days: list[dict], aux: dict | None = None) -> None:
     _DAYS, _AUX = days, aux or {}
 
 
-def strategy(name: str) -> tuple[str, dp.Strategy]:
-    """(price source, strategy) of a strategy name; "<name>|h=<hurdle>" sets a different hurdle."""
+def strategy(name: str, prefs: cf.RiskPrefs = PREFS) -> tuple[str, dp.Strategy, cf.RiskPrefs]:
+    """(price source, strategy, risk preferences) of a strategy name in a scenario whose risk preferences
+    are `prefs`; "<name>|h=<hurdle>" sets a different hurdle."""
     base, _, hurdle = name.partition("|h=")
-    source, strat = STRATEGIES[base]
-    return (source, replace(strat, name=name, hurdle_per_mwh=float(hurdle))) if hurdle else (source, strat)
+    source, strat, fixed = STRATEGIES[base]
+    prefs = replace(prefs, **fixed)
+    if hurdle:
+        return source, replace(strat, name=name), replace(prefs, hurdle_per_mwh=float(hurdle))
+    return source, strat, prefs
 
 
 def _route_days(sc: Scenario, name: str):
     """One strategy through every day on a 10 MW route, yielding (day, terms, summary, log): the day's
     contract terms and caps (vpp.contracts), the 08:00 bridge plan and the 09:00 forecast, the stored
     energy and the month-to-date peak (for the CMD cap) carried from day to day, and on the eve of a
-    day flagged as a possible system peak the energy its 17:00-20:00 hours need, kept overnight."""
-    route, bat, site = sc.route, sc.bat, sc.site
-    source, strat = strategy(name)
+    day flagged as a possible system peak the energy its 17:00-20:00 hours need, kept overnight. Under a
+    fixed retail contract the meter's energy is priced at RETAIL_FIXED, there is no standing offer to
+    sell at the wholesale price, and net energy export earns nothing."""
+    route, asset, site = sc.route, sc.asset, sc.site
+    bat = asset.battery
+    source, strat, prefs = strategy(name, sc.prefs)
     perfect = source == "actual"
-    events = ct.call_days(route.contract, _AUX["demand"]) if route.contract is not None else {}
+    fixed = route.retail == "fixed"
+    if fixed:
+        strat = replace(strat, offer=False)
+    events = {c.name: ct.call_days(c, _AUX["demand"]) for c in route.contracts}
     peaks = _AUX["ircr_peaks"] if route.ircr_hindsight else {}
     same_day, day_before = set(), set(peaks)  # possible peak days flagged at 09:00 on the day / the day before
-    if route.ircr is not None and not route.ircr_hindsight:
+    if route.ircr == "dynamic":
+        same_day, day_before = set(_AUX["flags0"]), set(_AUX["flags1"])
+    elif route.ircr is not None and not route.ircr_hindsight:
         same_day = set(sb.flag_days(route.ircr[0], _AUX["predictor0"]))
         day_before = set(sb.flag_days(route.ircr[1], _AUX["predictor1"]))
     by_date = {d["day"]: d for d in _DAYS}
@@ -172,7 +189,7 @@ def _route_days(sc: Scenario, name: str):
     window[sb.IRCR_SLOTS[0]:sb.IRCR_SLOTS[1]] = True
     enuc = sb.RT7(route.cmd_mw / sb.PF * 1000).enuc_per_mw() if route.cmd_mw else 0.0
     ref = (19, 27) if route.window == "esroi" else ct.window_7h(ct.HOT_DAY)  # credits are certified once, on a hot weekday
-    credit = ct.credits(bat, site, ref, route.rcm) if route.rcm else 0.0
+    credit = ct.credits(bat, site, ref, route.rcm, sc.prefs.load_margin) if route.rcm else 0.0
     soc, mtd = 0.0, {}
     for d in _DAYS:
         day = d["day"]
@@ -181,6 +198,10 @@ def _route_days(sc: Scenario, name: str):
             pe, pf = d["prices"][source]
         else:
             (pe, pf), forecast = d["prices"]["bridge"], d["fc0900"]
+        rtp, p5 = d["rtp"], d["p5"]
+        if fixed:
+            pe, forecast = np.full(dp.N, ct.RETAIL_FIXED), None
+            rtp, p5 = pe, np.full(dp.N * dp.STEPS, ct.RETAIL_FIXED)
         load_fc = load_act = None
         if site is not None:
             load_fc = d["load_act" if perfect else "load_fc"] * site.load_scale
@@ -193,12 +214,22 @@ def _route_days(sc: Scenario, name: str):
         tomorrow = by_date.get(day + pd.Timedelta(days=1))
         if site is not None and tomorrow is not None and tomorrow["day"] in day_before:
             # hold overnight what tomorrow's flagged hours need: the factory's planned load then
-            need = tomorrow["load_fc"] * site.load_scale * (1 + site.load_margin)
+            need = tomorrow["load_fc"] * site.load_scale * (1 + sc.prefs.load_margin)
             slots = peaks[tomorrow["day"]] if tomorrow["day"] in peaks else np.flatnonzero(window)
             reserve = min(bat.energy_mwh, float(np.minimum(bat.power_mw, need[slots]).sum()) * dp.DT / bat.eta)
-        terms = ct.day_terms(route, d, bat, site, cmd_cap, ircr_cap, ircr_at, forecast, credit, events, enuc, reserve)
-        summary, log = dp.run_day(bat, strat, pe, pf, d["rtp"], d["act_f"], d["p5"], None, d["risk"], soc, d["p5_f"],
-                                  site, load_fc, load_act, 0.0 if perfect else None, terms=terms)
+        carry = 0.0
+        if tomorrow is not None:  # tomorrow's standing compliance obligations are known today
+            plan_next = None if site is None else tomorrow["load_fc"] * site.load_scale * (1 + sc.prefs.load_margin)
+            standing = ct.day_terms(route, tomorrow, bat, site, None, None, 0, None, credit, {}, enuc, 0.0,
+                                    sc.prefs.capacity_floor)
+            today = ct.day_terms(route, d, bat, site, None, None, 0, None, credit, {}, enuc, 0.0, sc.prefs.capacity_floor)
+            plan_today = None if site is None else d["load_fc"] * site.load_scale * (1 + sc.prefs.load_margin)
+            carry = ct.carry_in(standing, bat, site, plan_next, today, plan_today)
+        terms = ct.day_terms(route, d, bat, site, cmd_cap, ircr_cap, ircr_at, forecast, credit, events, enuc, reserve,
+                             sc.prefs.capacity_floor, carry, _AUX["ircr_value_mw"])
+        summary, log = dp.run_day(asset, strat, prefs, pe, pf, rtp, d["act_f"], p5, None, d["risk"], soc,
+                                  d["p5_f"], site, load_fc, load_act, terms=terms, export_energy=not fixed,
+                                  reg_util=route.reg_util)
         soc = summary["soc_end"]
         for m, x in zip(d["slot_month"], log["meter_mw"].to_numpy()):
             mtd[m] = max(mtd.get(m, 0.0), x)
@@ -219,9 +250,10 @@ def explain_route_day(sc: Scenario, name: str, day: pd.Timestamp, days: list[dic
     """Plain-language account of one day of a 10 MW route (replays the route up to that day);
     money: ledger_* items settled outside the dispatcher (capacity, contracts, bill) for that day."""
     _init_worker(days, aux)
+    _, strat, prefs = strategy(name, sc.prefs)
     for d, terms, summary, log in _route_days(sc, name):
         if d == day:
-            return dp.explain(log, {**summary, **(money or {})}, sc.bat, strategy(name)[1], None, sc.site, terms)
+            return dp.explain(log, {**summary, **(money or {})}, sc.asset, strat, prefs, None, sc.site, terms)
     raise KeyError(day)
 
 
@@ -230,8 +262,8 @@ def _run(task: tuple[Scenario, str, bool]):
     sc, name, keep_logs = task
     if sc.route is not None:
         return _run_route(sc, name, keep_logs)
-    bat, site = sc.bat, sc.site
-    source, strat = STRATEGIES[name]
+    asset, site = sc.asset, sc.site
+    source, strat, prefs = strategy(name, sc.prefs)
     rows, logs, soc = [], {}, 0.0
     for d in _DAYS:
         pe, pf = d["prices"][source]
@@ -239,9 +271,9 @@ def _run(task: tuple[Scenario, str, bool]):
         if site is not None:
             load_fc = d["load_act" if source == "actual" else "load_fc"] * site.load_scale
             load_act = d["load_act"] * site.load_scale
-        obligations = [dp.capacity_obligation(bat, d["window"])] if sc.obligation else None
-        summary, log = dp.run_day(bat, strat, pe, pf, d["rtp"], d["act_f"], d["p5"], obligations, d["risk"], soc, d["p5_f"],
-                                  site, load_fc, load_act, 0.0 if source == "actual" else None)
+        obligations = [ct.capacity_obligation(asset.battery, d["window"])] if sc.obligation else None
+        summary, log = dp.run_day(asset, strat, prefs, pe, pf, d["rtp"], d["act_f"], d["p5"], obligations, d["risk"], soc,
+                                  d["p5_f"], site, load_fc, load_act)
         soc = summary["soc_end"]
         rows.append({"scenario": sc.name, "strategy": name, "day": d["day"], **summary})
         if keep_logs:
@@ -367,7 +399,7 @@ def legacy_main(days: list[dict]) -> None:
               f"90th pct ${alpha * g['offer_fcess'].quantile(0.9):.1f}/MWh")
     fl = lg[lg["strategy"] == "forecast+offer(value)"]
     ts = fl["day"] + H + fl["slot"] * HALF
-    cap = np.clip(np.minimum(BAT.power_mw, SITE.import_limit_mw - fl["site_load_plan"]), 0.0, None)
+    cap = np.clip(np.minimum(ASSET.battery.power_mw, SITE.import_limit_mw - fl["site_load_plan"]), 0.0, None)
     business = (ts.dt.dayofweek < 5) & (ts.dt.hour >= 8) & (ts.dt.hour < 17)
     print(f"\n=== site: mean load {fl['site_load'].mean():.2f} MW (max {fl['site_load'].max():.2f}); most the battery may "
           f"charge: weekday 08-17 {cap[business].mean():.2f} MW, other hours {cap[~business].mean():.2f} MW")
@@ -379,8 +411,10 @@ def legacy_main(days: list[dict]) -> None:
     d = next(x for x in days if x["day"] == example)
     summ = daily[(daily["scenario"] == "main") & (daily["strategy"] == pick) & (daily["day"] == example)].iloc[0].to_dict()
     print(f"\n=== currently chosen: {current}. Example explanation: {example.date()} ({pick}, main scenario)")
-    bat = LEGACY["main"].bat
-    print("\n".join(dp.explain(logs[pick][example], summ, bat, STRATEGIES[pick][1], [dp.capacity_obligation(bat, d["window"])], SITE)))
+    main_sc = LEGACY["main"]
+    _, strat, prefs = strategy(pick, main_sc.prefs)
+    print("\n".join(dp.explain(logs[pick][example], summ, main_sc.asset, strat, prefs,
+                               [ct.capacity_obligation(main_sc.asset.battery, d["window"])], SITE)))
 
 
 # ---------------------------------------------------------------------------- the 10 MW study (2026-10-19)
@@ -389,12 +423,12 @@ def legacy_main(days: list[dict]) -> None:
 # market (energy + FCESS - wear) plus capacity credits less refunds plus contract availability; the
 # factory's bill items are settled per month (RT7 network demand) and per Hot Season (IRCR).
 
-Q2B_BAT = dp.Battery(power_mw=10.0, energy_mwh=40.0, degradation_per_mwh=WEAR)
+Q2B_ASSET = cf.Asset(cf.Battery(power_mw=10.0, energy_mwh=40.0), wear_per_mwh=WEAR)
 VALUE = "forecast+offer(value)"
 Q2B_STRATEGIES = ("perfect", "forecast", VALUE)
 HURDLES = (0.0, 25.0, 50.0, 100.0, 150.0)
 CMD_GRID = (11.0, 10.0, 9.0, 8.0, 7.0)
-REFUND_FACTOR = 1.0                   # central; 0.25 with no forced outages, 6 on tight evenings
+REFUND_FACTOR = ct.REFUND_FACTOR
 SC_CHOICE_MONTHS = ("2026-01", "2026-03")  # validation months of the backtest's Hot Season
 IRCR_SEASON = 2025                    # the 2025-26 Hot Season sets the factory's 2026-27 IRCR
 EXPORT_3MW = replace(st.FACTORY, export_limit_mw=3.0)
@@ -402,13 +436,31 @@ EXPORT_3MW = replace(st.FACTORY, export_limit_mw=3.0)
 
 def q2b_aux() -> dict:
     """Inputs the 10 MW workers share: system demand (contract call days), AEMO's forecast peak
-    requirement (IRCR flags) and the actual 12 peak intervals of IRCR_SEASON (the hindsight bound)."""
-    demand = pd.read_parquet(PROCESSED / "wem_30min.parquet", columns=["demand_mw"])["demand_mw"]
+    requirement (IRCR flags), the actual 12 peak intervals of IRCR_SEASON (the hindsight bound), and the
+    dynamic IRCR rule's flags and value.
+
+    The dynamic rule (vpp.site_bill.dynamic_flags) uses only Hot Seasons before IRCR_SEASON for its
+    tolerance. Value of a flagged day: covering at least 3 of the 4 peak days (9 of the 12 intervals)
+    brings the median, and so the IRCR, to 0, so every flagged day is needed; each is valued as an equal
+    share of the year's capacity price per MW, RCP / the flags a season takes (past seasons' average),
+    on the day's largest import in its peak hours. A proxy, settled against the official structure
+    after the season (q2b_bills)."""
+    df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet", columns=["demand_mw", "req_energy_mw"])
+    demand = df30["demand_mw"]
     peaks = {}
     for t in sb.ircr_intervals(demand, IRCR_SEASON):
         day = (t - H).normalize()
         peaks.setdefault(day, []).append(int((t - day - H) / HALF))
-    return {"demand": demand, "predictor0": sb.peak_day_predictor(0), "predictor1": sb.peak_day_predictor(1), "ircr_peaks": peaks}
+    p0, p1 = sb.peak_day_predictor(0), sb.peak_day_predictor(1)
+    actual = sb.daily_max(df30["req_energy_mw"])  # the predictor's own quantity
+    past = [y for y in sorted(set(sb.hot_season(actual.index))) if 0 <= y < IRCR_SEASON]
+    tol0, tol1 = sb.forecast_tolerance(p0, actual, past), sb.forecast_tolerance(p1, actual, past)
+    flags0, flags1 = sb.dynamic_flags(p0, actual, tol0, 1), sb.dynamic_flags(p1, actual, tol1, 2)
+    flagged = flags0.union(flags1)
+    per_season = [int((sb.hot_season(flagged) == y).sum()) for y in past]
+    value = ct.RCP[IRCR_SEASON + 1] * sb.IRCR_RATIO / max(1.0, float(np.mean(per_season)))
+    return {"demand": demand, "predictor0": p0, "predictor1": p1, "ircr_peaks": peaks, "flags0": flags0, "flags1": flags1,
+            "ircr_value_mw": value, "ircr_tolerance": (tol0, tol1), "ircr_flags_past": per_season}
 
 
 def factory_load(days: list[dict], site: st.Site = st.FACTORY) -> pd.Series:
@@ -417,48 +469,74 @@ def factory_load(days: list[dict], site: st.Site = st.FACTORY) -> pd.Series:
     return pd.Series(np.concatenate([d["load_act"] for d in days]) * site.load_scale, index=ts)
 
 
-def _sc(name: str, route: ct.Route, strategies=(VALUE,), site: st.Site | None = st.FACTORY) -> Scenario:
+REFUSED: dict[str, str] = {}  # scenario -> why its configuration is not allowed or cannot be had
+WARNED: dict[str, list] = {}  # scenario -> what it commits to that the battery cannot always cover
+
+
+def _sc(name: str, route: ct.Route, strategies=(VALUE,), site: st.Site | None = st.FACTORY,
+        prefs: cf.RiskPrefs = PREFS) -> Scenario | None:
+    """The scenario, or None (recorded in REFUSED) if Route.check refuses its configuration. Without an
+    export service the connection exports nothing (RT7 is import-only)."""
     route = replace(route, name=name)
-    route.check()
-    return Scenario(name, Q2B_BAT, None if route.metering == "standalone" else site, False, tuple(strategies), route)
+    site = None if route.metering == "standalone" else site
+    if site is not None and not route.export_service:
+        site = replace(site, export_limit_mw=0.0)
+    try:
+        warnings = route.check(Q2B_ASSET.battery, site, prefs.load_margin)
+    except ValueError as e:
+        REFUSED[name] = str(e).split(": ", 1)[1]
+        return None
+    if warnings:
+        WARNED[name] = warnings
+    return Scenario(name, Q2B_ASSET, site, False, tuple(strategies), route, prefs)
 
 
 def q2b_scenarios(stage: int, cmd_nb: float, cmd: float | None = None, hurdle: float = HURDLE) -> list[Scenario]:
     """Stage 1: the CMD level, the hurdle and the IRCR flag rule, on the market-only route m0. Stage 2:
     every commitment on m1 = m0 + the chosen CMD + the IRCR rule (or standalone, for gross credits)."""
-    rule = (sb.IRCR_THRESHOLD_MW, sb.IRCR_DAY_AHEAD_MW)
+    fixed = (sb.IRCR_THRESHOLD_MW, sb.IRCR_DAY_AHEAD_MW)
     if stage == 1:
         m0 = ct.Route("m0", cmd_mw=cmd_nb)
-        return ([_sc("m0", m0, Q2B_STRATEGIES + tuple(f"{VALUE}|h={h:g}" for h in HURDLES)),
-                 _sc("m0 no CMD cap", ct.Route("x"))]
-                + [_sc(f"CMD {c:g} MW", ct.Route("x", cmd_mw=c)) for c in CMD_GRID]
-                + [_sc("m0 IRCR rule", replace(m0, ircr=rule)), _sc("m0 IRCR wide", replace(m0, ircr=sb.IRCR_WIDE)),
-                   _sc("m0 IRCR hindsight", replace(m0, ircr=(0.0, 0.0), ircr_hindsight=True))])
+        scs = ([_sc("m0", m0, Q2B_STRATEGIES + tuple(f"{VALUE}|h={h:g}" for h in HURDLES)),
+                _sc("m0 no CMD cap", ct.Route("x"))]
+               + [_sc(f"CMD {c:g} MW", ct.Route("x", cmd_mw=c)) for c in CMD_GRID]
+               + [_sc("m0 IRCR dynamic", replace(m0, ircr="dynamic")), _sc("m0 IRCR fixed", replace(m0, ircr=fixed)),
+                  _sc("m0 IRCR wide", replace(m0, ircr=sb.IRCR_WIDE)),
+                  _sc("m0 IRCR hindsight", replace(m0, ircr=(0.0, 0.0), ircr_hindsight=True))])
+        return [x for x in scs if x is not None]
     v = VALUE if hurdle == HURDLE else f"{VALUE}|h={hurdle:g}"
     f = "forecast" if hurdle == HURDLE else f"forecast|h={hurdle:g}"
-    m1 = ct.Route("m1", cmd_mw=cmd, ircr=rule)
-    return [
+    m1 = ct.Route("m1", cmd_mw=cmd, ircr="dynamic")
+    scs = [
         _sc("m1", m1, ("perfect", f, v)),
+        _sc("m1 no FCESS", replace(m1, fcess=()), (v,)),
+        _sc("m1 retail fixed", replace(m1, retail="fixed"), (v,)),
+        _sc("m1 no export service", replace(m1, export_service=False), (v,)),
         _sc("m1 export 3 MW", m1, (v,), EXPORT_3MW),
+        _sc("m1 regulation not used", replace(m1, reg_util=(0.0, 0.0)), (v,)),
+        _sc("m1 regulation used more", replace(m1, reg_util=(0.18, 0.24)), (v,)),
+        _sc("m1 IRCR fixed", replace(m1, ircr=fixed), (v,)),
         _sc("m1 IRCR wide", replace(m1, ircr=sb.IRCR_WIDE), (v,)),
         _sc("m1 IRCR hindsight", replace(m1, ircr=(0.0, 0.0), ircr_hindsight=True), (v,)),
-        _sc("RCM netted 4h", replace(m1, rcm="netted"), (v,)),
-        _sc("RCM netted 4h, margin", replace(m1, rcm="netted_margin"), (v,)),
-        _sc("RCM netted 4h, refund test", replace(m1, rcm="netted", floor_rule="refund_test"), (v,)),
+        # a facility with capacity credits and a load must not run its battery to reduce IRCR (ESM 7.10.6B)
+        _sc("RCM netted 4h", replace(m1, rcm="netted", ircr=None), (v,)),
+        _sc("RCM netted 4h, IRCR targeted", replace(m1, rcm="netted"), (v,)),
+        _sc("RCM netted 4h, margin", replace(m1, rcm="netted_margin", ircr=None), (v,)),
+        _sc("RCM netted 4h, refund test", replace(m1, rcm="netted", ircr=None), (v,),
+            prefs=replace(PREFS, capacity_floor="refund_test")),
         _sc("standalone market", ct.Route("x", metering="standalone"), (v,)),
         _sc("RCM gross 4h standalone", ct.Route("x", metering="standalone", rcm="gross"), (v,)),
         _sc("RCM gross 7h standalone", ct.Route("x", metering="standalone", rcm="gross", window="7h"), (v,)),
-        _sc("SCM 5 MW x 2h at meter", replace(m1, contract=ct.scm(5.0, 2.0, True)), (v,)),
-        _sc("SCM 5 MW x 2h battery", replace(m1, contract=ct.scm(5.0, 2.0, False)), (v,)),
-        _sc("SCM 8 MW x 2h battery", replace(m1, contract=ct.scm(8.0, 2.0, False)), (v,)),
-        _sc("SCM 5 MW x 4h battery", replace(m1, contract=ct.scm(5.0, 4.0, False)), (v,)),
-        _sc("SCM 5 MW x 2h battery, no calls", replace(m1, contract=ct.scm(5.0, 2.0, False, "none")), (v,)),
-        _sc("SCM 5 MW x 2h battery, 2023-24 calls", replace(m1, contract=ct.scm(5.0, 2.0, False, "2324")), (v,)),
-        _sc("NCESS AEMO 1.5 MW", replace(m1, contract=ct.ncess_aemo(1.5)), (v,)),
-        _sc("NCESS Western Power 3 MW x 2h", replace(m1, contract=ct.ncess_wp(3.0, 2.0, 10)), (v,)),
+        _sc("SCM 5 MW (registered)", replace(m1, contracts=(ct.scm(5.0),)), (v,)),
+        _sc("SCM 5 MW (registered), no export service", replace(m1, contracts=(ct.scm(5.0),), export_service=False), (v,)),
+        _sc("SCM 5 MW (unregistered form)", replace(m1, contracts=(ct.scm_unregistered(5.0),)), (v,)),
+        _sc("SCM AO 5 MW", replace(m1, contracts=(ct.scm_ao(5.0),)), (v,)),
+        _sc("NCESS AEMO 1.5 MW", replace(m1, contracts=(ct.ncess_aemo(1.5),)), (v,)),
+        _sc("NCESS Western Power 3 MW, calls 2 h", replace(m1, contracts=(ct.ncess_wp(3.0, 2.0, 10),)), (v,)),
         _sc("PPA backup 4 MWh", replace(m1, backup_mwh=4.0), (v,)),
         _sc("PPA backup 8 MWh", replace(m1, backup_mwh=8.0), (v,)),
     ]
+    return [x for x in scs if x is not None]
 
 
 def q2b_tasks(scenarios: list[Scenario], keep: tuple[str, ...] = ()) -> list[tuple[Scenario, str, bool]]:
@@ -475,22 +553,23 @@ def q2b_ledger(daily: pd.DataFrame, scenarios: list[Scenario]) -> pd.DataFrame:
     route = {s.name: s.route for s in scenarios}
     out = daily.copy()
     rcp = out["day"].map(ct.rcp)
-    n_ti = out["scenario"].map(lambda n: 14 if route[n].window == "7h" else 8)
     out["capacity"] = out["credit_mw"] * rcp / 365
-    out["refund"] = REFUND_FACTOR * rcp / 365 / n_ti * out.get("capacity_short_mw_ti", 0.0)
+    rate = np.array([ct.refund_rate(d, route[n].window) for d, n in zip(out["day"], out["scenario"])])
+    out["refund"] = rate * out.get("capacity_short_mw_ti", 0.0)
     out["contract"] = 0.0
     for name, r in route.items():
-        spec = r.contract
-        if spec is None:
-            continue
-        rows = (out["scenario"] == name) & (out.get(f"{spec.name}_window_ti", pd.Series(0, index=out.index)).fillna(0) > 0)
-        x = out.loc[rows]
-        pay = spec.rate * spec.mw * x[f"{spec.name}_available_ti"] / x[f"{spec.name}_window_ti"]
-        if spec.name == "ncess_wp":  # non-performance discount per season, on the season's fee
-            season = np.where(x["day"].dt.month >= 10, x["day"].dt.year, x["day"].dt.year - 1)
-            failed = (x[f"{spec.name}_min_delivery"] < spec.min_delivery - 1e-9).groupby([x["strategy"], season]).transform("sum")
-            pay = spec.rate * spec.mw * (1 - failed.map(_wp_discount))
-        out.loc[rows, "contract"] = pay
+        for spec in r.contracts:
+            unit = "5min" if spec.form == "registered" else "ti"
+            rows = (out["scenario"] == name) & (out.get(f"{spec.name}_window_{unit}", pd.Series(0, index=out.index)).fillna(0) > 0)
+            x = out.loc[rows]
+            pay = spec.rate * spec.mw * x[f"{spec.name}_available_{unit}"] / x[f"{spec.name}_window_{unit}"]
+            if spec.activation_price:  # activation-only: paid on the energy delivered in events
+                pay = pay + spec.activation_price * x[f"{spec.name}_event_mwh"]
+            if spec.name == "ncess_wp":  # non-performance discount per season, on the season's fee
+                season = np.where(x["day"].dt.month >= 10, x["day"].dt.year, x["day"].dt.year - 1)
+                failed = (x[f"{spec.name}_min_delivery"] < spec.min_delivery - 1e-9).groupby([x["strategy"], season]).transform("sum")
+                pay = spec.rate * spec.mw * (1 - failed.map(_wp_discount))
+            out.loc[rows, "contract"] = out.loc[rows, "contract"] + pay
     out["ledger_total"] = out["total"] + out["capacity"] - out["refund"] + out["contract"]
     return out
 
@@ -515,24 +594,56 @@ def q2b_bills(meters: dict, days: list[dict], scenarios: list[Scenario], cmd_nb:
         bills.append(bill.assign(scenario=name, strategy=strat, saving=nb_bill["total"] - bill["total"],
                                  saving_per_day=(nb_bill["total"] - bill["total"]) / bill["days"]).reset_index())
         mw = sb.ircr_mw(meter, iv)
+        saving = (ircr_nb - mw) * ct.RCP[IRCR_SEASON + 1] * sb.IRCR_RATIO
+        barred = bool(r.rcm)  # ESM 7.10.6B: a facility with capacity credits and a load must not reduce its IRCR
         ircr.append({"scenario": name, "strategy": strat, "ircr_mw": mw, "ircr_no_battery_mw": ircr_nb,
-                     "saving_per_year": (ircr_nb - mw) * ct.RCP[IRCR_SEASON + 1],
-                     "intervals_covered": int((meter.reindex(iv) <= 1e-6).sum())})
+                     "saving_per_year": 0.0 if barred else saving, "saving_barred_7_10_6B": saving if barred else 0.0,
+                     "intervals_covered": int((meter.reindex(iv) <= 1e-6).sum()),
+                     "peak_days_covered": sb.peak_days_covered(meter, iv)})
     bills = pd.concat(bills, ignore_index=True)
     bills["period"] = period_of(bills["month"].dt.to_timestamp())
     return bills, pd.DataFrame(ircr)
 
 
+def contract_record(ledger: pd.DataFrame) -> pd.DataFrame:
+    """Per (scenario, strategy) and contract: called days, called days delivered below the contract's
+    threshold (by Hot Season), and the worst share of unavailable service intervals in any 90 days."""
+    rows = []
+    for (sc, strat), g in ledger.groupby(["scenario", "strategy"]):
+        for c in [c[:-len("_window_ti")] for c in g.columns if c.endswith("_window_ti")]:
+            unit = "5min" if f"{c}_window_5min" in g and g[f"{c}_window_5min"].fillna(0).sum() > 0 else "ti"
+            x = g[g[f"{c}_window_{unit}"].fillna(0) > 0].set_index("day").sort_index()
+            if not len(x):
+                continue
+            threshold = {"ncess_wp": 0.95}.get(c, 0.9)
+            called = x[x[f"{c}_event_ti"].fillna(0) > 0]
+            failed = called[called[f"{c}_min_delivery"] < threshold - 1e-9]
+            unavail = (x[f"{c}_window_{unit}"] - x[f"{c}_available_{unit}"]).rolling("90D").sum()
+            share = (unavail / x[f"{c}_window_{unit}"].rolling("90D").sum()).max()
+            seasons = sb.hot_season(failed.index)
+            rows.append({"scenario": sc, "strategy": strat, "contract": c, "called_days": len(called),
+                         "failed_days": len(failed), "most_failed_in_a_season": int(pd.Series(seasons).value_counts().max()) if len(failed) else 0,
+                         "worst_90d_unavailable": float(share)})
+    return pd.DataFrame(rows)
+
+
 def q2b_summary(ledger: pd.DataFrame, bills: pd.DataFrame, ircr: pd.DataFrame) -> pd.DataFrame:
-    """$/day by scenario, strategy and period: daily items, the month's bill saving per day, the IRCR saving."""
+    """$/day by scenario, strategy and period: daily items, the month's bill saving per day, the IRCR saving;
+    the worst 5% of days (mean of their daily ledger) and the worst day; compliance: planned shortfall (plans
+    that could not meet every requirement, the largest in MWh), unplanned shortfall in real time (MWh),
+    capacity shortfall and timing errors (information used before it was public; must be 0)."""
     cols = ["total", "energy", "fcess", "wear", "capacity", "refund", "contract", "ledger_total"]
     s = ledger.groupby(["scenario", "strategy", "period"])[cols].mean()
     s["days"] = ledger.groupby(["scenario", "strategy", "period"]).size()
     extra = ledger.groupby(["scenario", "strategy", "period"]).agg(
         max_import_mw=("max_import_mw", "max"), self_mwh=("self_mwh", "mean"), export_mwh=("export_mwh", "mean"),
-        fallbacks=("plan_fallbacks", "sum"), site_short_mw=("site_shortfall_mw", "max"),
+        plans_short=("plans_short", "sum"), plan_shortfall_mwh=("plan_shortfall_mwh", "max"),
+        unplanned_shortfall_mwh=("obligation_shortfall_mwh", "max"), timing_errors=("timing_errors", "sum"),
+        worst_day=("ledger_total", "min"), site_short_mw=("site_shortfall_mw", "max"),
         budget_overrun_mwh=("budget_overrun_mwh", "sum"), refund_mw_ti=("capacity_short_mw_ti", "sum"))
     s = s.join(extra)
+    s["worst_5pct_days"] = ledger.groupby(["scenario", "strategy", "period"])["ledger_total"].apply(
+        lambda x: x.nsmallest(max(1, int(np.ceil(0.05 * len(x))))).mean())
     if len(bills):
         b = bills.groupby(["scenario", "strategy", "period"]).apply(lambda g: g["saving"].sum() / g["days"].sum())
         s["bill_saving"] = b
@@ -567,7 +678,8 @@ def q2b_inputs(smoke: bool = False) -> tuple[list[dict], list, dict]:
     if smoke:
         days = [d for d in days if d["day"].month in (1, 2)][:30]
     cmd_nb = sb.cmd_kva(factory_load(days).max()) * sb.PF / 1000
-    pick = ["m1", "RCM netted 4h", "SCM 5 MW x 2h battery", "NCESS Western Power 3 MW x 2h", "PPA backup 4 MWh", "standalone market"]
+    pick = ["m1", "RCM netted 4h", "SCM 5 MW (registered)", "NCESS Western Power 3 MW, calls 2 h", "PPA backup 4 MWh",
+            "standalone market"]
     scs = [s for s in q2b_scenarios(2, cmd_nb, cmd=9.0) if s.name in pick]
     return days, q2b_tasks(scs, keep=tuple(pick)), q2b_aux()
 
@@ -588,18 +700,27 @@ def q2b_main(days: list[dict]) -> None:
     best_h = float(hurdle_pick["value"].idxmax())
     # a different hurdle replaces 75 only if its daily gain on validation is significant
     hurdle = best_h if hurdle_pick.loc[f"{best_h:g}", "ci_lo"] > 0 else HURDLE
+    print("=== market access assumed by the main route m1 (unverified):\n  " + "\n  ".join(ct.Route("m1").assumptions()) + "\n")
     print(f"=== stage 1 (validation): CMD choice\n{cmd_pick.round(1).to_string()}\n=> CMD {cmd:.2f} MW\n")
     print(f"=== hurdle ($/MWh)\n{hurdle_pick.round(1).to_string()}\n=> hurdle {hurdle:g}\n")
 
     s2 = q2b_scenarios(2, cmd_nb, cmd, hurdle)
-    logged = ("m1", "RCM netted 4h", "SCM 5 MW x 2h battery", "NCESS Western Power 3 MW x 2h", "PPA backup 4 MWh")
+    if REFUSED:
+        print("=== configurations refused (not allowed, or not on offer):")
+        print("\n".join(f"  {k}: {v}" for k, v in REFUSED.items()) + "\n")
+    if WARNED:
+        print("=== commitments the battery cannot always cover:")
+        print("\n".join(f"  {k}: {'; '.join(v)}" for k, v in WARNED.items()) + "\n")
+    logged = ("m1", "RCM netted 4h", "SCM 5 MW (registered)", "NCESS Western Power 3 MW, calls 2 h", "PPA backup 4 MWh")
     daily2, logs2, meters2 = run_tasks(q2b_tasks(s2, keep=logged), days, aux)
     scenarios = s1 + s2
     daily = pd.concat([daily1, daily2], ignore_index=True)
     ledger = q2b_ledger(daily, scenarios)
     bills, ircr = q2b_bills({**meters1, **meters2}, days, scenarios, cmd_nb)
     summary = q2b_summary(ledger, bills, ircr)
+    record = contract_record(ledger)
     ledger.to_csv(REPORTS / "q2b_10mw_daily.csv", index=False)
+    record.to_csv(REPORTS / "q2b_10mw_contracts.csv", index=False)
     bills.to_csv(REPORTS / "q2b_10mw_bills.csv", index=False)
     ircr.to_csv(REPORTS / "q2b_10mw_ircr.csv", index=False)
     summary.to_csv(REPORTS / "q2b_10mw_summary.csv")
@@ -609,9 +730,13 @@ def q2b_main(days: list[dict]) -> None:
     print(f"=== SCM size and hours, chosen on {', '.join(SC_CHOICE_MONTHS)} (daily ledger incl. availability)\n{sc_pick.round(1).to_string()}\n")
     pd.concat({"cmd": cmd_pick, "hurdle": hurdle_pick, "scm": sc_pick}, names=["choice"]).to_csv(REPORTS / "q2b_10mw_choices.csv")
     show = ["days", "total", "capacity", "refund", "contract", "ledger_total", "bill_saving", "ircr_saving", "value",
-            "max_import_mw", "fallbacks", "enuc_months"]
+            "worst_5pct_days", "max_import_mw", "plans_short", "plan_shortfall_mwh", "unplanned_shortfall_mwh", "enuc_months"]
     print("=== $/day by route (value strategy unless noted)")
     print(summary[show].round(1).to_string())
+    print("\n=== contract record (called days, failed days, worst 90-day unavailability)")
+    print(record.round(3).to_string(index=False))
+    print(f"\nIRCR dynamic rule: tolerance {aux['ircr_tolerance'][0]:.0f} / {aux['ircr_tolerance'][1]:.0f} MW (same day / day "
+          f"before), past seasons' flags {aux['ircr_flags_past']}, value ${aux['ircr_value_mw']:,.0f} per MW of a flagged day")
     print("\n=== IRCR, 2025-26 Hot Season (sets the 2026-27 capacity cost)")
     print(ircr.round(2).to_string(index=False))
     lg = pd.concat([x.assign(day=d, scenario=sc, strategy=st_) for (sc, st_), by_day in logs2.items() for d, x in by_day.items()],

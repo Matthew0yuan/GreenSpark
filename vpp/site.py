@@ -2,7 +2,8 @@
 
 The battery and the site's load share one connection point. The battery can only charge as fast as
 the import limit leaves room for after the site's load, and FCESS headroom has to fit inside the same
-limits.
+limits. The import and export limits are an agreement with the network (compliance), not physics; how
+much more than forecast the plans assume the site draws is a risk preference (vpp.config.RiskPrefs).
 
 The hackathon data has no site meter data, so the backtest uses an example commercial site
 (example_load); use load_csv for a real site's 30-min load when one is available. FACTORY is the
@@ -20,11 +21,10 @@ import pandas as pd
 class Site:
     import_limit_mw: float = 1.2  # most the connection may draw from the grid
     export_limit_mw: float = 1.0  # most it may send to the grid
-    load_margin: float = 0.16     # plans assume the site may draw this much more than forecast (2x example noise)
     load_scale: float = 1.0       # the site's load is the example (or CSV) load times this
 
 
-FACTORY = Site(import_limit_mw=12.0, export_limit_mw=10.0, load_margin=0.16, load_scale=10.0)
+FACTORY = Site(import_limit_mw=12.0, export_limit_mw=10.0, load_scale=10.0)
 
 
 def example_load(ts: pd.DatetimeIndex, noise: float = 0.08, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
