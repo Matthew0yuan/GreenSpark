@@ -22,7 +22,10 @@ Pass (validation, before vpp.evaluate.CUTOFF): the choice earns more than value 
 daily difference above 0 (vpp.stochastic.block_ci; a day's money is its ledger plus its month's bill saving per
 day). The test is printed once, for every strategy.
 
-Run:  python -m vpp.reserve [--smoke]
+--replay re-runs every strategy from the recorded choices (reports/reserve_choices.csv, no plays): the bills by
+month (reports/reserve_bills.csv) and the market's own interval, as the bill rests on a few monthly peaks.
+
+Run:  python -m vpp.reserve [--smoke | --replay]
 """
 
 import os
@@ -181,8 +184,49 @@ def compare(money_: pd.DataFrame, ledger: pd.DataFrame) -> pd.DataFrame:
 
 
 
+def replay() -> None:
+    """Every strategy again, the choice from its recorded reserves: checks the ledger reproduces, then the bill
+    saving by month against R=0 and the market's daily difference with its interval."""
+    days = bt.load_days("0900")
+    aux = bt.q2b_aux()
+    cmd_nb = sb.cmd_kva(bt.factory_load(days).max()) * sb.PF / 1000
+    m1 = bt._sc("m1", ct.Route("m1", cmd_mw=sto.CMD, ircr="dynamic"), tuple(FIXED.values()))
+    label = {v: k for k, v in FIXED.items()}
+    daily, _, meters = bt.run_tasks(bt.q2b_tasks([m1]), days, aux)
+    daily["strategy"] = daily["strategy"].map(label)
+    meters = {(sc, label[s]): m for (sc, s), m in meters.items()}
+    chosen = pd.read_csv(REPORTS / "reserve_choices.csv", parse_dates=["day"]).set_index("day")["chosen"]
+    bt._init_worker(days, aux)
+    rows, ms = [], []
+    pick = lambda d, kw: dp.Reserve(chosen[d["day"]], *bt.RESERVE_WINDOW) if chosen.get(d["day"], 0.0) > 0 else None  # noqa: E731
+    for day, _, summary, log in bt._route_days(m1, bt.VALUE, decide=pick):
+        rows.append({"scenario": "m1", "strategy": CHOICE, "day": day, **summary})
+        ms.append(log["meter_mw"].to_numpy().astype(np.float32))
+    choice = pd.DataFrame(rows)
+    choice["period"] = bt.period_of(choice["day"])
+    meters["m1", CHOICE] = np.vstack(ms)
+    ledger = bt.q2b_ledger(pd.concat([daily, choice], ignore_index=True), [m1])
+    run = pd.read_csv(REPORTS / "reserve_daily.csv", parse_dates=["day"]).set_index(["strategy", "day"])["ledger_total"]
+    gap = float((ledger.set_index(["strategy", "day"])["ledger_total"].reindex(run.index) - run).abs().max())
+    print(f"the replay reproduces the recorded run's ledger: largest difference ${gap:.2g}")
+    bills, _ = bt.q2b_bills(meters, days, [m1], cmd_nb)
+    bills.to_csv(REPORTS / "reserve_bills.csv", index=False)
+    b = bills.assign(per_day=bills["saving"] / bills["days"]).pivot_table(index="month", columns="strategy", values="per_day")
+    print(f"=== bill saving $/day by month, against R=0\n{b.sub(b['R=0'], axis=0).drop(columns='R=0').round(0).to_string()}\n")
+    led = ledger.pivot_table(index="day", columns="strategy", values="ledger_total")
+    period = pd.Series(bt.period_of(led.index), index=led.index)
+    print("=== the market alone (daily ledger), against R=0")
+    for p in bt.PERIODS:
+        for s_ in [*list(FIXED)[1:], CHOICE]:
+            diff = (led[s_] - led["R=0"])[period == p].to_numpy()
+            lo, hi = sto.block_ci(diff)
+            print(f"  {p} {s_}: {diff.mean():+.1f} $/day, 95% interval {lo:+.1f} .. {hi:+.1f}")
+
+
 def main(argv: list[str] | None = None) -> None:
     argv = sys.argv[1:] if argv is None else argv
+    if "--replay" in argv:
+        return replay()
     smoke = "--smoke" in argv
     days = bt.load_days("0900")
     if smoke:
