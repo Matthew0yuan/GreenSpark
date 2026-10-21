@@ -51,3 +51,8 @@ class RiskPrefs:
     risk_threshold: float | None = None  # keep reserve_mwh stored in intervals with spike risk >= this
     reserve_mwh: float = 0.0
     reserve_value: float = 200.0         # $ per MWh of the largest shortfall below that reserve (an economic floor) [assumed]
+    # the "dro" planner (vpp.dispatch.Strategy): how far the scenarios' probabilities may be off, as a factor on
+    # each scenario's weight and on the expected number of half-hours at or above the spike price. Before the
+    # cutoff the scenarios' monthly spike frequency was 0.59 .. 1.99 x the actual (reports/findings.md, section 18),
+    # so the actual was 1 / 1.99 .. 1 / 0.59 x the scenarios'
+    ambiguity: tuple = (0.50, 1.70)

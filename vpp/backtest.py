@@ -154,10 +154,14 @@ def _init_worker(days: list[dict], aux: dict | None = None) -> None:
 
 def strategy(name: str, prefs: cf.RiskPrefs = PREFS) -> tuple[str, dp.Strategy, cf.RiskPrefs]:
     """(price source, strategy, risk preferences) of a strategy name in a scenario whose risk preferences
-    are `prefs`; "<name>|h=<hurdle>" sets a different hurdle."""
-    base, _, hurdle = name.partition("|h=")
+    are `prefs`; "<name>|h=<hurdle>" sets a different hurdle, "<name>|plan=<planner>" a different planner
+    (vpp.dispatch.Strategy; the scenario planners need the day's scenarios, vpp.stochastic)."""
+    base, _, planner = name.partition("|plan=")
+    base, _, hurdle = base.partition("|h=")
     source, strat, fixed = STRATEGIES[base]
     prefs = replace(prefs, **fixed)
+    if planner:
+        strat = replace(strat, name=name, planner=planner)
     if hurdle:
         return source, replace(strat, name=name), replace(prefs, hurdle_per_mwh=float(hurdle))
     return source, strat, prefs
@@ -230,7 +234,7 @@ def _route_days(sc: Scenario, name: str):
                              sc.prefs.capacity_floor, carry, _AUX["ircr_value_mw"])
         summary, log = dp.run_day(asset, strat, prefs, pe, pf, rtp, d["act_f"], p5, None, d["risk"], soc,
                                   d["p5_f"], site, load_fc, load_act, terms=terms, export_energy=not fixed,
-                                  reg_util=route.reg_util)
+                                  reg_util=route.reg_util, scen=None if strat.planner == "point" else d.get("scen"))
         soc = summary["soc_end"]
         for m, x in zip(d["slot_month"], log["meter_mw"].to_numpy()):
             mtd[m] = max(mtd.get(m, 0.0), x)
