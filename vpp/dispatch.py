@@ -47,8 +47,10 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import Bounds, LinearConstraint, milp
-from scipy.sparse import coo_matrix
+from scipy.optimize import Bounds, LinearConstraint, linprog, milp
+from scipy.sparse import block_diag, coo_matrix
+from scipy.sparse import hstack as sp_hstack
+from scipy.sparse import vstack as sp_vstack
 
 from vpp.config import Asset, Battery, RiskPrefs
 from vpp.site import Site
@@ -69,6 +71,13 @@ class Strategy:
     offer_rule: str = "forecast"         # "forecast" or "value", see the module docstring
     k_min: float = 150.0                 # $/MWh, lowest offer price
     alpha: float = 1.2                   # safety margin on what selling early gives up
+    # "point": plan on the point forecast, re-planned when information arrives (a reveal, an offer sale). The
+    # others also re-plan every `every` intervals from the actual state of charge, the prices nudged towards the
+    # latest seen: "roll" on the point forecast; from the scenarios' issue (run_day's scen) on, "mean" on the
+    # scenarios' mean, "sp" with the two-stage stochastic plan (plan_sp), "dro" the same at the worst weights the
+    # risk preferences' ambiguity allows
+    planner: str = "point"
+    every: int = 2
 
 
 def decision_wear(asset: Asset, prefs: RiskPrefs) -> float:
@@ -160,31 +169,34 @@ def _structure(n: int, bat: Battery, sustain_h: float, kinds: tuple = (), comp: 
     return A, np.array(lb, float), np.array(ub, float), idx
 
 
-def plan(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: float | None = None, floor=None,
-         site: Site | None = None, load=None, terminal_value: float = 0.0, wear_per_mwh: float | None = None,
-         layers=(), fcess_hi: dict | None = None, export_energy: bool = True, comp_floor=None, soft=(),
-         reg_util: tuple = (0.0, 0.0)) -> dict:
-    """Best schedule for the remaining n intervals on the given prices.
+@dataclass(eq=False)
+class _Milp:
+    """plan's MILP at one set of prices: minimise cost @ x with lb <= A x <= ub and lo <= x <= hi."""
+    cost: np.ndarray
+    A: object
+    lb: np.ndarray
+    ub: np.ndarray
+    lo: np.ndarray
+    hi: np.ndarray
+    integrality: np.ndarray
+    idx: dict
+    pe: np.ndarray
+    price_f: dict | None
+    wear: float
+    terminal_value: float
+    util: tuple
+    report: bool  # caps, a compliance floor or economic floors: the result reports their penalty and slack
 
-    price_e: $/MWh per interval; price_f: {product: $/MW/h} or None for energy only; budget: MWh the
-    battery may still discharge today (default: the limits' cycles a day); floor: minimum stored MWh
-    at the end of each interval; site, load: the connection limits and the site's load (MW) per
-    interval; terminal_value: $ per MWh still stored at the end; wear_per_mwh: $ per MWh discharged
-    (default: the asset's wear).
-    layers: caps on net charging (charge - discharge, MW) as (cap (n,), kind, penalty, compliance):
-    an economic cap pays `penalty` $/MWh over the cap in each interval ("slot") or $/MW on the largest
-    excess ("peak"); the penalties steer the plan and are not part of its value. A compliance cap must
-    hold (its penalty is ignored). comp_floor: stored MWh that compliance requires at the end of each
-    interval (instead of `floor`, a plain bound). If the compliance floor and caps cannot all hold, the
-    plan first keeps their total shortfall to the least possible, then optimises value with that
-    shortfall ("shortfall" in the result: summed over intervals; "shortfall_mwh": the largest floor
-    shortfall). soft: economic floors as (floor (n,), $ per MWh of its largest shortfall). fcess_hi:
-    {product: (n,) most MW enabled} or None. export_energy=False: no net energy export at the meter (it
-    would earn nothing under a fixed retail contract); FCESS raise headroom still has the connection's
-    export limit. reg_util: MWh delivered / taken per MW-hour of regulation raise / lower enabled - it moves
-    the stored energy, earns or pays the energy price and wears the battery. Returns the schedule and its
-    value at these prices (energy + FCESS - wear + stored energy left).
-    """
+    def solve(self, cost=None):
+        return milp(self.cost if cost is None else cost, constraints=LinearConstraint(self.A, self.lb, self.ub),
+                    bounds=Bounds(self.lo, self.hi), integrality=self.integrality)
+
+
+def _milp(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: float | None = None, floor=None,
+          site: Site | None = None, load=None, terminal_value: float = 0.0, wear_per_mwh: float | None = None,
+          layers=(), fcess_hi: dict | None = None, export_energy: bool = True, comp_floor=None, soft=(),
+          reg_util: tuple = (0.0, 0.0)) -> _Milp:
+    """plan's MILP (the arguments are plan's)."""
     bat = asset.battery
     n = len(price_e)
     P, E = bat.power_mw, bat.energy_mwh
@@ -233,36 +245,167 @@ def plan(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: float
         lb[rows_s] = np.asarray(fl, float)
         cost[z] = value
     integrality = np.r_[np.zeros(3 * n), np.ones(n), np.zeros(nx - 4 * n)]
-    res = milp(cost, constraints=LinearConstraint(A, lb, ub), bounds=Bounds(lo, hi), integrality=integrality)
-    shortfall = 0.0
-    if res.status != 0 and comp_floor is not None:
-        # no plan meets every compliance requirement: first the least total shortfall, then the best value with it
-        least = np.zeros(nx)
-        least[idx["comp_cols"]] = idx["comp_vals"]
-        ub[idx["comp"]] = np.inf
-        first = milp(least, constraints=LinearConstraint(A, lb, ub), bounds=Bounds(lo, hi), integrality=integrality)
-        if first.status == 0:
-            shortfall = max(0.0, float(first.fun))
-            ub[idx["comp"]] = shortfall * (1 + 1e-6) + 1e-6
-            res = milp(cost, constraints=LinearConstraint(A, lb, ub), bounds=Bounds(lo, hi), integrality=integrality)
-    if res.status != 0:
-        raise RuntimeError(f"plan infeasible ({res.message}); s_init={s_init:.3f}, budget={budget}")
-    x = res.x
+    return _Milp(cost, A, lb, ub, lo, hi, integrality, idx, pe, price_f, wear, terminal_value, util,
+                 bool(layers or comp_floor is not None or soft))
+
+
+def _least_shortfall(m: _Milp) -> float | None:
+    """The least total compliance shortfall a schedule can reach (None if the solver finds none); the MILP is left
+    bounding its shortfall to that."""
+    least = np.zeros(len(m.cost))
+    least[m.idx["comp_cols"]] = m.idx["comp_vals"]
+    m.ub[m.idx["comp"]] = np.inf
+    first = m.solve(least)
+    if first.status != 0:
+        return None
+    shortfall = max(0.0, float(first.fun))
+    m.ub[m.idx["comp"]] = shortfall * (1 + 1e-6) + 1e-6
+    return shortfall
+
+
+def _schedule(m: _Milp, asset: Asset, x: np.ndarray, shortfall: float) -> dict:
+    """plan's result from a solution x of its MILP."""
+    n, pe, price_f, util = len(m.pe), m.pe, m.price_f, m.util
     c, d = x[:n], x[n:2 * n]
     out = {"net": d - c, "soc": x[2 * n:3 * n], **{name: x[(4 + k) * n:(5 + k) * n] for k, name in enumerate(FCESS)}}
     out["energy_value"] = float((pe * (d - c)).sum() * DT)
     out["fcess_value"] = float(sum((np.asarray(price_f[k], float) * out[k]).sum() for k in FCESS) * DT) if price_f is not None else 0.0
-    out["wear"] = float(wear * d.sum() * DT)
-    out["stored_value"] = float(terminal_value * out["soc"][-1])
+    out["wear"] = float(m.wear * d.sum() * DT)
+    out["stored_value"] = float(m.terminal_value * out["soc"][-1])
     out["value"] = out["energy_value"] + out["fcess_value"] - out["wear"] + out["stored_value"]
     if any(util):
         rr, rl = x[4 * n:5 * n], x[6 * n:7 * n]
         out["value"] += float(((pe - asset.wear_per_mwh) * util[0] * rr - pe * util[1] * rl).sum() * DT)
+    out["money"] = out["value"] + out["wear"] - float(asset.wear_per_mwh * d.sum() * DT)  # the value without the hurdle
     out["shortfall"] = shortfall  # the least total compliance shortfall (0 if every requirement holds)
-    out["shortfall_mwh"] = float(x[idx["comp_cols"][:n]].max()) if comp_floor is not None and shortfall > 0 else 0.0
-    if layers or comp_floor is not None or soft:
-        out["penalty"] = float(cost[8 * n:] @ x[8 * n:])
-        out["slack"] = [x[cols] for cols in idx["slack"]]
+    out["shortfall_mwh"] = float(x[m.idx["comp_cols"][:n]].max()) if "comp_cols" in m.idx and shortfall > 0 else 0.0
+    if m.report:
+        out["penalty"] = float(m.cost[8 * n:] @ x[8 * n:])
+        out["slack"] = [x[cols] for cols in m.idx["slack"]]
+    return out
+
+
+def plan(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: float | None = None, floor=None,
+         site: Site | None = None, load=None, terminal_value: float = 0.0, wear_per_mwh: float | None = None,
+         layers=(), fcess_hi: dict | None = None, export_energy: bool = True, comp_floor=None, soft=(),
+         reg_util: tuple = (0.0, 0.0)) -> dict:
+    """Best schedule for the remaining n intervals on the given prices.
+
+    price_e: $/MWh per interval; price_f: {product: $/MW/h} or None for energy only; budget: MWh the
+    battery may still discharge today (default: the limits' cycles a day); floor: minimum stored MWh
+    at the end of each interval; site, load: the connection limits and the site's load (MW) per
+    interval; terminal_value: $ per MWh still stored at the end; wear_per_mwh: $ per MWh discharged
+    (default: the asset's wear).
+    layers: caps on net charging (charge - discharge, MW) as (cap (n,), kind, penalty, compliance):
+    an economic cap pays `penalty` $/MWh over the cap in each interval ("slot") or $/MW on the largest
+    excess ("peak"); the penalties steer the plan and are not part of its value. A compliance cap must
+    hold (its penalty is ignored). comp_floor: stored MWh that compliance requires at the end of each
+    interval (instead of `floor`, a plain bound). If the compliance floor and caps cannot all hold, the
+    plan first keeps their total shortfall to the least possible, then optimises value with that
+    shortfall ("shortfall" in the result: summed over intervals; "shortfall_mwh": the largest floor
+    shortfall). soft: economic floors as (floor (n,), $ per MWh of its largest shortfall). fcess_hi:
+    {product: (n,) most MW enabled} or None. export_energy=False: no net energy export at the meter (it
+    would earn nothing under a fixed retail contract); FCESS raise headroom still has the connection's
+    export limit. reg_util: MWh delivered / taken per MW-hour of regulation raise / lower enabled - it moves
+    the stored energy, earns or pays the energy price and wears the battery. Returns the schedule and its
+    value at these prices (energy + FCESS - wear + stored energy left).
+    """
+    m = _milp(asset, price_e, price_f, s_init, budget, floor, site, load, terminal_value, wear_per_mwh, layers, fcess_hi,
+              export_energy, comp_floor, soft, reg_util)
+    res = m.solve()
+    shortfall = 0.0
+    if res.status != 0 and comp_floor is not None:
+        # no plan meets every compliance requirement: first the least total shortfall, then the best value with it
+        least = _least_shortfall(m)
+        if least is not None:
+            shortfall, res = least, m.solve()
+    if res.status != 0:
+        raise RuntimeError(f"plan infeasible ({res.message}); s_init={s_init:.3f}, budget={budget}")
+    return _schedule(m, asset, res.x, shortfall)
+
+
+def worst_weights(values, K, lo: float, hi: float, w_lo: float, w_hi: float) -> np.ndarray:
+    """The scenario weights w that make sum_s w_s values_s least, with w_lo <= w_s <= w_hi, sum 1 and
+    lo <= sum_s w_s K_s <= hi."""
+    K = np.asarray(K, float)
+    res = linprog(np.asarray(values, float), A_ub=np.vstack([-K, K]), b_ub=[-lo, hi], A_eq=np.ones((1, len(K))), b_eq=[1.0],
+                  bounds=(w_lo, w_hi), method="highs")
+    if res.status != 0:
+        raise RuntimeError(f"no weights in the ambiguity set ({res.message})")
+    return res.x
+
+
+def plan_sp(asset: Asset, prices_e, prices_f, first: int, ambiguity: tuple | None = None, **kw) -> dict:
+    """Two-stage stochastic plan over S price scenarios (rows of prices_e; prices_f: one {product: prices} per
+    scenario, or None). The first `first` intervals have one schedule, the same in every scenario, because it is
+    carried out before the next re-plan (non-anticipativity); after them each scenario has its own schedule, which
+    knows that scenario's prices, so the plan's value is optimistic. Every scenario keeps all of plan's limits,
+    floors and caps (kw: plan's other arguments).
+
+    Objective: the expected value over equally weighted scenarios, or, with ambiguity = (K, lo, hi, w_lo, w_hi),
+    the worst expected value over the weights w with w_lo <= w_s <= w_hi, sum 1 and lo <= sum_s w_s K_s <= hi
+    (K: a count per scenario, such as its intervals at or above a spike price). Writing w = w_lo + u, the worst
+    case enters through LP duality - maximise w_lo sum_s value_s + a (1 - S w_lo) + b (lo - w_lo sum K)
+    - g (hi - w_lo sum K) - (w_hi - w_lo) sum_s e_s with a + (b - g) K_s - e_s <= value_s and b, g, e >= 0 - so
+    the plan stays one MILP.
+
+    Returns plan's keys, the schedule being the first stage and then the scenarios' weighted average, and every
+    amount weighted by the weights the objective used ("weights"); "values" / "moneys": each scenario's value less
+    penalties / money (plan's "money");
+    "objective": the objective's value (weights @ values)."""
+    pe = np.asarray(prices_e, float)
+    S, n = pe.shape
+    first = min(first, n)
+    ms = [_milp(asset, pe[s], None if prices_f is None else prices_f[s], **kw) for s in range(S)]
+    nx, nr = ms[0].A.shape[1], ms[0].A.shape[0]
+    stage1 = np.array([k * n + t for k in range(8) for t in range(first)])
+    m1 = (S - 1) * len(stage1)
+    cols = np.ravel([[s * nx + j, j] for s in range(1, S) for j in stage1])
+    same = coo_matrix((np.tile([1.0, -1.0], m1), (np.repeat(np.arange(m1), 2), cols)), shape=(m1, S * nx))
+    extra = 0 if ambiguity is None else S + 3  # a, b, g, e_1..e_S
+
+    def solve():
+        A = sp_vstack([block_diag([m.A for m in ms]), same])
+        lb = np.r_[np.concatenate([m.lb for m in ms]), np.zeros(m1)]
+        ub = np.r_[np.concatenate([m.ub for m in ms]), np.zeros(m1)]
+        lo, hi = np.concatenate([m.lo for m in ms]), np.concatenate([m.hi for m in ms])
+        integrality = np.concatenate([m.integrality for m in ms])
+        if ambiguity is None:
+            cost = np.concatenate([m.cost / S for m in ms])
+        else:
+            K, k_lo, k_hi, w_lo, w_hi = ambiguity
+            K = np.asarray(K, float)
+            # cost_s @ x_s + a + (b - g) K_s - e_s <= 0, i.e. a + (b - g) K_s - e_s <= value_s
+            dual = sp_hstack([block_diag([m.cost[None, :] for m in ms]),
+                              coo_matrix(np.c_[np.ones(S), K, -K, -np.eye(S)])])
+            A = sp_vstack([sp_hstack([A, coo_matrix((A.shape[0], extra))]), dual])
+            lb, ub = np.r_[lb, np.full(S, -np.inf)], np.r_[ub, np.zeros(S)]
+            lo, hi = np.r_[lo, -np.inf, np.zeros(S + 2)], np.r_[hi, np.full(S + 3, np.inf)]
+            integrality = np.r_[integrality, np.zeros(extra)]
+            cost = np.r_[np.concatenate([w_lo * m.cost for m in ms]), -(1 - S * w_lo), -(k_lo - w_lo * K.sum()),
+                         k_hi - w_lo * K.sum(), np.full(S, w_hi - w_lo)]
+        return milp(cost, constraints=LinearConstraint(A.tocsr(), lb, ub), bounds=Bounds(lo, hi), integrality=integrality)
+
+    res, shortfall = solve(), 0.0
+    if res.status != 0 and kw.get("comp_floor") is not None:
+        # as plan: the least total compliance shortfall first (it does not depend on the prices), then the best value
+        least = _least_shortfall(ms[0])
+        if least is not None:
+            for m in ms[1:]:
+                m.ub[m.idx["comp"]] = ms[0].ub[ms[0].idx["comp"]]
+            res, shortfall = solve(), least
+    if res.status != 0:
+        raise RuntimeError(f"stochastic plan infeasible ({res.message})")
+    outs = [_schedule(m, asset, res.x[s * nx:(s + 1) * nx], shortfall) for s, m in enumerate(ms)]
+    values = np.array([-m.cost @ res.x[s * nx:(s + 1) * nx] for s, m in enumerate(ms)])  # value less penalties
+    w = np.full(S, 1 / S) if ambiguity is None else worst_weights(values, *ambiguity)
+    out = {k: np.r_[outs[0][k][:first], sum(wi * o[k][first:] for wi, o in zip(w, outs))] for k in ["net", "soc", *FCESS]}
+    for k in ("energy_value", "fcess_value", "wear", "stored_value", "value", "money", "penalty"):
+        if k in outs[0]:
+            out[k] = float(sum(wi * o[k] for wi, o in zip(w, outs)))
+    out.update(shortfall=shortfall, shortfall_mwh=max(o["shortfall_mwh"] for o in outs), weights=w, values=values,
+               moneys=np.array([o["money"] for o in outs]),
+               objective=-float(res.fun))
     return out
 
 
@@ -559,7 +702,7 @@ def _reveal(r: Reveal, t: int, fc_e, fc_f, obligations: list, layers: list, budg
 
 def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, act_f, p5, obligations=None, risk=None,
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
-            export_energy: bool = True, reg_util: tuple = (0.0, 0.0)):
+            export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -582,6 +725,13 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     bridge plan, event notices) is followed by a re-plan from the actual state of charge; the capacity
     and availability tests are scored. With terms the summary and log also report the meter, the caps
     and the tests. terms=None is the plain dispatcher of the 1 MW study, unchanged.
+
+    scen: the day's price scenarios for the planners "mean", "sp" and "dro" (see Strategy; they need terms):
+    {"slot": the interval they are issued at, "energy": (S, 48) $/MWh, "fcess": {product: (S, 48)} planning
+    prices, "spike": the $/MWh whose count per scenario the ambiguity bounds}; plans from "slot" on use them.
+    Without them those planners plan on the forecast ("roll"). With terms the summary also compares the first
+    plan on a revealed forecast with what followed: its expected money from that interval on (at the asset's
+    wear, stored energy at the plan's value; the scenarios' equal-weight mean) and the money actually made then.
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -595,6 +745,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     exp_room = exp_room_f if export_energy or site is None else la  # most net discharging for energy, MW
     full = terms is not None
     terms = terms if full else DayTerms()
+    planner = strat.planner if scen is not None or strat.planner in ("point", "roll") else "roll"
+    if planner != "point" and not full:
+        raise ValueError(f"planner {planner!r} needs the day's terms")
     obls, layers = list(obligations or []) + list(terms.obligations), list(terms.layers)
     budget = asset.limits.cycles_per_day * E
     reveals = sorted(terms.reveals, key=lambda r: r.slot)
@@ -658,16 +811,42 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             soft.append((np.where(risky_next, prefs.reserve_mwh, 0.0), prefs.reserve_value))
         return hard, soft
 
-    def replan(t0, fe, ff, s0, b0, ladder):
-        """Plan intervals t0.. from s0 stored and budget b0. With terms: compliance first (see plan).
-        Without (the 1 MW study): ladder "offer": None if infeasible; "trigger": then without the floor."""
+    def scen_plan(t0, seen, kw):
+        """Plan intervals t0.. on the scenarios (planner "mean", "sp" or "dro"). seen: (interval, energy price, FCESS
+        prices) of the latest 5-min prices, which every scenario is nudged towards as the forecast is; None: none."""
+        e, f = scen["energy"], scen["fcess"] if fcess else None
+        n_s = len(e)
+        if seen is None:
+            pe = e[:, t0:]
+            pf = None if f is None else [{k: f[k][j, t0:] for k in FCESS} for j in range(n_s)]
+        else:
+            pe = np.array([nowcast(row, seen[0], seen[1]) for row in e])
+            pf = None if f is None else [nowcast_fcess({k: f[k][j] for k in FCESS}, seen[0], seen[2]) for j in range(n_s)]
+        if planner == "mean":
+            return plan(asset, pe.mean(axis=0), None if pf is None else {k: np.mean([x[k] for x in pf], axis=0) for k in FCESS}, **kw)
+        amb = None
+        if planner == "dro":
+            K = (pe >= scen["spike"]).sum(axis=1).astype(float)
+            lo, hi = prefs.ambiguity
+            amb = (K, lo * K.mean(), hi * K.mean(), lo / n_s, hi / n_s)
+        return plan_sp(asset, pe, pf, strat.every - t0 % strat.every, amb, **kw)
+
+    def replan(t0, fe, ff, s0, b0, ladder, seen=None):
+        """Plan intervals t0.. from s0 stored and budget b0. With terms: compliance first (see plan), on the
+        scenarios from their issue on if the planner uses them (seen: see scen_plan). Without (the 1 MW study):
+        ladder "offer": None if infeasible; "trigger": then without the floor."""
         nonlocal fallbacks, plans_short, plan_short
         rest = None if lf is None else lf[t0:]
         lay = [(cap_now(x, t0, lf if x.compliance else lfe)[t0:], x.kind, x.penalty, x.compliance) for x in layers]
         fh = None if terms.fcess_hi is None else {k: np.asarray(v, float)[t0:] for k, v in terms.fcess_hi.items()}
         if full:
             hard, soft = floors(t0)
-            out = plan(asset, fe, ff, s0, b0, None, site, rest, tv, dw, lay, fh, export_energy, hard, soft, reg_util)
+            kw = dict(s_init=s0, budget=b0, site=site, load=rest, terminal_value=tv, wear_per_mwh=dw, layers=lay, fcess_hi=fh,
+                      export_energy=export_energy, comp_floor=hard, soft=soft, reg_util=reg_util)
+            if ladder != "offer" and planner in ("mean", "sp", "dro") and t0 >= scen["slot"]:
+                out = scen_plan(t0, seen, kw)
+            else:
+                out = plan(asset, fe, ff, **kw)
             if out["shortfall"] > 1e-6 and ladder != "offer":  # the offer rule's what-if plans are not adopted
                 plans_short += 1
                 plan_short = max(plan_short, out["shortfall_mwh"])
@@ -692,7 +871,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     def rest_of(ff, t0):
         return None if ff is None else {k: np.asarray(ff[k], float)[t0:] for k in FCESS}
 
-    meter = np.zeros(N)
+    meter, wear_t, first_plan = np.zeros(N), np.zeros(N), None
     if full:
         floor = floors(0)[0]
         morning = cur = replan(0, fc_e, fc_f, s_start, budget, "full")
@@ -724,6 +903,15 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             if not value_rule:
                 k_offer[t:] = offer_prices(strat, fc_e)[t:]
             cur, cur_t0, replanned[t] = replan(t, np.asarray(fc_e, float)[t:], rest_of(fc_f, t), s, budget, "full"), t, True
+            if first_plan is None and any(r.energy is not None for r in due):
+                first_plan = (t, float(np.mean(cur["moneys"])) if "moneys" in cur else cur["money"], tv)
+        if planner != "point" and t and t % strat.every == 0 and not replanned[t]:
+            # scheduled re-plan from the actual state of charge, the prices nudged towards the latest 5-min prices
+            last = t * STEPS - 1
+            f_now = None if p5_f is None or not fcess else {k: p5_f[k][last] for k in FCESS}
+            cur = replan(t, nowcast(fc_e, t - 1, p5[last]), nowcast_fcess(fc_f, t - 1, f_now), s, budget, "full",
+                         (t - 1, p5[last], f_now))
+            cur_t0, replanned[t] = t, True
         i = t - cur_t0
         r_plan = sum(cur[k][i] for k in RAISE) if fcess else 0.0
         l_plan = sum(cur[k][i] for k in LOWER) if fcess else 0.0
@@ -797,6 +985,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                 s -= pw * DT5 / eta
                 budget -= pw * DT5
                 wear += asset.wear_per_mwh * pw * DT5
+                wear_t[t] += asset.wear_per_mwh * pw * DT5
             else:
                 pw = max(pw, -(E - s) / (eta * DT5))
                 s -= pw * DT5 * eta
@@ -824,6 +1013,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                     meter[t] -= (up - down) / DT5 / STEPS
                     budget -= up
                     wear += asset.wear_per_mwh * up
+                    wear_t[t] += asset.wear_per_mwh * up
                     reg_out, reg_in = reg_out + up, reg_in + down
             if comp:
                 shortfall = max(shortfall, obligation_need(bat, comp, hours, lf) - s)
@@ -847,7 +1037,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             cur_t0 = t + 1
             last = t * STEPS + STEPS - 1
             f_now = None if p5_f is None or not fcess else {k: p5_f[k][last] for k in FCESS}
-            cur = replan(cur_t0, nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget, "full" if full else "trigger")
+            cur = replan(cur_t0, nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget, "full" if full else "trigger",
+                         (t, p5[last], f_now))
             replanned[cur_t0] = True
     energy_rev = float((np.asarray(rtp) * energy).sum())
     fcess_rev = float(sum((np.asarray(act_f[k]) * mw_h[k]).sum() for k in FCESS)) if fcess else 0.0
@@ -869,7 +1060,13 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                         "self_mwh": self_mwh, "plans_short": plans_short, "plan_shortfall_mwh": plan_short,
                         "timing_errors": len(timing_errors(terms)), "reg_out_mwh": reg_out, "reg_in_mwh": reg_in,
                         "budget_overrun_mwh": max(0.0, -budget_low),
-                        "capacity_short_mw_ti": float(short_cap.sum())})
+                        "capacity_short_mw_ti": float(short_cap.sum()), "planner_fallback": int(planner != strat.planner)})
+        if first_plan is not None:
+            t0, money, tv0 = first_plan
+            got = (np.asarray(rtp)[t0:] * energy[t0:]).sum() - wear_t[t0:].sum() + tv0 * s
+            if fcess:
+                got += sum((np.asarray(act_f[k])[t0:] * mw_h[k][t0:]).sum() for k in FCESS)
+            summary.update({"plan_slot": t0, "plan_money": money, "plan_got": float(got)})
         for name, (mwh, mw) in excess.items():
             summary[f"excess_{name}_mwh"], summary[f"excess_{name}_mw"] = mwh, mw
         for a in terms.availability:
