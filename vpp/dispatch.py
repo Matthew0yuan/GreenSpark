@@ -723,6 +723,12 @@ def value_offer_price(asset: Asset, strat: Strategy, prefs: RiskPrefs, t: int, j
     return max(strat.k_min, (strat.alpha * lost + wear_now) / extra), lost_fcess / extra
 
 
+def _copy_plan(out: dict) -> dict:
+    """A copy of a plan's results that an observer may keep or change without touching the plan in use."""
+    return {k: v.copy() if isinstance(v, np.ndarray) else [a.copy() for a in v] if isinstance(v, list) else v
+            for k, v in out.items()}
+
+
 def _reveal(r: Reveal, t: int, fc_e, fc_f, obligations: list, layers: list, budget: float):
     """Apply a Reveal at the start of interval t: forecasts from t on, obligations and caps, budget."""
     if r.energy is not None:
@@ -737,7 +743,8 @@ def _reveal(r: Reveal, t: int, fc_e, fc_f, obligations: list, layers: list, budg
 def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, act_f, p5, obligations=None, risk=None,
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
             export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
-            reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None):
+            reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None, on_plan=None,
+            offer_lag: int = 1):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -772,6 +779,11 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     of each equal segment, vpp.storage_value) instead of its buy-back value. bids: with offer_rule "table", the
     day's layered offers (vpp.storage_value.DayBids): each 5 minutes the standing offer sells, beyond the plan,
     the MWh whose threshold the price reaches.
+    on_plan(t0, kind, plan, ctx): called with a copy of every plan the day adopts, from interval t0 on; kind is
+    "morning", "reveal", "scheduled" or "trigger" (after an offer sale), ctx what the plan was made from (stored
+    energy, budget, floors with their names, caps, prices, load, terminal value). It only observes. offer_lag: the
+    standing offer is priced from the 5-min price this many steps back (1: the step just before), a sensitivity
+    for offers that must be in before a gate closure.
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -843,21 +855,25 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             x = replace(x, cap=np.maximum(np.asarray(x.cap, float), meter[:t0].max()))
         return x.limit(load)
 
-    def floors(t0, offer=False, s0=None):
+    def floors(t0, offer=False, s0=None, names=False):
         """With terms: the compliance floor (stored MWh at the end of intervals t0..) and the economic
         floors as (floor, $ per MWh of the largest shortfall): the economic obligations, the risk reserve and,
         except in the offer rule's what-if plans, what is left of the spike reserve (from the window's start,
-        at most the s0 MWh stored then: the reserve is never bought inside its window)."""
+        at most the s0 MWh stored then: the reserve is never bought inside its window). names: also return
+        the economic floors' names, in the same order."""
         t = np.arange(t0, N)
         hard = np.array([obligation_need(bat, comp, (k + 1) * DT, lf) for k in t]) if comp else np.zeros(len(t))
         soft = [(np.array([o.need(bat, (k + 1) * DT, lf) for k in t]), o.value_per_mwh) for o in obls if not o.compliance]
+        labels = [o.name for o in obls if not o.compliance]
         if prefs.risk_threshold is not None and risk is not None:
             risky_next = np.r_[np.asarray(risk)[t0 + 1:], 0.0] >= prefs.risk_threshold
             soft.append((np.where(risky_next, prefs.reserve_mwh, 0.0), prefs.reserve_value))
+            labels.append("risk reserve")
         if reserve is not None and not offer and t0 >= reserve.slot and res_left > 1e-9:
             level = res_left if t0 < reserve.start or s0 is None else min(res_left, s0)
             soft.append((np.where((t >= reserve.start - 1) & (t < reserve.end), level, 0.0), reserve.value))
-        return hard, soft
+            labels.append("spike reserve")
+        return (hard, soft, labels) if names else (hard, soft)
 
     def scen_plan(t0, seen, kw):
         """Plan intervals t0.. on the scenarios (planner "mean", "sp" or "dro"). seen: (interval, energy price, FCESS
@@ -883,15 +899,23 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         """Plan intervals t0.. from s0 stored and budget b0. With terms: compliance first (see plan), on the
         scenarios from their issue on if the planner uses them (seen: see scen_plan). Without (the 1 MW study):
         ladder "offer": None if infeasible; "trigger": then without the floor."""
-        nonlocal fallbacks, plans_short, plan_short
+        nonlocal fallbacks, plans_short, plan_short, plan_ctx
         rest = None if lf is None else lf[t0:]
         lay = [(cap_now(x, t0, lf if x.compliance else lfe)[t0:], x.kind, x.penalty, x.compliance) for x in layers]
         fh = None if terms.fcess_hi is None else {k: np.asarray(v, float)[t0:] for k, v in terms.fcess_hi.items()}
+        watch = on_plan is not None and ladder != "offer"  # an adopted plan the caller observes
         if full:
-            hard, soft = floors(t0, ladder == "offer", s0)
+            hard, soft, *labels = floors(t0, ladder == "offer", s0, names=watch)
             kw = dict(s_init=s0, budget=b0, site=site, load=rest, terminal_value=tv if terminal is None else terminal,
                       wear_per_mwh=dw, layers=lay, fcess_hi=fh, export_energy=export_energy, comp_floor=hard, soft=soft,
                       reg_util=reg_util)
+            if watch:
+                plan_ctx = {"t0": t0, "stored": s0, "budget": b0, "prices": np.array(fe, float),
+                            "fcess": None if ff is None else {k: np.array(v, float) for k, v in ff.items()},
+                            "load": None if rest is None else rest.copy(), "hard": hard.copy(),
+                            "soft": [(n, f.copy(), v) for n, (f, v) in zip(labels[0], soft)],
+                            "caps": [(x.name, c.copy(), k, p, comp_) for x, (c, k, p, comp_) in zip(layers, lay)],
+                            "terminal": np.array(kw["terminal_value"], float)}
             if ladder != "offer" and planner in ("mean", "sp", "dro") and t0 >= scen["slot"]:
                 out = scen_plan(t0, seen, kw)
             else:
@@ -912,6 +936,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                     return None
                 raise
             fallbacks += k > 0
+            if watch:
+                plan_ctx = {"t0": t0, "stored": s0, "budget": b0, "prices": np.array(fe, float),
+                            "hard": None if fl is None else np.array(fl, float), "soft": [], "caps": [],
+                            "terminal": np.array(tv, float)}
             return out
 
     def offer_replan(t0, fe, ff, s0, b0):
@@ -924,12 +952,18 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     if reserve is not None and not full:
         raise ValueError("a spike reserve needs the day's terms")
     res_left = 0.0 if reserve is None else reserve.mwh  # MWh of the spike reserve not yet sold
+    plan_ctx = None  # what the latest adopted plan was made from (only kept for on_plan)
     if full:
         floor = floors(0)[0]
         morning = cur = replan(0, fc_e, fc_f, s_start, budget, "full")
     else:
         floor = plan_floor(bat, 0, s_start, obls, risk, prefs, room, lf, forced)
         morning = cur = plan(asset, fc_e, fc_f, s_start, None, floor, site, lf, tv, dw)
+        if on_plan is not None:
+            plan_ctx = {"t0": 0, "stored": s_start, "budget": None, "prices": np.array(fc_e, float),
+                        "hard": np.array(floor, float), "soft": [], "caps": [], "terminal": np.array(tv, float)}
+    if on_plan is not None:
+        on_plan(0, "morning", _copy_plan(cur), plan_ctx)
     cur_t0, s = 0, s_start
     shortfall = site_short = wear = 0.0
     energy, soc = np.zeros(N), np.zeros(N)
@@ -955,6 +989,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             if not (value_rule or table_rule):
                 k_offer[t:] = offer_prices(strat, fc_e)[t:]
             cur, cur_t0, replanned[t] = replan(t, np.asarray(fc_e, float)[t:], rest_of(fc_f, t), s, budget, "full"), t, True
+            if on_plan is not None:
+                on_plan(t, "reveal", _copy_plan(cur), plan_ctx)
             if first_plan is None and any(r.energy is not None for r in due):
                 first_plan = (t, float(np.mean(cur["moneys"])) if "moneys" in cur else cur["money"], tv)
         if planner != "point" and t and t % strat.every == 0 and not replanned[t]:
@@ -964,6 +1000,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             cur = replan(t, nowcast(fc_e, t - 1, p5[last]), nowcast_fcess(fc_f, t - 1, f_now), s, budget, "full",
                          (t - 1, p5[last], f_now))
             cur_t0, replanned[t] = t, True
+            if on_plan is not None:
+                on_plan(t, "scheduled", _copy_plan(cur), plan_ctx)
         i = t - cur_t0
         r_plan = sum(cur[k][i] for k in RAISE) if fcess else 0.0
         l_plan = sum(cur[k][i] for k in LOWER) if fcess else 0.0
@@ -1003,14 +1041,15 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                 if table_rule:
                     # layered: the MWh whose threshold the price reaches, priced from the latest step already seen
                     i5 = t * STEPS + j
-                    seen = p5[i5 - 1] if i5 > 0 else float(np.asarray(fc_e, float)[t])
+                    seen = p5[i5 - offer_lag] if i5 >= offer_lag else float(np.asarray(fc_e, float)[t])
                     target, k_offer[t] = bids.sell(t, s, max(pw, 0.0), sellable, price, seen, eta, strat.alpha, dw,
                                                    strat.k_min)
                 elif not k_ready:
                     # the offer is in before this step's prices exist: priced from the latest step already seen
                     i5 = t * STEPS + j
-                    seen = p5[i5 - 1] if i5 > 0 else float(np.asarray(fc_e, float)[t])
-                    f_seen = None if p5_f is None or not fcess or i5 == 0 else {k: p5_f[k][i5 - 1] for k in FCESS}
+                    seen = p5[i5 - offer_lag] if i5 >= offer_lag else float(np.asarray(fc_e, float)[t])
+                    f_seen = (None if p5_f is None or not fcess or i5 < offer_lag
+                              else {k: p5_f[k][i5 - offer_lag] for k in FCESS})
                     k_offer[t], offer_fcess[t] = value_offer_price(
                         asset, strat, prefs, t, j, s, budget, pw, sellable, fc_e, fc_f, seen, offer_replan, f_seen)
                     k_ready = True
@@ -1101,6 +1140,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             cur = replan(cur_t0, nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget, "full" if full else "trigger",
                          (t, p5[last], f_now))
             replanned[cur_t0] = True
+            if on_plan is not None:
+                on_plan(cur_t0, "trigger", _copy_plan(cur), plan_ctx)
     energy_rev = float((np.asarray(rtp) * energy).sum())
     fcess_rev = float(sum((np.asarray(act_f[k]) * mw_h[k]).sum() for k in FCESS)) if fcess else 0.0
     summary = {"energy": energy_rev, "fcess": fcess_rev, "wear": wear, "total": energy_rev + fcess_rev - wear,
@@ -1270,6 +1311,11 @@ def explain(log: pd.DataFrame, summary: dict, asset: Asset, strat: Strategy, pre
         if strat.offer_rule == "forecast":
             lines.append(f"Standing offer all day: discharge as soon as the price reaches ${k.min():.0f}-{k.max():.0f}/MWh "
                          f"({strat.alpha:.1f}x the best price still expected, never below ${strat.k_min:.0f}).")
+        elif strat.offer_rule == "table":
+            lines.append(f"Standing offer in layers: each MWh stored is offered at its own price, higher the less energy is "
+                         f"left ({strat.alpha:.1f}x what keeping it is worth, plus {costs}, never below ${strat.k_min:.0f})"
+                         + (f"; the layers the price reached today were offered at ${k.min():.0f}-{k.max():.0f}/MWh."
+                            if len(k) else f"; the price never passed ${strat.k_min:.0f} while there was energy to sell."))
         elif len(k):
             f = log["offer_fcess"].to_numpy()
             f = f[np.isfinite(f)]
@@ -1292,7 +1338,10 @@ def explain(log: pd.DataFrame, summary: dict, asset: Asset, strat: Strategy, pre
     if abs(done_dis - plan_dis) > 0.05 or abs(done_chg - plan_chg) > 0.05:
         lines.append(f"Executed in the end: discharged {done_dis:.1f} MWh and charged {done_chg:.1f} MWh "
                      f"(morning plan: {plan_dis:.1f} and {plan_chg:.1f}).")
-    if log["soc"].iloc[-1] > 0.05:
+    if log["soc"].iloc[-1] > 0.05 and strat.terminal == "table":
+        lines.append(f"Ends the day holding {log['soc'].iloc[-1]:.1f} MWh, valued by the storage-value curve (each further MWh "
+                     f"is worth less): selling it for less than that, after losses and wear, would not pay.")
+    elif log["soc"].iloc[-1] > 0.05:
         lines.append(f"Ends the day holding {log['soc'].iloc[-1]:.1f} MWh, counted at ${log['stored_value'].iloc[0]:.0f}/MWh "
                      f"(what buying it back would cost): selling it for less, after losses and wear, would not pay.")
     if terms is not None:
