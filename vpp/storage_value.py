@@ -78,11 +78,14 @@ def decreasing(y: np.ndarray) -> np.ndarray:
     return np.repeat(vals, wts)
 
 
-def price_states(prices: pd.DataFrame, month: pd.Period) -> dict:
+def price_states(prices: pd.DataFrame, month: pd.Period, level: pd.Series | None = None) -> dict:
     """Bins, bin means, transitions and the 08:00 bin frequencies from the WINDOW days before the month (at most
-    TRAIN_END). prices: (trading day x slot 0..47) 30-min prices."""
+    TRAIN_END). prices: (trading day x slot 0..47) 30-min prices. level: a price level per trading day (vpp.v2.value);
+    the states are then of each half-hour's price less its day's level, and the bin means are relative to it."""
     end = min(month.start_time, CUTOFF)
     x = prices[(prices.index >= end - WINDOW) & (prices.index < end) & (prices.index <= TRAIN_END)].dropna()
+    if level is not None:
+        x = x.sub(level.reindex(x.index), axis=0).dropna()
     X, days = x.to_numpy(), x.index
     edges = np.quantile(X, BIN_Q, axis=0).T  # (48, B + 1)
     bins = np.stack([np.searchsorted(edges[t, 1:-1], X[:, t], side="right") for t in range(dp.N)], axis=1)
@@ -111,8 +114,10 @@ def load_profiles(month: pd.Period, site: st.Site = st.FACTORY) -> np.ndarray:
     return out
 
 
-def solve(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: st.Site = st.FACTORY) -> tuple[np.ndarray, int]:
-    """V[day of the week, slot 0..48, stored-energy point, price state] (relative values) and the weeks it took."""
+def solve(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: st.Site = st.FACTORY,
+          short_penalty: float = SHORT_PENALTY) -> tuple[np.ndarray, int]:
+    """V[day of the week, slot 0..48, stored-energy point, price state] (relative values) and the weeks it took.
+    short_penalty: $ per MWh the battery cannot shave above the CMD (0: shaving left to the caller, vpp.v2)."""
     bat = asset.battery
     E, P, eta = bat.energy_mwh, bat.power_mw, bat.eta
     grid = np.arange(0.0, E + 1e-9, GRID)
@@ -128,7 +133,7 @@ def solve(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: 
             short = np.clip(max(0.0, load[dow, t] - CMD) * dp.DT - deliver, 0.0, None)
             x = grid[:, None] + a[None, :]
             acts[dow, t] = (x, (x >= -1e-9) & (x <= E + 1e-9),
-                            ps["means"][t][:, None] * (deliver - buy)[None, :] - dw * deliver - SHORT_PENALTY * short)
+                            ps["means"][t][:, None] * (deliver - buy)[None, :] - dw * deliver - short_penalty * short)
     prev = None
     for week in range(1, MAX_WEEKS + 1):
         V[6, dp.N] = V[0, 0]
