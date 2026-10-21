@@ -159,13 +159,22 @@ def strategy(name: str, prefs: cf.RiskPrefs = PREFS) -> tuple[str, dp.Strategy, 
     """(price source, strategy, risk preferences) of a strategy name in a scenario whose risk preferences
     are `prefs`; "<name>|h=<hurdle>" sets a different hurdle, "<name>|plan=<planner>" a different planner
     (vpp.dispatch.Strategy; the scenario planners need the day's scenarios, vpp.stochastic), and a last
-    "|res=<MWh>" keeps that much for spikes every day (see _route_days)."""
-    base, _, planner = name.partition("|res=")[0].partition("|plan=")
+    "|res=<MWh>" keeps that much for spikes every day (see _route_days). Flags "|vt" (stored energy at the end of
+    each plan valued by the storage-value table) and "|bid" (layered offers from it; vpp.storage_value) may
+    come anywhere after the name."""
+    parts = name.split("|")
+    flags = {f for f in parts[1:] if f in ("vt", "bid")}
+    core = "|".join(f for f in parts if f not in flags)
+    base, _, planner = core.partition("|res=")[0].partition("|plan=")
     base, _, hurdle = base.partition("|h=")
     source, strat, fixed = STRATEGIES[base]
     prefs = replace(prefs, **fixed)
-    if planner or "|res=" in name:
+    if planner or "|res=" in name or flags:
         strat = replace(strat, name=name, planner=planner or strat.planner)
+    if "vt" in flags:
+        strat = replace(strat, terminal="table")
+    if "bid" in flags:
+        strat = replace(strat, offer_rule="table")
     if hurdle:
         return source, replace(strat, name=name), replace(prefs, hurdle_per_mwh=float(hurdle))
     return source, strat, prefs
@@ -247,6 +256,10 @@ def _route_days(sc: Scenario, name: str, decide=None):
             kw["reserve"] = decide(d, kw)
         elif res_mwh > 0:
             kw["reserve"] = dp.Reserve(res_mwh, *RESERVE_WINDOW)
+        if strat.terminal == "table":  # vpp.storage_value's tables, in the shared inputs
+            kw["terminal"] = _AUX["storage"].terminal(day)
+        if strat.offer and strat.offer_rule == "table":
+            kw["bids"] = _AUX["storage"].bids(day)
         summary, log = dp.run_day(**kw)
         soc = summary["soc_end"]
         for m, x in zip(d["slot_month"], log["meter_mw"].to_numpy()):
