@@ -559,6 +559,20 @@ class AvailabilityTest:
         return bool(self.events) and t >= max(b for _, b in self.events)
 
 
+@dataclass(frozen=True)
+class Reserve:
+    """Stored energy kept for price spikes, an economic choice made at the start of interval `slot`. From then on
+    plans keep `mwh` stored at the end of every interval from start - 1 to end - 1, so it is there when the
+    window opens and is not planned away inside it (a soft floor worth `value` $ per MWh of its largest
+    shortfall: it steers and is never settled). Only the standing offer sells it, priced as if the reserve
+    were not there; what the offer sells inside the window comes off it for the rest of the day."""
+    mwh: float
+    start: int
+    end: int
+    slot: int = 2
+    value: float = 1000.0
+
+
 @dataclass(frozen=True, eq=False)
 class DayTerms:
     """Everything a day's contracts and site bill add to the dispatcher (see run_day)."""
@@ -702,7 +716,8 @@ def _reveal(r: Reveal, t: int, fc_e, fc_f, obligations: list, layers: list, budg
 
 def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, act_f, p5, obligations=None, risk=None,
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
-            export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None):
+            export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
+            reserve: Reserve | None = None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -732,6 +747,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     Without them those planners plan on the forecast ("roll"). With terms the summary also compares the first
     plan on a revealed forecast with what followed: its expected money from that interval on (at the asset's
     wear, stored energy at the plan's value; the scenarios' equal-weight mean) and the money actually made then.
+    reserve: stored energy kept for spikes (Reserve; needs terms).
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -800,15 +816,20 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             x = replace(x, cap=np.maximum(np.asarray(x.cap, float), meter[:t0].max()))
         return x.limit(load)
 
-    def floors(t0):
+    def floors(t0, offer=False, s0=None):
         """With terms: the compliance floor (stored MWh at the end of intervals t0..) and the economic
-        floors as (floor, $ per MWh of the largest shortfall): the economic obligations and the risk reserve."""
+        floors as (floor, $ per MWh of the largest shortfall): the economic obligations, the risk reserve and,
+        except in the offer rule's what-if plans, what is left of the spike reserve (from the window's start,
+        at most the s0 MWh stored then: the reserve is never bought inside its window)."""
         t = np.arange(t0, N)
         hard = np.array([obligation_need(bat, comp, (k + 1) * DT, lf) for k in t]) if comp else np.zeros(len(t))
         soft = [(np.array([o.need(bat, (k + 1) * DT, lf) for k in t]), o.value_per_mwh) for o in obls if not o.compliance]
         if prefs.risk_threshold is not None and risk is not None:
             risky_next = np.r_[np.asarray(risk)[t0 + 1:], 0.0] >= prefs.risk_threshold
             soft.append((np.where(risky_next, prefs.reserve_mwh, 0.0), prefs.reserve_value))
+        if reserve is not None and not offer and t0 >= reserve.slot and res_left > 1e-9:
+            level = res_left if t0 < reserve.start or s0 is None else min(res_left, s0)
+            soft.append((np.where((t >= reserve.start - 1) & (t < reserve.end), level, 0.0), reserve.value))
         return hard, soft
 
     def scen_plan(t0, seen, kw):
@@ -840,7 +861,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         lay = [(cap_now(x, t0, lf if x.compliance else lfe)[t0:], x.kind, x.penalty, x.compliance) for x in layers]
         fh = None if terms.fcess_hi is None else {k: np.asarray(v, float)[t0:] for k, v in terms.fcess_hi.items()}
         if full:
-            hard, soft = floors(t0)
+            hard, soft = floors(t0, ladder == "offer", s0)
             kw = dict(s_init=s0, budget=b0, site=site, load=rest, terminal_value=tv, wear_per_mwh=dw, layers=lay, fcess_hi=fh,
                       export_energy=export_energy, comp_floor=hard, soft=soft, reg_util=reg_util)
             if ladder != "offer" and planner in ("mean", "sp", "dro") and t0 >= scen["slot"]:
@@ -872,6 +893,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         return None if ff is None else {k: np.asarray(ff[k], float)[t0:] for k in FCESS}
 
     meter, wear_t, first_plan = np.zeros(N), np.zeros(N), None
+    if reserve is not None and not full:
+        raise ValueError("a spike reserve needs the day's terms")
+    res_left = 0.0 if reserve is None else reserve.mwh  # MWh of the spike reserve not yet sold
     if full:
         floor = floors(0)[0]
         morning = cur = replan(0, fc_e, fc_f, s_start, budget, "full")
@@ -963,6 +987,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                                    if p5_f is not None and r_plan > 1e-9 else 0.0)
                     if margin * (sellable - max(pw, 0.0)) >= raise_price * raise_lost:
                         offer_mwh[t] += (sellable - max(pw, 0.0)) * DT5
+                        if reserve is not None and reserve.start <= t < reserve.end:
+                            res_left = max(0.0, res_left - (sellable - max(pw, 0.0)) * DT5)
                         pw, triggered[t] = sellable, True
             safety = pw <= 0 and s - pw * DT5 * eta < keep
             if safety:
@@ -1061,6 +1087,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                         "timing_errors": len(timing_errors(terms)), "reg_out_mwh": reg_out, "reg_in_mwh": reg_in,
                         "budget_overrun_mwh": max(0.0, -budget_low),
                         "capacity_short_mw_ti": float(short_cap.sum()), "planner_fallback": int(planner != strat.planner)})
+        if reserve is not None:
+            summary.update({"reserve_mwh": reserve.mwh, "reserve_sold_mwh": reserve.mwh - res_left,
+                            "reserve_held_mwh": float(min(reserve.mwh, soc[reserve.start - 1]))})
         if first_plan is not None:
             t0, money, tv0 = first_plan
             got = (np.asarray(rtp)[t0:] * energy[t0:]).sum() - wear_t[t0:].sum() + tv0 * s

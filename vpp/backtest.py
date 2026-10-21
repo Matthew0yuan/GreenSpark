@@ -63,6 +63,9 @@ STRATEGIES = {
 CORE = ["perfect", "forecast", "forecast+offer", "forecast+offer(value)"]
 CANDIDATES = ["forecast", "forecast+offer", "forecast+offer(value)"]
 LOOKBACK = pd.Timedelta(days=90)  # fixed, not tuned
+# the spike reserve's window, 16:00-20:00: before the cutoff 44% of the $ above $150 fell in it, the most of any
+# 4 hours (reports/q2b_plan.md, section 9, R)
+RESERVE_WINDOW = (16, 24)
 ASSET = cf.Asset(wear_per_mwh=WEAR)
 PREFS = cf.RiskPrefs(hurdle_per_mwh=HURDLE)  # the client's risk preferences in every scenario unless it says otherwise
 
@@ -155,28 +158,32 @@ def _init_worker(days: list[dict], aux: dict | None = None) -> None:
 def strategy(name: str, prefs: cf.RiskPrefs = PREFS) -> tuple[str, dp.Strategy, cf.RiskPrefs]:
     """(price source, strategy, risk preferences) of a strategy name in a scenario whose risk preferences
     are `prefs`; "<name>|h=<hurdle>" sets a different hurdle, "<name>|plan=<planner>" a different planner
-    (vpp.dispatch.Strategy; the scenario planners need the day's scenarios, vpp.stochastic)."""
-    base, _, planner = name.partition("|plan=")
+    (vpp.dispatch.Strategy; the scenario planners need the day's scenarios, vpp.stochastic), and a last
+    "|res=<MWh>" keeps that much for spikes every day (see _route_days)."""
+    base, _, planner = name.partition("|res=")[0].partition("|plan=")
     base, _, hurdle = base.partition("|h=")
     source, strat, fixed = STRATEGIES[base]
     prefs = replace(prefs, **fixed)
-    if planner:
-        strat = replace(strat, name=name, planner=planner)
+    if planner or "|res=" in name:
+        strat = replace(strat, name=name, planner=planner or strat.planner)
     if hurdle:
         return source, replace(strat, name=name), replace(prefs, hurdle_per_mwh=float(hurdle))
     return source, strat, prefs
 
 
-def _route_days(sc: Scenario, name: str):
+def _route_days(sc: Scenario, name: str, decide=None):
     """One strategy through every day on a 10 MW route, yielding (day, terms, summary, log): the day's
     contract terms and caps (vpp.contracts), the 08:00 bridge plan and the 09:00 forecast, the stored
     energy and the month-to-date peak (for the CMD cap) carried from day to day, and on the eve of a
     day flagged as a possible system peak the energy its 17:00-20:00 hours need, kept overnight. Under a
     fixed retail contract the meter's energy is priced at RETAIL_FIXED, there is no standing offer to
-    sell at the wholesale price, and net energy export earns nothing."""
+    sell at the wholesale price, and net energy export earns nothing. The spike reserve (vpp.dispatch.Reserve,
+    in RESERVE_WINDOW from 09:00): a name ending "|res=<MWh>" keeps that much every day; decide(d, kw), if
+    given, returns each day's Reserve or None from the day and run_day's keyword arguments."""
     route, asset, site = sc.route, sc.asset, sc.site
     bat = asset.battery
     source, strat, prefs = strategy(name, sc.prefs)
+    res_mwh = float(name.partition("|res=")[2] or 0.0)
     perfect = source == "actual"
     fixed = route.retail == "fixed"
     if fixed:
@@ -232,9 +239,15 @@ def _route_days(sc: Scenario, name: str):
             carry = ct.carry_in(standing, bat, site, plan_next, today, plan_today)
         terms = ct.day_terms(route, d, bat, site, cmd_cap, ircr_cap, ircr_at, forecast, credit, events, enuc, reserve,
                              sc.prefs.capacity_floor, carry, _AUX["ircr_value_mw"])
-        summary, log = dp.run_day(asset, strat, prefs, pe, pf, rtp, d["act_f"], p5, None, d["risk"], soc,
-                                  d["p5_f"], site, load_fc, load_act, terms=terms, export_energy=not fixed,
-                                  reg_util=route.reg_util, scen=None if strat.planner == "point" else d.get("scen"))
+        kw = dict(asset=asset, strat=strat, prefs=prefs, fc_e=pe, fc_f=pf, rtp=rtp, act_f=d["act_f"], p5=p5,
+                  obligations=None, risk=d["risk"], s_start=soc, p5_f=d["p5_f"], site=site, load_fc=load_fc,
+                  load_act=load_act, terms=terms, export_energy=not fixed, reg_util=route.reg_util,
+                  scen=None if strat.planner == "point" else d.get("scen"))
+        if decide is not None:
+            kw["reserve"] = decide(d, kw)
+        elif res_mwh > 0:
+            kw["reserve"] = dp.Reserve(res_mwh, *RESERVE_WINDOW)
+        summary, log = dp.run_day(**kw)
         soc = summary["soc_end"]
         for m, x in zip(d["slot_month"], log["meter_mw"].to_numpy()):
             mtd[m] = max(mtd.get(m, 0.0), x)
