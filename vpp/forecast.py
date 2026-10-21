@@ -40,11 +40,14 @@ def energy_blend(frame: pd.DataFrame, days_ahead: int = 0, start: pd.Timestamp =
     return pd.DataFrame({"energy_with_aemo": with_aemo, "energy_no_aemo": no_aemo.reindex(with_aemo.index)})
 
 
-def build(days_ahead: int = 0, start: pd.Timestamp = FORECAST_START, issue: pd.Timedelta | None = None) -> pd.DataFrame:
-    df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet")
-    runs = pd.read_parquet(PROCESSED / "aemo_predispatch.parquet")
-    weather = pd.read_parquet(PROCESSED / "weather_30min.parquet")
-    frame = ac.build_frame(df30, runs, weather, issue=issue)
+def build(days_ahead: int = 0, start: pd.Timestamp = FORECAST_START, issue: pd.Timedelta | None = None,
+          frame: pd.DataFrame | None = None) -> pd.DataFrame:
+    """frame: the feature frame built with the same `issue` (ac.build_frame), when the caller has it."""
+    if frame is None:
+        df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet")
+        runs = pd.read_parquet(PROCESSED / "aemo_predispatch.parquet")
+        weather = pd.read_parquet(PROCESSED / "weather_30min.parquet")
+        frame = ac.build_frame(df30, runs, weather, issue=issue)
     parts = energy_blend(frame, days_ahead, start)
     sub = frame.loc[parts.index]
     out = sub[["issue_date", "ts", "days_ahead", "target_date"]].assign(
