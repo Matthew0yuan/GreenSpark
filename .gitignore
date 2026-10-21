@@ -1,1 +1,2 @@
 *.zip
+data/processed/v2_value_*.npz
