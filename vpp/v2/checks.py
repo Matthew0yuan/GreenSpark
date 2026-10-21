@@ -4,8 +4,20 @@
                       result: day by day in one process on 30 days of 2026-01 (summaries and logs exactly equal,
                       with decision records off and on), and with --full also all days through the process pool
                       (daily rows, logs, float32 meters, ledger and bills). It guards the copied loop against drift.
+  --runs [s2,s3]      the saved runs (reports/v2_<step>_*, data/processed/v2_<step>_*):
+                      plans (every recorded plan): stored energy within the battery, power and FCESS headroom within
+                        the battery's power (no MW given twice), FCESS raise backed by stored energy, the planned meter
+                        within the connection, the compliance floor kept;
+                      execution (logs, daily rows): v2's I1 (meter within the connection), I3 (stored energy within
+                        the battery), I6 (energy revenue = sum of RTP x MWh), I7 (discharge within the budget),
+                        I9 (information used only once public);
+                      offers: every layered offer non-increasing in stored energy and protected energy never below
+                        its threshold (random days and states);
+                      accounts: every number in the plain-Chinese account of 40 recorded plans comes from a computed
+                        fact (vpp.v2.explain.check_numbers).
 
 Run:  python -m vpp.v2.checks --parity [--full]
+      python -m vpp.v2.checks --runs s2,s3
 """
 
 import sys
@@ -15,9 +27,16 @@ import numpy as np
 import pandas as pd
 
 from vpp import backtest as bt
+from vpp import dispatch as dp
+from vpp import site as st
 from vpp import site_bill as sb
+from vpp.data import PROCESSED
 from vpp.v2 import backtest as vb
+from vpp.v2 import bids as bd
+from vpp.v2 import explain as ex
 from vpp.v2 import harness as hs
+from vpp.v2 import outputs as op
+from vpp.v2 import value as vl
 from vpp.v2.config import V1
 
 
@@ -74,6 +93,89 @@ def parity_full(days: list[dict], aux: dict) -> bool:
     return ok
 
 
+TOL = 1e-6
+
+
+def plans(step: str) -> bool:
+    """Every recorded plan of a run, checked against the battery, the connection and its floors."""
+    recs = pd.read_parquet(PROCESSED / f"v2_{step}_records.parquet")
+    asset, site = bt.Q2B_ASSET, st.FACTORY
+    bat, tau = asset.battery, asset.limits.fcess_sustain_h
+    P, E, eta = bat.power_mw, bat.energy_mwh, bat.eta
+    bad = {k: 0 for k in ("stored", "power", "headroom", "backing", "meter", "floor")}
+    for r in recs.itertuples():
+        net, soc = np.asarray(r.net, float), np.asarray(r.soc, float)
+        rr, cr, rl, cl = (np.asarray(getattr(r, k), float) for k in dp.FCESS)
+        prev = np.r_[r.stored, soc[:-1]]
+        load = np.asarray(r.load, float)
+        bad["stored"] += int(((soc < -TOL) | (soc > E + TOL)).any())
+        bad["power"] += int((np.abs(net) > P + TOL).any())
+        bad["headroom"] += int(((net + rr + cr > P + TOL) | (-net + rl + cl > P + TOL)).any())
+        bad["backing"] += int(((rr + cr) * tau / eta > np.minimum(prev, soc) + TOL).any())
+        bad["meter"] += int(((load - net > site.import_limit_mw + TOL) | (net - load > site.export_limit_mw + TOL)).any())
+        if r.hard is not None and not (r.shortfall > TOL):
+            bad["floor"] += int((soc < np.asarray(r.hard, float) - TOL).any())
+    ok = True
+    for k, n in bad.items():
+        ok &= _result(f"{step} plans: {k}", n == 0, f"{n} of {len(recs)} plans")
+    return ok
+
+
+def execution(step: str) -> bool:
+    """v2's I1, I3, I6, I7 and I9 on a run's logs and daily rows."""
+    log = pd.read_parquet(PROCESSED / f"v2_{step}_log.parquet")
+    daily = pd.read_csv(bt.REPORTS / f"v2_{step}_daily.csv", parse_dates=["day"])
+    E = bt.Q2B_ASSET.battery.energy_mwh
+    short = daily.set_index(["strategy", "day"])["site_shortfall_mw"]
+    lk = log.set_index(["strategy", "day"]).index
+    over = (log["meter_mw"].to_numpy() > st.FACTORY.import_limit_mw + TOL) & ~(short.reindex(lk).to_numpy() > 0)
+    ok = _result(f"{step} I1 import within the connection or recorded", not over.any(), f"{int(over.sum())} of {len(log)} intervals")
+    ok &= _result(f"{step} I1 export within the connection", not (-log["meter_mw"] > st.FACTORY.export_limit_mw + TOL).any())
+    ok &= _result(f"{step} I3 stored energy within 0-{E:g} MWh", bool(((log["soc"] > -TOL) & (log["soc"] < E + TOL)).all()))
+    rev = (log["rtp"] * log["energy_mwh"]).groupby([log["strategy"], log["day"]]).sum()
+    got = daily.set_index(["strategy", "day"])["energy"].reindex(rev.index)
+    ok &= _result(f"{step} I6 energy revenue = sum(RTP x MWh)", bool(np.allclose(rev, got, rtol=1e-9, atol=1e-6)), f"{len(rev)} days")
+    budget = E * bt.Q2B_ASSET.limits.cycles_per_day + daily["budget_overrun_mwh"]
+    ok &= _result(f"{step} I7 discharge within the budget", bool((daily["discharged_mwh"] <= budget + TOL).all()))
+    ok &= _result(f"{step} I9 information used only once public", int(daily["timing_errors"].sum()) == 0)
+    return ok
+
+
+def offers(n: int = 3000, seed: int = 2) -> bool:
+    """Layered offers on random days and states: non-increasing in stored energy; protected energy never below."""
+    z = vl.load(vl.build())
+    rng = np.random.default_rng(seed)
+    eta, dw = bt.Q2B_ASSET.battery.eta, dp.decision_wear(bt.Q2B_ASSET, bt.PREFS)
+    rising = below = 0
+    for _ in range(n):
+        i, t = int(rng.integers(0, len(z["level"]))), int(rng.integers(2, dp.N))
+        protect = np.zeros(dp.N)
+        protect[t] = float(rng.uniform(0, 40))
+        b = bd.LadderBids(z["edges"][i], z["marg"][i], float(z["level"][i]), protect, float(rng.uniform(500, 3000)))
+        seen = float(rng.uniform(-50, 3000))
+        thr = b.thresholds(t, seen, eta, 1.2, dw, 150.0)
+        rising += int((np.diff(thr) > 1e-9).any())
+        k = np.arange(len(thr)) < protect[t] - 1e-9
+        # the protected value alone is a lower bound (offer values are float32: relative tolerance)
+        below += int((thr[k] < (1.2 * b.value / eta + dw) * (1 - 1e-6)).any())
+    ok = _result("offers non-increasing in stored energy", rising == 0, f"{rising} of {n}")
+    return ok & _result("protected energy offered at least at its value", below == 0, f"{below} of {n}")
+
+
+def accounts(step: str, n: int = 40, seed: int = 3) -> bool:
+    """The plain-Chinese account of recorded plans: every number comes from a computed fact."""
+    recs = pd.read_parquet(PROCESSED / f"v2_{step}_records.parquet")
+    pick = recs.sample(min(n, len(recs)), random_state=seed)
+    asset = bt.Q2B_ASSET
+    bad = []
+    for _, r in pick.iterrows():
+        snap = op.Snapshot(r.to_dict(), asset.battery, bt.PREFS.load_margin, asset.limits.fcess_sustain_h,
+                           asset.wear_per_mwh, ladder=step == "s3")
+        lines, facts = ex.explain(snap)
+        bad += ex.check_numbers(lines, facts)
+    return _result(f"{step} accounts: every number computed", not bad, f"{len(pick)} plans" + (f"; {bad[:2]}" if bad else ""))
+
+
 def main(argv: list[str] | None = None) -> None:
     argv = sys.argv[1:] if argv is None else argv
     ok = True
@@ -82,6 +184,10 @@ def main(argv: list[str] | None = None) -> None:
         ok &= parity_in_process(days, aux)
         if "--full" in argv:
             ok &= parity_full(bt.load_days("0900"), aux)
+    if "--runs" in argv:
+        for step in argv[argv.index("--runs") + 1].split(","):
+            ok &= plans(step) & execution(step) & accounts(step)
+        ok &= offers()
     print("ALL CHECKS PASS" if ok else "SOME CHECKS FAILED")
     sys.exit(0 if ok else 1)
 
