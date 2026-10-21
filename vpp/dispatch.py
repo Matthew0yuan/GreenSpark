@@ -78,6 +78,9 @@ class Strategy:
     # risk preferences' ambiguity allows
     planner: str = "point"
     every: int = 2
+    # what stored energy is worth at the end of the plan: "buyback" (stored_energy_value) or "table" (run_day's
+    # terminal curve, vpp.storage_value). offer_rule "table": layered offers from run_day's bids (DayBids)
+    terminal: str = "buyback"
 
 
 def decision_wear(asset: Asset, prefs: RiskPrefs) -> float:
@@ -183,9 +186,10 @@ class _Milp:
     pe: np.ndarray
     price_f: dict | None
     wear: float
-    terminal_value: float
+    terminal_value: float | np.ndarray
     util: tuple
     report: bool  # caps, a compliance floor or economic floors: the result reports their penalty and slack
+    nx0: int = 0  # columns before the terminal value's segments (all columns without them)
 
     def solve(self, cost=None):
         return milp(self.cost if cost is None else cost, constraints=LinearConstraint(self.A, self.lb, self.ub),
@@ -234,7 +238,8 @@ def _milp(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: floa
             cost[4 * n:5 * n] += util[0] * DT * (asset.wear_per_mwh - pe)
         if util[1]:  # regulation lower used: energy bought at the price
             cost[6 * n:7 * n] += util[1] * DT * pe
-    cost[3 * n - 1] = -terminal_value
+    curve = np.ndim(terminal_value) > 0
+    cost[3 * n - 1] = 0.0 if curve else -terminal_value
     for (cap, kind, penalty, comp), (r1, r2), cols in zip(layers, idx["layers"], idx["slack"]):
         ub[r1] = ub[r2] = np.asarray(cap, float)
         cost[cols] = 0.0 if comp else (penalty * DT if kind == "slot" else penalty)
@@ -245,8 +250,19 @@ def _milp(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: floa
         lb[rows_s] = np.asarray(fl, float)
         cost[z] = value
     integrality = np.r_[np.zeros(3 * n), np.ones(n), np.zeros(nx - 4 * n)]
+    if curve:
+        # stored energy at the end valued by a concave curve: segment j (MWh) is worth terminal_value[j] per MWh,
+        # the segments together hold at most the energy stored (non-increasing values fill in order)
+        m = np.asarray(terminal_value, float)
+        width = E / len(m)
+        row = coo_matrix((np.r_[-1.0, np.ones(len(m))], (np.zeros(len(m) + 1, int), np.r_[3 * n - 1, nx + np.arange(len(m))])),
+                         shape=(1, nx + len(m)))
+        A = sp_vstack([sp_hstack([A, coo_matrix((A.shape[0], len(m)))]), row]).tocsr()
+        lb, ub = np.r_[lb, -np.inf], np.r_[ub, 0.0]
+        lo, hi = np.r_[lo, np.zeros(len(m))], np.r_[hi, np.full(len(m), width)]
+        cost, integrality = np.r_[cost, -m], np.r_[integrality, np.zeros(len(m))]
     return _Milp(cost, A, lb, ub, lo, hi, integrality, idx, pe, price_f, wear, terminal_value, util,
-                 bool(layers or comp_floor is not None or soft))
+                 bool(layers or comp_floor is not None or soft), nx)
 
 
 def _least_shortfall(m: _Milp) -> float | None:
@@ -271,7 +287,10 @@ def _schedule(m: _Milp, asset: Asset, x: np.ndarray, shortfall: float) -> dict:
     out["energy_value"] = float((pe * (d - c)).sum() * DT)
     out["fcess_value"] = float(sum((np.asarray(price_f[k], float) * out[k]).sum() for k in FCESS) * DT) if price_f is not None else 0.0
     out["wear"] = float(m.wear * d.sum() * DT)
-    out["stored_value"] = float(m.terminal_value * out["soc"][-1])
+    if np.ndim(m.terminal_value) > 0:
+        out["stored_value"] = float(np.asarray(m.terminal_value, float) @ x[m.nx0:])
+    else:
+        out["stored_value"] = float(m.terminal_value * out["soc"][-1])
     out["value"] = out["energy_value"] + out["fcess_value"] - out["wear"] + out["stored_value"]
     if any(util):
         rr, rl = x[4 * n:5 * n], x[6 * n:7 * n]
@@ -280,7 +299,7 @@ def _schedule(m: _Milp, asset: Asset, x: np.ndarray, shortfall: float) -> dict:
     out["shortfall"] = shortfall  # the least total compliance shortfall (0 if every requirement holds)
     out["shortfall_mwh"] = float(x[m.idx["comp_cols"][:n]].max()) if "comp_cols" in m.idx and shortfall > 0 else 0.0
     if m.report:
-        out["penalty"] = float(m.cost[8 * n:] @ x[8 * n:])
+        out["penalty"] = float(m.cost[8 * n:m.nx0] @ x[8 * n:m.nx0])
         out["slack"] = [x[cols] for cols in m.idx["slack"]]
     return out
 
@@ -294,7 +313,8 @@ def plan(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: float
     price_e: $/MWh per interval; price_f: {product: $/MW/h} or None for energy only; budget: MWh the
     battery may still discharge today (default: the limits' cycles a day); floor: minimum stored MWh
     at the end of each interval; site, load: the connection limits and the site's load (MW) per
-    interval; terminal_value: $ per MWh still stored at the end; wear_per_mwh: $ per MWh discharged
+    interval; terminal_value: $ per MWh still stored at the end, or a concave curve: one $/MWh per equal
+    segment of the battery's energy, non-increasing (vpp.storage_value); wear_per_mwh: $ per MWh discharged
     (default: the asset's wear).
     layers: caps on net charging (charge - discharge, MW) as (cap (n,), kind, penalty, compliance):
     an economic cap pays `penalty` $/MWh over the cap in each interval ("slot") or $/MW on the largest
@@ -717,7 +737,7 @@ def _reveal(r: Reveal, t: int, fc_e, fc_f, obligations: list, layers: list, budg
 def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, act_f, p5, obligations=None, risk=None,
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
             export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
-            reserve: Reserve | None = None):
+            reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -748,6 +768,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     plan on a revealed forecast with what followed: its expected money from that interval on (at the asset's
     wear, stored energy at the plan's value; the scenarios' equal-weight mean) and the money actually made then.
     reserve: stored energy kept for spikes (Reserve; needs terms).
+    terminal: with terms, the plans value the energy stored at the end of the day by this concave curve ($ per MWh
+    of each equal segment, vpp.storage_value) instead of its buy-back value. bids: with offer_rule "table", the
+    day's layered offers (vpp.storage_value.DayBids): each 5 minutes the standing offer sells, beyond the plan,
+    the MWh whose threshold the price reaches.
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -793,7 +817,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     room = charge_room(bat, site, lf, charge_caps)
     room_e = econ_room(layers, charge_caps)
     value_rule = strat.offer and strat.offer_rule == "value"
-    k_offer = np.full(N, np.inf) if value_rule else offer_prices(strat, fc_e)
+    table_rule = strat.offer and strat.offer_rule == "table"
+    if table_rule and bids is None:
+        raise ValueError("offer rule 'table' needs the day's bids")
+    k_offer = np.full(N, np.inf) if value_rule or table_rule else offer_prices(strat, fc_e)
     offer_fcess, offer_mwh = np.full(N, np.nan), np.zeros(N)
     tv = stored_energy_value(bat, fc_e)
     dw = decision_wear(asset, prefs)
@@ -862,8 +889,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         fh = None if terms.fcess_hi is None else {k: np.asarray(v, float)[t0:] for k, v in terms.fcess_hi.items()}
         if full:
             hard, soft = floors(t0, ladder == "offer", s0)
-            kw = dict(s_init=s0, budget=b0, site=site, load=rest, terminal_value=tv, wear_per_mwh=dw, layers=lay, fcess_hi=fh,
-                      export_energy=export_energy, comp_floor=hard, soft=soft, reg_util=reg_util)
+            kw = dict(s_init=s0, budget=b0, site=site, load=rest, terminal_value=tv if terminal is None else terminal,
+                      wear_per_mwh=dw, layers=lay, fcess_hi=fh, export_energy=export_energy, comp_floor=hard, soft=soft,
+                      reg_util=reg_util)
             if ladder != "offer" and planner in ("mean", "sp", "dro") and t0 >= scen["slot"]:
                 out = scen_plan(t0, seen, kw)
             else:
@@ -924,7 +952,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             room_e = econ_room(layers, charge_caps)
             tv = stored_energy_value(bat, fc_e)
             offer_f = use_cost(tv)
-            if not value_rule:
+            if not (value_rule or table_rule):
                 k_offer[t:] = offer_prices(strat, fc_e)[t:]
             cur, cur_t0, replanned[t] = replan(t, np.asarray(fc_e, float)[t:], rest_of(fc_f, t), s, budget, "full"), t, True
             if first_plan is None and any(r.energy is not None for r in due):
@@ -971,7 +999,14 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             pw = min(cur["net"][i], sellable)
             price = p5[t * STEPS + j]
             if strat.offer and price >= strat.k_min and sellable > max(pw, 0.0) + 1e-6:
-                if not k_ready:
+                target = sellable  # MW to discharge if the offer is taken
+                if table_rule:
+                    # layered: the MWh whose threshold the price reaches, priced from the latest step already seen
+                    i5 = t * STEPS + j
+                    seen = p5[i5 - 1] if i5 > 0 else float(np.asarray(fc_e, float)[t])
+                    target, k_offer[t] = bids.sell(t, s, max(pw, 0.0), sellable, price, seen, eta, strat.alpha, dw,
+                                                   strat.k_min)
+                elif not k_ready:
                     # the offer is in before this step's prices exist: priced from the latest step already seen
                     i5 = t * STEPS + j
                     seen = p5[i5 - 1] if i5 > 0 else float(np.asarray(fc_e, float)[t])
@@ -980,16 +1015,16 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                         asset, strat, prefs, t, j, s, budget, pw, sellable, fc_e, fc_f, seen, offer_replan, f_seen)
                     k_ready = True
                 margin = price - k_offer[t]
-                if margin >= 0:
+                if margin >= 0 and target > max(pw, 0.0) + 1e-9:
                     # co-optimised: discharging more uses headroom the plan had enabled for FCESS raise
-                    raise_lost = max(0.0, min(r_plan, P - pw)) - max(0.0, min(r_plan, P - sellable))
+                    raise_lost = max(0.0, min(r_plan, P - pw)) - max(0.0, min(r_plan, P - target))
                     raise_price = (sum(cur[k][i] * p5_f[k][t * STEPS + j] for k in RAISE) / r_plan
                                    if p5_f is not None and r_plan > 1e-9 else 0.0)
-                    if margin * (sellable - max(pw, 0.0)) >= raise_price * raise_lost:
-                        offer_mwh[t] += (sellable - max(pw, 0.0)) * DT5
+                    if margin * (target - max(pw, 0.0)) >= raise_price * raise_lost:
+                        offer_mwh[t] += (target - max(pw, 0.0)) * DT5
                         if reserve is not None and reserve.start <= t < reserve.end:
-                            res_left = max(0.0, res_left - (sellable - max(pw, 0.0)) * DT5)
-                        pw, triggered[t] = sellable, True
+                            res_left = max(0.0, res_left - (target - max(pw, 0.0)) * DT5)
+                        pw, triggered[t] = target, True
             safety = pw <= 0 and s - pw * DT5 * eta < keep
             if safety:
                 # obligation safety: stored energy is at the least that can still be refilled in time
