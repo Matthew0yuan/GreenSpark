@@ -15,7 +15,18 @@ Tests (before the cutoff, each month from its own window, scored every hour from
 in 0.8-1.25; V2 daily Brier against the slot-only rate, month-block interval below 0; V3 the realised rate with
 today's spike vs without, and danger vs not, compared within the same half-hour, month-block interval above 0.
 
+Round 3, D (reports/v2_plan.md, section 9.2): how often a danger day is a spike day (a half-hour at or above SPIKE
+from 09:00), for two calls and two thresholds.
+  calls       "same day": the 09:00 model above; "day before": the same model's day-ahead version (days_ahead=1),
+              issued at 09:00 the day before (HISTORY_D1), its risk over the same 09:00-07:30
+  thresholds  "365": the month's, as above; "recent": the 80% quantile of the risks of the RECENT target days before,
+              each day at its own (only calls already issued)
+Pass (before the cutoff): the lift - spike-day rate on danger days less on normal days - has a month-block interval
+above 0 (P1), and in at least P2_SHARE of the months with both kinds of day the danger days' rate is the higher (P2).
+The recent threshold is also run through V1-V3.
+
 Run:  python -m vpp.v2.risk [--rebuild]
+      python -m vpp.v2.risk --danger [--rebuild]
 """
 
 import sys
@@ -39,42 +50,62 @@ WINDOW = pd.Timedelta(days=365)
 FIRST = 2                     # 09:00, when the morning model is issued
 SCORED = np.arange(FIRST, dp.N, 2)  # every hour from 09:00
 HISTORY = PROCESSED / "spike_risk_history_0900.parquet"
+HISTORY_D1 = PROCESSED / "spike_risk_history_0900_d1.parquet"  # the day-ahead version (round 3, D)
 HISTORY_START = pd.Timestamp("2024-04-01 08:00")
 GATE = {"V1": (0.8, 1.25)}
+RECENT = 28                   # target days behind the recent threshold [fixed, as the price level's]
+RECENT_SENS = 90              # reported only
+P2_SHARE = 0.75               # [fixed]
 REPORTS = bt.REPORTS
 
 
-def history(rebuild: bool = False) -> pd.DataFrame:
-    """The 09:00 spike-risk model, walked forward from HISTORY_START (cached)."""
-    if HISTORY.exists() and not rebuild:
-        return pd.read_parquet(HISTORY)
+def history(rebuild: bool = False, days_ahead: int = 0) -> pd.DataFrame:
+    """The spike-risk model issued at 09:00 for the same trading day (days_ahead=0) or the next (1), walked forward
+    from HISTORY_START (cached)."""
+    path = HISTORY if days_ahead == 0 else HISTORY_D1
+    if path.exists() and not rebuild:
+        return pd.read_parquet(path)
     df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet")
     runs = pd.read_parquet(PROCESSED / "aemo_predispatch.parquet")
     weather = pd.read_parquet(PROCESSED / "weather_30min.parquet")
     f = sr.add_signals(ac.build_frame(df30, runs, weather, issue=ISSUE), df30)
-    p = sr.walk_forward_risk(f, 0, start=HISTORY_START)
+    p = sr.walk_forward_risk(f, days_ahead, start=HISTORY_START)
     out = f.loc[p.index, ["issue_date", "ts", "days_ahead", "target_date", "actual_energy"]].assign(p_spike=p)
     out.loc[(out["ts"] < out["issue_date"] + ISSUE).to_numpy(), "p_spike"] = np.nan
     out = out.sort_values("ts").reset_index(drop=True)
-    out.to_parquet(HISTORY)
+    out.to_parquet(path)
     return out
 
 
 def day_risk(hist: pd.DataFrame) -> pd.Series:
     """Each trading day's morning risk: 1 - prod(1 - p) over the half-hours from 09:00."""
     p = hist.dropna(subset=["p_spike"])
+    p = p[(p["ts"] - p["target_date"] >= pd.Timedelta(hours=8) + FIRST * pd.Timedelta(minutes=30)).to_numpy()]
     return 1.0 - p.groupby("target_date")["p_spike"].apply(lambda x: float(np.prod(1.0 - x.to_numpy())))
 
 
-class Model:
-    """The spike tables of every month, and the day-level inputs: spikes, danger."""
+def recent_flags(risk: pd.Series, days: int = RECENT) -> pd.Series:
+    """1 where a day's risk is at least the 80% quantile of the risks of the `days` target days before it (NaN without
+    them all): only calls issued before the day's own."""
+    thr = risk.shift(1).rolling(days, min_periods=days).quantile(1 - DANGER_SHARE, interpolation="linear")
+    return (risk >= thr).astype(float).where(thr.notna() & risk.notna())
 
-    def __init__(self, hist: pd.DataFrame | None = None):
+
+class Model:
+    """The spike tables of every month, and the day-level inputs: spikes, danger.
+    threshold "365": a danger day's risk is at least the month's threshold (the 365 days before the month), the
+    estimation window's days classed at it too; "recent": each day at its own recent threshold (recent_flags).
+    days_ahead: the morning call issued the same day (0) or the day before (1)."""
+
+    def __init__(self, hist: pd.DataFrame | None = None, threshold: str = "365", recent: int = RECENT,
+                 days_ahead: int = 0):
         from vpp.v2 import value as vl
         self.rtp = vl.prices()                                     # (trading day x slot) RTP
         self.spikes = (self.rtp >= SPIKE).to_numpy()
         self.days = self.rtp.index
-        self.risk = day_risk(history() if hist is None else hist).reindex(self.days)
+        self.risk = day_risk(history(days_ahead=days_ahead) if hist is None else hist).reindex(self.days)
+        self.mode = threshold
+        self.flags = recent_flags(self.risk, recent).to_numpy() if threshold == "recent" else None
         seen = np.cumsum(self.spikes, axis=1) > 0
         self.regime = np.c_[np.zeros(len(self.days), bool), seen[:, :-1]]   # a spike in a half-hour before t
         rest = np.cumsum(self.spikes[:, ::-1], axis=1)[:, ::-1] > 0
@@ -84,21 +115,30 @@ class Model:
     def window(self, month: pd.Period) -> np.ndarray:
         """Rows of the days that estimate month's tables: the 365 days before it, never after TRAIN_END."""
         end = min(month.start_time, CUTOFF)
-        return np.flatnonzero((self.days >= end - WINDOW) & (self.days < end) & (self.days <= TRAIN_END)
-                              & self.risk.notna().to_numpy())
+        known = self.risk.notna().to_numpy() if self.flags is None else np.isfinite(self.flags)
+        return np.flatnonzero((self.days >= end - WINDOW) & (self.days < end) & (self.days <= TRAIN_END) & known)
 
     def threshold(self, month: pd.Period) -> float:
         return float(np.quantile(self.risk.to_numpy()[self.window(month)], 1 - DANGER_SHARE))
 
+    def flag(self, i: int, month: pd.Period) -> int | None:
+        """1 if day row i is a danger day (at month's threshold, or its own recent one), 0 if not, None if unknown."""
+        if self.flags is not None:
+            return int(self.flags[i]) if np.isfinite(self.flags[i]) else None
+        r = self.risk.iloc[i]
+        return int(r >= self.threshold(month)) if np.isfinite(r) else None
+
     def danger(self, day: pd.Timestamp) -> int | None:
         """1 on a danger day, 0 otherwise, None without the morning model."""
-        r = self.risk.get(pd.Timestamp(day).normalize())
-        if r is None or not np.isfinite(r):
+        day = pd.Timestamp(day).normalize()
+        if day not in self.days:
             return None
-        return int(r >= self.threshold(pd.Timestamp(day).to_period("M")))
+        return self.flag(self.days.get_loc(day), day.to_period("M"))
 
     def classes(self, month: pd.Period, rows: np.ndarray) -> np.ndarray:
-        """Danger classes of the given day rows, at month's threshold."""
+        """Danger classes of the given day rows, at month's threshold (or each at its own recent one)."""
+        if self.flags is not None:
+            return self.flags[rows].astype(int)
         return (self.risk.to_numpy()[rows] >= self.threshold(month)).astype(int)
 
     def tables(self, month: pd.Period) -> dict:
@@ -151,12 +191,10 @@ def scores(model: Model, months) -> pd.DataFrame:
     for month in months:
         tb = model.tables(month)
         days = np.flatnonzero((model.days >= month.start_time) & (model.days <= month.end_time))
-        thr = model.threshold(month)
         for i in days:
-            r = model.risk.iloc[i]
-            if not np.isfinite(r):
+            d = model.flag(i, month)
+            if d is None:
                 continue
-            d = int(r >= thr)
             for t in SCORED:
                 reg = int(model.regime[i, t])
                 a, b = tb["cell"][t, d, reg]
@@ -211,6 +249,54 @@ def validate(model: Model) -> tuple[pd.DataFrame, dict]:
     return res, out
 
 
+def hit_days(model: Model) -> pd.DataFrame:
+    """Every backtest day with a call: danger (0/1), spike day (a half-hour at or above SPIKE from 09:00), the
+    number of such half-hours, month and period."""
+    rows = []
+    for i in np.flatnonzero((model.days >= "2025-04-01") & (model.days <= "2026-10-15")):
+        d = model.flag(i, model.days[i].to_period("M"))
+        if d is None:
+            continue
+        n = int(model.spikes[i, FIRST:].sum())
+        rows.append({"day": model.days[i], "danger": d, "spike": n > 0, "n_spike": n})
+    x = pd.DataFrame(rows)
+    x["month"] = pd.PeriodIndex(x["day"], freq="M")
+    x["period"] = bt.period_of(x["day"])
+    return x
+
+
+def lift(x: pd.DataFrame) -> float:
+    """Spike-day rate on danger days less on normal days (NaN without both)."""
+    g = x.groupby("danger")["spike"].mean()
+    return float(g.get(1, np.nan) - g.get(0, np.nan))
+
+
+def hits(x: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Per period: the hit table (see the module docstring); per month: each kind of day's spike-day rate."""
+    rows = []
+    for p, y in x.groupby("period"):
+        dg, nm = y[y["danger"] == 1], y[y["danger"] == 0]
+        m = y.groupby(["month", "danger"])["spike"].mean().unstack("danger")
+        both = m.dropna() if {0, 1} <= set(m.columns) else m.iloc[:0]
+        row = {"period": p, "days": len(y), "danger_share": len(dg) / len(y),
+               "hit_danger": dg["spike"].mean(), "hit_normal": nm["spike"].mean(), "lift": lift(y),
+               "recall": (y["spike"] & (y["danger"] == 1)).sum() / max(1, y["spike"].sum()),
+               "spikes_per_danger_day": dg["n_spike"].mean(), "spikes_per_normal_day": nm["n_spike"].mean(),
+               "months": y["month"].nunique(), "months_both": len(both),
+               "months_danger_higher": int((both[1] > both[0]).sum()) if len(both) else 0}
+        row["lift_lo"], row["lift_hi"] = _month_boot(y, lift)
+        rows.append(row)
+    res = pd.DataFrame(rows).set_index("period")
+    months = x.groupby(["month", "danger"]).agg(days=("spike", "size"), hit=("spike", "mean")).reset_index()
+    return res, months
+
+
+def danger_pass(res: pd.DataFrame) -> dict:
+    v = res.loc["validation"]
+    return {"P1": v["lift_lo"] > 0,
+            "P2": v["months_both"] > 0 and v["months_danger_higher"] >= P2_SHARE * v["months_both"]}
+
+
 def check_overlap() -> tuple[float, int]:
     """Largest difference between the extended history and the dispatcher's 09:00 file where both exist."""
     h = history().dropna(subset=["p_spike"]).set_index("ts")["p_spike"]
@@ -219,8 +305,60 @@ def check_overlap() -> tuple[float, int]:
     return float((h.reindex(common) - o.reindex(common)).abs().max()), len(common)
 
 
+def danger_checks() -> dict:
+    """Round 3's checks: the day-ahead calls issued at 09:00 the day before, for targets after the issue; the recent
+    threshold of a day unchanged when its own and later risks change; R1's validation unchanged at "365"."""
+    h1 = history(days_ahead=1).dropna(subset=["p_spike"])
+    issued = bool(((h1["target_date"] - h1["issue_date"]) == pd.Timedelta(days=1)).all()
+                  and (h1["ts"] >= h1["issue_date"] + ISSUE).all())
+    risk = day_risk(history())
+    rng = np.random.default_rng(0)
+    timing = True
+    for k in rng.integers(RECENT + 1, len(risk) - 1, 5):
+        thr = risk.shift(1).rolling(RECENT).quantile(1 - DANGER_SHARE)
+        changed = risk.copy()
+        changed.iloc[k:] = rng.uniform(0, 1, len(risk) - k)
+        timing &= thr.iloc[k] == changed.shift(1).rolling(RECENT).quantile(1 - DANGER_SHARE).iloc[k]
+    saved = pd.read_csv(REPORTS / "v2_risk_validation.csv", index_col="period")
+    res, _ = validate(Model())
+    same = np.allclose(res[saved.columns].loc[saved.index].to_numpy(float), saved.to_numpy(float), rtol=0, atol=1e-12)
+    return {"day-ahead calls issued the day before at 09:00": issued,
+            "recent threshold uses only earlier calls": bool(timing), "R1 at '365' as committed": bool(same)}
+
+
+def danger_main(rebuild: bool) -> None:
+    for days_ahead in (0, 1):
+        history(rebuild, days_ahead)
+    variants = [("same day", 0, "365", None), ("same day", 0, "recent", RECENT), ("day before", 1, "365", None),
+                ("day before", 1, "recent", RECENT), ("same day", 0, "recent", RECENT_SENS),
+                ("day before", 1, "recent", RECENT_SENS)]
+    tables, months = [], []
+    for call, ahead, thr, n in variants:
+        label = thr if n is None else f"recent {n}"
+        model = Model(threshold=thr, recent=n or RECENT, days_ahead=ahead)
+        res, mon = hits(hit_days(model))
+        ok = danger_pass(res)
+        tables.append(res.assign(call=call, threshold=label, P1=ok["P1"], P2=ok["P2"],
+                                 chosen_on=n != RECENT_SENS).reset_index())
+        months.append(mon.assign(call=call, threshold=label))
+    table = pd.concat(tables).set_index(["call", "threshold", "period"])
+    table.to_csv(REPORTS / "v2_danger_hits.csv")
+    pd.concat(months).to_csv(REPORTS / "v2_danger_months.csv", index=False)
+    pd.set_option("display.width", 250)
+    pd.set_option("display.max_columns", 30)
+    print(table.round(3).to_string())
+    res, gate = validate(Model(threshold="recent"))
+    res.to_csv(REPORTS / "v2_risk_validation_recent.csv")
+    print("\nR1 with the recent threshold (same day)\n" + res.round(4).T.to_string())
+    print("gate (before the cutoff):", ", ".join(f"{k} {'pass' if v else 'FAIL'}" for k, v in gate.items()))
+    print("\nchecks:", ", ".join(f"{k} {'PASS' if v else 'FAIL'}" for k, v in danger_checks().items()))
+
+
 def main(argv: list[str] | None = None) -> None:
     argv = sys.argv[1:] if argv is None else argv
+    if "--danger" in argv:
+        danger_main("--rebuild" in argv)
+        return
     hist = history("--rebuild" in argv)
     diff, n = check_overlap()
     print(f"morning model extended to {hist['target_date'].min().date()}; where it overlaps the dispatcher's file "
