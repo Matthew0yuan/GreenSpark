@@ -36,30 +36,34 @@ from vpp.v2.config import V1, V2Config
 REPORTS = bt.REPORTS
 CMD = 9.0  # MW, m1's CMD (chosen before the cutoff, findings section 16)
 SMOKE = (("2026-01-12", "2026-01-23"), ("2025-08-04", "2025-08-15"))
-SITE = V2Config("site", site_reserve=True)  # step s2's winner: the base of step s3
-WIN = V2Config("rel+ladder", site_reserve=True, value="relative", ladder=True)  # step s3's winner
+FIX = dict(offer_end=True)  # every v2 configuration prices the value offer's last half-hour (v2_plan.md, 9.1)
+SITE = V2Config("site", site_reserve=True, **FIX)  # step s2's winner: the base of step s3
+WIN = V2Config("rel+ladder", site_reserve=True, value="relative", ladder=True, **FIX)  # step s3's winner
 STEPS = {
     "s2": {"base": "v1", "candidates": ("site",), "ref": "site+R20", "tables": (),
-           "configs": (V1, V2Config("site", site_reserve=True, record=True),
-                       V2Config("site+R20", site_reserve=True, spike_reserve_mwh=20.0),
-                       V2Config("site expected", site_reserve=True, site_load_basis="expected"))},
+           "configs": (V1, V2Config("site", site_reserve=True, record=True, **FIX),
+                       V2Config("site+R20", site_reserve=True, spike_reserve_mwh=20.0, **FIX),
+                       V2Config("site expected", site_reserve=True, site_load_basis="expected", **FIX),
+                       V2Config("v1 fixed", **FIX))},
     "s3": {"base": "site", "candidates": ("rel", "rel+ladder"), "ref": "site+R20", "tables": (("median", 40.0),),
-           "configs": (SITE, V2Config("site+R20", site_reserve=True, spike_reserve_mwh=20.0),
-                       V2Config("rel", site_reserve=True, value="relative"),
-                       V2Config("rel+ladder", site_reserve=True, value="relative", ladder=True, record=True))},
+           "configs": (SITE, V2Config("site+R20", site_reserve=True, spike_reserve_mwh=20.0, **FIX),
+                       V2Config("rel", site_reserve=True, value="relative", **FIX),
+                       V2Config("rel+ladder", site_reserve=True, value="relative", ladder=True, record=True, **FIX))},
 }
 STEPS["r3"] = {"base": WIN.name, "candidates": ("rel+ladder 48h",), "ref": None, "tables": (("median", 40.0),),
                "configs": (WIN, V2Config("rel+ladder 48h", site_reserve=True, value="relative", ladder=True, plan_days=2,
-                                         record=True))}
+                                         record=True, **FIX))}
 SENS = (  # (configuration, its base): one setting changed each
     (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
     (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
-    (V2Config("rel+ladder lag 15 min", site_reserve=True, value="relative", ladder=True, offer_lag=3), WIN.name),
-    (V2Config("rel+ladder lag 30 min", site_reserve=True, value="relative", ladder=True, offer_lag=6), WIN.name),
-    (V2Config("rel+ladder 36 MWh", site_reserve=True, value="relative", ladder=True, usable_mwh=36.0), WIN.name),
-    (V2Config("rel+ladder unshifted", site_reserve=True, value="relative", ladder=True, curve_shift=False), WIN.name),
-    (V2Config("rel+ladder mean level", site_reserve=True, value="relative", ladder=True, level_stat="mean"), WIN.name),
-    (V2Config("site expected", site_reserve=True, site_load_basis="expected"), SITE.name),
+    (V2Config("rel+ladder lag 15 min", site_reserve=True, value="relative", ladder=True, offer_lag=3, **FIX), WIN.name),
+    (V2Config("rel+ladder lag 30 min", site_reserve=True, value="relative", ladder=True, offer_lag=6, **FIX), WIN.name),
+    (V2Config("rel+ladder 36 MWh", site_reserve=True, value="relative", ladder=True, usable_mwh=36.0, **FIX), WIN.name),
+    (V2Config("rel+ladder unshifted", site_reserve=True, value="relative", ladder=True, curve_shift=False, **FIX),
+     WIN.name),
+    (V2Config("rel+ladder mean level", site_reserve=True, value="relative", ladder=True, level_stat="mean", **FIX),
+     WIN.name),
+    (V2Config("site expected", site_reserve=True, site_load_basis="expected", **FIX), SITE.name),
 )
 SENS_TABLES = (("median", 40.0), ("median", 36.0), ("mean", 40.0))
 
