@@ -19,6 +19,7 @@ from vpp import contracts as ct
 from vpp import dispatch as dp
 from vpp import site_bill as sb
 from vpp.v2 import bids as bd
+from vpp.v2 import horizon as hz
 from vpp.v2 import record as rc
 from vpp.v2 import reserves as rv
 from vpp.v2 import value as vl
@@ -37,6 +38,39 @@ def value_inputs(cfg: V2Config, bat) -> dict:
             raise FileNotFoundError(f"{p.name}: build it first (python -m vpp.v2.value)")
         VALUE_INPUTS[key] = vl.load(p)
     return VALUE_INPUTS[key]
+
+
+D1_INPUTS: dict = {}  # the 09:00 day-ahead forecast by issue day, loaded on first use
+
+
+def tomorrow_part(day, tomorrow: dict, after: dict | None, route, site, asset, prefs, mtd: dict, slots,
+                  inputs: dict, ircr_value_mw: float, enuc: float, shift: bool) -> hz.Tomorrow | None:
+    """Tomorrow's part of the plans made from 09:00 today (R3), or None without the day-ahead forecast. slots:
+    tomorrow's flagged peak hours (None if it is not flagged); after: the day after tomorrow (its CMD needs shift the
+    end value; its own flag is not public yet)."""
+    if not D1_INPUTS:
+        D1_INPUTS.update(hz.tomorrow_prices(hz.forecast_d1()))
+    d1 = D1_INPUTS.get(pd.Timestamp(day).normalize())
+    if d1 is None:
+        return None
+    bat = asset.battery
+    expected = tomorrow["load_fc"] * site.load_scale  # economic caps are priced on the expected load (run_day)
+    caps, extra = {}, {}  # each cap as the plan takes it: the most net charging it allows (cap - load), MW
+    if route.cmd_mw is not None:
+        caps["cmd"] = np.array([max(route.cmd_mw, mtd.get(m, 0.0)) for m in tomorrow["slot_month"]]) - expected
+    if slots is not None:
+        ircr = np.full(dp.N, np.inf)
+        ircr[slots] = 0.0
+        caps["ircr"] = ircr - expected
+        extra["ircr"] = ("peak", ircr_value_mw)
+    level = float(inputs["level"][inputs["index"][pd.Timestamp(day).normalize()]])
+    curve = vl.curve_at(inputs, str(pd.Timestamp(day).to_period("M")), pd.Timestamp(tomorrow["day"]).dayofweek, level)
+    q = 0.0
+    if after is not None:
+        q = rv.site_reserve(after, site, bat, prefs.load_margin, "plan", route.cmd_mw, mtd, None, ircr_value_mw,
+                            enuc).total_mwh
+    return hz.Tomorrow(d1[0], d1[1], tomorrow["load_fc"] * site.load_scale * (1 + prefs.load_margin), caps, extra,
+                       vl.shifted(curve, q, shift), asset.limits.cycles_per_day * bat.energy_mwh)
 
 
 def scenario(sc: bt.Scenario, cfg: V2Config) -> bt.Scenario:
@@ -80,11 +114,13 @@ def _ladder(inputs: dict, i: int, level: float, bat, site, prefs, load_fc, cmd_c
     return bd.LadderBids(inputs["edges"][i], inputs["marg"][i], level, protect, min(values, default=0.0))
 
 
-def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | None = None, until=None, on_day=None):
+def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | None = None, until=None, on_day=None,
+               decide=None):
     """One v2 configuration through every day on a 10 MW route, yielding (day, terms, summary, log, records): as
     vpp.backtest._route_days for forecast+offer(value), with cfg's features (records: [] unless cfg.record).
     To replay one day of a run (vpp.v2.report): soc0 and mtd0, the stored energy and each month's highest import
-    when the first day starts; until, the last day; on_day(day, kw, summary, log), called after each day."""
+    when the first day starts; until, the last day; on_day(day, kw, summary, log), called after each day.
+    decide(d, kw): a choice made at 09:00 (vpp.v2.candidates), returning run_day arguments to change."""
     sc = scenario(sc, cfg)
     route, asset, site = sc.route, sc.asset, sc.site
     bat = asset.battery
@@ -166,7 +202,7 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
         context = {}
         if site_res is not None:
             obs = site_res.obligations(carry, bat.eta)
-            if obs:
+            if obs and cfg.plan_days == 1:  # a 48-hour plan has tomorrow's needs in itself
                 terms = replace(terms, reveals=terms.reveals + (dp.Reveal(2, "site reserve for tomorrow", obligations=obs),))
             context.update(site_ircr_mwh=site_res.ircr_mwh, site_total_mwh=site_res.total_mwh,
                            site_cmd_hours=site_res.cmd_hours, site_ircr_value=site_res.ircr_value,
@@ -187,8 +223,18 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
             if cfg.ladder:
                 kw["bids"] = _ladder(inputs, i, level, bat, site, prefs, load_fc, cmd_cap, ircr_cap, terms, site_res,
                                      reserve, enuc, aux["ircr_value_mw"])
+        if cfg.plan_days == 2 and site is not None and tomorrow is not None and inputs is not None:
+            slots = None
+            if tomorrow["day"] in day_before:
+                slots = peaks[tomorrow["day"]] if tomorrow["day"] in peaks else np.flatnonzero(window)
+            ext = tomorrow_part(day, tomorrow, by_date.get(day + pd.Timedelta(days=2)), route, site, asset, prefs, mtd,
+                                slots, inputs, aux["ircr_value_mw"], enuc, cfg.curve_shift)
+            if ext is not None:
+                kw["extend"] = ext
         if cfg.offer_lag != 1:
             kw["offer_lag"] = cfg.offer_lag
+        if decide is not None:
+            kw.update(decide(d, kw))
         recorder = rc.Recorder(day, {"config": cfg.name, "carry_mwh": carry, **context}) if cfg.record else None
         if recorder is not None:
             kw["on_plan"] = recorder

@@ -48,6 +48,9 @@ STEPS = {
                        V2Config("rel", site_reserve=True, value="relative"),
                        V2Config("rel+ladder", site_reserve=True, value="relative", ladder=True, record=True))},
 }
+STEPS["r3"] = {"base": WIN.name, "candidates": ("rel+ladder 48h",), "ref": None, "tables": (("median", 40.0),),
+               "configs": (WIN, V2Config("rel+ladder 48h", site_reserve=True, value="relative", ladder=True, plan_days=2,
+                                         record=True))}
 SENS = (  # (configuration, its base): one setting changed each
     (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
     (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
@@ -219,7 +222,7 @@ def main(argv: list[str] | None = None) -> None:
     if not smoke and "validation" in table.index.get_level_values(0):
         val = table.loc["validation"]
         passing = [c for c in spec["candidates"] if c in val.index and val.loc[c, "vs_base_lo"] > 0
-                   and (step == "s2" or val.loc[c, "vs_ref"] >= 0)]
+                   and (step == "s2" or spec.get("ref") is None or val.loc[c, "vs_ref"] >= 0)]
         best = max(passing, key=lambda c: val.loc[c, "per_day"]) if passing else None
         print(f"pass (before the cutoff): {', '.join(passing) or 'none'}; chosen: {best or 'none'}")
 

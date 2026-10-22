@@ -723,6 +723,14 @@ def value_offer_price(asset: Asset, strat: Strategy, prefs: RiskPrefs, t: int, j
     return max(strat.k_min, (strat.alpha * lost + wear_now) / extra), lost_fcess / extra
 
 
+def _head(out: dict, n: int) -> dict:
+    """A plan cut back to its first n intervals (the rest of a plan that ran past the end of the day)."""
+    cut = {k: np.asarray(v)[:n] for k, v in out.items() if k in ("net", "soc", *FCESS)}
+    if "slack" in out:
+        cut["slack"] = [np.atleast_1d(np.asarray(a))[:n] for a in out["slack"]]
+    return {**out, **cut}
+
+
 def _copy_plan(out: dict) -> dict:
     """A copy of a plan's results that an observer may keep or change without touching the plan in use."""
     return {k: v.copy() if isinstance(v, np.ndarray) else [a.copy() for a in v] if isinstance(v, list) else v
@@ -744,7 +752,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
             export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
             reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None, on_plan=None,
-            offer_lag: int = 1):
+            offer_lag: int = 1, extend=None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -784,6 +792,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     energy, budget, floors with their names, caps, prices, load, terminal value). It only observes. offer_lag: the
     standing offer is priced from the 5-min price this many steps back (1: the step just before), a sensitivity
     for offers that must be in before a gate closure.
+    extend(t0, prices, fcess, kw, cap names): plans from t0 may run past the end of the day (vpp.v2.horizon): it
+    returns the prices, FCESS prices and plan arguments lengthened; the plan is then cut back to the day.
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -916,10 +926,14 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                             "soft": [(n, f.copy(), v) for n, (f, v) in zip(labels[0], soft)],
                             "caps": [(x.name, c.copy(), k, p, comp_) for x, (c, k, p, comp_) in zip(layers, lay)],
                             "terminal": np.array(kw["terminal_value"], float)}
+            if extend is not None:
+                fe, ff, kw = extend(t0, np.asarray(fe, float), ff, kw, [x.name for x in layers])
             if ladder != "offer" and planner in ("mean", "sp", "dro") and t0 >= scen["slot"]:
                 out = scen_plan(t0, seen, kw)
             else:
                 out = plan(asset, fe, ff, **kw)
+            if extend is not None:
+                out = _head(out, N - t0)
             if out["shortfall"] > 1e-6 and ladder != "offer":  # the offer rule's what-if plans are not adopted
                 plans_short += 1
                 plan_short = max(plan_short, out["shortfall_mwh"])

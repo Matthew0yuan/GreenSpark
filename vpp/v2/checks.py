@@ -15,9 +15,12 @@
                         its threshold (random days and states);
                       accounts: every number in the plain-Chinese account of 40 recorded plans comes from a computed
                         fact (vpp.v2.explain.check_numbers).
+  --timing            the 09:00 choice among candidates (vpp.v2.candidates) is unchanged when the day's actual prices
+                      and load after 09:00 are changed (positive control: the start state changes the plays)
+  --same              runs that share a configuration agree: rel+ladder in steps s3, r2 and r3 day for day
 
 Run:  python -m vpp.v2.checks --parity [--full]
-      python -m vpp.v2.checks --runs s2,s3
+      python -m vpp.v2.checks --runs s2,s3,r2,r3 --timing --same
 """
 
 import sys
@@ -170,15 +173,71 @@ def accounts(step: str, n: int = 40, seed: int = 3) -> bool:
     bad = []
     for _, r in pick.iterrows():
         snap = op.Snapshot(r.to_dict(), asset.battery, bt.PREFS.load_margin, asset.limits.fcess_sustain_h,
-                           asset.wear_per_mwh, ladder=step == "s3")
+                           asset.wear_per_mwh, ladder=step != "s2")
         lines, facts = ex.explain(snap)
         bad += ex.check_numbers(lines, facts)
     return _result(f"{step} accounts: every number computed", not bad, f"{len(pick)} plans" + (f"; {bad[:2]}" if bad else ""))
 
 
+def chooser_timing(n_days: int = 3) -> bool:
+    """The 09:00 choice (vpp.v2.candidates) uses nothing after 09:00: with the day's actual prices and load after
+    09:00 changed, every candidate's plays and the choice stay the same (positive control: the start state)."""
+    import copy
+    from concurrent.futures import ProcessPoolExecutor
+
+    from vpp import reserve as rs
+    from vpp.v2 import candidates as cd
+    days, _, aux = bt.q2b_inputs(smoke=True)
+    analogs, ok, moved = rs.Analogs(), True, 0
+    with ProcessPoolExecutor() as pool:
+        for k in (3, 11, 19)[:n_days]:
+            pair = days[k:k + 2]
+            out = []
+            for variant in ("as is", "changed", "start"):
+                sub = copy.deepcopy(pair)
+                if variant == "changed":
+                    d = sub[0]
+                    d["rtp"] = np.r_[d["rtp"][:2], d["rtp"][2:] * 3 + 100]
+                    d["p5"] = np.r_[d["p5"][:12], d["p5"][12:] * 3 + 100]
+                    d["act_f"] = {f: np.r_[v[:2], v[2:] + 50] for f, v in d["act_f"].items()}
+                    d["p5_f"] = {f: np.r_[v[:12], v[12:] + 50] for f, v in d["p5_f"].items()}
+                    d["load_act"] = np.r_[d["load_act"][:2], d["load_act"][2:] * 1.1]
+                bt._init_worker(sub, aux)
+                ch = cd.Chooser(pool, analogs, 0.0)
+                list(hs.route_days(vb.m1(), cd.BASE, soc0=20.0 if variant == "start" else 10.0, until=sub[0]["day"],
+                                   decide=ch))
+                r = ch.rows[0]
+                out.append((r["chosen"], [r[f"expected_{o[0]}"] for o in cd.OPTIONS]))
+            same = out[0][0] == out[1][0] and np.allclose(out[0][1], out[1][1], rtol=0, atol=1e-9)
+            moved += not np.allclose(out[0][1], out[2][1])
+            ok &= _result(f"09:00 choice on {pair[0]['day'].date()} unchanged by the actuals after 09:00", same,
+                          f"chosen {out[0][0]} / {out[1][0]}")
+    return ok & _result("positive control: a different start state changes the plays", moved > 0, f"{moved} of {n_days}")
+
+
+def same_base() -> bool:
+    """rel+ladder in the runs of steps s3, r2 and r3 is the same run, day for day (each later step's base)."""
+    ok = True
+    ref = pd.read_csv(bt.REPORTS / "v2_s3_daily.csv")
+    ref = ref[ref["strategy"] == vb.WIN.name].reset_index(drop=True)
+    for step in ("r2", "r3"):
+        p = bt.REPORTS / f"v2_{step}_daily.csv"
+        if not p.exists():
+            continue
+        x = pd.read_csv(p)
+        x = x[x["strategy"] == vb.WIN.name].reset_index(drop=True)
+        num = ref.select_dtypes("number").columns.intersection(x.select_dtypes("number").columns)  # columns of both runs
+        ok &= _result(f"rel+ladder in step {step} = in step s3", ref[num].equals(x[num]), f"{len(x)} days, {len(num)} columns")
+    return ok
+
+
 def main(argv: list[str] | None = None) -> None:
     argv = sys.argv[1:] if argv is None else argv
     ok = True
+    if "--timing" in argv:
+        ok &= chooser_timing()
+    if "--same" in argv:
+        ok &= same_base()
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)

@@ -18,6 +18,7 @@ class V2Config:
     spike_reserve_mwh: float = 0.0    # kept for spikes 16:00-20:00 every day (v1's "|res=")
     offer_lag: int = 1                # 5-min steps back the standing offer's price is taken from
     usable_mwh: float | None = None   # stored energy the dispatcher may use (a state-of-charge window); None: all
+    plan_days: int = 1                # 2: from 09:00 plans run to the end of tomorrow (vpp.v2.horizon, R3)
     record: bool = False              # keep decision records (vpp.v2.record)
 
 
