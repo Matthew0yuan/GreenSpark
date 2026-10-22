@@ -6,7 +6,12 @@ plan the day had adopted by the given time and prints, in Chinese: the account (
 record), the charging plan, the reserve plan, the bidding plan, the allocation and the money and risk. The report is
 also written to reports/v2_report_<day>_<HHMM>.md.
 
+Since round 2 it also prints the intraday spike judgment (vpp.v2.risk, descriptive), the 09:00 candidates as the
+chooser saw them (--step r2 --config "choose lam=0": the chooser decides again in the replay) and the 48-hour
+reference plan (vpp.v2.horizon), from 09:00.
+
 Run:  python -m vpp.v2.report --day 2026-02-03 --at 21:00 [--config rel+ladder] [--step s3]
+      python -m vpp.v2.report --day 2026-02-03 --at 21:00 --config "choose lam=0" --step r2
 """
 
 import sys
@@ -17,11 +22,13 @@ import pandas as pd
 
 from vpp import backtest as bt
 from vpp import dispatch as dp
+from vpp import site_bill as sb
 from vpp import stochastic as sto
 from vpp.data import PROCESSED
 from vpp.v2 import backtest as vb
 from vpp.v2 import explain as ex
 from vpp.v2 import harness as hs
+from vpp.v2 import horizon as hz
 from vpp.v2 import outputs as op
 from vpp.v2 import value as vl
 
@@ -29,10 +36,62 @@ REPORTS = bt.REPORTS
 
 
 def _config(step: str, name: str):
+    if step == "r2":
+        from vpp.v2 import candidates as cd
+        return replace(cd.BASE, name=name, record=True)
     for cfg in vb.STEPS[step]["configs"]:
         if cfg.name == name:
             return replace(cfg, record=True)
     raise KeyError(f"no configuration {name!r} in step {step}")
+
+
+def _risk_lines(day: pd.Timestamp, slot: int) -> list[str]:
+    """R1, descriptive: the chance of another spike today, from the half-hour of the report, and its parts."""
+    from vpp.v2 import risk as rk
+    j = rk.Model().judge(day, slot)
+    pct = lambda x: f"{100 * x:.0f}%"  # noqa: E731
+    if j["danger"] is None or slot < rk.FIRST:
+        return [f"- {op.clock(slot)} 时，今天剩下的时段再出 ≥ ${rk.SPIKE:.0f} 尖峰的概率按这个时段的平常频率是 {pct(j['base'])}"
+                "（早上的风险模型 09:00 才发出）。"]
+    return [f"- {op.clock(slot)} 时，今天剩下的时段再出 ≥ ${rk.SPIKE:.0f} 尖峰的概率：**{pct(j['p'])}**"
+            f"（80% 区间 {pct(j['lo'])}–{pct(j['hi'])}）。",
+            f"- 怎么来的：这个时段平常是 {pct(j['base'])}；早上的模型说今天{'是' if j['danger'] else '不是'}危险日，"
+            f"变成 {pct(j['p_danger'])}（这一项没通过单独检验，只作参考）；今天{'已经' if j['regime'] else '还没'}出过尖峰，"
+            f"变成 {pct(j['p'])}。",
+            "- 这个判断只用于说明，不改变决策（第二轮 R1 没有通过接到决策上的检验）。"]
+
+
+def _candidate_lines(rows: list[dict]) -> list[str]:
+    """R2: the day's 09:00 candidates as the chooser saw them."""
+    if not rows or "expected_a" not in rows[0]:
+        return ["- 这个配置不做候选比较。"]
+    from vpp.v2 import candidates as cd
+    r = rows[0]
+    names = {"a": "a 现状", "b": "b 卖得积极（α 1.0）", "c": "c 卖得保守（α 1.5）", "d": "d 傍晚多留 10 MWh"}
+    head = "| 候选 | 20 种走势平均 $ | 最差的一种 $ | 最坏情况下的后悔 $ |\n|---|---|---|---|\n"
+    body = "\n".join(f"| {names[o[0]]} | {r[f'expected_{o[0]}']:,.0f} | {r[f'worst_{o[0]}']:,.0f} | {r[f'regret_{o[0]}']:,.0f} |"
+                     for o in cd.OPTIONS)
+    return [head + body, f"\n- 选中：{names[r['chosen']]}；{'结论不依赖概率' if r['robust'] else '结论依赖概率'}"
+            f"（后悔最小 ${r['regret']:,.0f}）。只看 20 种走势的平均会选 {names[r['nominal']]}。"]
+
+
+def _reference_lines(ref: dict | None) -> list[str]:
+    """R3: the 48-hour reference plan, summarised by two-hour blocks."""
+    if ref is None:
+        return ["- 48 小时参考计划从 09:00 起才有（提前一天的预测 09:00 发出）。"]
+    t0, net, soc = ref["t0"], np.asarray(ref["net"], float), np.asarray(ref["soc"], float)
+    rows = []
+    for a in range(0, len(net), 4):
+        b = min(len(net), a + 4)
+        k = t0 + a
+        label = ("今天 " if k < dp.N else "明天 ") + op.clock(k % dp.N)
+        rows.append(f"| {label} | {abs(net[a:b].clip(max=0).sum()) * dp.DT:.1f} | {net[a:b].clip(min=0).sum() * dp.DT:.1f} "
+                    f"| {soc[b - 1]:.1f} |")
+    today, tom = net[: dp.N - t0], net[dp.N - t0:]
+    head = "| 时段起点（每 2 小时） | 充电 MWh | 放电 MWh | 结束时存电 MWh |\n|---|---|---|---|\n"
+    return [f"- 今天剩下：充 {abs(today.clip(max=0).sum()) * dp.DT:.1f} MWh、放 {today.clip(min=0).sum() * dp.DT:.1f} MWh；"
+            f"明天：充 {abs(tom.clip(max=0).sum()) * dp.DT:.1f} MWh、放 {tom.clip(min=0).sum() * dp.DT:.1f} MWh；"
+            f"后天 08:00 存电 {soc[-1]:.1f} MWh。只作参考，会随新信息重排。", "", head + "\n".join(rows)]
 
 
 def _start_state(step: str, name: str, days: list[dict], day: pd.Timestamp) -> tuple[float, dict, pd.Series]:
@@ -85,14 +144,26 @@ def report(day: pd.Timestamp, at: str, name: str = "rel+ladder", step: str = "s3
         vl.build(cfg.level_stat, cfg.usable_mwh or bt.Q2B_ASSET.battery.energy_mwh)
     days = bt.load_days("0900")
     i = next(k for k, d in enumerate(days) if d["day"] == day)
-    sub = days[i:i + 2]
+    sub = days[i:i + 3]
     sto.attach(sub)
     soc0, mtd0, saved = _start_state(step, name, days, day)
-    bt._init_worker(sub, bt.q2b_aux())
+    aux = bt.q2b_aux()
+    bt._init_worker(sub, aux)
     sc = hs.scenario(vb.m1(), cfg)
-    seen = {}
-    rows = [r for r in hs.route_days(vb.m1(), cfg, soc0, mtd0, until=day,
-                                     on_day=lambda d, kw, s, lg: seen.update(kw=kw, summary=s, log=lg))]
+    seen, chooser, pool = {}, None, None
+    if step == "r2":  # the chooser decides at 09:00 again, exactly as in the run
+        from concurrent.futures import ProcessPoolExecutor
+
+        from vpp import reserve as rs
+        from vpp.v2 import candidates as cd
+        pool = ProcessPoolExecutor()
+        chooser = cd.Chooser(pool, rs.Analogs(), float(name.split("=")[1]))
+    try:
+        rows = [r for r in hs.route_days(vb.m1(), cfg, soc0, mtd0, until=day, decide=chooser,
+                                         on_day=lambda d, kw, s, lg: seen.update(kw=kw, summary=s, log=lg))]
+    finally:
+        if pool is not None:
+            pool.shutdown()
     _, _, summary, log, records = rows[0]
     same = summary["total"] == saved["total"] and summary["soc_end"] == saved["soc_end"]
     slot = int((pd.Timestamp(f"2000-01-01 {at}") - pd.Timestamp("2000-01-01 08:00")) / pd.Timedelta(minutes=30)) % dp.N
@@ -153,6 +224,19 @@ def report(day: pd.Timestamp, at: str, name: str = "rel+ladder", step: str = "s3
               f"最好 {usd(rk['best'])}。" if rk else "- 风险：只对 09:00 的计划计算（那时才有 20 种价格走势）。")
     md.append(f"- 当天实际结算（电费节省另算）：市场收入 {usd(summary['total'])} = 电能买卖净额 {usd(summary['energy'])} + "
               f"FCESS {usd(summary['fcess'])} − 损耗 {usd(summary['wear'])}。")
+    md += ["\n## ⑥ 当天的尖峰判断（只作说明）\n", *_risk_lines(day, slot)]
+    md += ["\n## ⑦ 09:00 的候选方案比较\n", *_candidate_lines(chooser.rows if chooser is not None else [])]
+    ref = None
+    if (cfg.value == "relative" or cfg.ladder) and len(sub) > 1:
+        route, site = sc.route, sc.site
+        tom = sub[1]
+        slots = np.arange(*sb.IRCR_SLOTS) if tom["day"] in set(aux["flags1"]) else None  # flagged at 09:00 today
+        part = hs.tomorrow_part(day, tom, sub[2] if len(sub) > 2 else None, route, site, sc.asset, prefs, mtd0, slots,
+                                hs.value_inputs(cfg, sc.asset.battery), aux["ircr_value_mw"],
+                                sb.RT7(route.cmd_mw / sb.PF * 1000).enuc_per_mw(), cfg.curve_shift)
+        if part is not None:
+            ref = hz.reference(rec, part, sc.asset, site, prefs, dp.decision_wear(sc.asset, prefs))
+    md += ["\n## ⑧ 48 小时参考计划\n", *_reference_lines(ref)]
     return "\n".join(md) + "\n", bad
 
 
@@ -163,7 +247,8 @@ def main(argv: list[str] | None = None) -> None:
     name = argv[argv.index("--config") + 1] if "--config" in argv else "rel+ladder"
     step = argv[argv.index("--step") + 1] if "--step" in argv else "s3"
     text, bad = report(day, at, name, step)
-    out = REPORTS / f"v2_report_{day.date()}_{at.replace(':', '')}.md"
+    slug = "" if name == "rel+ladder" else "_" + "".join(c if c.isalnum() else "-" for c in name).strip("-")
+    out = REPORTS / f"v2_report_{day.date()}_{at.replace(':', '')}{slug}.md"
     out.write_text(text, encoding="utf-8")
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to a narrower code page
     print(text)

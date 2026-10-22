@@ -113,26 +113,46 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False)
         rows["curve"].append((1 - w) * c0[dow] + w * c1[dow])
         rows["marg"].append((1 - w) * m0[dow] + w * m1[dow])
         rows["edges"].append(states[month]["edges"])
+    keys = sorted(solved)
     np.savez_compressed(out, day=np.array(rows["day"]), level=np.array(rows["level"]),
                         curve=np.array(rows["curve"], np.float32), marg=np.array(rows["marg"], np.float32),
                         edges=np.array(rows["edges"], np.float32),
-                        weeks=np.array([w for _, _, w in solved.values()]), n_tables=len(solved))
+                        weeks=np.array([w for _, _, w in solved.values()]), n_tables=len(solved),
+                        grid_month=np.array([str(m) for m, _ in keys]), grid_level=np.array([g for _, g in keys]),
+                        grid_curve=np.array([solved[k][0] for k in keys], np.float32))
     return out
 
 
 def load(p) -> dict:
-    """The per-day arrays, keyed by trading day."""
+    """The per-day arrays, keyed by trading day, and each month's end-of-day curves on its level grid."""
     z = np.load(p)
     days = pd.to_datetime(z["day"].astype(str))
+    grid: dict = {}
+    for m, g, c in zip(z["grid_month"].astype(str), z["grid_level"], z["grid_curve"]):
+        grid.setdefault(m, []).append((float(g), c))
     return {"index": {d: i for i, d in enumerate(days)}, "level": z["level"], "curve": z["curve"], "marg": z["marg"],
-            "edges": z["edges"]}
+            "edges": z["edges"], "grid": {m: sorted(v, key=lambda x: x[0]) for m, v in grid.items()}}
+
+
+def curve_at(inputs: dict, month: str, dow: int, level: float) -> np.ndarray:
+    """The end-of-day curve of a trading day starting on weekday dow, from month's table at a price level
+    (interpolated on the month's grid, the nearest end beyond it)."""
+    g = inputs["grid"][month]
+    levels = np.array([x for x, _ in g])
+    k = int(np.clip(np.searchsorted(levels, level, side="right") - 1, 0, len(levels) - 2))
+    w = float(np.clip((level - levels[k]) / (levels[k + 1] - levels[k]), 0.0, 1.0))
+    return (1 - w) * g[k][1][dow].astype(float) + w * g[k + 1][1][dow].astype(float)
+
+
+def shifted(c: np.ndarray, q_mwh: float, shift: bool = True) -> np.ndarray:
+    """A curve shifted past the q MWh already needed (the first q segments take the first segment's value)."""
+    q = int(np.clip(round(q_mwh), 0, len(c))) if shift else 0
+    return np.r_[np.full(q, c[0]), c[:len(c) - q]]
 
 
 def terminal(inputs: dict, day: pd.Timestamp, q_mwh: float, shift: bool = True) -> np.ndarray:
     """The plan's end-of-day value: the day's curve, shifted past the q MWh ① and ② already need at 08:00."""
-    c = inputs["curve"][inputs["index"][pd.Timestamp(day).normalize()]].astype(float)
-    q = int(np.clip(round(q_mwh), 0, len(c))) if shift else 0
-    return np.r_[np.full(q, c[0]), c[:len(c) - q]]
+    return shifted(inputs["curve"][inputs["index"][pd.Timestamp(day).normalize()]].astype(float), q_mwh, shift)
 
 
 def main(argv: list[str] | None = None) -> None:

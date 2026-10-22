@@ -32,7 +32,9 @@ class Recorder:
                "soft_names": [n for n, _, _ in ctx["soft"]], "soft_values": [float(v) for _, _, v in ctx["soft"]],
                "soft_floors": [_f32(f).tolist() for _, f, _ in ctx["soft"]],
                "cap_names": [c[0] for c in ctx["caps"]], "cap_kinds": [c[2] for c in ctx["caps"]],
-               "cap_compliance": [bool(c[4]) for c in ctx["caps"]], "caps": [_f32(c[1]).tolist() for c in ctx["caps"]]}
+               "cap_penalties": [float(c[3]) for c in ctx["caps"]],
+               "cap_compliance": [bool(c[4]) for c in ctx["caps"]], "caps": [_f32(c[1]).tolist() for c in ctx["caps"]],
+               "fcess_prices": None if ctx.get("fcess") is None else {k: _f32(v) for k, v in ctx["fcess"].items()}}
         self.rows.append({**row, **self.context})
 
 
