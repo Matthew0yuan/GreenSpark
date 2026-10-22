@@ -233,6 +233,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
                 kw["extend"] = ext
         if cfg.offer_lag != 1:
             kw["offer_lag"] = cfg.offer_lag
+        if cfg.offer_end:
+            kw["offer_end"] = True
         if decide is not None:
             kw.update(decide(d, kw))
         recorder = rc.Recorder(day, {"config": cfg.name, "carry_mwh": carry, **context}) if cfg.record else None

@@ -685,13 +685,15 @@ def offer_prices(strat: Strategy, fc_e) -> np.ndarray:
 
 def value_offer_price(asset: Asset, strat: Strategy, prefs: RiskPrefs, t: int, j: int, s: float, budget: float,
                       planned: float, sell: float, fc_e, fc_f, price_now: float, replan,
-                      fcess_now: dict | None = None) -> tuple[float, float]:
+                      fcess_now: dict | None = None, last: bool = False) -> tuple[float, float]:
     """"value" rule: offer price for the rest of interval t from re-planning the rest of the day twice,
     running at the planned power until the interval ends or selling at `sell` MW instead. Energy and
     FCESS forecasts are both nudged towards the latest prices seen before the offer is made, those of the
     previous 5-min step (price_now; fcess_now: its FCESS prices).
     replan(first interval, energy forecast, FCESS forecast, stored MWh, budget) returns the plan of the
-    rest of the day with the day's floors and caps, or None if there is none.
+    rest of the day with the day's floors and caps, or None if there is none. last: the last interval is
+    priced the same way, replan(N, ...) returning what is stored at the day's end is worth; without it the
+    last interval loses nothing by selling and is offered at k_min.
 
     Returns (offer price, the FCESS part of the value lost per MWh sold).
     """
@@ -702,7 +704,7 @@ def value_offer_price(asset: Asset, strat: Strategy, prefs: RiskPrefs, t: int, j
         return np.inf, 0.0
     dw = decision_wear(asset, prefs)
     lost = lost_fcess = 0.0
-    if t < N - 1:
+    if t < N - 1 or last:
         fc_next = nowcast(fc_e, t, price_now)
         f_next = nowcast_fcess(fc_f, t, fcess_now)
         branches = []
@@ -752,7 +754,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
             export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
             reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None, on_plan=None,
-            offer_lag: int = 1, extend=None):
+            offer_lag: int = 1, extend=None, offer_end: bool = False):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -794,6 +796,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     for offers that must be in before a gate closure.
     extend(t0, prices, fcess, kw, cap names): plans from t0 may run past the end of the day (vpp.v2.horizon): it
     returns the prices, FCESS prices and plan arguments lengthened; the plan is then cut back to the day.
+    offer_end: the "value" rule also prices the last interval, against what the energy stored at the day's end is worth
+    (the plans' terminal value) less the economic floors' penalty there (needs terms); without it the last interval
+    is offered at k_min.
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -810,6 +815,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     planner = strat.planner if scen is not None or strat.planner in ("point", "roll") else "roll"
     if planner != "point" and not full:
         raise ValueError(f"planner {planner!r} needs the day's terms")
+    if offer_end and not full:
+        raise ValueError("offer_end needs the day's terms")
     obls, layers = list(obligations or []) + list(terms.obligations), list(terms.layers)
     budget = asset.limits.cycles_per_day * E
     reveals = sorted(terms.reveals, key=lambda r: r.slot)
@@ -957,7 +964,21 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             return out
 
     def offer_replan(t0, fe, ff, s0, b0):
-        return replan(t0, fe, ff, s0, b0, "offer")
+        return end_value(s0) if t0 >= N else replan(t0, fe, ff, s0, b0, "offer")
+
+    def end_value(s0):
+        """The offer rule's what-if past the last interval: s0 MWh stored at the day's end at the plans' terminal
+        value, the economic floors' penalty and the compliance floor's shortfall there."""
+        hard, soft = floors(N - 1, True, s0)
+        term = tv if terminal is None else terminal
+        if np.ndim(term):
+            m = np.asarray(term, float)
+            w = E / len(m)
+            stored = float(m @ np.clip(s0 - w * np.arange(len(m)), 0.0, w))
+        else:
+            stored = float(term) * s0
+        return {"value": stored, "fcess_value": 0.0, "penalty": float(sum(v * max(0.0, f[-1] - s0) for f, v in soft)),
+                "shortfall": max(0.0, float(hard[-1]) - s0)}
 
     def rest_of(ff, t0):
         return None if ff is None else {k: np.asarray(ff[k], float)[t0:] for k in FCESS}
@@ -1065,7 +1086,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                     f_seen = (None if p5_f is None or not fcess or i5 < offer_lag
                               else {k: p5_f[k][i5 - offer_lag] for k in FCESS})
                     k_offer[t], offer_fcess[t] = value_offer_price(
-                        asset, strat, prefs, t, j, s, budget, pw, sellable, fc_e, fc_f, seen, offer_replan, f_seen)
+                        asset, strat, prefs, t, j, s, budget, pw, sellable, fc_e, fc_f, seen, offer_replan, f_seen,
+                        offer_end)
                     k_ready = True
                 margin = price - k_offer[t]
                 if margin >= 0 and target > max(pw, 0.0) + 1e-9:
