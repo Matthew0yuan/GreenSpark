@@ -12,7 +12,12 @@ rose after 2026-06-30 it fell behind. Here the table is of prices relative to a 
 Per trading day it keeps L_d, the end-of-day curve ($ per MWh of each 1 MWh segment at the next 08:00), the offer
 values (slot x price state x segment) and the relative bin edges, as float32 in an npz the workers load.
 
-Run:  python -m vpp.v2.value [--stat mean] [--energy 36]     builds the per-day arrays (cached)
+hurdle (round 4, reports/v2_plan.md section 11): the table charges every MWh sold its wear plus this hurdle ($/MWh),
+as the plans do (bt.HURDLE, the default, is the table rounds 1-3 used). B1 builds tables at 0, 25 and 50: the trades
+the table prices are made at prices already seen, so the forecast-error hurdle may be counted twice there.
+
+Run:  python -m vpp.v2.value [--stat mean] [--energy 36] [--hurdle 0]     builds the per-day arrays (cached)
+      python -m vpp.v2.value --b1                                         round 4, B1: builds and checks the tables
 """
 
 import sys
@@ -34,8 +39,9 @@ GRID_STEP = 5.0   # $/MWh between solved levels [fixed]
 FIRST, LAST = pd.Timestamp("2025-04-01"), pd.Timestamp("2026-10-15")  # the backtest's days
 
 
-def path(stat: str = "median", energy_mwh: float = 40.0) -> Path:
-    return PROCESSED / f"v2_value_{stat}{'' if energy_mwh == 40.0 else f'_{energy_mwh:g}mwh'}.npz"
+def path(stat: str = "median", energy_mwh: float = 40.0, hurdle: float = bt.HURDLE) -> Path:
+    return PROCESSED / (f"v2_value_{stat}{'' if energy_mwh == 40.0 else f'_{energy_mwh:g}mwh'}"
+                        f"{'' if hurdle == bt.HURDLE else f'_h{hurdle:g}'}.npz")
 
 
 def prices() -> pd.DataFrame:
@@ -68,19 +74,23 @@ def _marginals(V: np.ndarray, ps: dict) -> tuple[np.ndarray, np.ndarray]:
 
 
 def _solve(task: tuple) -> tuple:
-    month, level, ps, energy_mwh = task
+    month, level, ps, energy_mwh, hurdle = task
     asset = bt.Q2B_ASSET if energy_mwh == bt.Q2B_ASSET.battery.energy_mwh else \
         replace(bt.Q2B_ASSET, battery=replace(bt.Q2B_ASSET.battery, energy_mwh=energy_mwh))
-    V, weeks = sv.solve({**ps, "means": level + ps["means"]}, sv.load_profiles(month), asset=asset, short_penalty=0.0)
+    prefs = bt.PREFS if hurdle == bt.HURDLE else replace(bt.PREFS, hurdle_per_mwh=hurdle)
+    V, weeks = sv.solve({**ps, "means": level + ps["means"]}, sv.load_profiles(month), asset=asset, prefs=prefs,
+                        short_penalty=0.0)
     curve, marg = _marginals(V, ps)
     return month, level, curve.astype(np.float32), marg.astype(np.float32), weeks
 
 
-def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False) -> Path:
-    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh))."""
-    out = path(stat, energy_mwh)
-    if out.exists() and not rebuild:
-        return out
+def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False, hurdle: float = bt.HURDLE,
+          out: Path | None = None) -> Path:
+    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh, hurdle), or written to out)."""
+    if out is None:
+        out = path(stat, energy_mwh, hurdle)
+        if out.exists() and not rebuild:
+            return out
     table = prices()
     lv = levels(table, stat)
     days = lv.index[(lv.index >= FIRST) & (lv.index <= LAST)]
@@ -95,7 +105,7 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False)
         grid = np.arange(np.floor(lo / GRID_STEP) * GRID_STEP, np.ceil(hi / GRID_STEP) * GRID_STEP + 1e-9, GRID_STEP)
         if len(grid) == 1:
             grid = np.r_[grid, grid + GRID_STEP]
-        tasks += [(month, float(g), ps, energy_mwh) for g in grid]
+        tasks += [(month, float(g), ps, energy_mwh, hurdle) for g in grid]
     with ProcessPoolExecutor() as pool:
         solved = {(m, g): (c, mg, w) for m, g, c, mg, w in pool.map(_solve, tasks)}
     rows = {"day": [], "level": [], "curve": [], "marg": [], "edges": []}
@@ -155,11 +165,62 @@ def terminal(inputs: dict, day: pd.Timestamp, q_mwh: float, shift: bool = True) 
     return shifted(inputs["curve"][inputs["index"][pd.Timestamp(day).normalize()]].astype(float), q_mwh, shift)
 
 
+B1_HURDLES = (0.0, 25.0, 50.0)  # round 4, B1 [fixed beforehand, reports/v2_plan.md section 11.3]
+
+
+def b1() -> bool:
+    """Round 4, B1 (no decision changes): the tables at hurdles 0, 25 and 50, checked (the default hurdle rebuilt
+    bit for bit; every curve and offer value non-increasing in stored energy and not below 0; training windows before
+    the month and not after TRAIN_END) and reported: the mean 08:00 curve at 5/10/20/30 MWh before and after the
+    cutoff, with the buy limit 0.922 x value / 1.2 - h and the sell threshold max(150, 1.2 x value / 0.922 + 30 + h)."""
+    from vpp import evaluate as ev
+    ok = True
+    check = PROCESSED / "v2_value_median_b1check.npz"
+    build("median", 40.0, hurdle=bt.HURDLE, out=check)
+    a, b = np.load(path()), np.load(check)
+    diff = [k for k in a.files if not np.array_equal(a[k], b[k])]
+    worst = max((float(np.max(np.abs(a[k].astype(float) - b[k].astype(float)))) for k in diff
+                 if a[k].dtype.kind == "f" and a[k].shape == b[k].shape), default=0.0)
+    print(f"{'PASS' if not diff else 'FAIL'}  hurdle {bt.HURDLE:g} rebuilt bit for bit: "
+          f"{'all ' + str(len(a.files)) + ' arrays equal' if not diff else f'differ {diff}, largest {worst:.3g}'}")
+    ok &= not diff
+    a.close(), b.close()
+    check.unlink()
+    table = prices()
+    for month in sv.MONTHS:
+        end = min(month.start_time, ev.CUTOFF)
+        used = table.index[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= ev.TRAIN_END)]
+        ok &= bool(used.max() < month.start_time and used.max() <= ev.TRAIN_END)
+    print(f"{'PASS' if ok else 'FAIL'}  training windows before each month and not after {ev.TRAIN_END.date()}")
+    rows = []
+    for h in (*B1_HURDLES, bt.HURDLE):
+        z = load(build("median", 40.0, hurdle=h))
+        flat = (np.diff(z["curve"], axis=1) <= 1e-6).all() and (np.diff(z["marg"], axis=3) <= 1e-6).all()
+        pos = (z["curve"] >= 0).all() and (z["marg"] >= 0).all()
+        print(f"{'PASS' if flat and pos else 'FAIL'}  hurdle {h:g}: curves and offer values non-increasing and >= 0")
+        ok &= bool(flat and pos)
+        days = pd.DatetimeIndex(list(z["index"]))
+        for name, m in (("before cutoff", days < ev.CUTOFF), ("after cutoff", days >= ev.CUTOFF)):
+            c = z["curve"][m].astype(float).mean(axis=0)
+            for s in (5, 10, 20, 30):
+                rows.append({"hurdle": h, "period": name, "stored_mwh": s, "value": c[s],
+                             "buy_limit": 0.922 * c[s] / 1.2 - h, "sell_threshold": max(150.0, 1.2 * c[s] / 0.922 + 30 + h)})
+    rep = pd.DataFrame(rows)
+    rep.to_csv(bt.REPORTS / "v2_b1_values.csv", index=False)
+    pd.set_option("display.width", 200)
+    print(rep.pivot_table(index=["period", "stored_mwh"], columns="hurdle",
+                          values=["value", "buy_limit", "sell_threshold"]).round(0).to_string())
+    return ok
+
+
 def main(argv: list[str] | None = None) -> None:
     argv = sys.argv[1:] if argv is None else argv
+    if "--b1" in argv:
+        sys.exit(0 if b1() else 1)
     stat = argv[argv.index("--stat") + 1] if "--stat" in argv else "median"
     energy = float(argv[argv.index("--energy") + 1]) if "--energy" in argv else 40.0
-    p = build(stat, energy, "--rebuild" in argv)
+    hurdle = float(argv[argv.index("--hurdle") + 1]) if "--hurdle" in argv else bt.HURDLE
+    p = build(stat, energy, "--rebuild" in argv, hurdle)
     z = load(p)
     lv = pd.Series(z["level"], index=list(z["index"]))
     print(f"{p.name}: {len(lv)} days; level ${lv.min():.0f}-{lv.max():.0f}/MWh (median {lv.median():.0f})")
