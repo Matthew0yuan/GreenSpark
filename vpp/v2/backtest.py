@@ -127,6 +127,7 @@ STEPS["b3x"] = {"base": B2_WIN.name, "candidates": (B3X.name,), "ref": None, "re
 # round 1's (rel+ladder) and v1 alongside; run from the first backtest day on so their start state carries over
 FWD_FROM = pd.Timestamp("2026-10-16")
 STEPS["fwd"] = {"base": E5.name, "candidates": (E5.name,), "ref": None, "report_only": True, "forward": True,
+                "last": "2026-10-31",  # days without data yet are left out
                 "tables": (("median", 40.0), ("median", 40.0, B2_WIN.hurdle, True)),
                 "configs": (V1, WIN, replace(B4, record=False), replace(E5, record=False))}
 ROUND5 = ("t5", "c5", "e5", "f5", "g5", "f5x", "b3x", "fwd")
@@ -378,16 +379,16 @@ def main(argv: list[str] | None = None) -> None:
     argv = sys.argv[1:] if argv is None else argv
     step = argv[argv.index("--step") + 1]
     smoke = "--smoke" in argv
-    days = bt.load_days("0900")
+    if step == "sens":
+        spec = {"tables": SENS_TABLES, "configs": (V1, WIN, SITE, *(c for c, _ in SENS))}
+    else:
+        spec = STEPS[step]
+    days = bt.load_days("0900", last=spec.get("last"))  # the forward step runs on past the backtest's last day
     if smoke:
         days = smoke_days(days)
     aux = bt.q2b_aux()
     cmd_nb = sb.cmd_kva(bt.factory_load(days).max()) * sb.PF / 1000
     sc = m1()
-    if step == "sens":
-        spec = {"tables": SENS_TABLES, "configs": (V1, WIN, SITE, *(c for c, _ in SENS))}
-    else:
-        spec = STEPS[step]
     for t in spec["tables"]:  # (level statistic, MWh[, hurdle[, by market state[, by regime]]])
         vl.build(t[0], t[1], hurdle=t[2] if len(t) > 2 else bt.HURDLE, state=len(t) > 3 and t[3],
                  regime=len(t) > 4 and t[4])

@@ -45,7 +45,7 @@ from vpp.data import PROCESSED, ROOT
 from vpp.evaluate import CUTOFF, period_of
 
 REPORTS = ROOT / "reports"
-FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-31"  # validation before vpp.evaluate.CUTOFF, test from it; from 2026-10-16 the forward days (v2_plan.md 13.4), only those with data
+FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-15"  # validation before vpp.evaluate.CUTOFF, test from it
 PERIODS = ("validation", "test")
 H, HALF = pd.Timedelta(hours=8), pd.Timedelta("30min")
 WEAR = 30.0  # A$/MWh discharged, central assumption
@@ -97,22 +97,24 @@ LEGACY = {s.name: s for s in [
 ]}
 
 
-def load_days(issue: str = "0815") -> list[dict]:
+def load_days(issue: str = "0815", last: str | None = None) -> list[dict]:
     """Inputs of every trading day in the backtest with complete data. issue "0900": the strict 09:00
     forecast (vpp.forecast.OUT_0900), whose energy part starts at slot 2, plus what the 10 MW study
-    needs: the 08:00 bridge prices, the 7 h capacity window and each slot's calendar month."""
+    needs: the 08:00 bridge prices, the 7 h capacity window and each slot's calendar month. last: the last
+    day in place of LAST_DAY (v2's forward days, reports/v2_plan.md 13.4; days without data are left out)."""
+    last_day = LAST_DAY if last is None else last
     df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet")
     p5all = pd.read_parquet(PROCESSED / "wem_5min.parquet", columns=["energy"] + dp.FCESS)
     esroi = pd.read_parquet(PROCESSED / "esroi.parquet").set_index("trading_date")
     strict = issue == "0900"
     fc = pd.read_parquet(PROCESSED / ("forecast_dispatch_0900.parquet" if strict else "forecast_dispatch.parquet")).set_index("ts")
     risk = pd.read_parquet(PROCESSED / ("spike_risk_0900.parquet" if strict else "spike_risk.parquet")).set_index("ts")["p_spike"]
-    first, last = pd.Timestamp(FIRST_DAY) + H, pd.Timestamp(LAST_DAY) + H + pd.Timedelta(days=1)
+    first, last = pd.Timestamp(FIRST_DAY) + H, pd.Timestamp(last_day) + H + pd.Timedelta(days=1)
     ts_all = pd.date_range(first, last, freq="30min", inclusive="left")
     load_fc, load_act = (pd.Series(x, index=ts_all) for x in st.example_load(ts_all))
     planning = lambda x: np.maximum(x, 0) + dp.OFFER_EPS  # noqa: E731  FCESS headroom offered at $0
     days = []
-    for day in pd.date_range(FIRST_DAY, LAST_DAY):
+    for day in pd.date_range(FIRST_DAY, last_day):
         ts = pd.date_range(day + H, periods=dp.N, freq="30min")
         a, f = df30.reindex(ts), fc.reindex(ts)
         ts5 = pd.date_range(day + H, periods=dp.N * dp.STEPS, freq="5min")
