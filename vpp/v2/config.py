@@ -30,6 +30,7 @@ class V2Config:
     # only; tomorrow's site reserve (②, public at 09:00) joins the shift from 09:00
     terminal_0900: bool = False
     regime: bool = False              # round 5, c5: today's offer values also by whether the day has spiked (with state)
+    replan_every: int = 0             # round 5, e5: also re-plan every this many trading intervals (planner "roll")
 
 
 V1 = V2Config()

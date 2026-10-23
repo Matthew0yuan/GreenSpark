@@ -16,13 +16,15 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
                on B4's winner (a fix, reported only; the base of the later round-5 steps)
   --step c5    round 5 (section 12.4): today's offer values also by whether the day has already spiked, on t5
                (pass: month-block 95% interval of the gain over t5 above 0)
-  --smoke     2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
+  --step e5    round 5 (section 12.5): the plans also redone at the start of every trading interval, on t5 (as c5),
+               with the energy market by time of day and the night re-plans after a dip (reports/v2_e5_roll.csv)
+  --smoke    2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5 [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5 [--smoke]
 """
 
 import os
@@ -35,6 +37,7 @@ import pandas as pd
 
 from vpp import backtest as bt
 from vpp import contracts as ct
+from vpp import dispatch as dp
 from vpp import site_bill as sb
 from vpp import stochastic as sto
 from vpp.data import PROCESSED
@@ -89,7 +92,53 @@ STEPS["t5"] = {"base": R4_WIN.name, "candidates": (T5.name,), "ref": None, "repo
 C5 = replace(T5, name=f"{T5.name}+regime", regime=True)
 STEPS["c5"] = {"base": T5.name, "candidates": (C5.name,), "ref": None,
                "tables": (*STEPS["b4"]["tables"], ("median", 40.0, B2_WIN.hurdle, True, True)), "configs": (T5, C5)}
-ROUND5 = ("t5", "c5")
+# e5 (12.5): the plans also redone at the start of every trading interval, on t5 (c5 did not pass)
+E5 = replace(T5, name=f"{T5.name}+roll", replan_every=1)
+STEPS["e5"] = {"base": T5.name, "candidates": (E5.name,), "ref": None, "tables": STEPS["b4"]["tables"], "configs": (T5, E5)}
+ROUND5 = ("t5", "c5", "e5")
+BLOCKS = (("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
+
+
+def roll_diagnostics(logs: dict, days: list[dict], base: str, cand: str) -> tuple[pd.DataFrame, str]:
+    """e5 (v2_plan.md section 12.5), per period: the energy market's money (RTP x MWh) of base and candidate in four
+    blocks of the day; night re-plans after a dip (the latest 5-min price at least $20 below the forecast of the
+    interval it ends, the candidate then charging at least 1 MW more than the base), and the share of them where the
+    next interval's settled price did not stay $20 below its forecast; with the interpretation rule written down
+    beforehand (at least half the in-sample market gain from 00-08 and stored energy at 08:00 at least 2 MWh higher:
+    possibly the nowcast moving prices but not the end value)."""
+    by = {d["day"]: d for d in days}
+    rows = []
+    for name in (base, cand):
+        for day, lg in logs[next(k for k in logs if k[1] == name)].items():
+            rev = (lg["rtp"] * lg["energy_mwh"]).to_numpy()
+            rows.append({"config": name, "period": bt.period_of([day])[0], "day": day,
+                         **{b: rev[lo:hi].sum() for b, lo, hi in BLOCKS}, "soc_0800": float(lg["soc_start"].iloc[0])})
+    x = pd.DataFrame(rows)
+    blocks = x.groupby(["period", "config"])[[b for b, _, _ in BLOCKS] + ["soc_0800"]].mean()
+    lb, lc = logs[next(k for k in logs if k[1] == base)], logs[next(k for k in logs if k[1] == cand)]
+    dips = []
+    for day, c in lc.items():
+        b, p5, fc = lb[day], by[day]["p5"], c["forecast"].to_numpy()
+        charge_c, charge_b = (-g["energy_mwh"].to_numpy() / dp.DT for g in (c, b))
+        for t in range(33, 48):  # 00:30-07:30: the re-plan at t after interval t - 1 (night)
+            if c["replanned"].iloc[t] and p5[t * 6 - 1] - fc[t - 1] <= -20.0 and charge_c[t] - charge_b[t] >= 1.0:
+                dips.append({"period": bt.period_of([day])[0], "kept_low": c["rtp"].iloc[t] <= fc[t] - 20.0})
+    d = pd.DataFrame(dips, columns=["period", "kept_low"])
+    for period in blocks.index.get_level_values(0).unique():
+        sel = d[d["period"] == period]
+        blocks.loc[(period, cand), "dip_replans"] = len(sel)
+        blocks.loc[(period, cand), "dip_not_kept_low_share"] = float((~sel["kept_low"]).mean()) if len(sel) else np.nan
+    note = ""
+    if "validation" in blocks.index.get_level_values(0):
+        v = blocks.loc["validation"]
+        gain = v.loc[cand, [b for b, _, _ in BLOCKS]] - v.loc[base, [b for b, _, _ in BLOCKS]]
+        night_share = gain["00-08"] / gain.sum() if gain.sum() > 0 else np.nan
+        soc_up = v.loc[cand, "soc_0800"] - v.loc[base, "soc_0800"]
+        flag = gain.sum() > 0 and night_share >= 0.5 and soc_up >= 2.0
+        note = (f"in-sample energy-market gain ${gain.sum():.1f}/day, {night_share:.0%} of it 00-08; stored at 08:00 "
+                f"{soc_up:+.2f} MWh: " + ("possibly the nowcast moving prices but not the end value" if flag
+                                           else "the rule for a possible nowcast artefact is not met"))
+    return blocks, note
 SENS = (  # (configuration, its base): one setting changed each
     (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
     (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
@@ -302,6 +351,10 @@ def main(argv: list[str] | None = None) -> None:
         dist.to_csv(REPORTS / f"{tag}_soc.csv")
         print(f"=== stored energy at 08:00, full days, night charge drawn the next day, buys over a cap\n"
               f"{dist.round(2).to_string()}\n")
+    if step == "e5":
+        blocks, note = roll_diagnostics(logs, days, spec["base"], spec["candidates"][0])
+        blocks.to_csv(REPORTS / f"{tag}_roll.csv")
+        print(f"=== energy market $/day by time of day, night re-plans after a dip\n{blocks.round(2).to_string()}\n{note}\n")
     if records:
         rc.frame(records).to_parquet(PROCESSED / f"{tag}_records.parquet")
     pd.concat([x.assign(day=d, strategy=name) for (_, name), lg in logs.items() for d, x in lg.items()],

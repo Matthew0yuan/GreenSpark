@@ -134,6 +134,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
         strat = replace(strat, name=cfg.name, terminal="table")
     if cfg.ladder:
         strat = replace(strat, name=cfg.name, offer_rule="table")
+    if cfg.replan_every:  # e5 (round 5): the plans are also redone on the clock, the forecast nudged to the latest price
+        strat = replace(strat, name=cfg.name, planner="roll", every=cfg.replan_every)
     inputs = value_inputs(cfg, bat) if cfg.value == "relative" or cfg.ladder else None
     if inputs is not None and inputs["curve"].shape[1] != round(bat.energy_mwh / vl.sv.GRID):
         raise ValueError("the value curve's segments do not match the battery the dispatcher sees")

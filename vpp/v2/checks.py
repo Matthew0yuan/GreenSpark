@@ -378,7 +378,8 @@ def regime_timing(days=("2025-12-10", "2026-01-21", "2026-02-02"), slots=(14, 24
                         f"{moved} of {len(days) * len(slots)}")
 
 
-def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5")), tol: float = 1e-9) -> bool:
+def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5"), ("e5", "c5", "rw50+state t5")),
+               tol: float = 1e-9) -> bool:
     """Round 5: a step's base is the same run, day for day, as in the step that chose it: within tol, the drift between
     the environments the two runs were made in (round 5 runs in another session than round 4: up to 1.3e-11; in one
     environment the base is bit for bit the same before and after the round's code, v2_plan.md section 6)."""
