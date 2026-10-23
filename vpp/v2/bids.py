@@ -9,6 +9,12 @@ From 09:00 the energy the factory still needs is protected: the rest of today's 
 flagged day's peak hours) and tomorrow's site reserve by 04:00 (vpp.v2.reserves), less what can still be charged
 before each, on top of what compliance needs. Its threshold is at least alpha x (its value + the lowest value per MWh
 among those needs) / eta + wear + hurdle, so it sells only into a price that pays for the bill it would cost.
+
+Round 4, B3 (reports/v2_plan.md, section 11.5): with buy_margin h set, the offers also bid to buy. The buy limit of
+segment k is eta x its value / alpha - h (from the same values and price state). In a step whose plan charges or
+idles, the plan's charging up to the protected level of the next half-hour is kept whatever the price; the rest of it
+only fills segments whose limit is at least the price; and beyond the plan, the battery buys into every such segment.
+A step whose plan discharges is left to the plan and the offers to sell.
 """
 
 from dataclasses import dataclass
@@ -28,6 +34,12 @@ class LadderBids:
     value: float         # $ per MWh of the protected energy
     alpha2: float | None = None  # the margin on the value from 09:00 (a candidate chosen then, vpp.v2.candidates)
     cost: float | None = None    # $ per MWh sold the offers charge in place of the plans' wear + hurdle (round 4, B2)
+    buy_margin: float | None = None  # h of the buy limits; None: the offers only sell (round 4, B3)
+
+    def _values(self, t: int, seen: float) -> np.ndarray:
+        """$ per MWh of each segment at the end of slot t, in the price state of the latest 5-min price seen."""
+        b = int(np.clip(np.searchsorted(self.edges[t, 1:-1], seen - self.level, side="right"), 0, sv.B - 1))
+        return self.marg[t, b]
 
     def thresholds(self, t: int, seen: float, eta: float, alpha: float, dw: float, k_min: float) -> np.ndarray:
         """$/MWh at which each segment of stored energy sells in slot t (non-increasing in the segment)."""
@@ -35,8 +47,7 @@ class LadderBids:
             alpha = self.alpha2
         if self.cost is not None:
             dw = self.cost
-        b = int(np.clip(np.searchsorted(self.edges[t, 1:-1], seen - self.level, side="right"), 0, sv.B - 1))
-        m = self.marg[t, b]
+        m = self._values(t, seen)
         thr = np.maximum(k_min, alpha * m / eta + dw)
         protected = np.arange(len(m)) * sv.GRID < self.protect[t] - 1e-9
         if protected.any():
@@ -56,6 +67,29 @@ class LadderBids:
         x_star = min(x_plan, max(x_end, ok[0] * sv.GRID))  # sell down to the lowest segment the price clears
         target = max(base, min(sellable, (s - x_star) * eta / dp.DT5))
         return target, float(thr[min(len(thr) - 1, int(np.floor(x_star / sv.GRID + 1e-9)))])
+
+    def buy_limits(self, t: int, seen: float, eta: float, alpha: float) -> np.ndarray:
+        """$/MWh up to which each segment of stored energy is bought in slot t: eta x its value / alpha - h
+        (non-increasing in the segment, and below the segment's sell threshold)."""
+        if self.alpha2 is not None and t >= 2:
+            alpha = self.alpha2
+        return eta * self._values(t, seen) / alpha - self.buy_margin
+
+    def buy(self, t: int, s: float, pw: float, price: float, seen: float, eta: float, alpha: float, E: float,
+            P: float) -> float:
+        """MW to execute this 5-min step (negative: charge) in a step whose plan pw charges or idles: the plan's
+        charging up to the protected level of the next half-hour whatever the price, the rest of it and any more
+        only into the segments, from the one being filled up, whose buy limit is at least the price; at most P MW.
+        The connection, the caps on the meter and the battery's room are applied by the caller."""
+        lim = self.buy_limits(t, seen, eta, alpha)
+        k0 = min(len(lim) - 1, int(np.floor(s / sv.GRID + 1e-9)))  # the segment being filled
+        ok = lim[k0:] >= price
+        n_ok = len(ok) if ok.all() else int(np.argmin(ok))  # the leading segments worth buying (limits fall with k)
+        x_star = min(E, (k0 + n_ok) * sv.GRID)
+        want = max(0.0, x_star - s) / (eta * dp.DT5)
+        need = max(0.0, float(self.protect[min(t + 1, dp.N - 1)]) - s) / (eta * dp.DT5)
+        c_plan = max(0.0, -pw)
+        return -min(P, max(min(c_plan, need), want))
 
 
 def protection(bat, site, plan_load: np.ndarray, caps: np.ndarray, tomorrow_mwh: float, compliance: np.ndarray,

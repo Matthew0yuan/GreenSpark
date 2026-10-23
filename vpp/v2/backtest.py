@@ -10,13 +10,14 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
   --step b2    round 4 (section 11.4): the value table and the real-time offers at the wear plus h = 0 / 25 / 50, the
                plans keeping the hurdle of 75 (pass: month-block 95% interval of the gain over rel+ladder above 0;
                several passing, the highest mean)
+  --step b3    round 4 (section 11.5): the offers' buy side on B2's winner rw50 (pass: as b2, over rw50)
   --smoke      2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2 [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3 [--smoke]
 """
 
 import os
@@ -61,6 +62,12 @@ B2 = tuple(V2Config(f"rw{h:g}", site_reserve=True, value="relative", ladder=True
            for h in (0.0, 25.0, 50.0))
 STEPS["b2"] = {"base": WIN.name, "candidates": tuple(c.name for c in B2), "ref": None,
                "tables": (("median", 40.0), *(("median", 40.0, c.hurdle) for c in B2)), "configs": (WIN, *B2)}
+# round 4, B3 (section 11.5): the buy side of the offers, on B2's winner rw50
+B2_WIN = B2[2]
+B3 = V2Config(f"{B2_WIN.name}+buy", site_reserve=True, value="relative", ladder=True, hurdle=B2_WIN.hurdle, buy=True,
+              record=True, **FIX)
+STEPS["b3"] = {"base": B2_WIN.name, "candidates": (B3.name,), "ref": None, "tables": (("median", 40.0, B2_WIN.hurdle),),
+               "configs": (B2_WIN, B3)}
 SENS = (  # (configuration, its base): one setting changed each
     (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
     (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
