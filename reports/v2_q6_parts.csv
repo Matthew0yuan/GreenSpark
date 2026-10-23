@@ -1,0 +1,5 @@
+period,config,base,days,per_day,vs_base,market_vs_base,bill_vs_base
+test to 2026-10-15,rw50+state t5+roll+curve,rw50+state t5+roll,107,2181.1459628508755,79.74495689384356,65.22860670523875,14.516350188604818
+test to 2026-10-15,rw50+state t5+roll+curve0,rw50+state t5+roll,107,2101.401005957033,0.0,0.0,0.0
+test from 2026-10-16,rw50+state t5+roll+curve,rw50+state t5+roll,7,1798.0008944559854,-7.380259883067732,-7.380259883067767,3.4638958368304884e-14
+test from 2026-10-16,rw50+state t5+roll+curve0,rw50+state t5+roll,7,1805.3811543390532,0.0,0.0,0.0
