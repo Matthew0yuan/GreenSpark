@@ -31,6 +31,9 @@ class V2Config:
     terminal_0900: bool = False
     regime: bool = False              # round 5, c5: today's offer values also by whether the day has spiked (with state)
     replan_every: int = 0             # round 5, e5: also re-plan every this many trading intervals (planner "roll")
+    # round 5, f5: the offers also bid to buy, B3's way, at the full value: "full" (eta x value, capped), "floor" (the
+    # values both sides use floored at the recent cheap charging price / eta), "fill" (reference: the cap from 00:00)
+    bid: str = ""
 
 
 V1 = V2Config()

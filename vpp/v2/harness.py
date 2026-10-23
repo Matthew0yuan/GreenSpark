@@ -26,6 +26,15 @@ from vpp.v2 import value as vl
 from vpp.v2.config import V2Config
 
 VALUE_INPUTS: dict = {}  # the relative value curve's per-day arrays by (level statistic, MWh), loaded on first use
+FLOORS: dict = {}  # f5's cheap charging price per day by (CMD, load scale, load margin), made on first use
+
+
+def charge_floors(cmd_mw: float, load_scale: float, margin: float) -> pd.Series:
+    """Round 5, f5: each day's floor price for the buy side and the values (vpp.v2.bids.charge_floor)."""
+    key = (cmd_mw, load_scale, margin)
+    if key not in FLOORS:
+        FLOORS[key] = bd.charge_floor(vl.prices(), cmd_mw, load_scale, margin)
+    return FLOORS[key]
 
 
 def value_inputs(cfg: V2Config, bat) -> dict:
@@ -257,6 +266,15 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
                                      reserve, enuc, aux["ircr_value_mw"],
                                      None if cfg.hurdle is None else asset.wear_per_mwh + cfg.hurdle,
                                      h if cfg.buy else None, marg)
+                if cfg.bid:  # f5 (round 5): B3's buy side at the full value, capped; a floor; or the night fill
+                    floor = np.nan
+                    if cfg.bid == "floor" and site is not None and route.cmd_mw:
+                        floor = float(charge_floors(route.cmd_mw, site.load_scale, sc.prefs.load_margin).get(day, np.nan))
+                        context.update(bid_floor=floor)
+                    kw["bids"] = replace(kw["bids"], buy_margin=0.0, buy_alpha=1.0,
+                                         buy_cap=(bd.OFFER_CAP - asset.wear_per_mwh - h) * bat.eta ** 2,
+                                         value_floor=floor / bat.eta if np.isfinite(floor) else None,
+                                         night_fill=cfg.bid == "fill")
         if cfg.plan_days == 2 and site is not None and tomorrow is not None and inputs is not None:
             slots = None
             if tomorrow["day"] in day_before:
