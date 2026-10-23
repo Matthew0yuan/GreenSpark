@@ -123,7 +123,44 @@ STEPS["f5x"] = {"base": E5.name, "candidates": (F5X[0].name, F5X[1].name), "ref"
 B3X = replace(B3, name=f"{B3.name} room", buy_room=True)
 STEPS["b3x"] = {"base": B2_WIN.name, "candidates": (B3X.name,), "ref": None, "report_only": True,
                 "tables": STEPS["b3"]["tables"], "configs": (replace(B2_WIN, record=False), B3X)}
-ROUND5 = ("t5", "c5", "e5", "f5", "g5", "f5x", "b3x")
+# section 13.4 (reported only): the new configuration e5 on the days from FWD_FROM, with round 4's (rw50+state),
+# round 1's (rel+ladder) and v1 alongside; run from the first backtest day on so their start state carries over
+FWD_FROM = pd.Timestamp("2026-10-16")
+STEPS["fwd"] = {"base": E5.name, "candidates": (E5.name,), "ref": None, "report_only": True, "forward": True,
+                "tables": (("median", 40.0), ("median", 40.0, B2_WIN.hurdle, True)),
+                "configs": (V1, WIN, replace(B4, record=False), replace(E5, record=False))}
+ROUND5 = ("t5", "c5", "e5", "f5", "g5", "f5x", "b3x", "fwd")
+
+
+def forward_days(ledger: pd.DataFrame, logs: dict, first: pd.Timestamp = FWD_FROM, cmd: float = CMD) -> tuple:
+    """Section 13.4: per configuration and forward day (from first), the market money (energy, FCESS, wear), MWh
+    bought and sold at their mean RTP, the meter's highest half-hour against the CMD and against the month's highest
+    before the day (the bill charges the month's highest above the CMD once); and their means."""
+    rows = []
+    for (_, name), by_day in logs.items():
+        month_max: dict = {}
+        for day in sorted(by_day):
+            lg = by_day[day]
+            m, peak = day.strftime("%Y-%m"), float(lg["meter_mw"].max())
+            before = month_max.get(m, 0.0)
+            month_max[m] = max(before, peak)
+            if day < first:
+                continue
+            e, rtp = lg["energy_mwh"].to_numpy(), lg["rtp"].to_numpy()
+            led = ledger[(ledger["strategy"] == name) & (pd.to_datetime(ledger["day"]) == day)].iloc[0]
+            rows.append({"config": name, "day": day.date(), "market": led["total"], "energy": led["energy"],
+                         "fcess": led["fcess"], "wear": led["wear"], "sold_mwh": e.clip(min=0).sum(),
+                         "sell_price": (rtp * e.clip(min=0)).sum() / max(e.clip(min=0).sum(), 1e-9),
+                         "bought_mwh": -e.clip(max=0).sum(),
+                         "buy_price": -(rtp * e.clip(max=0)).sum() / max(-e.clip(max=0).sum(), 1e-9),
+                         "meter_max_mw": peak, "month_max_before_mw": before, "over_cmd": peak > cmd + 1e-6,
+                         "raises_month_max": peak > max(before, cmd) + 1e-6, "soc_0800": float(lg["soc_start"].iloc[0])})
+    x = pd.DataFrame(rows).sort_values(["config", "day"])
+    means = x.drop(columns=["day", "over_cmd", "raises_month_max"]).groupby("config").mean()
+    means["days"] = x.groupby("config").size()
+    means["days_over_cmd"] = x.groupby("config")["over_cmd"].sum()
+    means["days_raising_month_max"] = x.groupby("config")["raises_month_max"].sum()
+    return x, means
 BLOCKS = (("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
 
 
@@ -392,6 +429,16 @@ def main(argv: list[str] | None = None) -> None:
     print(f"=== stored energy (MWh) and offers\n{diag.round(2).to_string()}\n")
     print(f"=== IRCR, {bt.IRCR_SEASON}-{bt.IRCR_SEASON - 1999} Hot Season ($/year)\n"
           f"{ircr[['strategy', 'ircr_mw', 'saving_per_year', 'peak_days_covered']].round(2).to_string(index=False)}\n")
+    if spec.get("forward"):  # section 13.4: the forward days only
+        per_day, means = forward_days(ledger, logs)
+        per_day.to_csv(REPORTS / f"{tag}_days.csv", index=False)
+        lead = spec["base"]
+        for c in ("market", "energy", "fcess", "wear"):
+            means[f"{c}_vs_{lead}"] = means[c] - means.loc[lead, c]
+        means.to_csv(REPORTS / f"{tag}_summary.csv")
+        print(f"=== forward days from {FWD_FROM.date()}: {per_day['day'].nunique()} days, $/day\n"
+              f"{means[['days', 'market', 'energy', 'fcess', 'wear', 'sold_mwh', 'sell_price', 'bought_mwh', 'buy_price', 'meter_max_mw', 'days_over_cmd', 'days_raising_month_max', f'market_vs_{lead}']].round(2).to_string()}\n"
+              f"\n=== per day (market $)\n{per_day.pivot(index='day', columns='config', values='market').round(1).to_string()}\n")
     if spec.get("layers"):  # g5: each layer against the one before it
         layers = compare_pairs(money, ledger, bills, spec["layers"])
         layers.to_csv(REPORTS / f"{tag}_layers.csv")

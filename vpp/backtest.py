@@ -45,7 +45,7 @@ from vpp.data import PROCESSED, ROOT
 from vpp.evaluate import CUTOFF, period_of
 
 REPORTS = ROOT / "reports"
-FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-15"  # validation before vpp.evaluate.CUTOFF, test from it
+FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-31"  # validation before vpp.evaluate.CUTOFF, test from it; from 2026-10-16 the forward days (v2_plan.md 13.4), only those with data
 PERIODS = ("validation", "test")
 H, HALF = pd.Timedelta(hours=8), pd.Timedelta("30min")
 WEAR = 30.0  # A$/MWh discharged, central assumption
