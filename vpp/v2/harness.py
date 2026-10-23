@@ -85,12 +85,14 @@ def scenario(sc: bt.Scenario, cfg: V2Config) -> bt.Scenario:
 
 
 def _ladder(inputs: dict, i: int, level: float, bat, site, prefs, load_fc, cmd_cap, ircr_cap, terms, site_res,
-            reserve: float, enuc: float, ircr_value_mw: float, cost: float | None = None) -> bd.LadderBids:
+            reserve: float, enuc: float, ircr_value_mw: float, cost: float | None = None,
+            buy_margin: float | None = None) -> bd.LadderBids:
     """The day's layered offers (S3): the curve's offer values at the day's level, the factory's energy protected at
     the lowest value per MWh among its needs today (CMD, a flagged day's peak hours) and tomorrow (②). cost: $ per
-    MWh sold the offers charge in place of the plans' (round 4, B2)."""
+    MWh sold the offers charge in place of the plans' (round 4, B2); buy_margin: h of the buy limits (B3)."""
     if site is None:
-        return bd.LadderBids(inputs["edges"][i], inputs["marg"][i], level, np.zeros(dp.N), 0.0, cost=cost)
+        return bd.LadderBids(inputs["edges"][i], inputs["marg"][i], level, np.zeros(dp.N), 0.0, cost=cost,
+                             buy_margin=buy_margin)
     plan_load = load_fc * (1 + prefs.load_margin)  # what the plans assume the factory draws (run_day)
     caps = np.full(dp.N, np.inf)
     values = []
@@ -112,7 +114,8 @@ def _ladder(inputs: dict, i: int, level: float, bat, site, prefs, load_fc, cmd_c
     compliance = (np.array([dp.obligation_need(bat, comp, (k + 1) * dp.DT, plan_load) for k in range(dp.N)])
                   if comp else np.zeros(dp.N))
     protect = bd.protection(bat, site, plan_load, caps, tomorrow, compliance) if values or comp else np.zeros(dp.N)
-    return bd.LadderBids(inputs["edges"][i], inputs["marg"][i], level, protect, min(values, default=0.0), cost=cost)
+    return bd.LadderBids(inputs["edges"][i], inputs["marg"][i], level, protect, min(values, default=0.0), cost=cost,
+                         buy_margin=buy_margin)
 
 
 def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | None = None, until=None, on_day=None,
@@ -222,9 +225,11 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
             if cfg.value == "relative":
                 kw["terminal"] = vl.terminal(inputs, day, held, cfg.curve_shift)
             if cfg.ladder:
+                h = bt.HURDLE if cfg.hurdle is None else cfg.hurdle
                 kw["bids"] = _ladder(inputs, i, level, bat, site, prefs, load_fc, cmd_cap, ircr_cap, terms, site_res,
                                      reserve, enuc, aux["ircr_value_mw"],
-                                     None if cfg.hurdle is None else asset.wear_per_mwh + cfg.hurdle)
+                                     None if cfg.hurdle is None else asset.wear_per_mwh + cfg.hurdle,
+                                     h if cfg.buy else None)
         if cfg.plan_days == 2 and site is not None and tomorrow is not None and inputs is not None:
             slots = None
             if tomorrow["day"] in day_before:

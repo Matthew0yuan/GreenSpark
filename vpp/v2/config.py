@@ -24,6 +24,7 @@ class V2Config:
     # round 4 (v2_plan.md section 11): $ per MWh sold, beyond the wear, that the value table and the real-time offers
     # charge (B2); None: the plans' hurdle (75), as rounds 1-3. The plans keep their hurdle either way.
     hurdle: float | None = None
+    buy: bool = False                 # round 4, B3: the layered offers also bid to buy, at the margin above
 
 
 V1 = V2Config()

@@ -788,7 +788,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     terminal: with terms, the plans value the energy stored at the end of the day by this concave curve ($ per MWh
     of each equal segment, vpp.storage_value) instead of its buy-back value. bids: with offer_rule "table", the
     day's layered offers (vpp.storage_value.DayBids): each 5 minutes the standing offer sells, beyond the plan,
-    the MWh whose threshold the price reaches.
+    the MWh whose threshold the price reaches. Bids with a buy_margin (vpp.v2.bids.LadderBids, v2 round 4) also bid
+    to buy in steps whose plan charges or idles (their buy()); a step that departs from the plan that way is followed,
+    at the end of its interval, by a re-plan as after a sale.
     on_plan(t0, kind, plan, ctx): called with a copy of every plan the day adopts, from interval t0 on; kind is
     "morning", "reveal", "scheduled" or "trigger" (after an offer sale), ctx what the plan was made from (stored
     energy, budget, floors with their names, caps, prices, load, terminal value). It only observes. offer_lag: the
@@ -849,6 +851,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     table_rule = strat.offer and strat.offer_rule == "table"
     if table_rule and bids is None:
         raise ValueError("offer rule 'table' needs the day's bids")
+    buy_rule = table_rule and getattr(bids, "buy_margin", None) is not None  # the bids also buy (vpp.v2.bids)
+    bid_mwh, moved = np.zeros(N), np.zeros(N, bool)  # MWh bought beyond (+) or short of (-) the plan; departures
     k_offer = np.full(N, np.inf) if value_rule or table_rule else offer_prices(strat, fc_e)
     offer_fcess, offer_mwh = np.full(N, np.nan), np.zeros(N)
     tv = stored_energy_value(bat, fc_e)
@@ -1071,6 +1075,14 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             sellable = max(0.0, min(P, exp_room[t], (s - keep_e) * eta / DT5, budget / DT5))
             pw = min(cur["net"][i], sellable)
             price = p5[t * STEPS + j]
+            if buy_rule and pw <= 0:
+                # the bids' buy side, priced from the latest step already seen, as the sell side
+                i5 = t * STEPS + j
+                seen_b = p5[i5 - offer_lag] if i5 >= offer_lag else float(np.asarray(fc_e, float)[t])
+                pw_b = bids.buy(t, s, pw, price, seen_b, eta, strat.alpha, E, P)
+                if abs(pw_b - pw) > 1e-9:
+                    bid_mwh[t] += (pw - pw_b) * DT5
+                    moved[t], pw = True, pw_b
             if strat.offer and price >= strat.k_min and sellable > max(pw, 0.0) + 1e-6:
                 target = sellable  # MW to discharge if the offer is taken
                 if table_rule:
@@ -1169,7 +1181,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                     ok = ((got >= a.min_delivery * a.mw - 1e-6) if event else a.after_events(t) or
                           (power >= a.mw - 1e-6 and s_open >= a.standby.need(bat, t * DT, lf) - 1e-6))
                     tests[a.name].append((ok, event, min(max(got, 0.0), a.mw) * DT if event else 0.0, got / a.mw if event else np.nan))
-        if triggered[t] and t < N - 1:
+        if (triggered[t] or moved[t]) and t < N - 1:
             cur_t0 = t + 1
             last = t * STEPS + STEPS - 1
             f_now = None if p5_f is None or not fcess else {k: p5_f[k][last] for k in FCESS}
@@ -1219,6 +1231,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         for name, (n5, ok5) in tests5.items():
             summary.update({f"{name}_window_5min": n5, f"{name}_available_5min": ok5})
         log = log.assign(meter_mw=meter, plan_net_live=plan_live, cap_mw=cap_min, capacity_short_mw=short_cap)
+    if buy_rule:
+        summary["bid_moves"] = int(moved.sum())
+        log = log.assign(bid_mwh=bid_mwh)
     return summary, log
 
 

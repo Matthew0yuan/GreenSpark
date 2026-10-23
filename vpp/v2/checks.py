@@ -33,6 +33,7 @@ from vpp import backtest as bt
 from vpp import dispatch as dp
 from vpp import site as st
 from vpp import site_bill as sb
+from vpp import storage_value as sv
 from vpp.data import PROCESSED
 from vpp.v2 import backtest as vb
 from vpp.v2 import bids as bd
@@ -167,6 +168,42 @@ def offers(n: int = 3000, seed: int = 2) -> bool:
     return ok & _result("protected energy offered at least at its value", below == 0, f"{below} of {n}")
 
 
+def buys(n: int = 3000, seed: int = 4, h: float = 50.0) -> bool:
+    """The offers' buy side (round 4, B3) on random days and states: buy limits non-increasing in stored energy and
+    below each segment's sell threshold; the economic part never fills a segment whose limit is below the price; the
+    plan's charging up to the protected level is never dropped for the price; never more than the battery's power."""
+    z = vl.load(vl.build("median", 40.0, hurdle=h))
+    rng = np.random.default_rng(seed)
+    bat = bt.Q2B_ASSET.battery
+    eta, E, P, cost = bat.eta, bat.energy_mwh, bat.power_mw, bt.Q2B_ASSET.wear_per_mwh + h
+    bad = {"rising": 0, "above sell": 0, "economic": 0, "must": 0, "power": 0}
+    for _ in range(n):
+        i, t = int(rng.integers(0, len(z["level"]))), int(rng.integers(0, dp.N))
+        protect = rng.uniform(0, 40, dp.N) * (rng.random() < 0.5)
+        b = bd.LadderBids(z["edges"][i], z["marg"][i], float(z["level"][i]), protect, float(rng.uniform(500, 3000)),
+                          cost=cost, buy_margin=h)
+        seen, price = float(rng.uniform(-50, 500)), float(rng.uniform(-100, 400))
+        s = float(rng.uniform(0, E))
+        pw = 0.0 if rng.random() < 0.3 else -float(rng.uniform(0, P))
+        lim = b.buy_limits(t, seen, eta, 1.2)
+        thr = b.thresholds(t, seen, eta, 1.2, dp.decision_wear(bt.Q2B_ASSET, bt.PREFS), 150.0)
+        bad["rising"] += int((np.diff(lim) > 1e-6).any())
+        bad["above sell"] += int((lim >= thr).any())
+        c = -b.buy(t, s, pw, price, seen, eta, 1.2, E, P)
+        bad["power"] += int(c > P + 1e-9)
+        need = max(0.0, protect[min(t + 1, dp.N - 1)] - s) / (eta * dp.DT5)
+        must = min(-pw, need) if pw < 0 else 0.0
+        bad["must"] += int(c < min(must, P) - 1e-9)
+        if c > must + 1e-9:  # the part bought for its value: every segment it fills is worth the price
+            top = min(E, s + eta * c * dp.DT5)
+            ks = np.arange(int(np.floor(s / sv.GRID + 1e-9)), int(np.ceil(top / sv.GRID - 1e-9)))
+            bad["economic"] += int((lim[np.clip(ks, 0, len(lim) - 1)] < price - 1e-9).any())
+    ok = True
+    for k, v in bad.items():
+        ok &= _result(f"buy side: {k}", v == 0, f"{v} of {n}")
+    return ok
+
+
 def accounts(step: str, n: int = 40, seed: int = 3) -> bool:
     """The plain-Chinese account of recorded plans: every number comes from a computed fact."""
     recs = pd.read_parquet(PROCESSED / f"v2_{step}_records.parquet")
@@ -231,9 +268,15 @@ def same_base() -> bool:
         return x[x["strategy"] == vb.WIN.name].reset_index(drop=True)
 
     ref, s3 = rel("r3"), rel("s3")
+    b2, b3 = (bt.REPORTS / f"v2_{k}_daily.csv" for k in ("b2", "b3"))
+    if b2.exists() and b3.exists():  # B3's base is B2's winner, with the buy side off
+        x, y = (pd.read_csv(p) for p in (b2, b3))
+        x, y = (f[f["strategy"] == vb.B2_WIN.name].reset_index(drop=True) for f in (x, y))
+        num = x.select_dtypes("number").columns.intersection(y.select_dtypes("number").columns)
+        ok &= _result(f"{vb.B2_WIN.name} in step b3 = in step b2", x[num].equals(y[num]), f"{len(y)} days, {len(num)} columns")
     for step in ("r2", "b2", "b3", "b4"):
         x = rel(step)
-        if x is None:
+        if x is None or x.empty:  # a step without rel+ladder (b3, b4 run on later bases)
             continue
         num = ref.select_dtypes("number").columns.intersection(x.select_dtypes("number").columns)  # columns of both runs
         ok &= _result(f"rel+ladder in step {step} = in step r3", ref[num].equals(x[num]), f"{len(x)} days, {len(num)} columns")
@@ -259,6 +302,8 @@ def main(argv: list[str] | None = None) -> None:
         for step in argv[argv.index("--runs") + 1].split(","):
             ok &= plans(step) & execution(step) & accounts(step)
         ok &= offers()
+        if any(x.startswith("b3") or x.startswith("b4") for x in argv[argv.index("--runs") + 1].split(",")):
+            ok &= buys()
     print("ALL CHECKS PASS" if ok else "SOME CHECKS FAILED")
     sys.exit(0 if ok else 1)
 
