@@ -27,11 +27,14 @@ class LadderBids:
     protect: np.ndarray  # (48,) stored MWh protected at each slot (0 before 09:00)
     value: float         # $ per MWh of the protected energy
     alpha2: float | None = None  # the margin on the value from 09:00 (a candidate chosen then, vpp.v2.candidates)
+    cost: float | None = None    # $ per MWh sold the offers charge in place of the plans' wear + hurdle (round 4, B2)
 
     def thresholds(self, t: int, seen: float, eta: float, alpha: float, dw: float, k_min: float) -> np.ndarray:
         """$/MWh at which each segment of stored energy sells in slot t (non-increasing in the segment)."""
         if self.alpha2 is not None and t >= 2:
             alpha = self.alpha2
+        if self.cost is not None:
+            dw = self.cost
         b = int(np.clip(np.searchsorted(self.edges[t, 1:-1], seen - self.level, side="right"), 0, sv.B - 1))
         m = self.marg[t, b]
         thr = np.maximum(k_min, alpha * m / eta + dw)
