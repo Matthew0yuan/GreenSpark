@@ -269,7 +269,8 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
         raise ValueError("values by regime are split from the values by market state")
     if out is None:
         out = path(stat, energy_mwh, hurdle, state, regime)
-        if out.exists() and not rebuild:
+        # a cache that stops before the backtest's last day (made before data were added) is built again
+        if out.exists() and not rebuild and pd.to_datetime(np.load(out)["day"]).max() >= pd.Timestamp(bt.LAST_DAY):
             return out
     table = prices()
     lv = levels(table, stat)

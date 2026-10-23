@@ -515,6 +515,34 @@ def forward_checks(last_old: str = "2026-10-14", tol: float = 1e-9) -> bool:
                         f"{h1['target_date'].nunique()} days")
 
 
+def test_checks(last_old: str = "2026-10-14", tol: float = 1e-9) -> bool:
+    """Section 14.4: the test run (step test) leaves the days already run as they were - each version's ledger up to
+    last_old within tol of the step that last ran it (the drift between environments; 2026-10-15 now has a tomorrow) -
+    and the four versions of the forward run are exactly the same on every day, ledger, logs and bills (the same
+    environment and data)."""
+    test = pd.read_csv(bt.REPORTS / "v2_test_daily.csv", parse_dates=["day"])
+    ok = True
+    for name, step in (("v1", "s2"), ("site", "s3"), ("rel+ladder", "b2"), ("rw50", "b4"), ("rw50+state", "t5"),
+                       ("rw50+state t5", "e5"), ("rw50+state t5+roll", "e5")):
+        old = pd.read_csv(bt.REPORTS / f"v2_{step}_daily.csv", parse_dates=["day"])
+        a = old[(old["strategy"] == name) & (old["day"] <= last_old)].reset_index(drop=True)
+        b = test[(test["strategy"] == name) & (test["day"] <= last_old)].reset_index(drop=True)
+        num = a.select_dtypes("number").columns.intersection(b.select_dtypes("number").columns)
+        num = num.drop(["capacity", "refund", "contract", "ledger_total"], errors="ignore")  # monthly parts
+        gap = float((a[num] - b[num]).abs().max().max()) if len(a) == len(b) and len(a) else np.inf
+        ok &= _result(f"test run: {name} up to {last_old} = step {step} (within {tol:g})", gap <= tol,
+                      f"{len(b)} days, largest difference {gap:.2g}")
+    fwd = pd.read_csv(bt.REPORTS / "v2_fwd_daily.csv", parse_dates=["day"])
+    flog, tlog = (pd.read_parquet(PROCESSED / f"v2_{s}_log.parquet") for s in ("fwd", "test"))
+    fb, tb = (pd.read_csv(bt.REPORTS / f"v2_{s}_bills.csv") for s in ("fwd", "test"))
+    for name in fwd["strategy"].unique():
+        same = [_same(*(f[f["strategy"] == name] for f in pair)) for pair in ((fwd, test[fwd.columns]),
+                                                                              (flog, tlog[flog.columns]), (fb, tb[fb.columns]))]
+        ok &= _result(f"test run: {name} = forward run on every day, exactly (ledger, logs, bills)", all(same),
+                      f"{int((test['strategy'] == name).sum())} days")
+    return ok
+
+
 def buy_caps(step: str) -> bool:
     """Round 5 (section 12.6): in a run with a buy side, no interval where the battery bought beyond its plan ends with
     the meter above both its cap and the month's earlier highest (a buy must not raise the month's peak)."""
@@ -608,6 +636,8 @@ def main(argv: list[str] | None = None) -> None:
         ok &= full_bids() & buy_caps("f5x") & buy_caps("b3x")
     if "--fwd" in argv:  # section 13.4: the forward run
         ok &= forward_checks() & execution("fwd")
+    if "--test" in argv:  # section 14: the test run, every adopted version through every day
+        ok &= test_checks() & execution("test")
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)
