@@ -204,6 +204,37 @@ def buys(n: int = 3000, seed: int = 4, h: float = 50.0) -> bool:
     return ok
 
 
+def states(n: int = 200, seed: int = 5) -> bool:
+    """Values by market state (round 4, B4): non-increasing in stored energy and not below 0; the states a day uses
+    are public by then: changing the calls of the days after tomorrow leaves today's and tomorrow's states as they
+    were (positive control: changing tomorrow's own call changes tomorrow's state on some days)."""
+    from vpp.v2 import risk as rk
+    z = np.load(vl.build("median", 40.0, hurdle=vb.B2_WIN.hurdle, state=True))
+    cs, ms = z["curve_state"], z["marg_state"]
+    ok = _result("state values non-increasing and >= 0",
+                 bool((np.diff(cs, axis=2) <= 1e-6).all() and (np.diff(ms, axis=4) <= 1e-6).all() and (cs >= 0).all()
+                      and (ms >= 0).all()), f"{len(cs)} days")
+    risk = rk.day_risk(rk.history(days_ahead=1))
+    flags = rk.recent_flags(risk)
+    rng = np.random.default_rng(seed)
+    days = pd.DatetimeIndex(z["day"].astype(str))
+    moved = changed = 0
+    for d in rng.choice(days[:-2], n, replace=False):
+        d = pd.Timestamp(d)
+        later = risk.copy()
+        later[later.index >= d + pd.Timedelta(days=2)] = rng.uniform(0, 1, int((later.index >= d + pd.Timedelta(days=2)).sum()))
+        f2 = rk.recent_flags(later)
+        same = all(np.array_equal(np.nan_to_num(flags.get(x, np.nan), nan=-1), np.nan_to_num(f2.get(x, np.nan), nan=-1))
+                   for x in (d, d + pd.Timedelta(days=1)))
+        changed += not same
+        own = risk.copy()
+        if d + pd.Timedelta(days=1) in own.index:
+            own[d + pd.Timedelta(days=1)] = 1.0 - own[d + pd.Timedelta(days=1)]
+            moved += flags.get(d + pd.Timedelta(days=1), np.nan) != rk.recent_flags(own).get(d + pd.Timedelta(days=1), np.nan)
+    ok &= _result("states used only once called: the days after tomorrow change nothing", changed == 0, f"{changed} of {n}")
+    return ok & _result("positive control: tomorrow's own call moves tomorrow's state", moved > 0, f"{moved} of {n}")
+
+
 def accounts(step: str, n: int = 40, seed: int = 3) -> bool:
     """The plain-Chinese account of recorded plans: every number comes from a computed fact."""
     recs = pd.read_parquet(PROCESSED / f"v2_{step}_records.parquet")
@@ -268,12 +299,15 @@ def same_base() -> bool:
         return x[x["strategy"] == vb.WIN.name].reset_index(drop=True)
 
     ref, s3 = rel("r3"), rel("s3")
-    b2, b3 = (bt.REPORTS / f"v2_{k}_daily.csv" for k in ("b2", "b3"))
-    if b2.exists() and b3.exists():  # B3's base is B2's winner, with the buy side off
-        x, y = (pd.read_csv(p) for p in (b2, b3))
-        x, y = (f[f["strategy"] == vb.B2_WIN.name].reset_index(drop=True) for f in (x, y))
-        num = x.select_dtypes("number").columns.intersection(y.select_dtypes("number").columns)
-        ok &= _result(f"{vb.B2_WIN.name} in step b3 = in step b2", x[num].equals(y[num]), f"{len(y)} days, {len(num)} columns")
+    b2 = bt.REPORTS / "v2_b2_daily.csv"
+    for later in ("b3", "b4"):  # their base is B2's winner, with the new feature off
+        p = bt.REPORTS / f"v2_{later}_daily.csv"
+        if b2.exists() and p.exists():
+            x, y = (pd.read_csv(f) for f in (b2, p))
+            x, y = (f[f["strategy"] == vb.B2_WIN.name].reset_index(drop=True) for f in (x, y))
+            num = x.select_dtypes("number").columns.intersection(y.select_dtypes("number").columns)
+            ok &= _result(f"{vb.B2_WIN.name} in step {later} = in step b2", x[num].equals(y[num]),
+                          f"{len(y)} days, {len(num)} columns")
     for step in ("r2", "b2", "b3", "b4"):
         x = rel(step)
         if x is None or x.empty:  # a step without rel+ladder (b3, b4 run on later bases)
@@ -302,8 +336,11 @@ def main(argv: list[str] | None = None) -> None:
         for step in argv[argv.index("--runs") + 1].split(","):
             ok &= plans(step) & execution(step) & accounts(step)
         ok &= offers()
-        if any(x.startswith("b3") or x.startswith("b4") for x in argv[argv.index("--runs") + 1].split(",")):
+        runs = argv[argv.index("--runs") + 1].split(",")
+        if "b3" in runs:
             ok &= buys()
+        if "b4" in runs:
+            ok &= states()
     print("ALL CHECKS PASS" if ok else "SOME CHECKS FAILED")
     sys.exit(0 if ok else 1)
 

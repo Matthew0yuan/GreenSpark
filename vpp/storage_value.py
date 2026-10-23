@@ -114,15 +114,14 @@ def load_profiles(month: pd.Period, site: st.Site = st.FACTORY) -> np.ndarray:
     return out
 
 
-def solve(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: st.Site = st.FACTORY,
-          short_penalty: float = SHORT_PENALTY) -> tuple[np.ndarray, int]:
-    """V[day of the week, slot 0..48, stored-energy point, price state] (relative values) and the weeks it took.
-    short_penalty: $ per MWh the battery cannot shave above the CMD (0: shaving left to the caller, vpp.v2)."""
+def actions(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: st.Site = st.FACTORY,
+            short_penalty: float = SHORT_PENALTY) -> dict:
+    """(day of the week, slot) -> (stored energy after each decision from each point, which are feasible, and the
+    money of each decision in each price state), as solve takes them."""
     bat = asset.battery
     E, P, eta = bat.energy_mwh, bat.power_mw, bat.eta
     grid = np.arange(0.0, E + 1e-9, GRID)
     dw = asset.wear_per_mwh + prefs.hurdle_per_mwh
-    V = np.zeros((7, dp.N + 1, len(grid), B))
     acts = {}
     for dow in range(7):
         for t in range(dp.N):
@@ -134,19 +133,36 @@ def solve(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: 
             x = grid[:, None] + a[None, :]
             acts[dow, t] = (x, (x >= -1e-9) & (x <= E + 1e-9),
                             ps["means"][t][:, None] * (deliver - buy)[None, :] - dw * deliver - short_penalty * short)
+    return acts
+
+
+def backward(V: np.ndarray, acts: dict, dow: int, trans: np.ndarray, E: float) -> None:
+    """Fill V[0..N - 1] (slot x point x price state) of one trading day on weekday dow from its end value V[N],
+    under the given transitions between price states."""
+    grid = np.arange(0.0, E + 1e-9, GRID)
+    for t in reversed(range(dp.N)):
+        ev = V[t + 1] @ trans[t].T  # (points, b): expected next value given this state b
+        x, ok, reward = acts[dow, t]
+        xc = np.clip(x, 0.0, E)
+        for b in range(B):
+            tot = np.where(ok, reward[b][None, :] + np.interp(xc, grid, ev[:, b]), -np.inf)
+            V[t, :, b] = tot.max(axis=1)
+
+
+def solve(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: st.Site = st.FACTORY,
+          short_penalty: float = SHORT_PENALTY) -> tuple[np.ndarray, int]:
+    """V[day of the week, slot 0..48, stored-energy point, price state] (relative values) and the weeks it took.
+    short_penalty: $ per MWh the battery cannot shave above the CMD (0: shaving left to the caller, vpp.v2)."""
+    E = asset.battery.energy_mwh
+    V = np.zeros((7, dp.N + 1, len(np.arange(0.0, E + 1e-9, GRID)), B))
+    acts = actions(ps, load, asset, prefs, site, short_penalty)
     prev = None
     for week in range(1, MAX_WEEKS + 1):
         V[6, dp.N] = V[0, 0]
         for dow in reversed(range(7)):
             if dow < 6:
                 V[dow, dp.N] = V[dow + 1, 0]
-            for t in reversed(range(dp.N)):
-                ev = V[dow, t + 1] @ ps["trans"][t].T  # (points, b): expected next value given this state b
-                x, ok, reward = acts[dow, t]
-                xc = np.clip(x, 0.0, E)
-                for b in range(B):
-                    tot = np.where(ok, reward[b][None, :] + np.interp(xc, grid, ev[:, b]), -np.inf)
-                    V[dow, t, :, b] = tot.max(axis=1)
+            backward(V[dow], acts, dow, ps["trans"], E)
         V -= V[0, 0].mean()
         marg = np.diff(V, axis=2)
         if prev is not None and np.abs(marg - prev).max() < TOL:

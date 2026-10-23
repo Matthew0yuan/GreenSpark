@@ -533,7 +533,8 @@ class CapLayer:
 class Reveal:
     """Information that arrives at the start of interval `slot`: a new energy / FCESS forecast from that
     slot on, caps and obligations that start to apply, ones that stop (`drop`, by name), and MWh added
-    to the day's cycle budget. The rest of the day is re-planned from the actual state of charge."""
+    to the day's cycle budget. The rest of the day is re-planned from the actual state of charge.
+    terminal: a new end-of-day value for the plans (run_day's terminal; v2 round 4, B4)."""
     slot: int
     label: str
     energy: np.ndarray | None = None
@@ -542,6 +543,7 @@ class Reveal:
     obligations: tuple = ()
     drop: tuple = ()
     budget_extra_mwh: float = 0.0
+    terminal: np.ndarray | None = None
 
 
 @dataclass(frozen=True)
@@ -825,6 +827,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     for r in reveals:
         if r.slot <= 0:  # known before the morning plan
             fc_e, fc_f, obls, layers, budget = _reveal(r, 0, fc_e, fc_f, obls, layers, budget)
+            if r.terminal is not None:
+                terminal = np.asarray(r.terminal, float)
     reveals = [r for r in reveals if r.slot > 0]
     comp = [o for o in obls if o.compliance]  # obligations that cannot be breached
 
@@ -1019,6 +1023,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         if due:
             for r in due:
                 fc_e, fc_f, obls, layers, budget = _reveal(r, t, fc_e, fc_f, obls, layers, budget)
+                if r.terminal is not None:
+                    terminal = np.asarray(r.terminal, float)
             comp = [o for o in obls if o.compliance]
             charge_caps, forced = caps_state(layers)
             room = charge_room(bat, site, lf, charge_caps)

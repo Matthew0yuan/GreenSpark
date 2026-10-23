@@ -31,7 +31,7 @@ VALUE_INPUTS: dict = {}  # the relative value curve's per-day arrays by (level s
 def value_inputs(cfg: V2Config, bat) -> dict:
     """The relative value curve's per-day arrays for cfg's level statistic, hurdle and the battery the dispatcher
     sees (built beforehand: python -m vpp.v2.value)."""
-    key = (cfg.level_stat, bat.energy_mwh, bt.HURDLE if cfg.hurdle is None else cfg.hurdle)
+    key = (cfg.level_stat, bat.energy_mwh, bt.HURDLE if cfg.hurdle is None else cfg.hurdle, cfg.state)
     if key not in VALUE_INPUTS:
         p = vl.path(*key)
         if not p.exists():
@@ -86,13 +86,14 @@ def scenario(sc: bt.Scenario, cfg: V2Config) -> bt.Scenario:
 
 def _ladder(inputs: dict, i: int, level: float, bat, site, prefs, load_fc, cmd_cap, ircr_cap, terms, site_res,
             reserve: float, enuc: float, ircr_value_mw: float, cost: float | None = None,
-            buy_margin: float | None = None) -> bd.LadderBids:
+            buy_margin: float | None = None, marg: np.ndarray | None = None) -> bd.LadderBids:
     """The day's layered offers (S3): the curve's offer values at the day's level, the factory's energy protected at
     the lowest value per MWh among its needs today (CMD, a flagged day's peak hours) and tomorrow (②). cost: $ per
-    MWh sold the offers charge in place of the plans' (round 4, B2); buy_margin: h of the buy limits (B3)."""
+    MWh sold the offers charge in place of the plans' (round 4, B2); buy_margin: h of the buy limits (B3); marg: the
+    day's offer values in place of the pooled ones (its market state's, B4)."""
+    marg = inputs["marg"][i] if marg is None else marg
     if site is None:
-        return bd.LadderBids(inputs["edges"][i], inputs["marg"][i], level, np.zeros(dp.N), 0.0, cost=cost,
-                             buy_margin=buy_margin)
+        return bd.LadderBids(inputs["edges"][i], marg, level, np.zeros(dp.N), 0.0, cost=cost, buy_margin=buy_margin)
     plan_load = load_fc * (1 + prefs.load_margin)  # what the plans assume the factory draws (run_day)
     caps = np.full(dp.N, np.inf)
     values = []
@@ -114,7 +115,7 @@ def _ladder(inputs: dict, i: int, level: float, bat, site, prefs, load_fc, cmd_c
     compliance = (np.array([dp.obligation_need(bat, comp, (k + 1) * dp.DT, plan_load) for k in range(dp.N)])
                   if comp else np.zeros(dp.N))
     protect = bd.protection(bat, site, plan_load, caps, tomorrow, compliance) if values or comp else np.zeros(dp.N)
-    return bd.LadderBids(inputs["edges"][i], inputs["marg"][i], level, protect, min(values, default=0.0), cost=cost,
+    return bd.LadderBids(inputs["edges"][i], marg, level, protect, min(values, default=0.0), cost=cost,
                          buy_margin=buy_margin)
 
 
@@ -224,12 +225,24 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
             context.update(level=level, curve_shift_mwh=held if cfg.curve_shift else 0.0)
             if cfg.value == "relative":
                 kw["terminal"] = vl.terminal(inputs, day, held, cfg.curve_shift)
+            marg = None
+            if cfg.state:
+                # B4: today's state (called at 09:00 yesterday) prices the offers all day; tomorrow's (called at 09:00
+                # today) the plans' end-of-day value from 09:00 on; the pooled values where a call is missing
+                today, nxt = inputs["state_today"][i], inputs["state_tomorrow"][i]
+                if np.isfinite(today):
+                    marg = inputs["marg_state"][i, int(today)]
+                if np.isfinite(nxt) and cfg.value == "relative":
+                    end = vl.shifted(inputs["curve_state"][i, int(nxt)].astype(float), held, cfg.curve_shift)
+                    terms = replace(terms, reveals=terms.reveals + (dp.Reveal(2, "tomorrow's market state", terminal=end),))
+                    kw["terms"] = terms
+                context.update(state_today=float(today), state_tomorrow=float(nxt))
             if cfg.ladder:
                 h = bt.HURDLE if cfg.hurdle is None else cfg.hurdle
                 kw["bids"] = _ladder(inputs, i, level, bat, site, prefs, load_fc, cmd_cap, ircr_cap, terms, site_res,
                                      reserve, enuc, aux["ircr_value_mw"],
                                      None if cfg.hurdle is None else asset.wear_per_mwh + cfg.hurdle,
-                                     h if cfg.buy else None)
+                                     h if cfg.buy else None, marg)
         if cfg.plan_days == 2 and site is not None and tomorrow is not None and inputs is not None:
             slots = None
             if tomorrow["day"] in day_before:
