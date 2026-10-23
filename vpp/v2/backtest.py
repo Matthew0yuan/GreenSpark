@@ -7,13 +7,16 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
                v2-site above 0 by the month-block interval, and a mean at least v2-site + 20 MWh's; both passing,
                the higher mean)
   --step sens  the sensitivities of section 5.4, each against its own base (reported, never chosen on)
+  --step b2    round 4 (section 11.4): the value table and the real-time offers at the wear plus h = 0 / 25 / 50, the
+               plans keeping the hurdle of 75 (pass: month-block 95% interval of the gain over rel+ladder above 0;
+               several passing, the highest mean)
   --smoke      2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2 [--smoke]
 """
 
 import os
@@ -53,6 +56,11 @@ STEPS = {
 STEPS["r3"] = {"base": WIN.name, "candidates": ("rel+ladder 48h",), "ref": None, "tables": (("median", 40.0),),
                "configs": (WIN, V2Config("rel+ladder 48h", site_reserve=True, value="relative", ladder=True, plan_days=2,
                                          record=True, **FIX))}
+# round 4, B2 (v2_plan.md section 11.4): the value table and the real-time offers at the wear plus h, the plans at 75
+B2 = tuple(V2Config(f"rw{h:g}", site_reserve=True, value="relative", ladder=True, hurdle=h, record=True, **FIX)
+           for h in (0.0, 25.0, 50.0))
+STEPS["b2"] = {"base": WIN.name, "candidates": tuple(c.name for c in B2), "ref": None,
+               "tables": (("median", 40.0), *(("median", 40.0, c.hurdle) for c in B2)), "configs": (WIN, *B2)}
 SENS = (  # (configuration, its base): one setting changed each
     (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
     (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
@@ -163,15 +171,21 @@ def compare_pairs(money: pd.DataFrame, ledger: pd.DataFrame, bills: pd.DataFrame
 
 def diagnostics(logs: dict) -> pd.DataFrame:
     """Per configuration and period: mean stored energy, stored at 08:00 (start) and 16:00, energy charged
-    20:00-08:00, energy the standing offer sold."""
+    20:00-08:00, energy the standing offer sold; MWh bought and sold a day at their mean RTP (round 4)."""
     rows = []
     for (_, name), by_day in logs.items():
         for day, lg in by_day.items():
+            e, rtp = lg["energy_mwh"], lg["rtp"]
             rows.append({"config": name, "period": bt.period_of([day])[0], "soc_mean": lg["soc"].mean(),
                          "soc_0800": lg["soc_start"].iloc[0], "soc_1600": lg["soc"].iloc[15],
                          "night_charge_mwh": -lg["energy_mwh"].iloc[24:].clip(upper=0).sum(),
-                         "offer_mwh": lg["offer_mwh"].sum()})
-    return pd.DataFrame(rows).groupby(["period", "config"]).mean()
+                         "offer_mwh": lg["offer_mwh"].sum(), "bought_mwh": -e.clip(upper=0).sum(),
+                         "sold_mwh": e.clip(lower=0).sum(), "buy_cost": -(rtp * e.clip(upper=0)).sum(),
+                         "sell_revenue": (rtp * e.clip(lower=0)).sum()})
+    out = pd.DataFrame(rows).groupby(["period", "config"]).mean()
+    out["buy_price"] = out.pop("buy_cost") / out["bought_mwh"]
+    out["sell_price"] = out.pop("sell_revenue") / out["sold_mwh"]
+    return out
 
 
 def smoke_days(days: list[dict]) -> list[dict]:
@@ -192,8 +206,8 @@ def main(argv: list[str] | None = None) -> None:
         spec = {"tables": SENS_TABLES, "configs": (V1, WIN, SITE, *(c for c, _ in SENS))}
     else:
         spec = STEPS[step]
-    for stat, energy in spec["tables"]:
-        vl.build(stat, energy)
+    for t in spec["tables"]:  # (level statistic, MWh[, hurdle])
+        vl.build(t[0], t[1], hurdle=t[2] if len(t) > 2 else bt.HURDLE)
     daily, logs, meters, records = run([(sc, cfg, step != "sens" or cfg.name in ("v1", WIN.name)) for cfg in spec["configs"]],
                                        days, aux)
     ledger = bt.q2b_ledger(daily, [sc])

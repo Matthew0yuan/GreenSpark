@@ -154,13 +154,15 @@ def offers(n: int = 3000, seed: int = 2) -> bool:
         i, t = int(rng.integers(0, len(z["level"]))), int(rng.integers(2, dp.N))
         protect = np.zeros(dp.N)
         protect[t] = float(rng.uniform(0, 40))
-        b = bd.LadderBids(z["edges"][i], z["marg"][i], float(z["level"][i]), protect, float(rng.uniform(500, 3000)))
+        cost = (None, 30.0, 55.0, 80.0)[int(rng.integers(0, 4))]  # round 4, B2: the offers' own cost per MWh sold
+        b = bd.LadderBids(z["edges"][i], z["marg"][i], float(z["level"][i]), protect, float(rng.uniform(500, 3000)),
+                          cost=cost)
         seen = float(rng.uniform(-50, 3000))
         thr = b.thresholds(t, seen, eta, 1.2, dw, 150.0)
         rising += int((np.diff(thr) > 1e-9).any())
         k = np.arange(len(thr)) < protect[t] - 1e-9
         # the protected value alone is a lower bound (offer values are float32: relative tolerance)
-        below += int((thr[k] < (1.2 * b.value / eta + dw) * (1 - 1e-6)).any())
+        below += int((thr[k] < (1.2 * b.value / eta + (dw if cost is None else cost)) * (1 - 1e-6)).any())
     ok = _result("offers non-increasing in stored energy", rising == 0, f"{rising} of {n}")
     return ok & _result("protected energy offered at least at its value", below == 0, f"{below} of {n}")
 
@@ -216,18 +218,28 @@ def chooser_timing(n_days: int = 3) -> bool:
 
 
 def same_base() -> bool:
-    """rel+ladder in the runs of steps s3, r2 and r3 is the same run, day for day (each later step's base)."""
+    """rel+ladder is the same run, day for day, in every later step (each later step's base): exactly equal to step
+    r3's, and within 1e-9 of step s3's, whose F1 rerun (2026-10-22) differs by up to 6.4e-12, the environment drift
+    of findings section 24.1."""
     ok = True
-    ref = pd.read_csv(bt.REPORTS / "v2_s3_daily.csv")
-    ref = ref[ref["strategy"] == vb.WIN.name].reset_index(drop=True)
-    for step in ("r2", "r3"):
+
+    def rel(step):
         p = bt.REPORTS / f"v2_{step}_daily.csv"
         if not p.exists():
-            continue
+            return None
         x = pd.read_csv(p)
-        x = x[x["strategy"] == vb.WIN.name].reset_index(drop=True)
+        return x[x["strategy"] == vb.WIN.name].reset_index(drop=True)
+
+    ref, s3 = rel("r3"), rel("s3")
+    for step in ("r2", "b2", "b3", "b4"):
+        x = rel(step)
+        if x is None:
+            continue
         num = ref.select_dtypes("number").columns.intersection(x.select_dtypes("number").columns)  # columns of both runs
-        ok &= _result(f"rel+ladder in step {step} = in step s3", ref[num].equals(x[num]), f"{len(x)} days, {len(num)} columns")
+        ok &= _result(f"rel+ladder in step {step} = in step r3", ref[num].equals(x[num]), f"{len(x)} days, {len(num)} columns")
+        num = s3.select_dtypes("number").columns.intersection(x.select_dtypes("number").columns)
+        gap = float((s3[num] - x[num]).abs().max().max())
+        ok &= _result(f"rel+ladder in step {step} within 1e-9 of step s3", gap <= 1e-9, f"largest difference {gap:.2g}")
     return ok
 
 

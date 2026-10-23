@@ -21,6 +21,9 @@ class V2Config:
     usable_mwh: float | None = None   # stored energy the dispatcher may use (a state-of-charge window); None: all
     plan_days: int = 1                # 2: from 09:00 plans run to the end of tomorrow (vpp.v2.horizon, R3)
     record: bool = False              # keep decision records (vpp.v2.record)
+    # round 4 (v2_plan.md section 11): $ per MWh sold, beyond the wear, that the value table and the real-time offers
+    # charge (B2); None: the plans' hurdle (75), as rounds 1-3. The plans keep their hurdle either way.
+    hurdle: float | None = None
 
 
 V1 = V2Config()
