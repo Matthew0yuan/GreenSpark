@@ -12,18 +12,21 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
                several passing, the highest mean)
   --step b3    round 4 (section 11.5): the offers' buy side on B2's winner rw50 (pass: as b2, over rw50)
   --step b4    round 4 (section 11.6): values by the market state of the day and of the next, on rw50 (as b3)
+  --step t5    round 5 (section 12.3): the 08:00 plan's end value without tomorrow's site reserve, public at 09:00,
+               on B4's winner (a fix, reported only; the base of the later round-5 steps)
   --smoke      2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4 [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5 [--smoke]
 """
 
 import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -74,6 +77,13 @@ B4 = V2Config(f"{B2_WIN.name}+state", site_reserve=True, value="relative", ladde
               record=True, **FIX)
 STEPS["b4"] = {"base": B2_WIN.name, "candidates": (B4.name,), "ref": None,
                "tables": (("median", 40.0, B2_WIN.hurdle), ("median", 40.0, B2_WIN.hurdle, True)), "configs": (B2_WIN, B4)}
+# round 5 (section 12), on round 4's winner B4. t5 (12.3): the 08:00 plan's end value without tomorrow's site reserve,
+# which is public at 09:00 (a fix: reported, and the base of the round's later steps)
+R4_WIN = B4
+T5 = replace(R4_WIN, name=f"{R4_WIN.name} t5", terminal_0900=True)
+STEPS["t5"] = {"base": R4_WIN.name, "candidates": (T5.name,), "ref": None, "report_only": True,
+               "tables": STEPS["b4"]["tables"], "configs": (R4_WIN, T5)}
+ROUND5 = ("t5",)
 SENS = (  # (configuration, its base): one setting changed each
     (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
     (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
@@ -201,6 +211,45 @@ def diagnostics(logs: dict) -> pd.DataFrame:
     return out
 
 
+FULL_MWH = 38.0  # "full": stored energy at least this (round 5, section 12.2)
+
+
+def distribution(logs: dict) -> pd.DataFrame:
+    """Round 5 (v2_plan.md section 12.2), per configuration and period: stored energy at 08:00 (10th, 50th and 90th
+    percentiles), the days that reach FULL_MWH, the share of the energy stored by charging 20:00-08:00 that is drawn
+    08:00-24:00 the next day, and the intervals where buying beyond the plan came with the meter above both its cap
+    and the month's earlier highest (0 expected; NaN without a buy side)."""
+    eta = bt.Q2B_ASSET.battery.eta
+    rows = []
+    for (_, name), by_day in logs.items():
+        days = sorted(by_day)
+        month_max: dict = {}
+        for k, day in enumerate(days):
+            lg = by_day[day]
+            e = lg["energy_mwh"].to_numpy()
+            stored_in = -e[24:].clip(max=0).sum() * eta  # charged 20:00-08:00, as stored MWh
+            nxt = by_day.get(days[k + 1]) if k + 1 < len(days) and days[k + 1] == day + pd.Timedelta(days=1) else None
+            drawn = nxt["energy_mwh"].to_numpy()[:32].clip(min=0).sum() / eta if nxt is not None else np.nan
+            over = np.nan
+            if "bid_mwh" in lg:
+                m = day.strftime("%Y-%m")
+                meter, cap, bought = (lg[c].to_numpy() for c in ("meter_mw", "cap_mw", "bid_mwh"))
+                before = np.maximum.accumulate(np.r_[month_max.get(m, 0.0), meter[:-1]])
+                over = int(((bought > 1e-9) & (meter > np.maximum(cap, before) + 1e-6)).sum())
+                month_max[m] = max(month_max.get(m, 0.0), float(meter.max()))
+            rows.append({"config": name, "period": bt.period_of([day])[0], "soc_0800": float(lg["soc_start"].iloc[0]),
+                         "full": max(float(lg["soc_start"].iloc[0]), float(lg["soc"].max())) >= FULL_MWH - 1e-9,
+                         "stored_in": stored_in, "used": min(stored_in, drawn) if np.isfinite(drawn) else np.nan,
+                         "stored_in_known": stored_in if np.isfinite(drawn) else np.nan, "buy_over_cap": over})
+    x = pd.DataFrame(rows)
+    g = x.groupby(["period", "config"])
+    out = pd.DataFrame({"soc_0800_p10": g["soc_0800"].quantile(0.1), "soc_0800_p50": g["soc_0800"].quantile(0.5),
+                        "soc_0800_p90": g["soc_0800"].quantile(0.9), "days": g.size(), "days_full": g["full"].sum(),
+                        "night_used_share": g["used"].sum() / g["stored_in_known"].sum(),
+                        "buy_over_cap": g["buy_over_cap"].sum(min_count=1)})
+    return out
+
+
 def smoke_days(days: list[dict]) -> list[dict]:
     return [d for d in days if any(pd.Timestamp(a) <= d["day"] <= pd.Timestamp(b) for a, b in SMOKE)]
 
@@ -241,6 +290,11 @@ def main(argv: list[str] | None = None) -> None:
     ircr.to_csv(REPORTS / f"{tag}_ircr.csv", index=False)
     table.to_csv(REPORTS / f"{tag}_result.csv")
     diag.to_csv(REPORTS / f"{tag}_diag.csv")
+    if step in ROUND5:
+        dist = distribution(logs)
+        dist.to_csv(REPORTS / f"{tag}_soc.csv")
+        print(f"=== stored energy at 08:00, full days, night charge drawn the next day, buys over a cap\n"
+              f"{dist.round(2).to_string()}\n")
     if records:
         rc.frame(records).to_parquet(PROCESSED / f"{tag}_records.parquet")
     pd.concat([x.assign(day=d, strategy=name) for (_, name), lg in logs.items() for d, x in lg.items()],
@@ -250,7 +304,9 @@ def main(argv: list[str] | None = None) -> None:
     print(f"=== stored energy (MWh) and offers\n{diag.round(2).to_string()}\n")
     print(f"=== IRCR, {bt.IRCR_SEASON}-{bt.IRCR_SEASON - 1999} Hot Season ($/year)\n"
           f"{ircr[['strategy', 'ircr_mw', 'saving_per_year', 'peak_days_covered']].round(2).to_string(index=False)}\n")
-    if not smoke and "validation" in table.index.get_level_values(0):
+    if spec.get("report_only"):
+        print(f"reported only: {', '.join(spec['candidates'])} is the base of the round's later steps")
+    elif not smoke and "validation" in table.index.get_level_values(0):
         val = table.loc["validation"]
         passing = [c for c in spec["candidates"] if c in val.index and val.loc[c, "vs_base_lo"] > 0
                    and (step == "s2" or spec.get("ref") is None or val.loc[c, "vs_ref"] >= 0)]

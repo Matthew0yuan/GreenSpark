@@ -285,6 +285,51 @@ def chooser_timing(n_days: int = 3) -> bool:
     return ok & _result("positive control: a different start state changes the plays", moved > 0, f"{moved} of {n_days}")
 
 
+def terminal_timing(tomorrows=("2026-01-21", "2026-02-02", "2026-03-06")) -> bool:
+    """t5 (round 5, section 12.3): with tomorrow's IRCR flag (public at 09:00 today) changed, the fixed configuration's
+    08:00 plan and its 08:00-09:00 steps stay the same, while the plans' end value from 09:00 moves (positive control);
+    the base, before the fix, shows the leak: its 08:00 plan moves."""
+    days, aux = bt.load_days("0900"), bt.q2b_aux()
+    by = {d["day"]: d for d in days}
+    ok, moved_end, leak = True, 0, 0
+    for tom in map(pd.Timestamp, tomorrows):
+        pair = [by[tom - pd.Timedelta(days=1)], by[tom]]
+        runs = {}
+        for cfg in (vb.T5, vb.R4_WIN):
+            for flagged in (True, False):
+                a = dict(aux, flags1=aux["flags1"] if flagged else aux["flags1"].drop(tom))
+                bt._init_worker(pair, a)
+                (_, _, _, log, recs), = list(hs.route_days(vb.m1(), replace(cfg, record=True), soc0=10.0, until=pair[0]["day"]))
+                runs[cfg.name, flagged] = (log, {r["kind"]: r for r in recs if r["kind"] in ("morning", "reveal")})
+        (la, ra), (lb, rb) = runs[vb.T5.name, True], runs[vb.T5.name, False]
+        same = (np.array_equal(ra["morning"]["net"], rb["morning"]["net"])
+                and np.array_equal(ra["morning"]["terminal"], rb["morning"]["terminal"]) and _same(la.iloc[:2], lb.iloc[:2]))
+        moved_end += not np.array_equal(ra["reveal"]["terminal"], rb["reveal"]["terminal"])
+        base_a, base_b = runs[vb.R4_WIN.name, True][1]["morning"], runs[vb.R4_WIN.name, False][1]["morning"]
+        leak += not np.array_equal(base_a["terminal"], base_b["terminal"])
+        ok &= _result(f"t5: {pair[0]['day'].date()} 08:00 plan and 08:00-09:00 unchanged by tomorrow's IRCR flag", same)
+    ok &= _result("t5 positive control: the end value from 09:00 moves with the flag", moved_end > 0, f"{moved_end} of {len(tomorrows)}")
+    return ok & _result("the base's 08:00 end value moved with the flag (the leak t5 removes)", leak > 0, f"{leak} of {len(tomorrows)}")
+
+
+def same_steps(pairs=(("t5", "b4", "rw50+state"),), tol: float = 1e-9) -> bool:
+    """Round 5: a step's base is the same run, day for day, as in the step that chose it: within tol, the drift between
+    the environments the two runs were made in (round 5 runs in another session than round 4: up to 1.3e-11; in one
+    environment the base is bit for bit the same before and after the round's code, v2_plan.md section 6)."""
+    ok = True
+    for step, earlier, name in pairs:
+        p, q = bt.REPORTS / f"v2_{step}_daily.csv", bt.REPORTS / f"v2_{earlier}_daily.csv"
+        if not (p.exists() and q.exists()):
+            continue
+        x, y = (pd.read_csv(f) for f in (q, p))
+        x, y = (f[f["strategy"] == name].reset_index(drop=True) for f in (x, y))
+        num = x.select_dtypes("number").columns.intersection(y.select_dtypes("number").columns)
+        gap = float((x[num] - y[num]).abs().max().max()) if len(x) == len(y) and len(y) else np.inf
+        ok &= _result(f"{name} in step {step} = in step {earlier} (within {tol:g})", gap <= tol,
+                      f"{len(y)} days, {len(num)} columns, largest difference {gap:.2g}")
+    return ok
+
+
 def same_base() -> bool:
     """rel+ladder is the same run, day for day, in every later step (each later step's base): exactly equal to step
     r3's, and within 1e-9 of step s3's, whose F1 rerun (2026-10-22) differs by up to 6.4e-12, the environment drift
@@ -326,7 +371,9 @@ def main(argv: list[str] | None = None) -> None:
     if "--timing" in argv:
         ok &= chooser_timing()
     if "--same" in argv:
-        ok &= same_base()
+        ok &= same_base() & same_steps()
+    if "--t5" in argv:
+        ok &= terminal_timing()
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)

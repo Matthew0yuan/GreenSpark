@@ -26,6 +26,9 @@ class V2Config:
     hurdle: float | None = None
     buy: bool = False                 # round 4, B3: the layered offers also bid to buy, at the margin above
     state: bool = False               # round 4, B4: values by the market state of the day and of the next
+    # round 5 (v2_plan.md section 12), t5: before 09:00 the plans' end value is shifted by what today already commits
+    # only; tomorrow's site reserve (②, public at 09:00) joins the shift from 09:00
+    terminal_0900: bool = False
 
 
 V1 = V2Config()
