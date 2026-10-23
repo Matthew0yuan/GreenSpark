@@ -493,7 +493,8 @@ def buy_caps(step: str) -> bool:
 
 
 def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5"), ("e5", "c5", "rw50+state t5"),
-                      ("f5", "e5", "rw50+state t5+roll"), ("g5", "e5", "rw50+state t5+roll")), tol: float = 1e-9) -> bool:
+                      ("f5", "e5", "rw50+state t5+roll"), ("g5", "e5", "rw50+state t5+roll"),
+                      ("f5x", "e5", "rw50+state t5+roll"), ("b3x", "b2", "rw50")), tol: float = 1e-9) -> bool:
     """Round 5: a step's base is the same run, day for day, as in the step that chose it: within tol, the drift between
     the environments the two runs were made in (round 5 runs in another session than round 4: up to 1.3e-11; in one
     environment the base is bit for bit the same before and after the round's code, v2_plan.md section 6)."""
@@ -561,6 +562,8 @@ def main(argv: list[str] | None = None) -> None:
         ok &= full_bids() & buy_caps("f5")
     if "--g5" in argv:
         ok &= locked_offers()
+    if "--f5x" in argv:  # section 13: the buy side within the room; the meter check must now pass
+        ok &= full_bids() & buy_caps("f5x") & buy_caps("b3x")
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)

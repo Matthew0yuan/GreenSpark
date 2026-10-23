@@ -76,6 +76,9 @@ class LadderBids:
     lock: int = 0
     lock_drain: float = 0.0
     offer_cap: float | None = None
+    # round 5, 13.1: run_day lets buying beyond the plan use only the room the caps at the day's start leave over the
+    # planned (or actual) load and regulation-lower use
+    room_rule: bool = False
     spiked: bool = field(default=False, init=False, repr=False)  # c5: a half-hour settled so far today reached SPIKE
     step: int = field(default=-1, init=False, repr=False)        # g5: the 5-min step run_day is in
     stored: dict = field(default_factory=dict, init=False, repr=False)  # g5: stored MWh at the start of each step

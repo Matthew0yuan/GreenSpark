@@ -275,6 +275,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
                                          buy_cap=(bd.OFFER_CAP - asset.wear_per_mwh - h) * bat.eta ** 2,
                                          value_floor=floor / bat.eta if np.isfinite(floor) else None,
                                          night_fill=cfg.bid == "fill")
+                if cfg.buy_room:  # 13.1 (round 5): buying beyond the plan only within the room the caps leave
+                    kw["bids"] = replace(kw["bids"], room_rule=True)
                 if cfg.offer_lock or cfg.offer_cap is not None:  # g5 (round 5): the gate closure and the price ceiling
                     kw["bids"] = replace(kw["bids"], lock=cfg.offer_lock, lock_drain=bat.power_mw * dp.DT5 / bat.eta,
                                          offer_cap=cfg.offer_cap)

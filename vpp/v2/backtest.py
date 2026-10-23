@@ -22,13 +22,16 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
                values, and the night fill (a reference), on e5 (pass: as c5; both passing, the higher mean)
   --step g5    round 5 (section 12.7): the gate closure (offer prices 20 minutes old; prices and quantities locked 15
                minutes before) and the $1,000 offer ceiling, layer by layer on e5 (reported only)
+  --step f5x   section 13: f5 again with buying beyond the plan only within the room the caps leave over the
+               planned load and regulation lower (13.1, 13.2; pass: as f5)
+  --step b3x   section 13.3: B3 again with the same fix, on rw50 (reported only)
   --smoke  2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5 [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5|f5x|b3x [--smoke]
 """
 
 import os
@@ -112,7 +115,15 @@ G5C = replace(G5B, name=f"{E5.name}+lock+cap", offer_cap=1000.0)
 STEPS["g5"] = {"base": E5.name, "candidates": (G5A.name, G5B.name, G5C.name), "ref": None, "report_only": True,
                "layers": ((G5A.name, E5.name), (G5B.name, G5A.name), (G5C.name, G5B.name)),
                "tables": STEPS["b4"]["tables"], "configs": (replace(E5, record=False), G5A, G5B, G5C)}
-ROUND5 = ("t5", "c5", "e5", "f5", "g5")
+# section 13: buying beyond the plan only within the room the caps leave (13.1); step 4 again on e5 (13.2), and B3
+# again on rw50 (13.3, reported)
+F5X = tuple(replace(c, name=f"{c.name} room", buy_room=True) for c in (F5A, F5B, F5R))
+STEPS["f5x"] = {"base": E5.name, "candidates": (F5X[0].name, F5X[1].name), "ref": None, "tables": STEPS["b4"]["tables"],
+                "configs": (replace(E5, record=False), *F5X)}
+B3X = replace(B3, name=f"{B3.name} room", buy_room=True)
+STEPS["b3x"] = {"base": B2_WIN.name, "candidates": (B3X.name,), "ref": None, "report_only": True,
+                "tables": STEPS["b3"]["tables"], "configs": (replace(B2_WIN, record=False), B3X)}
+ROUND5 = ("t5", "c5", "e5", "f5", "g5", "f5x", "b3x")
 BLOCKS = (("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
 
 
@@ -388,7 +399,7 @@ def main(argv: list[str] | None = None) -> None:
               f"{layers[['base', 'per_day', 'vs_base', 'vs_base_lo', 'vs_base_hi', 'market_vs_base', 'bill_vs_base']].round(1).to_string()}\n")
         print("reported only: what the backtest overstates without the gate closure and the price ceiling")
     elif spec.get("report_only"):
-        print(f"reported only: {', '.join(spec['candidates'])} is the base of the round's later steps")
+        print(f"reported only, not chosen on: {', '.join(spec['candidates'])}")
     elif not smoke and "validation" in table.index.get_level_values(0):
         val = table.loc["validation"]
         passing = [c for c in spec["candidates"] if c in val.index and val.loc[c, "vs_base_lo"] > 0
