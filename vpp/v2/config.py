@@ -25,6 +25,7 @@ class V2Config:
     # charge (B2); None: the plans' hurdle (75), as rounds 1-3. The plans keep their hurdle either way.
     hurdle: float | None = None
     buy: bool = False                 # round 4, B3: the layered offers also bid to buy, at the margin above
+    state: bool = False               # round 4, B4: values by the market state of the day and of the next
 
 
 V1 = V2Config()

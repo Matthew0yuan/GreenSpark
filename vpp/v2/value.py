@@ -16,7 +16,13 @@ hurdle (round 4, reports/v2_plan.md section 11): the table charges every MWh sol
 as the plans do (bt.HURDLE, the default, is the table rounds 1-3 used). B1 builds tables at 0, 25 and 50: the trades
 the table prices are made at prices already seen, so the forecast-error hurdle may be counted twice there.
 
-Run:  python -m vpp.v2.value [--stat mean] [--energy 36] [--hurdle 0]     builds the per-day arrays (cached)
+state (round 4, B4, section 11.6): the values also by the day's market state, a high-risk day or not by the
+day-before 09:00 call at the recent threshold (vpp.v2.risk). The transitions between price states are counted on each
+state's days of the same window and shrunk to the pooled ones with REGIME_PRIOR pseudo-transitions; from the pooled
+value at the next 08:00 one trading day is solved back under each state's transitions, giving today's offer values
+when today is in that state, and the 08:00 curve that ends today when tomorrow is in it.
+
+Run:  python -m vpp.v2.value [--stat mean] [--energy 36] [--hurdle 0] [--state]    builds the per-day arrays (cached)
       python -m vpp.v2.value --b1                                         round 4, B1: builds and checks the tables
 """
 
@@ -33,15 +39,17 @@ from vpp import backtest as bt
 from vpp import dispatch as dp
 from vpp import storage_value as sv
 from vpp.data import PROCESSED
+from vpp.evaluate import CUTOFF, TRAIN_END
 
 LEVEL_DAYS = 28   # days of past prices in the level [fixed]
 GRID_STEP = 5.0   # $/MWh between solved levels [fixed]
+REGIME_PRIOR = 20.0  # pseudo-transitions shrinking each market state's transitions to the pooled ones [fixed, 11.6]
 FIRST, LAST = pd.Timestamp("2025-04-01"), pd.Timestamp("2026-10-15")  # the backtest's days
 
 
-def path(stat: str = "median", energy_mwh: float = 40.0, hurdle: float = bt.HURDLE) -> Path:
+def path(stat: str = "median", energy_mwh: float = 40.0, hurdle: float = bt.HURDLE, state: bool = False) -> Path:
     return PROCESSED / (f"v2_value_{stat}{'' if energy_mwh == 40.0 else f'_{energy_mwh:g}mwh'}"
-                        f"{'' if hurdle == bt.HURDLE else f'_h{hurdle:g}'}.npz")
+                        f"{'' if hurdle == bt.HURDLE else f'_h{hurdle:g}'}{'_state' if state else ''}.npz")
 
 
 def prices() -> pd.DataFrame:
@@ -63,6 +71,35 @@ def levels(table: pd.DataFrame, stat: str = "median", days: int = LEVEL_DAYS) ->
     return pd.Series(out, index=idx)
 
 
+def regimes() -> pd.Series:
+    """Each trading day's market state: 1 if the day-before 09:00 call at the recent threshold made it a high-risk
+    day, 0 if not, NaN without the call (vpp.v2.risk; public at 09:00 on the day before)."""
+    from vpp.v2 import risk as rk
+    return rk.recent_flags(rk.day_risk(rk.history(days_ahead=1)))
+
+
+def regime_trans(table: pd.DataFrame, month: pd.Period, level: pd.Series, flags: pd.Series, ps: dict) -> np.ndarray:
+    """(state, slot, b, c) transitions between price states on the normal (0) and high-risk (1) days of month's
+    window, counted as vpp.storage_value.price_states counts them, each row shrunk to the pooled one."""
+    end = min(month.start_time, CUTOFF)
+    x = table[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= TRAIN_END)].dropna()
+    x = x.sub(level.reindex(x.index), axis=0).dropna()
+    X, days = x.to_numpy(), x.index
+    bins = np.stack([np.searchsorted(ps["edges"][t, 1:-1], X[:, t], side="right") for t in range(dp.N)], axis=1)
+    state = flags.reindex(days).to_numpy()
+    nxt = np.flatnonzero((days[1:] - days[:-1]) == pd.Timedelta(days=1))  # day i followed by day i + 1
+    out = np.empty((2, dp.N, sv.B, sv.B))
+    for k in (0, 1):
+        rows = state == k
+        counts = np.zeros((dp.N, sv.B, sv.B))
+        for t in range(dp.N - 1):
+            np.add.at(counts[t], (bins[rows, t], bins[rows, t + 1]), 1)
+        last = nxt[rows[nxt]]
+        np.add.at(counts[dp.N - 1], (bins[last, dp.N - 1], bins[last + 1, 0]), 1)
+        out[k] = (counts + REGIME_PRIOR * ps["trans"]) / (counts.sum(axis=2, keepdims=True) + REGIME_PRIOR)
+    return out
+
+
 def _marginals(V: np.ndarray, ps: dict) -> tuple[np.ndarray, np.ndarray]:
     """The end-of-day curve (dow x segment) and the offer values (dow x slot x state x segment) of a solved table,
     as v1 derives them (vpp.storage_value.build)."""
@@ -73,26 +110,54 @@ def _marginals(V: np.ndarray, ps: dict) -> tuple[np.ndarray, np.ndarray]:
     return curve, marg
 
 
+def _by_state(V: np.ndarray, ps: dict, acts: dict, rtrans: np.ndarray, E: float) -> tuple[np.ndarray, np.ndarray]:
+    """(state, dow, segment) the 08:00 curve that ends a day on weekday dow when the next day is in that state, and
+    (state, dow, slot, b, segment) the offer values of a day on weekday dow in that state: one trading day solved
+    back from the pooled value at its end under the state's transitions."""
+    curve = np.empty((2, 7, V.shape[2] - 1))
+    marg = np.empty((2, 7, dp.N, sv.B, V.shape[2] - 1))
+    for k in (0, 1):
+        for dow in range(7):
+            today = np.empty_like(V[dow])
+            today[dp.N] = V[dow, dp.N]
+            sv.backward(today, acts, dow, rtrans[k], E)
+            ev = np.einsum("tpc,tbc->tbp", today[1:], rtrans[k])
+            marg[k, dow] = np.clip(np.apply_along_axis(sv.decreasing, 2, np.diff(ev, axis=2) / sv.GRID), 0.0, None)
+            nxt = (dow + 1) % 7
+            tomorrow = np.empty_like(V[nxt])
+            tomorrow[dp.N] = V[nxt, dp.N]
+            sv.backward(tomorrow, acts, nxt, rtrans[k], E)
+            curve[k, dow] = np.clip(sv.decreasing(np.diff(tomorrow[0] @ ps["pi0"]) / sv.GRID), 0.0, None)
+    return curve, marg
+
+
 def _solve(task: tuple) -> tuple:
-    month, level, ps, energy_mwh, hurdle = task
+    month, level, ps, energy_mwh, hurdle, rtrans = task
     asset = bt.Q2B_ASSET if energy_mwh == bt.Q2B_ASSET.battery.energy_mwh else \
         replace(bt.Q2B_ASSET, battery=replace(bt.Q2B_ASSET.battery, energy_mwh=energy_mwh))
     prefs = bt.PREFS if hurdle == bt.HURDLE else replace(bt.PREFS, hurdle_per_mwh=hurdle)
-    V, weeks = sv.solve({**ps, "means": level + ps["means"]}, sv.load_profiles(month), asset=asset, prefs=prefs,
-                        short_penalty=0.0)
+    at_level = {**ps, "means": level + ps["means"]}
+    V, weeks = sv.solve(at_level, sv.load_profiles(month), asset=asset, prefs=prefs, short_penalty=0.0)
     curve, marg = _marginals(V, ps)
-    return month, level, curve.astype(np.float32), marg.astype(np.float32), weeks
+    out = [month, level, curve.astype(np.float32), marg.astype(np.float32), weeks]
+    if rtrans is not None:
+        acts = sv.actions(at_level, sv.load_profiles(month), asset, prefs, short_penalty=0.0)
+        curve_s, marg_s = _by_state(V, ps, acts, rtrans, asset.battery.energy_mwh)
+        out += [curve_s.astype(np.float32), marg_s.astype(np.float32)]
+    return tuple(out)
 
 
 def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False, hurdle: float = bt.HURDLE,
-          out: Path | None = None) -> Path:
-    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh, hurdle), or written to out)."""
+          out: Path | None = None, state: bool = False) -> Path:
+    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh, hurdle, state), or written to out);
+    with state, also each day's values by market state and the states of the day and the next (B4)."""
     if out is None:
-        out = path(stat, energy_mwh, hurdle)
+        out = path(stat, energy_mwh, hurdle, state)
         if out.exists() and not rebuild:
             return out
     table = prices()
     lv = levels(table, stat)
+    flags = regimes() if state else None
     days = lv.index[(lv.index >= FIRST) & (lv.index <= LAST)]
     tasks, states = [], {}
     for month in sv.MONTHS:
@@ -101,14 +166,15 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
             continue
         ps = sv.price_states(table, month, level=lv)
         states[month] = ps
+        rtrans = regime_trans(table, month, lv, flags, ps) if state else None
         lo, hi = lv[in_month].min(), lv[in_month].max()
         grid = np.arange(np.floor(lo / GRID_STEP) * GRID_STEP, np.ceil(hi / GRID_STEP) * GRID_STEP + 1e-9, GRID_STEP)
         if len(grid) == 1:
             grid = np.r_[grid, grid + GRID_STEP]
-        tasks += [(month, float(g), ps, energy_mwh, hurdle) for g in grid]
+        tasks += [(month, float(g), ps, energy_mwh, hurdle, rtrans) for g in grid]
     with ProcessPoolExecutor() as pool:
-        solved = {(m, g): (c, mg, w) for m, g, c, mg, w in pool.map(_solve, tasks)}
-    rows = {"day": [], "level": [], "curve": [], "marg": [], "edges": []}
+        solved = {(r[0], r[1]): r[2:] for r in pool.map(_solve, tasks)}
+    rows = {"day": [], "level": [], "curve": [], "marg": [], "edges": [], "curve_state": [], "marg_state": []}
     for d in days:
         month = d.to_period("M")
         grid = sorted(g for m, g in solved if m == month)
@@ -116,20 +182,30 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
         k = min(max(np.searchsorted(grid, L, side="right") - 1, 0), len(grid) - 2)
         g0, g1 = grid[k], grid[k + 1]
         w = min(max((L - g0) / (g1 - g0), 0.0), 1.0)
-        (c0, m0, _), (c1, m1, _) = solved[month, g0], solved[month, g1]
+        a, b = solved[month, g0], solved[month, g1]
         dow = d.dayofweek
         rows["day"].append(str(d.date()))
         rows["level"].append(L)
-        rows["curve"].append((1 - w) * c0[dow] + w * c1[dow])
-        rows["marg"].append((1 - w) * m0[dow] + w * m1[dow])
+        rows["curve"].append((1 - w) * a[0][dow] + w * b[0][dow])
+        rows["marg"].append((1 - w) * a[1][dow] + w * b[1][dow])
         rows["edges"].append(states[month]["edges"])
+        if state:
+            rows["curve_state"].append((1 - w) * a[3][:, dow] + w * b[3][:, dow])
+            rows["marg_state"].append((1 - w) * a[4][:, dow] + w * b[4][:, dow])
     keys = sorted(solved)
+    extra = {}
+    if state:
+        idx = pd.DatetimeIndex(rows["day"])
+        extra = {"curve_state": np.array(rows["curve_state"], np.float32),
+                 "marg_state": np.array(rows["marg_state"], np.float32),
+                 "state_today": flags.reindex(idx).to_numpy(float),
+                 "state_tomorrow": flags.reindex(idx + pd.Timedelta(days=1)).to_numpy(float)}
     np.savez_compressed(out, day=np.array(rows["day"]), level=np.array(rows["level"]),
                         curve=np.array(rows["curve"], np.float32), marg=np.array(rows["marg"], np.float32),
                         edges=np.array(rows["edges"], np.float32),
-                        weeks=np.array([w for _, _, w in solved.values()]), n_tables=len(solved),
+                        weeks=np.array([v[2] for v in solved.values()]), n_tables=len(solved),
                         grid_month=np.array([str(m) for m, _ in keys]), grid_level=np.array([g for _, g in keys]),
-                        grid_curve=np.array([solved[k][0] for k in keys], np.float32))
+                        grid_curve=np.array([solved[k][0] for k in keys], np.float32), **extra)
     return out
 
 
@@ -140,8 +216,12 @@ def load(p) -> dict:
     grid: dict = {}
     for m, g, c in zip(z["grid_month"].astype(str), z["grid_level"], z["grid_curve"]):
         grid.setdefault(m, []).append((float(g), c))
-    return {"index": {d: i for i, d in enumerate(days)}, "level": z["level"], "curve": z["curve"], "marg": z["marg"],
-            "edges": z["edges"], "grid": {m: sorted(v, key=lambda x: x[0]) for m, v in grid.items()}}
+    out = {"index": {d: i for i, d in enumerate(days)}, "level": z["level"], "curve": z["curve"], "marg": z["marg"],
+           "edges": z["edges"], "grid": {m: sorted(v, key=lambda x: x[0]) for m, v in grid.items()}}
+    for k in ("curve_state", "marg_state", "state_today", "state_tomorrow"):
+        if k in z.files:
+            out[k] = z[k]
+    return out
 
 
 def curve_at(inputs: dict, month: str, dow: int, level: float) -> np.ndarray:
@@ -220,7 +300,7 @@ def main(argv: list[str] | None = None) -> None:
     stat = argv[argv.index("--stat") + 1] if "--stat" in argv else "median"
     energy = float(argv[argv.index("--energy") + 1]) if "--energy" in argv else 40.0
     hurdle = float(argv[argv.index("--hurdle") + 1]) if "--hurdle" in argv else bt.HURDLE
-    p = build(stat, energy, "--rebuild" in argv, hurdle)
+    p = build(stat, energy, "--rebuild" in argv, hurdle, state="--state" in argv)
     z = load(p)
     lv = pd.Series(z["level"], index=list(z["index"]))
     print(f"{p.name}: {len(lv)} days; level ${lv.min():.0f}-{lv.max():.0f}/MWh (median {lv.median():.0f})")
