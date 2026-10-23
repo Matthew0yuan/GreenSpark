@@ -14,13 +14,15 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
   --step b4    round 4 (section 11.6): values by the market state of the day and of the next, on rw50 (as b3)
   --step t5    round 5 (section 12.3): the 08:00 plan's end value without tomorrow's site reserve, public at 09:00,
                on B4's winner (a fix, reported only; the base of the later round-5 steps)
-  --smoke      2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
+  --step c5    round 5 (section 12.4): today's offer values also by whether the day has already spiked, on t5
+               (pass: month-block 95% interval of the gain over t5 above 0)
+  --smoke     2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5 [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5 [--smoke]
 """
 
 import os
@@ -83,7 +85,11 @@ R4_WIN = B4
 T5 = replace(R4_WIN, name=f"{R4_WIN.name} t5", terminal_0900=True)
 STEPS["t5"] = {"base": R4_WIN.name, "candidates": (T5.name,), "ref": None, "report_only": True,
                "tables": STEPS["b4"]["tables"], "configs": (R4_WIN, T5)}
-ROUND5 = ("t5",)
+# c5 (12.4): today's offer values also by whether the day has already spiked, on t5
+C5 = replace(T5, name=f"{T5.name}+regime", regime=True)
+STEPS["c5"] = {"base": T5.name, "candidates": (C5.name,), "ref": None,
+               "tables": (*STEPS["b4"]["tables"], ("median", 40.0, B2_WIN.hurdle, True, True)), "configs": (T5, C5)}
+ROUND5 = ("t5", "c5")
 SENS = (  # (configuration, its base): one setting changed each
     (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
     (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
@@ -268,8 +274,9 @@ def main(argv: list[str] | None = None) -> None:
         spec = {"tables": SENS_TABLES, "configs": (V1, WIN, SITE, *(c for c, _ in SENS))}
     else:
         spec = STEPS[step]
-    for t in spec["tables"]:  # (level statistic, MWh[, hurdle[, by market state]])
-        vl.build(t[0], t[1], hurdle=t[2] if len(t) > 2 else bt.HURDLE, state=len(t) > 3 and t[3])
+    for t in spec["tables"]:  # (level statistic, MWh[, hurdle[, by market state[, by regime]]])
+        vl.build(t[0], t[1], hurdle=t[2] if len(t) > 2 else bt.HURDLE, state=len(t) > 3 and t[3],
+                 regime=len(t) > 4 and t[4])
     daily, logs, meters, records = run([(sc, cfg, step != "sens" or cfg.name in ("v1", WIN.name)) for cfg in spec["configs"]],
                                        days, aux)
     ledger = bt.q2b_ledger(daily, [sc])

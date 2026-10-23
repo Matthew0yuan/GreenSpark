@@ -17,29 +17,41 @@ only fills segments whose limit is at least the price; and beyond the plan, the 
 A step whose plan discharges is left to the plan and the offers to sell.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
 from vpp import dispatch as dp
 from vpp import storage_value as sv
 
+SPIKE = 150.0  # $/MWh: a settled half-hour at least this has spiked (round 5, c5; as vpp.v2.value.SPIKE)
+
 
 @dataclass
 class LadderBids:
     edges: np.ndarray    # (48, B + 1) price-state bin edges, relative to the level
-    marg: np.ndarray     # (48, B, segments) $ per MWh of each segment at the end of slot t, given its price state
+    # (48, B, segments) $ per MWh of each segment at the end of slot t, given its price state; round 5, c5:
+    # (48, B, 2, segments), also by whether the day has spiked (vpp.v2.value, regime)
+    marg: np.ndarray
     level: float         # the day's price level L ($/MWh)
     protect: np.ndarray  # (48,) stored MWh protected at each slot (0 before 09:00)
     value: float         # $ per MWh of the protected energy
     alpha2: float | None = None  # the margin on the value from 09:00 (a candidate chosen then, vpp.v2.candidates)
     cost: float | None = None    # $ per MWh sold the offers charge in place of the plans' wear + hurdle (round 4, B2)
     buy_margin: float | None = None  # h of the buy limits; None: the offers only sell (round 4, B3)
+    spiked: bool = field(default=False, init=False, repr=False)  # c5: a half-hour settled so far today reached SPIKE
+
+    def observe(self, i5: int, settled: np.ndarray) -> None:
+        """Round 5, c5: each 5 minutes run_day passes the day's half-hours settled by the offers' information time;
+        with values by regime, whether one of them reached SPIKE picks the values."""
+        if self.marg.ndim == 4:
+            self.spiked = bool(np.any(np.asarray(settled, float) >= SPIKE))
 
     def _values(self, t: int, seen: float) -> np.ndarray:
-        """$ per MWh of each segment at the end of slot t, in the price state of the latest 5-min price seen."""
+        """$ per MWh of each segment at the end of slot t, in the price state of the latest 5-min price seen (and, with
+        values by regime, whether the day has spiked so far)."""
         b = int(np.clip(np.searchsorted(self.edges[t, 1:-1], seen - self.level, side="right"), 0, sv.B - 1))
-        return self.marg[t, b]
+        return self.marg[t, b, int(self.spiked)] if self.marg.ndim == 4 else self.marg[t, b]
 
     def thresholds(self, t: int, seen: float, eta: float, alpha: float, dw: float, k_min: float) -> np.ndarray:
         """$/MWh at which each segment of stored energy sells in slot t (non-increasing in the segment)."""
