@@ -222,10 +222,15 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
             i = inputs["index"][pd.Timestamp(day).normalize()]
             level = float(inputs["level"][i])
             held = carry + (site_res.total_mwh if site_res is not None else reserve)  # ① + ② at 08:00 tomorrow
+            # t5 (round 5): before 09:00 only what today already commits; ② is public at 09:00
+            early = carry if cfg.terminal_0900 else held
             context.update(level=level, curve_shift_mwh=held if cfg.curve_shift else 0.0)
+            if cfg.terminal_0900:
+                context.update(curve_shift_early_mwh=early if cfg.curve_shift else 0.0)
             if cfg.value == "relative":
-                kw["terminal"] = vl.terminal(inputs, day, held, cfg.curve_shift)
+                kw["terminal"] = vl.terminal(inputs, day, early, cfg.curve_shift)
             marg = None
+            end_at_0900 = False  # a reveal at 09:00 already sets the plans' end value (B4's tomorrow's state)
             if cfg.state:
                 # B4: today's state (called at 09:00 yesterday) prices the offers all day; tomorrow's (called at 09:00
                 # today) the plans' end-of-day value from 09:00 on; the pooled values where a call is missing
@@ -236,7 +241,12 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
                     end = vl.shifted(inputs["curve_state"][i, int(nxt)].astype(float), held, cfg.curve_shift)
                     terms = replace(terms, reveals=terms.reveals + (dp.Reveal(2, "tomorrow's market state", terminal=end),))
                     kw["terms"] = terms
+                    end_at_0900 = True
                 context.update(state_today=float(today), state_tomorrow=float(nxt))
+            if cfg.terminal_0900 and cfg.value == "relative" and not end_at_0900:
+                end = vl.terminal(inputs, day, held, cfg.curve_shift)
+                terms = replace(terms, reveals=terms.reveals + (dp.Reveal(2, "tomorrow's site reserve", terminal=end),))
+                kw["terms"] = terms
             if cfg.ladder:
                 h = bt.HURDLE if cfg.hurdle is None else cfg.hurdle
                 kw["bids"] = _ladder(inputs, i, level, bat, site, prefs, load_fc, cmd_cap, ircr_cap, terms, site_res,
