@@ -18,13 +18,15 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
                (pass: month-block 95% interval of the gain over t5 above 0)
   --step e5    round 5 (section 12.5): the plans also redone at the start of every trading interval, on t5 (as c5),
                with the energy market by time of day and the night re-plans after a dip (reports/v2_e5_roll.csv)
-  --smoke    2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
+  --step f5    round 5 (section 12.6): B3's buy side at the full value, capped, with or without a floor under the
+               values, and the night fill (a reference), on e5 (pass: as c5; both passing, the higher mean)
+  --smoke   2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5 [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5 [--smoke]
 """
 
 import os
@@ -95,7 +97,13 @@ STEPS["c5"] = {"base": T5.name, "candidates": (C5.name,), "ref": None,
 # e5 (12.5): the plans also redone at the start of every trading interval, on t5 (c5 did not pass)
 E5 = replace(T5, name=f"{T5.name}+roll", replan_every=1)
 STEPS["e5"] = {"base": T5.name, "candidates": (E5.name,), "ref": None, "tables": STEPS["b4"]["tables"], "configs": (T5, E5)}
-ROUND5 = ("t5", "c5", "e5")
+# f5 (12.6): B3's buy side at the full value (capped), or with a floor under the values; "fill" a reference; on e5
+F5A = replace(E5, name=f"{E5.name}+bid", bid="full")
+F5B = replace(E5, name=f"{E5.name}+bid floor", bid="floor")
+F5R = replace(E5, name=f"{E5.name}+fill", bid="fill", record=False)
+STEPS["f5"] = {"base": E5.name, "candidates": (F5A.name, F5B.name), "ref": None, "tables": STEPS["b4"]["tables"],
+               "configs": (replace(E5, record=False), F5A, F5B, F5R)}
+ROUND5 = ("t5", "c5", "e5", "f5")
 BLOCKS = (("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
 
 

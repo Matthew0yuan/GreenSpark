@@ -25,6 +25,30 @@ from vpp import dispatch as dp
 from vpp import storage_value as sv
 
 SPIKE = 150.0  # $/MWh: a settled half-hour at least this has spiked (round 5, c5; as vpp.v2.value.SPIKE)
+OFFER_CAP = 1000.0  # $/MWh, the WEM's energy offer price ceiling (ERA, 2024-12; v2_plan.md section 10.3)
+NIGHT = 32          # slot of 00:00: f5's reference fills from here
+FLOOR_DAYS, FLOOR_Q, FLOOR_ROOM = 28, 0.25, 1.0  # f5's floor: days, quantile, MW below the CMD [fixed, 12.6]
+
+
+def charge_floor(table, cmd_mw: float, load_scale: float, margin: float) -> "pd.Series":
+    """Round 5, f5: for each trading day, the FLOOR_Q quantile of the 30-min RTP of the previous FLOOR_DAYS trading
+    days in the half-hours the battery could charge in: the plans' factory load (the example profile x load_scale x
+    (1 + margin), vpp.site) at most the CMD less FLOOR_ROOM. Only days before the day: known at 08:00."""
+    import pandas as pd
+
+    from vpp import site as st
+    idx = table.index
+    ts = pd.DatetimeIndex([d + pd.Timedelta(hours=8, minutes=30 * k) for d in idx for k in range(dp.N)])
+    ok = (st.example_load(ts)[0].reshape(len(idx), dp.N) * load_scale * (1 + margin)) <= cmd_mw - FLOOR_ROOM
+    X = table.to_numpy()
+    out = np.full(len(idx), np.nan)
+    for i, d in enumerate(idx):
+        lo = idx.searchsorted(d - pd.Timedelta(days=FLOOR_DAYS))
+        x = X[lo:i][ok[lo:i]]
+        x = x[np.isfinite(x)]
+        if len(x):
+            out[i] = np.quantile(x, FLOOR_Q)
+    return pd.Series(out, index=idx)
 
 
 @dataclass
@@ -39,6 +63,13 @@ class LadderBids:
     alpha2: float | None = None  # the margin on the value from 09:00 (a candidate chosen then, vpp.v2.candidates)
     cost: float | None = None    # $ per MWh sold the offers charge in place of the plans' wear + hurdle (round 4, B2)
     buy_margin: float | None = None  # h of the buy limits; None: the offers only sell (round 4, B3)
+    # round 5, f5 (reports/v2_plan.md section 12.6): the buy limits' own margin on the value (None: alpha, as B3), their
+    # cap ($/MWh), a floor under the values both sides use ($ per stored MWh: the floor price / eta), and the reference
+    # that bids the cap for every segment from 00:00
+    buy_alpha: float | None = None
+    buy_cap: float | None = None
+    value_floor: float | None = None
+    night_fill: bool = False
     spiked: bool = field(default=False, init=False, repr=False)  # c5: a half-hour settled so far today reached SPIKE
 
     def observe(self, i5: int, settled: np.ndarray) -> None:
@@ -51,7 +82,8 @@ class LadderBids:
         """$ per MWh of each segment at the end of slot t, in the price state of the latest 5-min price seen (and, with
         values by regime, whether the day has spiked so far)."""
         b = int(np.clip(np.searchsorted(self.edges[t, 1:-1], seen - self.level, side="right"), 0, sv.B - 1))
-        return self.marg[t, b, int(self.spiked)] if self.marg.ndim == 4 else self.marg[t, b]
+        m = self.marg[t, b, int(self.spiked)] if self.marg.ndim == 4 else self.marg[t, b]
+        return m if self.value_floor is None else np.maximum(np.asarray(m, float), self.value_floor)  # exact floor
 
     def thresholds(self, t: int, seen: float, eta: float, alpha: float, dw: float, k_min: float) -> np.ndarray:
         """$/MWh at which each segment of stored energy sells in slot t (non-increasing in the segment)."""
@@ -85,7 +117,12 @@ class LadderBids:
         (non-increasing in the segment, and below the segment's sell threshold)."""
         if self.alpha2 is not None and t >= 2:
             alpha = self.alpha2
-        return eta * self._values(t, seen) / alpha - self.buy_margin
+        lim = eta * self._values(t, seen) / (alpha if self.buy_alpha is None else self.buy_alpha) - self.buy_margin
+        if self.buy_cap is not None:
+            lim = np.minimum(lim, self.buy_cap)
+            if self.night_fill and t >= NIGHT:
+                lim = np.full_like(lim, self.buy_cap)
+        return lim
 
     def buy(self, t: int, s: float, pw: float, price: float, seen: float, eta: float, alpha: float, E: float,
             P: float) -> float:

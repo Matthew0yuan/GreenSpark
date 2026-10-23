@@ -378,8 +378,80 @@ def regime_timing(days=("2025-12-10", "2026-01-21", "2026-02-02"), slots=(14, 24
                         f"{moved} of {len(days) * len(slots)}")
 
 
-def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5"), ("e5", "c5", "rw50+state t5")),
-               tol: float = 1e-9) -> bool:
+def full_bids(n: int = 3000, seed: int = 6, h: float = 50.0) -> bool:
+    """f5 (round 5, section 12.6) on random days and states, with and without a floor: buy limits non-increasing in
+    stored energy, below each segment's sell threshold, never above the cap, never below the floor (or the cap); the
+    economic part never fills a segment whose limit is below the price; the plan's charging up to the protected level
+    is never dropped for the price; never more than the battery's power. The floor of a day uses only the days before
+    it (prices of the day and later changed: unchanged; positive control: the 28 days before changed)."""
+    z = vl.load(vl.build("median", 40.0, hurdle=h))
+    rng = np.random.default_rng(seed)
+    bat = bt.Q2B_ASSET.battery
+    eta, E, P, cost = bat.eta, bat.energy_mwh, bat.power_mw, bt.Q2B_ASSET.wear_per_mwh + h
+    cap = (bd.OFFER_CAP - cost) * eta ** 2
+    dw = dp.decision_wear(bt.Q2B_ASSET, bt.PREFS)
+    bad = {k: 0 for k in ("rising", "above sell", "cap", "floor", "economic", "must", "power")}
+    for _ in range(n):
+        i, t = int(rng.integers(0, len(z["level"]))), int(rng.integers(0, dp.N))
+        protect = rng.uniform(0, 40, dp.N) * (rng.random() < 0.5)
+        floor = float(rng.uniform(0, 150)) if rng.random() < 0.5 else None
+        b = bd.LadderBids(z["edges"][i], z["marg"][i], float(z["level"][i]), protect, float(rng.uniform(500, 3000)),
+                          cost=cost, buy_margin=0.0, buy_alpha=1.0, buy_cap=cap,
+                          value_floor=None if floor is None else floor / eta)
+        seen, price = float(rng.uniform(-50, 500)), float(rng.uniform(-100, 400))
+        s = float(rng.uniform(0, E))
+        pw = 0.0 if rng.random() < 0.3 else -float(rng.uniform(0, P))
+        lim = b.buy_limits(t, seen, eta, 1.2)
+        thr = b.thresholds(t, seen, eta, 1.2, dw, 150.0)
+        bad["rising"] += int((np.diff(lim) > 1e-6).any())
+        bad["above sell"] += int((lim >= thr).any())
+        bad["cap"] += int((lim > cap + 1e-9).any())
+        bad["floor"] += int(floor is not None and (lim < min(floor, cap) - 1e-6).any())
+        c = -b.buy(t, s, pw, price, seen, eta, 1.2, E, P)
+        bad["power"] += int(c > P + 1e-9)
+        need = max(0.0, protect[min(t + 1, dp.N - 1)] - s) / (eta * dp.DT5)
+        must = min(-pw, need) if pw < 0 else 0.0
+        bad["must"] += int(c < min(must, P) - 1e-9)
+        if c > must + 1e-9:
+            top = min(E, s + eta * c * dp.DT5)
+            ks = np.arange(int(np.floor(s / sv.GRID + 1e-9)), int(np.ceil(top / sv.GRID - 1e-9)))
+            bad["economic"] += int((lim[np.clip(ks, 0, len(lim) - 1)] < price - 1e-9).any())
+    ok = True
+    for k, v in bad.items():
+        ok &= _result(f"f5 bids: {k}", v == 0, f"{v} of {n}")
+    table = vl.prices()
+    base = bd.charge_floor(table, 9.0, st.FACTORY.load_scale, bt.PREFS.load_margin)
+    d = pd.Timestamp("2026-01-15")
+    later, before = table.copy(), table.copy()
+    later.loc[later.index >= d] += 500.0
+    before.loc[(before.index >= d - pd.Timedelta(days=28)) & (before.index < d)] += 500.0
+    same = base[d] == bd.charge_floor(later, 9.0, st.FACTORY.load_scale, bt.PREFS.load_margin)[d]
+    moved = base[d] != bd.charge_floor(before, 9.0, st.FACTORY.load_scale, bt.PREFS.load_margin)[d]
+    ok &= _result("f5 floor uses only the days before (the day and later changed)", bool(same), f"${base[d]:.1f} on {d.date()}")
+    return ok & _result("f5 floor positive control: the 28 days before changed", bool(moved))
+
+
+def buy_caps(step: str) -> bool:
+    """Round 5 (section 12.6): in a run with a buy side, no interval where the battery bought beyond its plan ends with
+    the meter above both its cap and the month's earlier highest (a buy must not raise the month's peak)."""
+    log = pd.read_parquet(PROCESSED / f"v2_{step}_log.parquet")
+    if "bid_mwh" not in log:
+        return True
+    ok = True
+    for name, x in log.dropna(subset=["bid_mwh"]).groupby("strategy"):
+        x = x.assign(day=pd.to_datetime(x["day"])).sort_values(["day", "slot"])
+        n = 0
+        for _, g in x.groupby(x["day"].dt.strftime("%Y-%m")):
+            meter = g["meter_mw"].to_numpy()
+            before = np.maximum.accumulate(np.r_[0.0, meter[:-1]])
+            n += int(((g["bid_mwh"].to_numpy() > 1e-9) & (meter > np.maximum(g["cap_mw"].to_numpy(), before) + 1e-6)).sum())
+        ok &= _result(f"{step} {name}: buying never raises the meter above its cap and the month's highest", n == 0,
+                      f"{n} intervals")
+    return ok
+
+
+def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5"), ("e5", "c5", "rw50+state t5"),
+                      ("f5", "e5", "rw50+state t5+roll")), tol: float = 1e-9) -> bool:
     """Round 5: a step's base is the same run, day for day, as in the step that chose it: within tol, the drift between
     the environments the two runs were made in (round 5 runs in another session than round 4: up to 1.3e-11; in one
     environment the base is bit for bit the same before and after the round's code, v2_plan.md section 6)."""
@@ -443,6 +515,8 @@ def main(argv: list[str] | None = None) -> None:
         ok &= terminal_timing()
     if "--c5" in argv:
         ok &= regime_values() & regime_timing()
+    if "--f5" in argv:
+        ok &= full_bids() & buy_caps("f5")
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)
