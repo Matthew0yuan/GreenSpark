@@ -31,7 +31,7 @@ VALUE_INPUTS: dict = {}  # the relative value curve's per-day arrays by (level s
 def value_inputs(cfg: V2Config, bat) -> dict:
     """The relative value curve's per-day arrays for cfg's level statistic, hurdle and the battery the dispatcher
     sees (built beforehand: python -m vpp.v2.value)."""
-    key = (cfg.level_stat, bat.energy_mwh, bt.HURDLE if cfg.hurdle is None else cfg.hurdle, cfg.state)
+    key = (cfg.level_stat, bat.energy_mwh, bt.HURDLE if cfg.hurdle is None else cfg.hurdle, cfg.state, cfg.regime)
     if key not in VALUE_INPUTS:
         p = vl.path(*key)
         if not p.exists():
@@ -237,6 +237,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
                 today, nxt = inputs["state_today"][i], inputs["state_tomorrow"][i]
                 if np.isfinite(today):
                     marg = inputs["marg_state"][i, int(today)]
+                if cfg.regime:  # c5 (round 5): today's state (pooled without a call), by whether the day has spiked
+                    marg = inputs["marg_regime"][i]
                 if np.isfinite(nxt) and cfg.value == "relative":
                     end = vl.shifted(inputs["curve_state"][i, int(nxt)].astype(float), held, cfg.curve_shift)
                     terms = replace(terms, reveals=terms.reveals + (dp.Reveal(2, "tomorrow's market state", terminal=end),))

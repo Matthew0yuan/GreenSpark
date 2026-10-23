@@ -857,6 +857,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         raise ValueError("offer rule 'table' needs the day's bids")
     buy_rule = table_rule and getattr(bids, "buy_margin", None) is not None  # the bids also buy (vpp.v2.bids)
     bid_mwh, moved = np.zeros(N), np.zeros(N, bool)  # MWh bought beyond (+) or short of (-) the plan; departures
+    # bids that follow the day so far (vpp.v2.bids, v2 round 5) see each 5 minutes the half-hours settled by the
+    # offers' information time (the latest 5-min price seen is offer_lag steps back)
+    watch = getattr(bids, "observe", None) if table_rule else None
+    rtp_seen = np.asarray(rtp, float)
     k_offer = np.full(N, np.inf) if value_rule or table_rule else offer_prices(strat, fc_e)
     offer_fcess, offer_mwh = np.full(N, np.nan), np.zeros(N)
     tv = stored_energy_value(bat, fc_e)
@@ -1081,6 +1085,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             sellable = max(0.0, min(P, exp_room[t], (s - keep_e) * eta / DT5, budget / DT5))
             pw = min(cur["net"][i], sellable)
             price = p5[t * STEPS + j]
+            if watch is not None:
+                watch(t * STEPS + j, rtp_seen[:max(0, (t * STEPS + j - offer_lag + 1) // STEPS)])
             if buy_rule and pw <= 0:
                 # the bids' buy side, priced from the latest step already seen, as the sell side
                 i5 = t * STEPS + j

@@ -22,7 +22,13 @@ state's days of the same window and shrunk to the pooled ones with REGIME_PRIOR 
 value at the next 08:00 one trading day is solved back under each state's transitions, giving today's offer values
 when today is in that state, and the 08:00 curve that ends today when tomorrow is in it.
 
-Run:  python -m vpp.v2.value [--stat mean] [--energy 36] [--hurdle 0] [--state]    builds the per-day arrays (cached)
+regime (round 5, c5, section 12.4): today's offer values also by whether the day has already spiked (a settled
+half-hour >= SPIKE). Inside the day the regime is part of the state: once spiked it stays for the day (it resets at
+the next 08:00); a day not yet spiked spikes in a slot with the share of that slot's pooled half-hours in its price
+state that reach SPIKE at the table's level. The transitions split by regime are the state's plus the regime's
+shrunk deviation (regime_split). The plans' end value is not split: the regime resets at the next 08:00.
+
+Run:  python -m vpp.v2.value [--stat mean] [--energy 36] [--hurdle 0] [--state] [--regime]   builds the per-day arrays
       python -m vpp.v2.value --b1                                         round 4, B1: builds and checks the tables
 """
 
@@ -44,12 +50,16 @@ from vpp.evaluate import CUTOFF, TRAIN_END
 LEVEL_DAYS = 28   # days of past prices in the level [fixed]
 GRID_STEP = 5.0   # $/MWh between solved levels [fixed]
 REGIME_PRIOR = 20.0  # pseudo-transitions shrinking each market state's transitions to the pooled ones [fixed, 11.6]
+POOL = 2          # round 5, c5: slots either side whose transitions are counted with a slot's [fixed, 12.4]
+SPIKE = 150.0     # $/MWh: a settled half-hour at least this has spiked (as vpp.v2.risk.SPIKE) [fixed, 12.4]
 FIRST, LAST = pd.Timestamp("2025-04-01"), pd.Timestamp("2026-10-15")  # the backtest's days
 
 
-def path(stat: str = "median", energy_mwh: float = 40.0, hurdle: float = bt.HURDLE, state: bool = False) -> Path:
+def path(stat: str = "median", energy_mwh: float = 40.0, hurdle: float = bt.HURDLE, state: bool = False,
+         regime: bool = False) -> Path:
     return PROCESSED / (f"v2_value_{stat}{'' if energy_mwh == 40.0 else f'_{energy_mwh:g}mwh'}"
-                        f"{'' if hurdle == bt.HURDLE else f'_h{hurdle:g}'}{'_state' if state else ''}.npz")
+                        f"{'' if hurdle == bt.HURDLE else f'_h{hurdle:g}'}{'_state' if state else ''}"
+                        f"{'_regime' if regime else ''}.npz")
 
 
 def prices() -> pd.DataFrame:
@@ -100,6 +110,105 @@ def regime_trans(table: pd.DataFrame, month: pd.Period, level: pd.Series, flags:
     return out
 
 
+def regime_split(table: pd.DataFrame, month: pd.Period, level: pd.Series, flags: pd.Series, ps: dict,
+                 rtrans: np.ndarray) -> dict:
+    """Round 5, c5 (reports/v2_plan.md section 12.4): the transitions between price states split again by whether the
+    day has already spiked (a settled half-hour >= SPIKE before the slot), for each market state of the day (0, 1)
+    and for a day without a call (2: all days). Each is the base's transitions (B4's for the state, the pooled ones
+    for 2) plus, row by row, lam x (the transitions counted on that regime's rows - those counted on both regimes'
+    rows), the counts pooled over the POOL slots either side and lam = n / (n + REGIME_PRIOR), n the distinct days in
+    the row; rows clipped at 0 and renormalised. Without a real difference it is the base. The last slot (to the next
+    day's first, where the regime resets) keeps the base's. Same window as the table (before the month, not after
+    TRAIN_END).
+    Returns trans (variant, regime, slot, b, c); cells (variant, regime, slot, [distinct days, mean lam weighted by
+    the rows' days, largest change of a transition]); pool_rel[slot][b], the sorted relative prices of the slot's
+    pooled half-hours in price state b (for the chance such a half-hour spikes at a level)."""
+    end = min(month.start_time, CUTOFF)
+    x = table[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= TRAIN_END)].dropna()
+    rel = x.sub(level.reindex(x.index), axis=0).dropna()
+    if len(rel) and not (rel.index.max() < month.start_time and rel.index.max() <= TRAIN_END):
+        raise ValueError(f"{month}: the window reaches past the month or the training end")
+    X, days = rel.to_numpy(), rel.index
+    spiked = x.loc[days].to_numpy() >= SPIKE
+    regime = np.c_[np.zeros(len(days), bool), np.cumsum(spiked, axis=1)[:, :-1] > 0]  # a spike before the slot
+    bins = np.stack([np.searchsorted(ps["edges"][t, 1:-1], X[:, t], side="right") for t in range(dp.N)], axis=1)
+    state = flags.reindex(days).to_numpy()
+    trans = np.empty((3, 2, dp.N, sv.B, sv.B))
+    cells = np.zeros((3, 2, dp.N, 3))
+    for v in (0, 1, 2):
+        rows = (state == v) if v < 2 else np.ones(len(days), bool)
+        base = rtrans[v] if v < 2 else ps["trans"]
+        trans[v, :, dp.N - 1] = base[dp.N - 1]
+        for t in range(dp.N - 1):
+            both, by = np.zeros((sv.B, sv.B)), np.zeros((2, sv.B, sv.B))
+            seen = np.zeros((2, len(days), sv.B), bool)
+            for u in range(max(0, t - POOL), min(dp.N - 2, t + POOL) + 1):
+                np.add.at(both, (bins[rows, u], bins[rows, u + 1]), 1)
+                for k in (0, 1):
+                    m = rows & (regime[:, u] == bool(k))
+                    np.add.at(by[k], (bins[m, u], bins[m, u + 1]), 1)
+                    seen[k, np.flatnonzero(m), bins[m, u]] = True
+            p_both = both / np.maximum(both.sum(axis=1, keepdims=True), 1.0)
+            for k in (0, 1):
+                n = seen[k].sum(axis=0)
+                lam = n / (n + REGIME_PRIOR)
+                counted = by[k].sum(axis=1, keepdims=True)
+                dev = np.where(counted > 0, by[k] / np.maximum(counted, 1.0) - p_both, 0.0)
+                tr = np.clip(base[t] + lam[:, None] * dev, 0.0, None)
+                trans[v, k, t] = tr / tr.sum(axis=1, keepdims=True)
+                cells[v, k, t] = (seen[k].any(axis=1).sum(), (n * lam).sum() / max(n.sum(), 1),
+                                  np.abs(trans[v, k, t] - base[t]).max())
+    pool_rel = [[np.sort(np.concatenate([X[bins[:, u] == b, u] for u in range(max(0, t - POOL), min(dp.N - 1, t + POOL) + 1)]))
+                 for b in range(sv.B)] for t in range(dp.N)]
+    return {"trans": trans, "cells": cells, "pool_rel": pool_rel}
+
+
+def spike_chance(pool_rel: list, means: np.ndarray, level: float) -> np.ndarray:
+    """(slot, b): the share of the slot's pooled half-hours in price state b whose price at this level is >= SPIKE
+    (smooth in the level; a state without half-hours: whether its mean price spikes)."""
+    out = np.empty((dp.N, sv.B))
+    for t in range(dp.N):
+        for b in range(sv.B):
+            x = pool_rel[t][b]
+            out[t, b] = ((len(x) - np.searchsorted(x, SPIKE - level, side="left")) / len(x) if len(x)
+                         else float(means[t, b] + level >= SPIKE))
+    return out
+
+
+def backward_regime(end: np.ndarray, acts: dict, dow: int, trans: np.ndarray, chance: np.ndarray, E: float) -> np.ndarray:
+    """ev[slot, b, regime, point]: the expected value at the end of each slot of a trading day on weekday dow, given
+    the slot's price state b and whether the day has spiked before it, solved back from the value end (point x b) at
+    the day's end, where the regime resets. Price states move by trans[regime] (regime, slot, b, c); a day not yet
+    spiked has spiked after slot t with chance[t, b]. With the same transitions for both regimes it is
+    vpp.storage_value.backward's."""
+    grid = np.arange(0.0, E + 1e-9, sv.GRID)
+    W = np.empty((dp.N + 1, len(grid), sv.B, 2))
+    W[dp.N] = end[:, :, None]
+    ev = np.empty((dp.N, sv.B, 2, len(grid)))
+    for t in reversed(range(dp.N)):
+        x, ok, reward = acts[dow, t]
+        xc = np.clip(x, 0.0, E)
+        for r in (0, 1):
+            for b in range(sv.B):
+                rho = 1.0 if r else chance[t, b]
+                e = ((1.0 - rho) * W[t + 1, :, :, 0] + rho * W[t + 1, :, :, 1]) @ trans[r][t][b]
+                ev[t, b, r] = e
+                tot = np.where(ok, reward[b][None, :] + np.interp(xc, grid, e), -np.inf)
+                W[t, :, b, r] = tot.max(axis=1)
+    return ev
+
+
+def _by_regime(V: np.ndarray, acts: dict, split: dict, chance: np.ndarray, E: float) -> np.ndarray:
+    """(variant, dow, slot, b, regime, segment): the offer values of a day on weekday dow in each market state (and
+    without a call), by whether the day has spiked: one trading day solved back from the pooled value at its end."""
+    marg = np.empty((3, 7, dp.N, sv.B, 2, V.shape[2] - 1))
+    for v in range(3):
+        for dow in range(7):
+            ev = backward_regime(V[dow, dp.N], acts, dow, split["trans"][v], chance, E)
+            marg[v, dow] = np.clip(np.apply_along_axis(sv.decreasing, 3, np.diff(ev, axis=3) / sv.GRID), 0.0, None)
+    return marg
+
+
 def _marginals(V: np.ndarray, ps: dict) -> tuple[np.ndarray, np.ndarray]:
     """The end-of-day curve (dow x segment) and the offer values (dow x slot x state x segment) of a solved table,
     as v1 derives them (vpp.storage_value.build)."""
@@ -132,7 +241,7 @@ def _by_state(V: np.ndarray, ps: dict, acts: dict, rtrans: np.ndarray, E: float)
 
 
 def _solve(task: tuple) -> tuple:
-    month, level, ps, energy_mwh, hurdle, rtrans = task
+    month, level, ps, energy_mwh, hurdle, rtrans, split = task
     asset = bt.Q2B_ASSET if energy_mwh == bt.Q2B_ASSET.battery.energy_mwh else \
         replace(bt.Q2B_ASSET, battery=replace(bt.Q2B_ASSET.battery, energy_mwh=energy_mwh))
     prefs = bt.PREFS if hurdle == bt.HURDLE else replace(bt.PREFS, hurdle_per_mwh=hurdle)
@@ -144,22 +253,29 @@ def _solve(task: tuple) -> tuple:
         acts = sv.actions(at_level, sv.load_profiles(month), asset, prefs, short_penalty=0.0)
         curve_s, marg_s = _by_state(V, ps, acts, rtrans, asset.battery.energy_mwh)
         out += [curve_s.astype(np.float32), marg_s.astype(np.float32)]
+        if split is not None:  # round 5, c5: also by whether the day has spiked
+            chance = spike_chance(split["pool_rel"], ps["means"], level)
+            out.append(_by_regime(V, acts, split, chance, asset.battery.energy_mwh).astype(np.float32))
     return tuple(out)
 
 
 def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False, hurdle: float = bt.HURDLE,
-          out: Path | None = None, state: bool = False) -> Path:
-    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh, hurdle, state), or written to out);
-    with state, also each day's values by market state and the states of the day and the next (B4)."""
+          out: Path | None = None, state: bool = False, regime: bool = False) -> Path:
+    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh, hurdle, state, regime), or written to
+    out); with state, also each day's values by market state and the states of the day and the next (B4); with regime
+    (round 5, c5; needs state), also the day's offer values for its own state (pooled without a call) by whether the
+    day has spiked, and reports/v2_c5_cells.csv (the split's days, shrinkage and largest change per month and slot)."""
+    if regime and not state:
+        raise ValueError("values by regime are split from the values by market state")
     if out is None:
-        out = path(stat, energy_mwh, hurdle, state)
+        out = path(stat, energy_mwh, hurdle, state, regime)
         if out.exists() and not rebuild:
             return out
     table = prices()
     lv = levels(table, stat)
     flags = regimes() if state else None
     days = lv.index[(lv.index >= FIRST) & (lv.index <= LAST)]
-    tasks, states = [], {}
+    tasks, states, cells = [], {}, []
     for month in sv.MONTHS:
         in_month = days[(days >= month.start_time) & (days <= month.end_time)]
         if not len(in_month):
@@ -167,14 +283,25 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
         ps = sv.price_states(table, month, level=lv)
         states[month] = ps
         rtrans = regime_trans(table, month, lv, flags, ps) if state else None
+        split = regime_split(table, month, lv, flags, ps, rtrans) if regime else None
+        if split is not None:
+            for v in range(3):
+                for k in (0, 1):
+                    for t in range(dp.N):
+                        n, lam, change = split["cells"][v, k, t]
+                        cells.append({"month": str(month), "market_state": ("normal", "high-risk", "no call")[v],
+                                      "spiked_today": k, "slot": t, "days": int(n), "lam": lam, "largest_change": change})
         lo, hi = lv[in_month].min(), lv[in_month].max()
         grid = np.arange(np.floor(lo / GRID_STEP) * GRID_STEP, np.ceil(hi / GRID_STEP) * GRID_STEP + 1e-9, GRID_STEP)
         if len(grid) == 1:
             grid = np.r_[grid, grid + GRID_STEP]
-        tasks += [(month, float(g), ps, energy_mwh, hurdle, rtrans) for g in grid]
+        tasks += [(month, float(g), ps, energy_mwh, hurdle, rtrans, split) for g in grid]
+    if cells:
+        pd.DataFrame(cells).to_csv(bt.REPORTS / "v2_c5_cells.csv", index=False)
     with ProcessPoolExecutor() as pool:
         solved = {(r[0], r[1]): r[2:] for r in pool.map(_solve, tasks)}
-    rows = {"day": [], "level": [], "curve": [], "marg": [], "edges": [], "curve_state": [], "marg_state": []}
+    rows = {"day": [], "level": [], "curve": [], "marg": [], "edges": [], "curve_state": [], "marg_state": [],
+            "marg_regime": []}
     for d in days:
         month = d.to_period("M")
         grid = sorted(g for m, g in solved if m == month)
@@ -192,6 +319,9 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
         if state:
             rows["curve_state"].append((1 - w) * a[3][:, dow] + w * b[3][:, dow])
             rows["marg_state"].append((1 - w) * a[4][:, dow] + w * b[4][:, dow])
+        if regime:
+            v = int(flags.get(d, np.nan)) if np.isfinite(flags.get(d, np.nan)) else 2  # today's state, or no call
+            rows["marg_regime"].append((1 - w) * a[5][v, dow] + w * b[5][v, dow])
     keys = sorted(solved)
     extra = {}
     if state:
@@ -200,6 +330,8 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
                  "marg_state": np.array(rows["marg_state"], np.float32),
                  "state_today": flags.reindex(idx).to_numpy(float),
                  "state_tomorrow": flags.reindex(idx + pd.Timedelta(days=1)).to_numpy(float)}
+    if regime:
+        extra["marg_regime"] = np.array(rows["marg_regime"], np.float32)
     np.savez_compressed(out, day=np.array(rows["day"]), level=np.array(rows["level"]),
                         curve=np.array(rows["curve"], np.float32), marg=np.array(rows["marg"], np.float32),
                         edges=np.array(rows["edges"], np.float32),
@@ -218,7 +350,7 @@ def load(p) -> dict:
         grid.setdefault(m, []).append((float(g), c))
     out = {"index": {d: i for i, d in enumerate(days)}, "level": z["level"], "curve": z["curve"], "marg": z["marg"],
            "edges": z["edges"], "grid": {m: sorted(v, key=lambda x: x[0]) for m, v in grid.items()}}
-    for k in ("curve_state", "marg_state", "state_today", "state_tomorrow"):
+    for k in ("curve_state", "marg_state", "state_today", "state_tomorrow", "marg_regime"):
         if k in z.files:
             out[k] = z[k]
     return out
@@ -300,7 +432,8 @@ def main(argv: list[str] | None = None) -> None:
     stat = argv[argv.index("--stat") + 1] if "--stat" in argv else "median"
     energy = float(argv[argv.index("--energy") + 1]) if "--energy" in argv else 40.0
     hurdle = float(argv[argv.index("--hurdle") + 1]) if "--hurdle" in argv else bt.HURDLE
-    p = build(stat, energy, "--rebuild" in argv, hurdle, state="--state" in argv)
+    p = build(stat, energy, "--rebuild" in argv, hurdle, state="--state" in argv or "--regime" in argv,
+              regime="--regime" in argv)
     z = load(p)
     lv = pd.Series(z["level"], index=list(z["index"]))
     print(f"{p.name}: {len(lv)} days; level ${lv.min():.0f}-{lv.max():.0f}/MWh (median {lv.median():.0f})")

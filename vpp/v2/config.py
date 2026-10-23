@@ -29,6 +29,7 @@ class V2Config:
     # round 5 (v2_plan.md section 12), t5: before 09:00 the plans' end value is shifted by what today already commits
     # only; tomorrow's site reserve (②, public at 09:00) joins the shift from 09:00
     terminal_0900: bool = False
+    regime: bool = False              # round 5, c5: today's offer values also by whether the day has spiked (with state)
 
 
 V1 = V2Config()

@@ -312,7 +312,73 @@ def terminal_timing(tomorrows=("2026-01-21", "2026-02-02", "2026-03-06")) -> boo
     return ok & _result("the base's 08:00 end value moved with the flag (the leak t5 removes)", leak > 0, f"{leak} of {len(tomorrows)}")
 
 
-def same_steps(pairs=(("t5", "b4", "rw50+state"),), tol: float = 1e-9) -> bool:
+def regime_values(months=("2025-07", "2026-01"), level: float = 90.0, tol: float = 1e-6) -> bool:
+    """c5 (round 5, section 12.4): the values by regime are non-increasing in stored energy and >= 0; with the same
+    transitions for both regimes they are B4's values by state (within tol); the split's windows end before each month
+    and not after TRAIN_END."""
+    from vpp.evaluate import CUTOFF, TRAIN_END
+    h = vb.B2_WIN.hurdle
+    z = np.load(vl.build("median", 40.0, hurdle=h, state=True, regime=True))
+    mr = z["marg_regime"]
+    ok = _result("c5 values by regime non-increasing and >= 0",
+                 bool((np.diff(mr, axis=4) <= 1e-6).all() and (mr >= 0).all()), f"{len(mr)} days")
+    table = vl.prices()
+    lv = vl.levels(table)
+    flags = vl.regimes()
+    prefs = replace(bt.PREFS, hurdle_per_mwh=h)
+    E = bt.Q2B_ASSET.battery.energy_mwh
+    worst = 0.0
+    for m in map(pd.Period, months):
+        ps = sv.price_states(table, m, level=lv)
+        rtrans = vl.regime_trans(table, m, lv, flags, ps)
+        at = {**ps, "means": level + ps["means"]}
+        V, _ = sv.solve(at, sv.load_profiles(m), prefs=prefs, short_penalty=0.0)
+        acts = sv.actions(at, sv.load_profiles(m), bt.Q2B_ASSET, prefs, short_penalty=0.0)
+        _, marg_s = vl._by_state(V, ps, acts, rtrans, E)
+        split = vl.regime_split(table, m, lv, flags, ps, rtrans)
+        chance = vl.spike_chance(split["pool_rel"], ps["means"], level)
+        for v in (0, 1):
+            same = {**split, "trans": np.stack([np.stack([rtrans[v], rtrans[v]])] * 3)}
+            mr_same = vl._by_regime(V, acts, same, chance, E)[v]
+            worst = max(worst, float(np.abs(mr_same[..., 0, :] - marg_s[v]).max()), float(np.abs(mr_same[..., 1, :] - marg_s[v]).max()))
+    ok &= _result(f"c5 with one set of transitions for both regimes = B4's values (within {tol:g})", worst <= tol,
+                  f"largest difference {worst:.2g} over {len(months)} months x 2 states x 7 weekdays")
+    bad = 0
+    for m in sv.MONTHS:
+        end = min(m.start_time, CUTOFF)
+        used = table.index[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= TRAIN_END)]
+        bad += int(not (used.max() < m.start_time and used.max() <= TRAIN_END))
+    return ok & _result("c5 split windows before each month and not after the training end", bad == 0, f"{bad} of {len(sv.MONTHS)}")
+
+
+def regime_timing(days=("2025-12-10", "2026-01-21", "2026-02-02"), slots=(14, 24)) -> bool:
+    """c5: the regime at slot t comes from half-hours settled before t only. Changing the settled prices from slot t on
+    (5-min prices kept) leaves every decision up to slot t as it was; changing the one settled just before t to $1,000
+    (positive control) changes the offers from slot t on on some day."""
+    import copy
+    all_days, aux = bt.load_days("0900"), bt.q2b_aux()
+    by = {d["day"]: d for d in all_days}
+    ok, moved = True, 0
+    for day in map(pd.Timestamp, days):
+        for t in slots:
+            out = {}
+            for variant in ("as is", "later", "before"):
+                pair = copy.deepcopy([by[day], by[day + pd.Timedelta(days=1)]])
+                if variant == "later":
+                    pair[0]["rtp"] = np.r_[pair[0]["rtp"][:t], pair[0]["rtp"][t:] + 300.0]
+                elif variant == "before":
+                    pair[0]["rtp"] = np.r_[pair[0]["rtp"][:t - 1], 1000.0, pair[0]["rtp"][t:]]
+                bt._init_worker(pair, aux)
+                (_, _, _, log, _), = list(hs.route_days(vb.m1(), replace(vb.C5, record=False), soc0=20.0, until=day))
+                out[variant] = log.drop(columns="rtp")
+            ok &= _result(f"c5: {day.date()} up to slot {t} unchanged by settled prices from slot {t} on",
+                          _same(out["as is"].iloc[:t + 1], out["later"].iloc[:t + 1]))
+            moved += not out["as is"].iloc[t:].equals(out["before"].iloc[t:])
+    return ok & _result("c5 positive control: a spike settled just before t moves the offers from t on", moved > 0,
+                        f"{moved} of {len(days) * len(slots)}")
+
+
+def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5")), tol: float = 1e-9) -> bool:
     """Round 5: a step's base is the same run, day for day, as in the step that chose it: within tol, the drift between
     the environments the two runs were made in (round 5 runs in another session than round 4: up to 1.3e-11; in one
     environment the base is bit for bit the same before and after the round's code, v2_plan.md section 6)."""
@@ -374,6 +440,8 @@ def main(argv: list[str] | None = None) -> None:
         ok &= same_base() & same_steps()
     if "--t5" in argv:
         ok &= terminal_timing()
+    if "--c5" in argv:
+        ok &= regime_values() & regime_timing()
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)
