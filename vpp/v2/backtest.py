@@ -20,13 +20,15 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
                with the energy market by time of day and the night re-plans after a dip (reports/v2_e5_roll.csv)
   --step f5    round 5 (section 12.6): B3's buy side at the full value, capped, with or without a floor under the
                values, and the night fill (a reference), on e5 (pass: as c5; both passing, the higher mean)
-  --smoke   2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
+  --step g5    round 5 (section 12.7): the gate closure (offer prices 20 minutes old; prices and quantities locked 15
+               minutes before) and the $1,000 offer ceiling, layer by layer on e5 (reported only)
+  --smoke  2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5 [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5 [--smoke]
 """
 
 import os
@@ -103,7 +105,14 @@ F5B = replace(E5, name=f"{E5.name}+bid floor", bid="floor")
 F5R = replace(E5, name=f"{E5.name}+fill", bid="fill", record=False)
 STEPS["f5"] = {"base": E5.name, "candidates": (F5A.name, F5B.name), "ref": None, "tables": STEPS["b4"]["tables"],
                "configs": (replace(E5, record=False), F5A, F5B, F5R)}
-ROUND5 = ("t5", "c5", "e5", "f5")
+# g5 (12.7, reported only): the gate closure and the offer price ceiling, layer by layer, on e5 (f5 did not pass)
+G5A = replace(E5, name=f"{E5.name}+lag20", offer_lag=4, record=False)
+G5B = replace(G5A, name=f"{E5.name}+lock", offer_lock=3)
+G5C = replace(G5B, name=f"{E5.name}+lock+cap", offer_cap=1000.0)
+STEPS["g5"] = {"base": E5.name, "candidates": (G5A.name, G5B.name, G5C.name), "ref": None, "report_only": True,
+               "layers": ((G5A.name, E5.name), (G5B.name, G5A.name), (G5C.name, G5B.name)),
+               "tables": STEPS["b4"]["tables"], "configs": (replace(E5, record=False), G5A, G5B, G5C)}
+ROUND5 = ("t5", "c5", "e5", "f5", "g5")
 BLOCKS = (("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
 
 
@@ -372,7 +381,13 @@ def main(argv: list[str] | None = None) -> None:
     print(f"=== stored energy (MWh) and offers\n{diag.round(2).to_string()}\n")
     print(f"=== IRCR, {bt.IRCR_SEASON}-{bt.IRCR_SEASON - 1999} Hot Season ($/year)\n"
           f"{ircr[['strategy', 'ircr_mw', 'saving_per_year', 'peak_days_covered']].round(2).to_string(index=False)}\n")
-    if spec.get("report_only"):
+    if spec.get("layers"):  # g5: each layer against the one before it
+        layers = compare_pairs(money, ledger, bills, spec["layers"])
+        layers.to_csv(REPORTS / f"{tag}_layers.csv")
+        print(f"=== each layer against the one before\n"
+              f"{layers[['base', 'per_day', 'vs_base', 'vs_base_lo', 'vs_base_hi', 'market_vs_base', 'bill_vs_base']].round(1).to_string()}\n")
+        print("reported only: what the backtest overstates without the gate closure and the price ceiling")
+    elif spec.get("report_only"):
         print(f"reported only: {', '.join(spec['candidates'])} is the base of the round's later steps")
     elif not smoke and "validation" in table.index.get_level_values(0):
         val = table.loc["validation"]

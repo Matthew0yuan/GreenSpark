@@ -70,13 +70,26 @@ class LadderBids:
     buy_cap: float | None = None
     value_floor: float | None = None
     night_fill: bool = False
+    # round 5, g5 (section 12.7): offers submitted `lock` 5-min steps before their step (the gate closure): priced and
+    # sized for the least stored energy the battery can have by then (stored energy at submission less lock x
+    # lock_drain, the most one step can draw); segments priced above offer_cap ($/MWh) are not offered
+    lock: int = 0
+    lock_drain: float = 0.0
+    offer_cap: float | None = None
     spiked: bool = field(default=False, init=False, repr=False)  # c5: a half-hour settled so far today reached SPIKE
+    step: int = field(default=-1, init=False, repr=False)        # g5: the 5-min step run_day is in
+    stored: dict = field(default_factory=dict, init=False, repr=False)  # g5: stored MWh at the start of each step
 
-    def observe(self, i5: int, settled: np.ndarray) -> None:
-        """Round 5, c5: each 5 minutes run_day passes the day's half-hours settled by the offers' information time;
-        with values by regime, whether one of them reached SPIKE picks the values."""
+    def observe(self, i5: int, settled: np.ndarray, s: float | None = None) -> None:
+        """Round 5: each 5 minutes run_day passes the step, the day's half-hours settled by the offers' information time
+        and the stored energy. c5: with values by regime, whether a settled half-hour reached SPIKE picks the values;
+        g5: with a lock, the stored energy at each step is kept for the offers submitted then."""
         if self.marg.ndim == 4:
             self.spiked = bool(np.any(np.asarray(settled, float) >= SPIKE))
+        if self.lock:
+            self.step = i5
+            if s is not None:
+                self.stored[i5] = s
 
     def _values(self, t: int, seen: float) -> np.ndarray:
         """$ per MWh of each segment at the end of slot t, in the price state of the latest 5-min price seen (and, with
@@ -96,13 +109,26 @@ class LadderBids:
         protected = np.arange(len(m)) * sv.GRID < self.protect[t] - 1e-9
         if protected.any():
             thr = np.where(protected, np.maximum(thr, alpha * (m + self.value) / eta + dw), thr)
+        if self.offer_cap is not None:  # g5: above the offer price ceiling a segment is not offered
+            thr = np.where(thr > self.offer_cap, np.inf, thr)
         return thr
+
+    def locked_stored(self, s: float) -> float:
+        """g5: the stored energy this step's offers are priced and sized for: the least the battery can have, from what
+        it had when they were submitted (lock steps back; the day's first step before that), or s without a lock."""
+        if not self.lock or not self.stored:
+            return s
+        at = self.step - self.lock
+        s_sub = self.stored[at] if at in self.stored else self.stored[min(self.stored)]
+        return min(s, max(0.0, s_sub - self.lock * self.lock_drain))
 
     def sell(self, t: int, s: float, base: float, sellable: float, price: float, seen: float, eta: float,
              alpha: float, dw: float, k_min: float) -> tuple[float, float]:
         """(MW to discharge this 5-min step, the threshold of the last MWh sold - or of the next, if none), as
-        DayBids.sell: beyond the plan's base MW, the MWh whose threshold the price reaches; at most sellable MW."""
+        DayBids.sell: beyond the plan's base MW, the MWh whose threshold the price reaches; at most sellable MW.
+        With a lock (g5) the segments are those of the least stored energy possible by the step (locked_stored)."""
         thr = self.thresholds(t, seen, eta, alpha, dw, k_min)
+        s = self.locked_stored(s)
         x_plan = s - base * dp.DT5 / eta
         x_end = max(0.0, s - sellable * dp.DT5 / eta)
         ok = np.flatnonzero(thr <= price)

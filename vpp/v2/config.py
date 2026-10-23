@@ -34,6 +34,10 @@ class V2Config:
     # round 5, f5: the offers also bid to buy, B3's way, at the full value: "full" (eta x value, capped), "floor" (the
     # values both sides use floored at the recent cheap charging price / eta), "fill" (reference: the cap from 00:00)
     bid: str = ""
+    # round 5, g5 (reported only): offers submitted this many 5-min steps before their step, priced and sized for the
+    # least stored energy possible by then (the gate closure); segments priced above offer_cap ($/MWh) not offered
+    offer_lock: int = 0
+    offer_cap: float | None = None
 
 
 V1 = V2Config()

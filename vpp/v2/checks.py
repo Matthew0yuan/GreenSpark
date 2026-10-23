@@ -431,6 +431,48 @@ def full_bids(n: int = 3000, seed: int = 6, h: float = 50.0) -> bool:
     return ok & _result("f5 floor positive control: the 28 days before changed", bool(moved))
 
 
+def locked_offers(n: int = 1000, seed: int = 7, h: float = 50.0) -> bool:
+    """g5 (round 5, section 12.7) on random days and states: with a lock of 3 steps, a step's offer depends on the
+    stored energy at submission only (the stored energy after it changed, never below the least possible: the same
+    offer; changed at submission: a different offer on some, the positive control); with the ceiling no segment is
+    offered above $1,000."""
+    z = vl.load(vl.build("median", 40.0, hurdle=h))
+    rng = np.random.default_rng(seed)
+    bat = bt.Q2B_ASSET.battery
+    eta, P, cost = bat.eta, bat.power_mw, bt.Q2B_ASSET.wear_per_mwh + h
+    dw, drain = dp.decision_wear(bt.Q2B_ASSET, bt.PREFS), bat.power_mw * dp.DT5 / bat.eta
+    changed = moved = above = 0
+    for _ in range(n):
+        i, t, j = int(rng.integers(0, len(z["level"]))), int(rng.integers(1, dp.N)), int(rng.integers(0, dp.STEPS))
+        i5 = t * dp.STEPS + j
+        b0 = bd.LadderBids(z["edges"][i], z["marg"][i], float(z["level"][i]), np.zeros(dp.N), 0.0, cost=cost, lock=3,
+                           lock_drain=drain, offer_cap=1000.0)
+        seen, price = float(rng.uniform(0, 400)), float(rng.uniform(150, 1100))
+        hist = rng.uniform(5.0, 40.0, i5 + 1)
+        # physically possible: within the lock the battery cannot draw more than lock x drain from what it had
+        hist[i5 - 2:] = np.maximum(hist[i5 - 2:], hist[i5 - 3] - 3 * drain)
+
+        def offer(h_):
+            b = replace(b0)
+            for k in range(i5 + 1):
+                b.observe(k, np.array([]), float(h_[k]))
+            return b.sell(t, float(h_[i5]), 0.0, P, price, seen, eta, 1.2, dw, 150.0)
+
+        first = offer(hist)
+        later = hist.copy()
+        low = max(0.0, hist[i5 - 3] - 3 * drain)
+        later[i5 - 2:] = rng.uniform(low, 40.0, len(later[i5 - 2:]))
+        changed += not np.allclose(first, offer(later), rtol=0, atol=1e-12)
+        sub = hist.copy()
+        sub[i5 - 3] = rng.uniform(5.0, 40.0)
+        moved += not np.allclose(first, offer(sub), rtol=0, atol=1e-12)
+        thr = b0.thresholds(t, seen, eta, 1.2, dw, 150.0)
+        above += int(((thr > 1000.0) & np.isfinite(thr)).any())
+    ok = _result("g5 offers depend on the stored energy at submission only", changed == 0, f"{changed} of {n}")
+    ok &= _result("g5 positive control: the stored energy at submission moves the offer", moved > 0, f"{moved} of {n}")
+    return ok & _result("g5 no segment offered above the ceiling", above == 0, f"{above} of {n}")
+
+
 def buy_caps(step: str) -> bool:
     """Round 5 (section 12.6): in a run with a buy side, no interval where the battery bought beyond its plan ends with
     the meter above both its cap and the month's earlier highest (a buy must not raise the month's peak)."""
@@ -451,7 +493,7 @@ def buy_caps(step: str) -> bool:
 
 
 def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5"), ("e5", "c5", "rw50+state t5"),
-                      ("f5", "e5", "rw50+state t5+roll")), tol: float = 1e-9) -> bool:
+                      ("f5", "e5", "rw50+state t5+roll"), ("g5", "e5", "rw50+state t5+roll")), tol: float = 1e-9) -> bool:
     """Round 5: a step's base is the same run, day for day, as in the step that chose it: within tol, the drift between
     the environments the two runs were made in (round 5 runs in another session than round 4: up to 1.3e-11; in one
     environment the base is bit for bit the same before and after the round's code, v2_plan.md section 6)."""
@@ -517,6 +559,8 @@ def main(argv: list[str] | None = None) -> None:
         ok &= regime_values() & regime_timing()
     if "--f5" in argv:
         ok &= full_bids() & buy_caps("f5")
+    if "--g5" in argv:
+        ok &= locked_offers()
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)
