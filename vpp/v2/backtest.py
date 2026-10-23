@@ -25,13 +25,17 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
   --step f5x   section 13: f5 again with buying beyond the plan only within the room the caps leave over the
                planned load and regulation lower (13.1, 13.2; pass: as f5)
   --step b3x   section 13.3: B3 again with the same fix, on rw50 (reported only)
+  --step fwd   section 13.4: e5 with rw50+state, rel+ladder and v1 alongside, on the days from 2026-10-16 (reported only)
+  --step test  section 14: every version adopted so far, v1 to e5, each against the one before it on the test (every
+               day from the cutoff with data) and on its two parts, the days the earlier rounds had seen and the days
+               from 2026-10-16 (reported only)
   --smoke  2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5|f5x|b3x [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5|f5x|b3x|fwd|test [--smoke]
 """
 
 import os
@@ -127,10 +131,17 @@ STEPS["b3x"] = {"base": B2_WIN.name, "candidates": (B3X.name,), "ref": None, "re
 # round 1's (rel+ladder) and v1 alongside; run from the first backtest day on so their start state carries over
 FWD_FROM = pd.Timestamp("2026-10-16")
 STEPS["fwd"] = {"base": E5.name, "candidates": (E5.name,), "ref": None, "report_only": True, "forward": True,
-                "last": "2026-10-31",  # days without data yet are left out
                 "tables": (("median", 40.0), ("median", 40.0, B2_WIN.hurdle, True)),
                 "configs": (V1, WIN, replace(B4, record=False), replace(E5, record=False))}
 ROUND5 = ("t5", "c5", "e5", "f5", "g5", "f5x", "b3x", "fwd")
+# section 14 (reported only): the test is every day from the cutoff with data; every version adopted so far, each
+# against the one before it, and e5 against rel+ladder and v1; run from the first backtest day on
+CHAIN = (V1, SITE, WIN, replace(B2_WIN, record=False), replace(B4, record=False), replace(T5, record=False),
+         replace(E5, record=False))
+STEPS["test"] = {"base": E5.name, "candidates": (E5.name,), "ref": None, "report_only": True,
+                 "pairs": (*((b.name, a.name) for a, b in zip(CHAIN, CHAIN[1:])), (E5.name, WIN.name), (E5.name, V1.name)),
+                 "tables": (("median", 40.0), ("median", 40.0, B2_WIN.hurdle), ("median", 40.0, B2_WIN.hurdle, True)),
+                 "configs": CHAIN}
 
 
 def forward_days(ledger: pd.DataFrame, logs: dict, first: pd.Timestamp = FWD_FROM, cmd: float = CMD) -> tuple:
@@ -162,7 +173,25 @@ def forward_days(ledger: pd.DataFrame, logs: dict, first: pd.Timestamp = FWD_FRO
     means["days_over_cmd"] = x.groupby("config")["over_cmd"].sum()
     means["days_raising_month_max"] = x.groupby("config")["raises_month_max"].sum()
     return x, means
-BLOCKS = (("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
+
+
+def test_parts(money: pd.DataFrame, ledger: pd.DataFrame, pairs, split: pd.Timestamp = FWD_FROM) -> pd.DataFrame:
+    """Section 14: the test's two parts - the days the earlier rounds had seen (from the cutoff to the day before
+    split) and the days nobody had (from split): per pair, the mean $/day, the gain over its base and its market and
+    bill parts (no intervals: the second part is a week)."""
+    led = ledger.pivot_table(index="day", columns="strategy", values="ledger_total").reindex(money.index)
+    day = money.index
+    rows = []
+    for part, sel in ((f"test to {(split - pd.Timedelta(days=1)).date()}", (day >= bt.CUTOFF) & (day < split)),
+                      (f"test from {split.date()}", day >= split)):
+        mp, lp = money[sel], led[sel]
+        for name, base in pairs if len(mp) else ():
+            gain, market = (mp[name] - mp[base]).mean(), (lp[name] - lp[base]).mean()
+            rows.append({"period": part, "config": name, "base": base, "days": len(mp), "per_day": mp[name].mean(),
+                         "vs_base": gain, "market_vs_base": market, "bill_vs_base": gain - market})
+    cols = ["period", "config", "base", "days", "per_day", "vs_base", "market_vs_base", "bill_vs_base"]
+    return pd.DataFrame(rows, columns=cols).set_index(["period", "config"])
+BLOCKS =(("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
 
 
 def roll_diagnostics(logs: dict, days: list[dict], base: str, cand: str) -> tuple[pd.DataFrame, str]:
@@ -383,7 +412,7 @@ def main(argv: list[str] | None = None) -> None:
         spec = {"tables": SENS_TABLES, "configs": (V1, WIN, SITE, *(c for c, _ in SENS))}
     else:
         spec = STEPS[step]
-    days = bt.load_days("0900", last=spec.get("last"))  # the forward step runs on past the backtest's last day
+    days = bt.load_days("0900", last=spec.get("last"))  # a step may end elsewhere than the backtest's last day
     if smoke:
         days = smoke_days(days)
     aux = bt.q2b_aux()
@@ -405,14 +434,17 @@ def main(argv: list[str] | None = None) -> None:
         print(f"\n{len(days)} days on m1, $/day: each sensitivity against its base (reported only)\n"
               f"{table[['base', 'per_day', 'vs_base', 'vs_base_lo', 'vs_base_hi', 'market_vs_base', 'bill_vs_base']].round(1).to_string()}\n")
         return
-    table = compare(money, ledger, bills, spec["base"], spec.get("ref"))
+    if spec.get("pairs"):  # section 14: each version against the one before it, then the test's two parts
+        table = pd.concat([compare_pairs(money, ledger, bills, spec["pairs"]), test_parts(money, ledger, spec["pairs"])])
+    else:
+        table = compare(money, ledger, bills, spec["base"], spec.get("ref"))
     diag = diagnostics(logs)
     ledger.to_csv(REPORTS / f"{tag}_daily.csv", index=False)
     bills.to_csv(REPORTS / f"{tag}_bills.csv", index=False)
     ircr.to_csv(REPORTS / f"{tag}_ircr.csv", index=False)
     table.to_csv(REPORTS / f"{tag}_result.csv")
     diag.to_csv(REPORTS / f"{tag}_diag.csv")
-    if step in ROUND5:
+    if step in (*ROUND5, "test"):
         dist = distribution(logs)
         dist.to_csv(REPORTS / f"{tag}_soc.csv")
         print(f"=== stored energy at 08:00, full days, night charge drawn the next day, buys over a cap\n"
@@ -425,8 +457,14 @@ def main(argv: list[str] | None = None) -> None:
         rc.frame(records).to_parquet(PROCESSED / f"{tag}_records.parquet")
     pd.concat([x.assign(day=d, strategy=name) for (_, name), lg in logs.items() for d, x in lg.items()],
               ignore_index=True).to_parquet(PROCESSED / f"{tag}_log.parquet")
-    print(f"\n{len(days)} days on m1, $/day; pass test: month-block 95% interval of the gain over {spec['base']}\n"
-          f"{table.round(1).T.to_string()}\n")
+    if spec.get("pairs"):
+        cols = ["base", "days", "per_day", "vs_base", "vs_base_lo", "vs_base_hi", "vs_base_7d_lo", "vs_base_7d_hi",
+                "market_vs_base", "market_lo", "market_hi", "bill_vs_base", "bill_months_better", "bill_months_worse"]
+        print(f"\n{len(days)} days on m1, $/day: each version against its base (month-block and 7-day block 95% "
+              f"intervals; the test's two parts without)\n{table[cols].round(1).to_string()}\n")
+    else:
+        print(f"\n{len(days)} days on m1, $/day; pass test: month-block 95% interval of the gain over {spec['base']}\n"
+              f"{table.round(1).T.to_string()}\n")
     print(f"=== stored energy (MWh) and offers\n{diag.round(2).to_string()}\n")
     print(f"=== IRCR, {bt.IRCR_SEASON}-{bt.IRCR_SEASON - 1999} Hot Season ($/year)\n"
           f"{ircr[['strategy', 'ircr_mw', 'saving_per_year', 'peak_days_covered']].round(2).to_string(index=False)}\n")

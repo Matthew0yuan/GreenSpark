@@ -253,7 +253,7 @@ def hit_days(model: Model) -> pd.DataFrame:
     """Every backtest day with a call: danger (0/1), spike day (a half-hour at or above SPIKE from 09:00), the
     number of such half-hours, month and period."""
     rows = []
-    for i in np.flatnonzero((model.days >= "2025-04-01") & (model.days <= "2026-10-15")):
+    for i in np.flatnonzero((model.days >= bt.FIRST_DAY) & (model.days <= bt.LAST_DAY)):
         d = model.flag(i, model.days[i].to_period("M"))
         if d is None:
             continue
@@ -319,7 +319,7 @@ def danger_checks() -> dict:
         changed = risk.copy()
         changed.iloc[k:] = rng.uniform(0, 1, len(risk) - k)
         timing &= thr.iloc[k] == changed.shift(1).rolling(RECENT).quantile(1 - DANGER_SHARE).iloc[k]
-    saved = pd.read_csv(REPORTS / "v2_risk_validation.csv", index_col="period")
+    saved = pd.read_csv(REPORTS / "v2_risk_validation.csv", index_col="period").loc[["validation"]]  # the test grows
     res, _ = validate(Model())
     same = np.allclose(res[saved.columns].loc[saved.index].to_numpy(float), saved.to_numpy(float), rtol=0, atol=1e-12)
     return {"day-ahead calls issued the day before at 09:00": issued,

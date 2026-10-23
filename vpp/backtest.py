@@ -45,7 +45,9 @@ from vpp.data import PROCESSED, ROOT
 from vpp.evaluate import CUTOFF, period_of
 
 REPORTS = ROOT / "reports"
-FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-15"  # validation before vpp.evaluate.CUTOFF, test from it
+# validation before vpp.evaluate.CUTOFF; the test is every day from it with data, so LAST_DAY moves to the newest
+# complete trading day whenever data are added (reports/v2_plan.md section 14; 2026-10-15 until 2026-10-23)
+FIRST_DAY, LAST_DAY = "2025-04-01", "2026-10-22"
 PERIODS = ("validation", "test")
 H, HALF = pd.Timedelta(hours=8), pd.Timedelta("30min")
 WEAR = 30.0  # A$/MWh discharged, central assumption
@@ -101,7 +103,7 @@ def load_days(issue: str = "0815", last: str | None = None) -> list[dict]:
     """Inputs of every trading day in the backtest with complete data. issue "0900": the strict 09:00
     forecast (vpp.forecast.OUT_0900), whose energy part starts at slot 2, plus what the 10 MW study
     needs: the 08:00 bridge prices, the 7 h capacity window and each slot's calendar month. last: the last
-    day in place of LAST_DAY (v2's forward days, reports/v2_plan.md 13.4; days without data are left out)."""
+    day in place of LAST_DAY (days without data are left out)."""
     last_day = LAST_DAY if last is None else last
     df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet")
     p5all = pd.read_parquet(PROCESSED / "wem_5min.parquet", columns=["energy"] + dp.FCESS)
