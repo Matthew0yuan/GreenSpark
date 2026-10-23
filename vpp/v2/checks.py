@@ -473,6 +473,48 @@ def locked_offers(n: int = 1000, seed: int = 7, h: float = 50.0) -> bool:
     return ok & _result("g5 no segment offered above the ceiling", above == 0, f"{above} of {n}")
 
 
+def forward_checks(last_old: str = "2026-10-14", tol: float = 1e-9) -> bool:
+    """Section 13.4: the forward run (step fwd) leaves the days already run as they were - its ledger rows up to
+    last_old equal the saved runs' (within tol, the drift between environments; 2026-10-15 legitimately changes: it
+    now has a tomorrow), and its logs exactly so for the runs made in this environment; and the forward days use only
+    what was public at 09:00: the weather and the pre-dispatch runs in their forecast, the day-ahead risk calls."""
+    from vpp import aemo_correction as ac
+    from vpp.spike import protocol as pc
+    from vpp.v2 import risk as rk
+    fwd = pd.read_csv(bt.REPORTS / "v2_fwd_daily.csv", parse_dates=["day"])
+    ok = True
+    for name, step in (("v1", "s2"), ("rel+ladder", "b2"), ("rw50+state", "t5"), ("rw50+state t5+roll", "e5")):
+        old = pd.read_csv(bt.REPORTS / f"v2_{step}_daily.csv", parse_dates=["day"])
+        a = old[(old["strategy"] == name) & (old["day"] <= last_old)].reset_index(drop=True)
+        b = fwd[(fwd["strategy"] == name) & (fwd["day"] <= last_old)].reset_index(drop=True)
+        num = a.select_dtypes("number").columns.intersection(b.select_dtypes("number").columns)
+        num = num.drop(["capacity", "refund", "contract", "ledger_total"], errors="ignore")  # monthly parts
+        gap = float((a[num] - b[num]).abs().max().max()) if len(a) == len(b) and len(a) else np.inf
+        ok &= _result(f"forward run: {name} up to {last_old} = step {step} (within {tol:g})", gap <= tol,
+                      f"{len(b)} days, largest difference {gap:.2g}")
+    flog = pd.read_parquet(PROCESSED / "v2_fwd_log.parquet")
+    for name, step in (("rw50+state", "t5"), ("rw50+state t5+roll", "e5")):
+        old = pd.read_parquet(PROCESSED / f"v2_{step}_log.parquet")
+        a = old[(old["strategy"] == name) & (pd.to_datetime(old["day"]) <= last_old)].reset_index(drop=True)
+        b = flog[(flog["strategy"] == name) & (pd.to_datetime(flog["day"]) <= last_old)].reset_index(drop=True)
+        ok &= _result(f"forward run: {name} logs up to {last_old} = step {step}, exactly", _same(a[b.columns], b))
+    df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet")
+    runs = pd.read_parquet(PROCESSED / "aemo_predispatch.parquet")
+    f = ac.build_frame(df30, runs, issue=pd.Timedelta(hours=9))
+    f = f[f["target_date"] >= vb.FWD_FROM]
+    wx = bool((pd.to_datetime(f["src_wx_available_at"]) <= f["issue_time"]).all())
+    pd_ok = bool((f["issued_at"] + pc.AVAILABILITY["predispatch"] <= f["issue_time"]).all())
+    days = f["target_date"].nunique()
+    ok &= _result("forward days: the forecast's weather public by 09:00", wx, f"{len(f)} rows, {days} days")
+    ok &= _result("forward days: the forecast's pre-dispatch runs public by 09:00", pd_ok)
+    h1 = rk.history(days_ahead=1)
+    h1 = h1[h1["target_date"] >= vb.FWD_FROM]
+    issued = bool(((h1["target_date"] - h1["issue_date"]) == pd.Timedelta(days=1)).all()
+                  and (h1["ts"] >= h1["issue_date"] + pd.Timedelta(hours=9)).all())
+    return ok & _result("forward days: the day-ahead risk calls issued 09:00 the day before", issued,
+                        f"{h1['target_date'].nunique()} days")
+
+
 def buy_caps(step: str) -> bool:
     """Round 5 (section 12.6): in a run with a buy side, no interval where the battery bought beyond its plan ends with
     the meter above both its cap and the month's earlier highest (a buy must not raise the month's peak)."""
@@ -564,6 +606,8 @@ def main(argv: list[str] | None = None) -> None:
         ok &= locked_offers()
     if "--f5x" in argv:  # section 13: the buy side within the room; the meter check must now pass
         ok &= full_bids() & buy_caps("f5x") & buy_caps("b3x")
+    if "--fwd" in argv:  # section 13.4: the forward run
+        ok &= forward_checks() & execution("fwd")
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)

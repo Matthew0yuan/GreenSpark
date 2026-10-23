@@ -52,7 +52,7 @@ GRID_STEP = 5.0   # $/MWh between solved levels [fixed]
 REGIME_PRIOR = 20.0  # pseudo-transitions shrinking each market state's transitions to the pooled ones [fixed, 11.6]
 POOL = 2          # round 5, c5: slots either side whose transitions are counted with a slot's [fixed, 12.4]
 SPIKE = 150.0     # $/MWh: a settled half-hour at least this has spiked (as vpp.v2.risk.SPIKE) [fixed, 12.4]
-FIRST, LAST = pd.Timestamp("2025-04-01"), pd.Timestamp("2026-10-15")  # the backtest's days
+FIRST, LAST = pd.Timestamp("2025-04-01"), pd.Timestamp("2026-10-31")  # the backtest's days, with the forward days
 
 
 def path(stat: str = "median", energy_mwh: float = 40.0, hurdle: float = bt.HURDLE, state: bool = False,
