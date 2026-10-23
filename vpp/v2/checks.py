@@ -18,6 +18,9 @@
   --timing            the 09:00 choice among candidates (vpp.v2.candidates) is unchanged when the day's actual prices
                       and load after 09:00 are changed (positive control: the start state changes the plays)
   --same              runs that share a configuration agree: rel+ladder in steps s3, r2 and r3 day for day
+  --q6                round 6 (section 15.4): the curve of the plan alone is e5, e5 is the test run's, the curves'
+                      purchases never rise with the price (else a zero-gap replay), no buy raises the meter above its
+                      cap and the month's highest, and an interval's curve is made before its prices exist
 
 Run:  python -m vpp.v2.checks --parity [--full]
       python -m vpp.v2.checks --runs s2,s3,r2,r3 --timing --same
@@ -562,6 +565,110 @@ def buy_caps(step: str) -> bool:
     return ok
 
 
+def curve_same(step: str = "q6") -> bool:
+    """Round 6 (v2_plan.md section 15.4, checks 1 and 2): the one-point curve (the plan alone) is e5 on every day,
+    exactly - ledger, logs and bills; and e5 in this step is the test run's e5 (section 14) on every day, exactly."""
+    daily = pd.read_csv(bt.REPORTS / f"v2_{step}_daily.csv", parse_dates=["day"])
+    log = pd.read_parquet(PROCESSED / f"v2_{step}_log.parquet")
+    bills = pd.read_csv(bt.REPORTS / f"v2_{step}_bills.csv")
+    e5, c0 = vb.E5.name, vb.Q6_0.name
+
+    def rows(frame, name, drop=()):
+        x = frame[frame["strategy"] == name].drop(columns=["strategy", *drop], errors="ignore")
+        return x.reset_index(drop=True)
+
+    extra = ["bid_moves", "bid_mwh", *[c for c in log.columns if c.startswith("curve_")]]
+    same = {"ledger": _same(rows(daily, e5, extra), rows(daily, c0, extra)),
+            "logs": _same(rows(log, e5, extra), rows(log, c0, extra)),
+            "bills": _same(rows(bills, e5), rows(bills, c0))}
+    ok = _result(f"{step}: the curve of the plan alone = e5 on every day, exactly", all(same.values()),
+                 f"{int((daily['strategy'] == c0).sum())} days; " + ", ".join(f"{k} {v}" for k, v in same.items()))
+    test, tlog = pd.read_csv(bt.REPORTS / "v2_test_daily.csv", parse_dates=["day"]), pd.read_parquet(PROCESSED / "v2_test_log.parquet")
+    a, b = rows(test, e5), rows(daily, e5)
+    a_log, b_log = rows(tlog, e5), rows(log, e5)
+    same = _same(a, b[a.columns]) and _same(a_log, b_log[a_log.columns])
+    return ok & _result(f"{step}: e5 = the test run's e5 on every day, exactly (ledger, logs)", same, f"{len(b)} days")
+
+
+def curve_points(log: pd.DataFrame) -> list[str]:
+    """The curve's columns of MWh bought in the interval, from the lowest price to the highest."""
+    return [f"curve_buy_{dp.curve_tag(d)}" for d in sorted({0.0, *vb.CURVE})]
+
+
+def curve_monotone(step: str = "q6", tol: float = 1e-6) -> bool:
+    """Round 6 (section 15.4, check 3): on every curve the MWh the plan buys in its interval (charging - discharging +
+    what regulation lower takes - what regulation raise delivers) does not rise with the price, within tol. Where it
+    does, the days are replayed from their saved start state at the solver's defaults (which must reproduce the run)
+    and at zero gap: a violation that goes at zero gap is the solver's precision."""
+    log = pd.read_parquet(PROCESSED / f"v2_{step}_log.parquet")
+    x = log[(log["strategy"] == vb.Q6.name) & log["curve_f"].notna()]
+    q = x[curve_points(x)].to_numpy()
+    rise = np.diff(q, axis=1).max(axis=1)
+    bad = x[rise > tol]
+    ok = _result(f"{step}: the curves' purchases never rise with the price (within {tol:g} MWh)", bad.empty,
+                 f"{len(bad)} of {len(x)} curves; largest rise {rise.max():.3g} MWh")
+    if bad.empty:
+        return ok
+    from vpp.v2 import report as rp
+    all_days, aux = bt.load_days("0900"), bt.q2b_aux()
+    at = {d["day"]: k for k, d in enumerate(all_days)}
+    cfg = replace(vb.Q6, record=False)
+    days = sorted(pd.to_datetime(bad["day"]).unique())
+    reproduced, left = 0, []
+    try:
+        for day in days:
+            soc0, mtd0, saved = rp._start_state(step, cfg.name, all_days, day)
+            bt._init_worker(all_days[at[day]:at[day] + 3], aux)
+            for opts in (None, {"mip_rel_gap": 0.0}):
+                dp.MIP_OPTIONS = opts
+                (_, _, summary, lg, _), = list(hs.route_days(vb.m1(), cfg, soc0, mtd0, until=day))
+                if opts is None:
+                    reproduced += summary["total"] == saved["total"] and summary["soc_end"] == saved["soc_end"]
+                else:
+                    y = lg[lg["curve_f"].notna()]
+                    r = np.diff(y[curve_points(y)].to_numpy(), axis=1).max(axis=1)
+                    left += [(day.date(), int(s), float(v)) for s, v in zip(y["slot"], r) if v > tol]
+    finally:
+        dp.MIP_OPTIONS = None
+    _result(f"{step}: the replays at the solver's defaults reproduce the run", reproduced == len(days),
+            f"{reproduced} of {len(days)} days")
+    return _result(f"{step}: at zero gap no curve's purchases rise with the price", not left,
+                   f"{len(days)} days replayed; left {left[:5]}")
+
+
+def curve_timing(days=("2025-12-10", "2026-01-21", "2026-02-02"), slots=(14, 40)) -> bool:
+    """Round 6 (section 15.4, check 5): interval t's curve is made before its prices exist. With the 5-min prices from
+    interval t's first step on changed, every decision before t and t's curve stay as they were; with only t's first
+    5-min price changed to -$1,000 (positive control), what t runs changes on some day."""
+    import copy
+    all_days, aux = bt.load_days("0900"), bt.q2b_aux()
+    by = {d["day"]: d for d in all_days}
+    cfg = replace(vb.Q6, record=False)
+    ok, moved = True, 0
+    for day in map(pd.Timestamp, days):
+        for t in slots:
+            out = {}
+            for variant in ("as is", "later", "first"):
+                pair = copy.deepcopy([by[day], by[day + pd.Timedelta(days=1)]])
+                p5 = np.array(pair[0]["p5"], float)
+                if variant == "later":
+                    p5[t * dp.STEPS:] += 300.0
+                elif variant == "first":
+                    p5[t * dp.STEPS] = -1000.0
+                pair[0]["p5"] = p5
+                bt._init_worker(pair, aux)
+                (_, _, _, log, _), = list(hs.route_days(vb.m1(), cfg, soc0=20.0, until=day))
+                out[variant] = log
+            a, b = out["as is"], out["later"]
+            curve = [c for c in a.columns if c == "curve_f" or c.startswith(("curve_net_", "curve_buy_"))]
+            ok &= _result(f"q6: {day.date()} before slot {t} and slot {t}'s curve unchanged by its prices",
+                          _same(a.iloc[:t], b.iloc[:t]) and _same(a[curve].iloc[t:t + 1], b[curve].iloc[t:t + 1]))
+            ran = ["energy_mwh", "soc", *[f"{k}_mw" for k in dp.FCESS]]
+            moved += not a[ran].iloc[t:t + 1].equals(out["first"][ran].iloc[t:t + 1])
+    return ok & _result("q6 positive control: slot t's own first price moves what it runs", moved > 0,
+                        f"{moved} of {len(days) * len(slots)}")
+
+
 def same_steps(pairs=(("t5", "b4", "rw50+state"), ("c5", "t5", "rw50+state t5"), ("e5", "c5", "rw50+state t5"),
                       ("f5", "e5", "rw50+state t5+roll"), ("g5", "e5", "rw50+state t5+roll"),
                       ("f5x", "e5", "rw50+state t5+roll"), ("b3x", "b2", "rw50")), tol: float = 1e-9) -> bool:
@@ -638,6 +745,8 @@ def main(argv: list[str] | None = None) -> None:
         ok &= forward_checks() & execution("fwd")
     if "--test" in argv:  # section 14: the test run, every adopted version through every day
         ok &= test_checks() & execution("test")
+    if "--q6" in argv:  # section 15.4: round 6, the plans' own bid curve
+        ok &= curve_same() & curve_monotone() & buy_caps("q6") & curve_timing()
     if "--parity" in argv:
         days, _, aux = bt.q2b_inputs(smoke=True)
         ok &= parity_in_process(days, aux)

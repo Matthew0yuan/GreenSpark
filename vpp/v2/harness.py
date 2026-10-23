@@ -292,6 +292,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
             kw["offer_lag"] = cfg.offer_lag
         if cfg.offer_end:
             kw["offer_end"] = True
+        if cfg.curve:  # round 6 (v2_plan.md section 15): the plans' own bid curve
+            kw["curve"] = cfg.curve
         if decide is not None:
             kw.update(decide(d, kw))
         recorder = rc.Recorder(day, {"config": cfg.name, "carry_mwh": carry, **context}) if cfg.record else None
