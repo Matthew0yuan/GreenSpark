@@ -29,13 +29,16 @@ wrote down before the runs. Choices use the days before the cutoff only; the day
   --step test  section 14: every version adopted so far, v1 to e5, each against the one before it on the test (every
                day from the cutoff with data) and on its two parts, the days the earlier rounds had seen and the days
                from 2026-10-16 (reported only)
+  --step q6    round 6 (section 15): the plans' own price-quantity curve for the interval each starts with, on e5
+               (pass: month-block 95% interval of the gain over e5 above 0); a one-point curve, the plan itself,
+               alongside (it must equal e5); FCESS by product, the buys beyond and short of the plan, the points run
   --smoke  2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
 
 A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
 resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
 part's interval and the bill's better / worse months are reported alongside.
 
-Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5|f5x|b3x|fwd|test [--smoke]
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5|f5x|b3x|fwd|test|q6 [--smoke]
 """
 
 import os
@@ -142,6 +145,13 @@ STEPS["test"] = {"base": E5.name, "candidates": (E5.name,), "ref": None, "report
                  "pairs": (*((b.name, a.name) for a, b in zip(CHAIN, CHAIN[1:])), (E5.name, WIN.name), (E5.name, V1.name)),
                  "tables": (("median", 40.0), ("median", 40.0, B2_WIN.hurdle), ("median", 40.0, B2_WIN.hurdle, True)),
                  "configs": CHAIN}
+# round 6 (section 15): the plans' own price-quantity curve for the interval each starts with, at the plan's price
+# +-20, +-50, +-100 $/MWh, on e5; the curve of the plan alone (the 0 point) must be e5, day for day (15.4)
+CURVE = (-100.0, -50.0, -20.0, 20.0, 50.0, 100.0)
+Q6 = replace(E5, name=f"{E5.name}+curve", curve=CURVE)
+Q6_0 = replace(E5, name=f"{E5.name}+curve0", curve=(0.0,), record=False)
+STEPS["q6"] = {"base": E5.name, "candidates": (Q6.name,), "ref": None, "tables": STEPS["b4"]["tables"],
+               "parts": ((Q6.name, E5.name), (Q6_0.name, E5.name)), "configs": (replace(E5, record=False), Q6, Q6_0)}
 
 
 def forward_days(ledger: pd.DataFrame, logs: dict, first: pd.Timestamp = FWD_FROM, cmd: float = CMD) -> tuple:
@@ -400,6 +410,37 @@ def distribution(logs: dict) -> pd.DataFrame:
     return out
 
 
+def curve_diagnostics(logs: dict, days: list[dict]) -> pd.DataFrame:
+    """Round 6 (v2_plan.md section 15.5), per configuration and period, $ or MWh a day: FCESS revenue by product (the
+    30-min price x the MW enabled), the MWh bought beyond the plan and short of it with their mean RTP, and (with a
+    curve) the share of 5-min steps run at each point."""
+    act = {d["day"]: d["act_f"] for d in days}
+    rows = []
+    for (_, name), by_day in logs.items():
+        for day, lg in by_day.items():
+            row = {"config": name, "period": bt.period_of([day])[0],
+                   **{f"fcess_{k}": float((np.asarray(act[day][k], float) * lg[f"{k}_mw"].to_numpy()).sum() * dp.DT)
+                      for k in dp.FCESS}}
+            if "bid_mwh" in lg:
+                b, rtp = lg["bid_mwh"].to_numpy(), lg["rtp"].to_numpy()
+                row.update(beyond_mwh=b.clip(min=0).sum(), beyond_cost=(rtp * b.clip(min=0)).sum(),
+                           short_mwh=-b.clip(max=0).sum(), short_cost=-(rtp * b.clip(max=0)).sum())
+            steps = [c for c in lg.columns if c.startswith("curve_steps_")]
+            row.update({c.replace("curve_steps_", "steps_"): int(lg[c].sum()) for c in steps})
+            rows.append(row)
+    x = pd.DataFrame(rows)
+    out = x.groupby(["period", "config"]).mean()
+    if "beyond_mwh" in out:
+        out["beyond_rtp"] = out.pop("beyond_cost") / out["beyond_mwh"]
+        out["short_rtp"] = out.pop("short_cost") / out["short_mwh"]
+    steps = [c for c in out.columns if c.startswith("steps_")]
+    if steps:
+        total = out[steps].sum(axis=1)
+        for c in steps:
+            out[c.replace("steps_", "share_")] = out.pop(c) / total.where(total > 0)
+    return out
+
+
 def smoke_days(days: list[dict]) -> list[dict]:
     return [d for d in days if any(pd.Timestamp(a) <= d["day"] <= pd.Timestamp(b) for a, b in SMOKE)]
 
@@ -444,11 +485,20 @@ def main(argv: list[str] | None = None) -> None:
     ircr.to_csv(REPORTS / f"{tag}_ircr.csv", index=False)
     table.to_csv(REPORTS / f"{tag}_result.csv")
     diag.to_csv(REPORTS / f"{tag}_diag.csv")
-    if step in (*ROUND5, "test"):
+    if step in (*ROUND5, "test", "q6"):
         dist = distribution(logs)
         dist.to_csv(REPORTS / f"{tag}_soc.csv")
         print(f"=== stored energy at 08:00, full days, night charge drawn the next day, buys over a cap\n"
               f"{dist.round(2).to_string()}\n")
+    if step == "q6":  # round 6 (section 15.5): FCESS by product, buys beyond and short of the plan, points run
+        cdiag = curve_diagnostics(logs, days)
+        cdiag.to_csv(REPORTS / f"{tag}_curve.csv")
+        print(f"=== FCESS by product, buys beyond / short of the plan ($ and MWh a day), share of 5-min steps by point\n"
+              f"{cdiag.round(3).T.to_string()}\n")
+    if spec.get("parts"):  # the test's two parts (section 14), no intervals
+        parts = test_parts(money, ledger, spec["parts"])
+        parts.to_csv(REPORTS / f"{tag}_parts.csv")
+        print(f"=== the test's two parts, $/day\n{parts.round(1).to_string()}\n")
     if step == "e5":
         blocks, note = roll_diagnostics(logs, days, spec["base"], spec["candidates"][0])
         blocks.to_csv(REPORTS / f"{tag}_roll.csv")

@@ -193,7 +193,12 @@ class _Milp:
 
     def solve(self, cost=None):
         return milp(self.cost if cost is None else cost, constraints=LinearConstraint(self.A, self.lb, self.ub),
-                    bounds=Bounds(self.lo, self.hi), integrality=self.integrality)
+                    bounds=Bounds(self.lo, self.hi), integrality=self.integrality, options=MIP_OPTIONS)
+
+
+# HiGHS options for every plan's MILP; None: the solver's defaults. Checks may set {"mip_rel_gap": 0} to replay days
+# at zero gap (v2_plan.md section 15.4).
+MIP_OPTIONS: dict | None = None
 
 
 def _milp(asset: Asset, price_e, price_f=None, s_init: float = 0.0, budget: float | None = None, floor=None,
@@ -756,7 +761,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
             export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
             reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None, on_plan=None,
-            offer_lag: int = 1, extend=None, offer_end: bool = False):
+            offer_lag: int = 1, extend=None, offer_end: bool = False, curve=()):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -803,6 +808,13 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     offer_end: the "value" rule also prices the last interval, against what the energy stored at the day's end is worth
     (the plans' terminal value) less the economic floors' penalty there (needs terms); without it the last interval
     is offered at k_min.
+    curve: $/MWh offsets d (v2 round 6, reports/v2_plan.md section 15; needs terms). Each adopted plan that starts
+    with the current interval also gives its price-quantity curve for it: re-planned from the same inputs with that
+    interval's price f + d and the later ones nudged by d x 0.5^k (the nowcast's fade), each point is the plan's
+    first interval (net MW and FCESS MW); d = 0 is the plan itself. Each 5-min step runs the point nearest its price
+    in place of the plan; charging beyond the plan's only within the room the caps at the day's start leave over the
+    planned (or actual) load and the point's regulation lower use, and a step that departs from the plan is followed
+    by a re-plan at the end of its interval, as after a sale. The log then has the curves and bid_mwh.
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -859,6 +871,17 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     # v2 round 5 (v2_plan.md 13.1): buying beyond the plan only within the room the economic caps at the day's start
     # leave over the planned (or actual, if higher) load and the energy regulation lower will take
     room_rule = buy_rule and getattr(bids, "room_rule", False)
+    # v2 round 6 (v2_plan.md section 15): the plans' own price-quantity curve for the interval each starts with
+    offsets = tuple(sorted({0.0, *(float(d) for d in curve)})) if len(curve) else ()
+    if offsets and not full:
+        raise ValueError("a bid curve needs the day's terms")
+    if offsets and buy_rule:
+        raise ValueError("the bid curve and the bids' buy side are alternatives")
+    adopted = None  # what the latest adopted plan was made from: (t0, prices, FCESS prices, stored, budget, seen)
+    curve_f = np.full(N, np.nan)  # the price each interval's curve is centred on (its plan's)
+    curve_net = {d: np.full(N, np.nan) for d in offsets}  # each point's net MW
+    curve_buy = {d: np.full(N, np.nan) for d in offsets}  # MWh each point buys in the interval (regulation's use too)
+    curve_steps = {d: np.zeros(N, int) for d in offsets}  # 5-min steps run at each point
     bid_mwh, moved = np.zeros(N), np.zeros(N, bool)  # MWh bought beyond (+) or short of (-) the plan; departures
     # bids that follow the day so far (vpp.v2.bids, v2 round 5) see each 5 minutes the half-hours settled by the
     # offers' information time (the latest 5-min price seen is offer_lag steps back) and the stored energy
@@ -930,12 +953,16 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     def replan(t0, fe, ff, s0, b0, ladder, seen=None):
         """Plan intervals t0.. from s0 stored and budget b0. With terms: compliance first (see plan), on the
         scenarios from their issue on if the planner uses them (seen: see scen_plan). Without (the 1 MW study):
-        ladder "offer": None if infeasible; "trigger": then without the floor."""
-        nonlocal fallbacks, plans_short, plan_short, plan_ctx
+        ladder "offer": None if infeasible; "trigger": then without the floor. With terms, ladder "full" is an adopted
+        plan and "curve" one of its curve's points (v2 round 6), made from the same inputs and neither observed nor
+        counted."""
+        nonlocal fallbacks, plans_short, plan_short, plan_ctx, adopted
+        if ladder == "full" and offsets:
+            adopted = (t0, np.array(fe, float), ff, s0, b0, seen)
         rest = None if lf is None else lf[t0:]
         lay = [(cap_now(x, t0, lf if x.compliance else lfe)[t0:], x.kind, x.penalty, x.compliance) for x in layers]
         fh = None if terms.fcess_hi is None else {k: np.asarray(v, float)[t0:] for k, v in terms.fcess_hi.items()}
-        watch = on_plan is not None and ladder != "offer"  # an adopted plan the caller observes
+        watch = on_plan is not None and ladder not in ("offer", "curve")  # an adopted plan the caller observes
         if full:
             hard, soft, *labels = floors(t0, ladder == "offer", s0, names=watch)
             kw = dict(s_init=s0, budget=b0, site=site, load=rest, terminal_value=tv if terminal is None else terminal,
@@ -956,7 +983,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                 out = plan(asset, fe, ff, **kw)
             if extend is not None:
                 out = _head(out, N - t0)
-            if out["shortfall"] > 1e-6 and ladder != "offer":  # the offer rule's what-if plans are not adopted
+            if out["shortfall"] > 1e-6 and ladder not in ("offer", "curve"):  # what-if plans are not adopted
                 plans_short += 1
                 plan_short = max(plan_short, out["shortfall_mwh"])
             return out
@@ -997,6 +1024,20 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
 
     def rest_of(ff, t0):
         return None if ff is None else {k: np.asarray(ff[k], float)[t0:] for k in FCESS}
+
+    def bid_curve(t):
+        """The adopted plan's price-quantity curve for interval t, which it starts with (v2 round 6): its price f
+        there and, per offset d, the first interval (net MW, FCESS MW) re-planned from the same inputs with prices
+        f + d there and d x 0.5^k added k intervals later; d = 0 is the plan itself."""
+        t0, fe, ff, s0, b0, seen = adopted
+        if t0 != t or t0 != cur_t0:
+            raise RuntimeError("the bid curve is made from the plan adopted at the start of its interval")
+        fade = 0.5 ** np.arange(len(fe))
+        points = {}
+        for d in offsets:
+            out = cur if d == 0.0 else replan(t0, fe + d * fade, ff, s0, b0, "curve", seen)
+            points[d] = {"net": float(out["net"][0]), **({k: float(out[k][0]) for k in FCESS} if fcess else {})}
+        return float(fe[0]), points
 
     meter, wear_t, first_plan = np.zeros(N), np.zeros(N), None
     if reserve is not None and not full:
@@ -1057,6 +1098,13 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         i = t - cur_t0
         r_plan = sum(cur[k][i] for k in RAISE) if fcess else 0.0
         l_plan = sum(cur[k][i] for k in LOWER) if fcess else 0.0
+        points = None  # v2 round 6: the curve of the plan adopted at this interval's start, by offset
+        if offsets and i == 0:
+            curve_f[t], points = bid_curve(t)
+            for d, x in points.items():
+                curve_net[d][t] = x["net"]
+                use = reg_util[1] * x["reg_lower"] - reg_util[0] * x["reg_raise"] if fcess else 0.0
+                curve_buy[d][t] = (use - x["net"]) * DT
         k_ready = not value_rule
         s_open = s
         if full:
@@ -1088,6 +1136,25 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             sellable = max(0.0, min(P, exp_room[t], (s - keep_e) * eta / DT5, budget / DT5))
             pw = min(cur["net"][i], sellable)
             price = p5[t * STEPS + j]
+            row = None  # the curve's point this step runs (v2 round 6); None: the plan's interval
+            if points is not None:
+                # the point nearest the step's price (the curve is in before the price exists), ties to the plan
+                d = min(offsets, key=lambda x: (abs(curve_f[t] + x - price), abs(x)))
+                row = points[d]
+                curve_steps[d][t] += 1
+                r_plan = sum(row[k] for k in RAISE) if fcess else 0.0
+                l_plan = sum(row[k] for k in LOWER) if fcess else 0.0
+                pw_c = min(row["net"], sellable)
+                if pw_c < pw and site is not None:
+                    # charging beyond the plan's only within the room the economic caps at the day's start leave over
+                    # the planned (or actual, if higher) load and the energy the point's regulation lower will take
+                    caps0 = [x.cap[t] for x in layers if not x.compliance and x.at_meter and np.isfinite(x.cap[t])]
+                    if caps0:
+                        space = min(caps0) - max(lf[t], la[t]) - (reg_util[1] * row["reg_lower"] if fcess else 0.0)
+                        pw_c = max(pw_c, min(pw, -max(0.0, space)))
+                if abs(pw_c - pw) > 1e-9:
+                    bid_mwh[t] += (pw - pw_c) * DT5
+                    moved[t], pw = True, pw_c
             if watch is not None:
                 watch(t * STEPS + j, rtp_seen[:max(0, (t * STEPS + j - offer_lag + 1) // STEPS)], s)
             if buy_rule and pw <= 0:
@@ -1125,8 +1192,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                 if margin >= 0 and target > max(pw, 0.0) + 1e-9:
                     # co-optimised: discharging more uses headroom the plan had enabled for FCESS raise
                     raise_lost = max(0.0, min(r_plan, P - pw)) - max(0.0, min(r_plan, P - target))
-                    raise_price = (sum(cur[k][i] * p5_f[k][t * STEPS + j] for k in RAISE) / r_plan
-                                   if p5_f is not None and r_plan > 1e-9 else 0.0)
+                    raise_price = (sum((cur[k][i] if row is None else row[k]) * p5_f[k][t * STEPS + j] for k in RAISE)
+                                   / r_plan if p5_f is not None and r_plan > 1e-9 else 0.0)
                     if margin * (target - max(pw, 0.0)) >= raise_price * raise_lost:
                         offer_mwh[t] += (target - max(pw, 0.0)) * DT5
                         if reserve is not None and reserve.start <= t < reserve.end:
@@ -1167,8 +1234,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             if fcess:
                 raise_ok = max(0.0, min(r_plan, P - pw, s * eta / tau, exp_room_f[t] - pw))
                 lower_ok = max(0.0, min(l_plan, P + pw, (E - s) / (eta * tau), imp_room[t] + pw))
-                enabled = {k: cur[k][i] * raise_ok / r_plan if r_plan > 1e-9 else 0.0 for k in RAISE}
-                enabled.update({k: cur[k][i] * lower_ok / l_plan if l_plan > 1e-9 else 0.0 for k in LOWER})
+                src = cur if row is None else {k: (row[k],) for k in FCESS}  # the curve's point: its own FCESS
+                ix = i if row is None else 0
+                enabled = {k: src[k][ix] * raise_ok / r_plan if r_plan > 1e-9 else 0.0 for k in RAISE}
+                enabled.update({k: src[k][ix] * lower_ok / l_plan if l_plan > 1e-9 else 0.0 for k in LOWER})
                 if any(reg_util) and p5_f is not None:  # offered at its use cost: enabled only if the price covers it
                     enabled = {k: v if p5_f[k][t * STEPS + j] >= offer_f[k] else 0.0 for k, v in enabled.items()}
                 for k in FCESS:
@@ -1251,10 +1320,19 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         for name, (n5, ok5) in tests5.items():
             summary.update({f"{name}_window_5min": n5, f"{name}_available_5min": ok5})
         log = log.assign(meter_mw=meter, plan_net_live=plan_live, cap_mw=cap_min, capacity_short_mw=short_cap)
-    if buy_rule:
+    if buy_rule or offsets:
         summary["bid_moves"] = int(moved.sum())
         log = log.assign(bid_mwh=bid_mwh)
+    if offsets:  # v2 round 6: each interval's curve (NaN where no plan started with it) and the steps at each point
+        log = log.assign(curve_f=curve_f, **{f"curve_net_{curve_tag(d)}": curve_net[d] for d in offsets},
+                         **{f"curve_buy_{curve_tag(d)}": curve_buy[d] for d in offsets},
+                         **{f"curve_steps_{curve_tag(d)}": curve_steps[d] for d in offsets})
     return summary, log
+
+
+def curve_tag(d: float) -> str:
+    """A curve offset as a column suffix: 0, m20 (-20 $/MWh), p50 (+50)."""
+    return "0" if d == 0 else f"{'m' if d < 0 else 'p'}{abs(d):g}"
 
 
 def _runs(labels) -> list[tuple[int, int, object]]:

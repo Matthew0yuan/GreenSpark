@@ -40,6 +40,9 @@ class V2Config:
     offer_cap: float | None = None
     # round 5, 13.1: buying beyond the plan only within the CMD room left by the planned load and regulation lower
     buy_room: bool = False
+    # round 6 (v2_plan.md section 15): the plans' own price-quantity curve for the interval each starts with, at these
+    # $/MWh offsets from its price (the plan itself is the 0 point); () off
+    curve: tuple = ()
 
 
 V1 = V2Config()
