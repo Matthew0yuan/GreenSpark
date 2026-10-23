@@ -38,6 +38,8 @@ class V2Config:
     # least stored energy possible by then (the gate closure); segments priced above offer_cap ($/MWh) not offered
     offer_lock: int = 0
     offer_cap: float | None = None
+    # round 5, 13.1: buying beyond the plan only within the CMD room left by the planned load and regulation lower
+    buy_room: bool = False
 
 
 V1 = V2Config()

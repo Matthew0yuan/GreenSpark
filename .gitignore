@@ -1,3 +1,4 @@
 *.zip
 data/processed/v2_value_*.npz
 data/processed/v2_f5_records.parquet
+data/processed/v2_f5x_records.parquet

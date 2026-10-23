@@ -856,6 +856,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     if table_rule and bids is None:
         raise ValueError("offer rule 'table' needs the day's bids")
     buy_rule = table_rule and getattr(bids, "buy_margin", None) is not None  # the bids also buy (vpp.v2.bids)
+    # v2 round 5 (v2_plan.md 13.1): buying beyond the plan only within the room the economic caps at the day's start
+    # leave over the planned (or actual, if higher) load and the energy regulation lower will take
+    room_rule = buy_rule and getattr(bids, "room_rule", False)
     bid_mwh, moved = np.zeros(N), np.zeros(N, bool)  # MWh bought beyond (+) or short of (-) the plan; departures
     # bids that follow the day so far (vpp.v2.bids, v2 round 5) see each 5 minutes the half-hours settled by the
     # offers' information time (the latest 5-min price seen is offer_lag steps back) and the stored energy
@@ -1092,6 +1095,11 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                 i5 = t * STEPS + j
                 seen_b = p5[i5 - offer_lag] if i5 >= offer_lag else float(np.asarray(fc_e, float)[t])
                 pw_b = bids.buy(t, s, pw, price, seen_b, eta, strat.alpha, E, P)
+                if room_rule and pw_b < pw and site is not None:
+                    caps0 = [x.cap[t] for x in layers if not x.compliance and x.at_meter and np.isfinite(x.cap[t])]
+                    if caps0:
+                        room = min(caps0) - max(lf[t], la[t]) - reg_util[1] * cur["reg_lower"][i]
+                        pw_b = max(pw_b, min(pw, -max(0.0, room)))
                 if abs(pw_b - pw) > 1e-9:
                     bid_mwh[t] += (pw - pw_b) * DT5
                     moved[t], pw = True, pw_b
