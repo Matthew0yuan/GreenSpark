@@ -1,0 +1,10 @@
+evaluation,ledger,train,paced,reference
+forward development,L1,2023,"PacedRule(ircr=False, kappa=1.0, event_h=2.0, anchor='fixed', theta_e=inf)","RefRule(q=0.5, theta_e=inf)"
+forward development,L1,2023+2024,"PacedRule(ircr=False, kappa=1.0, event_h=2.0, anchor='fixed', theta_e=0.0)","RefRule(q=0.5, theta_e=0.0)"
+final rule,L1,2023+2024+2025,"PacedRule(ircr=False, kappa=1.0, event_h=2.0, anchor='fixed', theta_e=0.0)","RefRule(q=0.5, theta_e=0.0)"
+forward development,L2,2023,"PacedRule(ircr=True, kappa=0.5, event_h=2.0, anchor='forecast', theta_e=inf)","RefRule(q=0.5, theta_e=inf)"
+forward development,L2,2023+2024,"PacedRule(ircr=True, kappa=0.5, event_h=2.0, anchor='forecast', theta_e=0.0)","RefRule(q=0.75, theta_e=0.0)"
+final rule,L2,2023+2024+2025,"PacedRule(ircr=True, kappa=0.5, event_h=2.0, anchor='forecast', theta_e=0.0)","RefRule(q=0.75, theta_e=0.0)"
+forward development,L3,2023,"PacedRule(ircr=True, kappa=0.5, event_h=1.5, anchor='fixed', theta_e=inf)","RefRule(q=0.5, theta_e=inf)"
+forward development,L3,2023+2024,"PacedRule(ircr=True, kappa=0.5, event_h=2.0, anchor='fixed', theta_e=inf)","RefRule(q=0.75, theta_e=inf)"
+final rule,L3,2023+2024+2025,"PacedRule(ircr=True, kappa=0.5, event_h=2.0, anchor='fixed', theta_e=inf)","RefRule(q=0.75, theta_e=inf)"

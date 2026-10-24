@@ -1,0 +1,217 @@
+pay,event_h,rule,period,calls,wholesale_per_customer,payments_per_customer,call_margin_per_customer,customer_benefit
+0.2,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.2,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.2,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.2,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.2,1.0,perfect foresight,in-sample,6,11.66733278592464,4.541735273556361,6.855597512368279,-1.9152624054481575
+0.2,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.2,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.2,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.2,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.2,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.2,2.0,perfect foresight,in-sample,4,13.47590606639568,5.160789960256451,8.135116106139229,-2.508253794407922
+0.2,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.2,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.2,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.2,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.2,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.2,3.0,perfect foresight,in-sample,4,7.8810006714239185,3.87671258102472,3.8242880903991994,-2.2989491815931555
+0.2,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.2,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.2,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.2,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.2,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.2,4.0,perfect foresight,in-sample,3,3.7549541346404944,2.34388564240451,1.2760684922359844,-1.7127396185170927
+0.2,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.3,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.3,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.3,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.3,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.3,1.0,perfect foresight,in-sample,4,9.467535600688443,4.246933983574698,5.040601617113745,-0.5885919799401491
+0.3,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.3,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.3,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.3,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.3,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.3,2.0,perfect foresight,in-sample,3,11.70220652833777,5.716663159795679,5.85054336854209,0.007899218220234072
+0.3,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.3,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.3,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.3,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.3,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.3,3.0,perfect foresight,in-sample,3,6.802956831587545,4.233975805565994,2.43398102602155,-0.3252112073633729
+0.3,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.3,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.3,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.3,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.3,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.3,4.0,perfect foresight,in-sample,1,1.6248978263482887,1.2708303857426353,0.3090674406056533,-0.16296311725161283
+0.3,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.4,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.4,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.4,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.4,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.4,1.0,perfect foresight,in-sample,4,9.467535600688443,5.551975240459845,3.7355603602285985,0.7164492769449968
+0.4,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.4,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.4,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.4,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.4,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.4,2.0,perfect foresight,in-sample,3,11.70220652833777,7.590594347059414,3.976612181278355,1.8818304054839694
+0.4,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.4,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.4,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.4,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.4,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.4,3.0,perfect foresight,in-sample,3,6.802956831587545,5.613677874753166,1.054278956834378,1.0544908618238005
+0.4,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.4,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.4,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.4,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.4,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.4,4.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.4,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.5,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.5,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.5,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.5,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.5,1.0,perfect foresight,in-sample,3,7.725321880925442,5.076457659737305,2.513864221188136,1.5101990168236845
+0.5,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.5,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.5,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.5,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.5,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.5,2.0,perfect foresight,in-sample,3,11.570084344308615,9.282791422571872,2.1522929217367417,3.717193824403516
+0.5,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.5,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.5,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.5,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.5,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.5,3.0,perfect foresight,in-sample,1,2.720533644335825,2.5549337446597242,0.12059989967610035,0.9163785666440203
+0.5,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.5,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.5,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.5,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.5,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.5,4.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.5,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.6,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.6,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.6,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.6,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.6,1.0,perfect foresight,in-sample,3,7.725321880925442,6.029277368642562,1.5610445122828804,2.463018725728939
+0.6,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.6,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.6,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.6,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.6,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.6,2.0,perfect foresight,in-sample,1,4.770547017413139,3.988855720223275,0.7366912971898645,1.992509319350053
+0.6,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.6,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.6,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.6,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.6,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.6,3.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.6,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.6,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.6,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.6,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.6,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.6,4.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.6,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.7,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.7,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.7,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.7,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.7,1.0,perfect foresight,in-sample,2,5.579064772007062,4.742502021925842,0.7465627500812196,2.32324094784338
+0.7,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.7,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.7,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.7,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.7,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.7,2.0,perfect foresight,in-sample,1,4.770547017413139,4.653665006927153,0.07188201048598587,2.657318606053932
+0.7,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.7,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.7,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.7,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.7,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.7,3.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.7,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.7,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.7,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.7,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.7,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.7,4.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.7,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.85,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.85,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.85,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.85,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.85,1.0,perfect foresight,in-sample,1,2.952285109813931,2.8750118626655405,0.03227324714839042,1.66330419811971
+0.85,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.85,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.85,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.85,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.85,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.85,2.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.85,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.85,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.85,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.85,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.85,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.85,3.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.85,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+0.85,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+0.85,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+0.85,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+0.85,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+0.85,4.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+0.85,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.0,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.0,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.0,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.0,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.0,1.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.0,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.0,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.0,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.0,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.0,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.0,2.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.0,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.0,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.0,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.0,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.0,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.0,3.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.0,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.0,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.0,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.0,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.0,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.0,4.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.0,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.2,1.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.2,1.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.2,1.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.2,1.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.2,1.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.2,1.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.2,2.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.2,2.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.2,2.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.2,2.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.2,2.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.2,2.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.2,3.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.2,3.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.2,3.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.2,3.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.2,3.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.2,3.0,perfect foresight,test,0,0.0,0.0,0.0,0.0
+1.2,4.0,"09:00 rule, theta 0",in-sample,0,0.0,0.0,0.0,0.0
+1.2,4.0,"09:00 rule, theta 0",test,0,0.0,0.0,0.0,0.0
+1.2,4.0,"09:00 rule, theta 0, spike warnings x3",in-sample,0,0.0,0.0,0.0,0.0
+1.2,4.0,"09:00 rule, theta 0, spike warnings x3",test,0,0.0,0.0,0.0,0.0
+1.2,4.0,perfect foresight,in-sample,0,0.0,0.0,0.0,0.0
+1.2,4.0,perfect foresight,test,0,0.0,0.0,0.0,0.0

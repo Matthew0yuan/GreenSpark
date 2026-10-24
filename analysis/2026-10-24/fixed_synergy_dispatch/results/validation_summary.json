@@ -1,0 +1,30 @@
+{
+  "rows": 72,
+  "test_functions_passed": 8,
+  "test_functions_failed": 0,
+  "reported_constraint_violations": 0,
+  "violations_by_check": {
+    "v_energy_balance": 0,
+    "v_soc_bounds": 0,
+    "v_reserve": 0,
+    "v_power": 0,
+    "v_grid_charge_outside_standby": 0,
+    "v_cap": 0,
+    "v_per_day": 0,
+    "v_event_length": 0,
+    "v_standby_before_0900": 0
+  },
+  "max_abs_independent_vs_sequential_gap_per_home": 1.1368683772161605e-13,
+  "forward_profit_criterion_by_ledger": {
+    "L1": true,
+    "L2": true,
+    "L3": true
+  },
+  "causal_policy_energy_calls": 0,
+  "greedy_hindsight_below_no_call_rows": 5,
+  "notes": [
+    "The perfect column is a greedy hindsight candidate, not an upper bound; some rows force unprofitable peak calls. forward_summary also reports max(hindsight,no call), which is still not an upper bound.",
+    "The platform field uses none=0 as no programme; for an already enrolled fleet platform cost is common to all operating choices and must not influence daily dispatch.",
+    "Forward development periods were previously inspected, and inherited energy profiles and forecast uplift use the 2026-06-30 cutoff. No causal policy executed an energy-labelled call in this run; this does not validate the full historical price-forecast pipeline."
+  ]
+}
