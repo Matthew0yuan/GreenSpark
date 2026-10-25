@@ -1,0 +1,42 @@
+{
+  "task": "analysis/2026-10-24/peak_day_probability",
+  "profile": "code",
+  "web": false,
+  "preflight_only": true,
+  "model": "claude-opus-5-5",
+  "effort": "xhigh",
+  "started_at": "2026-10-24T20:05:44",
+  "ended_at": "2026-10-24T20:06:05",
+  "status": "ok",
+  "status_zh": "正常结束",
+  "session_id": "991ed1f4-0654-4dec-9d7a-a79aeed02ff3",
+  "log": "agents/logs/analysis__2026-10-24__peak_day_probability/20261024-200544-preflight-991ed1f4.jsonl",
+  "attempts": [
+    {
+      "session_id": "991ed1f4-0654-4dec-9d7a-a79aeed02ff3",
+      "log": "agents/logs/analysis__2026-10-24__peak_day_probability/20261024-200544-preflight-991ed1f4.jsonl",
+      "exit_code": 0,
+      "started": true,
+      "stopped": null
+    }
+  ],
+  "num_turns": 4,
+  "cost_usd": 0.0469306,
+  "duration_s": 18,
+  "agents_md_version": "2026-10-24",
+  "structured_report": true,
+  "denials": [],
+  "outside_changes": [],
+  "tools": {
+    "Write": 1,
+    "Bash": 1,
+    "StructuredOutput": 1
+  },
+  "bash": [
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/_preflight.py",
+      "ran": true,
+      "ok": true
+    }
+  ]
+}

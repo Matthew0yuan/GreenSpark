@@ -1,0 +1,7 @@
+claim,source_url,locator,quote,status,accessed
+现行（旧）定义：12 个 Peak SWIS Trading Intervals = 热季里当天最高 TSOG 排前 4 的交易日、每天 TSOG 最高的 3 个交易时段；本实验沿用这一口径，没有读原文，转引项目文档,https://data.wa.aemo.com.au/datafiles/peak-intervals/peak-intervals.csv,reports/step0_terms.md 第 5.2 节（转引 ESM Rules 术语表第 767 页）,,待核实,
+AEMO 公布的 2025-26 热季 12 个高峰时段在 2026-01-21、02-01、02-02、03-18 四天；本实验直接用代码里的列表，没有重新打开 AEMO 文件,https://data.wa.aemo.com.au/datafiles/peak-intervals/peak-intervals.csv,vpp/site_bill.py OFFICIAL_PEAK_INTERVALS（代码注释标 verified）,,待核实,
+2023-24、2024-25 热季的官方高峰时段没有在本地数据里；这两季只能用运行需求代理（证据缺口）,https://data.wa.aemo.com.au/datafiles/peak-intervals/peak-intervals.csv,本地 data/raw 和 vpp/site_bill.py 只有 2025-26,,待核实,
+2027-10-01 起高峰时段的选法改为"TSOG 最高的 12 个时段所在的日子（至少 3 天）"，和本实验的 4 天 × 3 时段不同；本实验不声称等于最新规则,,reports/step0_terms.md 第 5.3 节（转引 RCM Reviews Sequencing Rules 2025 附表 6 第 180–181 页）,,待核实,
+AEMO 08:00 预调度一般 08:15 或 08:30 发布、公开副本约晚 20 分钟，所以 09:00 可用；这是项目已有的时点证据，本实验没有重新核对,,vpp/spike/protocol.py 和 vpp/spike/sources.py 文件说明,,待核实,
+D−1 交易日的实际运行需求在 D 日 09:00 已公开（结束后 1 小时）是本实验的假设；AEMO 运行需求数据的发布延迟没有在本地核实，敏感性分析推迟一天,,PLAN.md 第 1 节,,待核实,
