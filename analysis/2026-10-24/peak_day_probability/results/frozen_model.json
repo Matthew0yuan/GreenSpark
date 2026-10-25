@@ -1,0 +1,67 @@
+{
+  "written": "2026-10-24 20:33",
+  "data_up_to": "2026-06-30",
+  "first_use": "Hot Season 2026-12-01 .. 2027-03-31",
+  "config": {
+    "lag": 1,
+    "alpha": 1.0,
+    "min_train": 60,
+    "knn": 150,
+    "min_pool": 30,
+    "features": "main",
+    "n_paths": 2000,
+    "block": 7,
+    "window": 10,
+    "level_days": 60,
+    "level": true,
+    "seed": 20261024,
+    "flag_p": 0.1,
+    "q_tol": 0.9
+  },
+  "history_seasons": [
+    2023,
+    2024,
+    2025
+  ],
+  "m1_tolerance_mw": {
+    "same_day": 216.72535555555578,
+    "day_before": 200.8410444444444
+  },
+  "m2_ridge_standardised": {
+    "features": [
+      "f",
+      "rev",
+      "y_known",
+      "err_known",
+      "nonbiz"
+    ],
+    "mean": [
+      2884.1047202643194,
+      -13.000235682819374,
+      2904.997353157124,
+      22.479613069016168,
+      0.32599118942731276
+    ],
+    "sd": [
+      497.8409324987486,
+      93.83883547743778,
+      512.3937086313202,
+      149.6237307835889,
+      0.4687439960608341
+    ],
+    "beta": [
+      13.851912189200384,
+      -26.259591840382598,
+      -24.636747014972915,
+      53.98917513162309,
+      12.109017321909215
+    ],
+    "intercept_mw": 23.28862041116007,
+    "train_days": 454,
+    "note": "target = actual daily max operational demand - forecast; refit daily in operation"
+  },
+  "dp_cost": 0.03,
+  "dp_thresholds_file": "frozen_dp_thresholds.csv",
+  "dp_thresholds_from": "leave-one-season-out probabilities of 2023-24, 2024-25, 2025-26 (not forward; thresholds only)",
+  "formal_test_hot_season_days": 0
+}

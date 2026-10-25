@@ -1,0 +1,205 @@
+name,value,unit,formula,period,source,status,check,note
+brier_S0_A,0.031965,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_S1_A,0.0439387,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_M1p_A,0.13235,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_M2_A,0.139492,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_M3_A,0.0370811,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+bss_M3_A,-0.160053,1,1 - {brier_M3_A} / {brier_S0_A},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,相对常数基准 S0 的 Brier 技巧分数
+brier_S0_da_A,0.031965,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_S1_da_A,0.0309091,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_M1p_da_A,0.137762,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_M2_da_A,0.131207,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_M3_da_A,0.0263992,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+bss_M3_da_A,0.174121,1,1 - {brier_M3_da_A} / {brier_S0_da_A},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,相对常数基准 S0 的 Brier 技巧分数
+sum_p_S1_A,6.51333,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,全季当天概率之和（真实高峰日 4 个）
+mean_p_peak_S1_A,0.418333,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,4 个高峰日的平均当天概率
+sum_p_M2_A,19.96,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,全季当天概率之和（真实高峰日 4 个）
+mean_p_peak_M2_A,0.588333,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,4 个高峰日的平均当天概率
+sum_p_M3_A,5.6375,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,全季当天概率之和（真实高峰日 4 个）
+mean_p_peak_M3_A,0.419375,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_prob_metrics.csv,回测,,4 个高峰日的平均当天概率
+brier_S0_B,0.031965,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_S1_B,0.0211295,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_M1p_B,0.129026,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_M2_B,0.121873,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+brier_M3_B,0.0194377,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，当天 09:00决策
+bss_M3_B,0.391908,1,1 - {brier_M3_B} / {brier_S0_B},历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,相对常数基准 S0 的 Brier 技巧分数
+brier_S0_da_B,0.031965,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_S1_da_B,0.02445,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_M1p_da_B,0.132158,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_M2_da_B,0.125575,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+brier_M3_da_B,0.0229195,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,Brier 分数，前一天 09:00决策
+bss_M3_da_B,0.282982,1,1 - {brier_M3_da_B} / {brier_S0_da_B},历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,相对常数基准 S0 的 Brier 技巧分数
+sum_p_S1_B,2.26,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,全季当天概率之和（真实高峰日 4 个）
+mean_p_peak_S1_B,0.243333,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,4 个高峰日的平均当天概率
+sum_p_M2_B,19.5067,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,全季当天概率之和（真实高峰日 4 个）
+mean_p_peak_M2_B,0.61,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,4 个高峰日的平均当天概率
+sum_p_M3_B,3.5835,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,全季当天概率之和（真实高峰日 4 个）
+mean_p_peak_M3_B,0.326,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_prob_metrics.csv,回测,,4 个高峰日的平均当天概率
+brier_S0_AB,0.031965,1,,历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/season_prob_metrics.csv,回测,,
+brier_S1_AB,0.0325341,1,,历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/season_prob_metrics.csv,回测,,
+brier_M3_AB,0.0282594,1,,历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/season_prob_metrics.csv,回测,,
+bss_M3_AB,0.115927,1,1 - {brier_M3_AB} / {brier_S0_AB},历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/season_prob_metrics.csv,回测,,
+rank_all4_M2_A,26,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/peak_ranks.csv,回测,,事后按概率从高到低排，要排到第几天才包含全部 4 个高峰日（并列取最差位置）；只说明排序质量，不是在线策略
+rank_all4_M3_A,18,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/peak_ranks.csv,回测,,事后按概率从高到低排，要排到第几天才包含全部 4 个高峰日（并列取最差位置）；只说明排序质量，不是在线策略
+rank_all4_M2_B,24,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/peak_ranks.csv,回测,,事后按概率从高到低排，要排到第几天才包含全部 4 个高峰日（并列取最差位置）；只说明排序质量，不是在线策略
+rank_all4_M3_B,9,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/peak_ranks.csv,回测,,事后按概率从高到低排，要排到第几天才包含全部 4 个高峰日（并列取最差位置）；只说明排序质量，不是在线策略
+calls_M1_union_A_15,15,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_M1_union_A_15,1,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M2_flag_A_15,15,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_M2_flag_A_15,1,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M3_A_15,12,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_M3_A_15,2,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_S1_A_15,14,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_S1_A_15,2,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M1_union_A_30,28,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_M1_union_A_30,4,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_M1_union_A_30,12,时段,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_M1_union_A_30,16,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_M1_union_A_30,24,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_M2_flag_A_30,25,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_M2_flag_A_30,3,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_M2_flag_A_30,9,时段,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_M2_flag_A_30,15,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_M2_flag_A_30,22,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_M3_A_30,17,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_M3_A_30,3,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_M3_A_30,9,时段,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_M3_A_30,5,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_M3_A_30,14,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_S1_A_30,15,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_S1_A_30,2,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_S1_A_30,6,时段,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_S1_A_30,5,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_S1_A_30,13,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_M1_union_A_45,28,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_M1_union_A_45,4,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M2_flag_A_45,25,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_M2_flag_A_45,3,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M3_A_45,17,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_M3_A_45,3,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_S1_A_45,15,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_S1_A_45,2,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_saved_M3_A_30,11,次,{calls_M1_union_A_30} - {calls_M3_A_30},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,,M3 比现有规则少用的次数
+calls_M1_union_B_15,15,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_M1_union_B_15,0,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M2_flag_B_15,15,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_M2_flag_B_15,0,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M3_B_15,14,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_M3_B_15,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_S1_B_15,10,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 15,预算 15 次，在线
+covered_S1_B_15,3,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M1_union_B_30,27,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_M1_union_B_30,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_M1_union_B_30,11,时段,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_M1_union_B_30,18,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_M1_union_B_30,23,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_M2_flag_B_30,30,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_M2_flag_B_30,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_M2_flag_B_30,11,时段,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_M2_flag_B_30,17,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_M2_flag_B_30,26,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_M3_B_30,17,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_M3_B_30,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_M3_B_30,11,时段,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_M3_B_30,3,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_M3_B_30,13,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_S1_B_30,12,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 30,预算 30 次，在线
+covered_S1_B_30,3,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+intervals_S1_B_30,9,时段,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 12,17:30-19:30 窗口覆盖的高峰时段（共 12）
+dec_calls_S1_B_30,3,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,12 月的调用次数（季初消耗）
+false_S1_B_30,9,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,调用了但不是高峰日
+calls_M1_union_B_45,27,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_M1_union_B_45,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M2_flag_B_45,30,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_M2_flag_B_45,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_M3_B_45,17,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_M3_B_45,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_S1_B_45,12,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 45,预算 45 次，在线
+covered_S1_B_45,3,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,<= 4,覆盖的高峰日（共 4）
+calls_saved_M3_B_30,10,次,{calls_M1_union_B_30} - {calls_M3_B_30},历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/season_call_metrics.csv,回测,,M3 比现有规则少用的次数
+calls_M3_A_30_cost0,30,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 30,成本 c = 0（只报告，不用来选）
+covered_M3_A_30_cost0,4,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,成本 c = 0
+calls_M3_A_30_cost0.01,17,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 30,成本 c = 0.01（只报告，不用来选）
+covered_M3_A_30_cost0.01,3,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/season_call_metrics.csv,回测,<= 4,成本 c = 0.01
+rel_M3_top_days,11,天,,历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/reliability.csv,回测,,M3 当天概率 >= 0.3 的天数
+rel_M3_top_mean_p,0.5738,1,,历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/reliability.csv,回测,,这些天的平均概率
+rel_M3_top_peaks,4,天,,历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/reliability.csv,回测,,其中真的是高峰日的天数
+rel_M3_top_share,0.3636,1,{rel_M3_top_peaks} / {rel_M3_top_days},历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/reliability.csv,回测,,
+brier_M3_lag2_A,0.034594,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 lag2 (actual one day later)（只报告）
+calls_M3_lag2_A_30,14,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 lag2 (actual one day later)
+covered_M3_lag2_A_30,3,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 lag2 (actual one day later)
+brier_M3_lag2_B,0.021922,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 lag2 (actual one day later)（只报告）
+calls_M3_lag2_B_30,15,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 lag2 (actual one day later)
+covered_M3_lag2_B_30,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 lag2 (actual one day later)
+brier_M3_nolevel_A,0.0383414,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 no level ratio（只报告）
+calls_M3_nolevel_A_30,14,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 no level ratio
+covered_M3_nolevel_A_30,4,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 no level ratio
+brier_M3_nolevel_B,0.0222224,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 no level ratio（只报告）
+calls_M3_nolevel_B_30,15,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 no level ratio
+covered_M3_nolevel_B_30,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 no level ratio
+brier_M3_block1_A,0.0370025,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 block 1（只报告）
+calls_M3_block1_A_30,16,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 block 1
+covered_M3_block1_A_30,2,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 block 1
+brier_M3_block1_B,0.0198012,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 block 1（只报告）
+calls_M3_block1_B_30,16,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 block 1
+covered_M3_block1_B_30,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 block 1
+brier_M3_block14_A,0.037185,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 block 14（只报告）
+calls_M3_block14_A_30,17,次,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 block 14
+covered_M3_block14_A_30,3,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 block 14
+brier_M3_block14_B,0.0195384,1,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_prob_metrics.csv,回测,,敏感性 block 14（只报告）
+calls_M3_block14_B_30,17,次,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 30,敏感性 block 14
+covered_M3_block14_B_30,4,天,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/sensitivity_call_metrics.csv,回测,<= 4,敏感性 block 14
+covered_er_label_M1_union_A_30,4,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，电能需求代理标签（敏感性）,results/season_call_metrics.csv,回测,<= 4,
+covered_er_label_M3_A_30,4,天,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，电能需求代理标签（敏感性）,results/season_call_metrics.csv,回测,<= 4,
+zen_L1_M1_union_A,-118.765,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L1 现行规则，净出口记 0；Synergy 参考条款；不含平台费；预算 30 次
+zen_L1_M3_A,-66.1093,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L1 现行规则，净出口记 0；Synergy 参考条款；不含平台费；预算 30 次
+zen_L1_oracle_A,-12.5561,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L1 现行规则，净出口记 0；Synergy 参考条款；不含平台费；完美预知 4 次
+zen_L1_diff_M3_A,52.6558,A$/户[报名]/季,{zen_L1_M3_A} - {zen_L1_M1_union_A},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,
+zen_L2_M1_union_A,601.234,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L2 净出口记负的 2027 情景，假设组合下限不起作用；Synergy 参考条款；不含平台费；预算 30 次
+ircr_L2_M1_union_A,719.999,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,容量价值（整季 12 个时段中位数），已乘响应率 0.9
+cust_L2_M1_union_A,81.941,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,客户相对正常自用的净收益
+zen_L2_M3_A,582.368,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L2 净出口记负的 2027 情景，假设组合下限不起作用；Synergy 参考条款；不含平台费；预算 30 次
+ircr_L2_M3_A,648.477,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,容量价值（整季 12 个时段中位数），已乘响应率 0.9
+cust_L2_M3_A,42.9102,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,客户相对正常自用的净收益
+zen_L2_oracle_A,707.443,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L2 净出口记负的 2027 情景，假设组合下限不起作用；Synergy 参考条款；不含平台费；完美预知 4 次
+ircr_L2_oracle_A,719.999,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,容量价值（整季 12 个时段中位数），已乘响应率 0.9
+cust_L2_oracle_A,9.7229,A$/户[报名]/季,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,客户相对正常自用的净收益
+zen_L2_diff_M3_A,-18.866,A$/户[报名]/季,{zen_L2_M3_A} - {zen_L2_M1_union_A},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,
+zen_L1_M1_union_B,-112.624,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L1 现行规则，净出口记 0；Synergy 参考条款；不含平台费；预算 30 次
+zen_L1_M3_B,-60.6257,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L1 现行规则，净出口记 0；Synergy 参考条款；不含平台费；预算 30 次
+zen_L1_oracle_B,-10.7277,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L1 现行规则，净出口记 0；Synergy 参考条款；不含平台费；完美预知 4 次
+zen_L1_diff_M3_B,51.998,A$/户[报名]/季,{zen_L1_M3_B} - {zen_L1_M1_union_B},历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,
+zen_L2_M1_union_B,552.346,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L2 净出口记负的 2027 情景，假设组合下限不起作用；Synergy 参考条款；不含平台费；预算 30 次
+ircr_L2_M1_union_B,664.97,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,容量价值（整季 12 个时段中位数），已乘响应率 0.9
+cust_L2_M1_union_B,78.8165,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,客户相对正常自用的净收益
+zen_L2_M3_B,604.344,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L2 净出口记负的 2027 情景，假设组合下限不起作用；Synergy 参考条款；不含平台费；预算 30 次
+ircr_L2_M3_B,664.97,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,容量价值（整季 12 个时段中位数），已乘响应率 0.9
+cust_L2_M3_B,42.7139,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,客户相对正常自用的净收益
+zen_L2_oracle_B,654.242,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,L2 净出口记负的 2027 情景，假设组合下限不起作用；Synergy 参考条款；不含平台费；完美预知 4 次
+ircr_L2_oracle_B,664.97,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,容量价值（整季 12 个时段中位数），已乘响应率 0.9
+cust_L2_oracle_B,10.3052,A$/户[报名]/季,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,客户相对正常自用的净收益
+zen_L2_diff_M3_B,51.998,A$/户[报名]/季,{zen_L2_M3_B} - {zen_L2_M1_union_B},历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,
+ircr_L2_diff_M3_A,-71.5217,A$/户[报名]/季,{ircr_L2_M3_A} - {ircr_L2_M1_union_A},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,M3 少盖 3 个时段带来的容量价值差
+corr_od_er_daily_max,0.9971,1,,热季 2023-24、2024-25、2025-26（364 天）,inspect_data.py 的输出（运行一次后抄录）,推算,,运行需求日最高和实际电能需求日最高的相关系数
+zen_L2_diff_M3_two_seasons,33.1321,A$/户[报名],,历史诊断 A+B：热季 2024-25 和 2025-26（242 天）,results/revenue.csv（vpp.policy.policy_simulator.account / ircr_value，独立调用近似）,推算,,两季逐季差额之和（zen_L2_diff_M3_A + zen_L2_diff_M3_B），两个热季合计，不是每年
+mae_f0_A,118.532,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/bias_model_errors.csv,回测,,AEMO 当天预测日最高 vs 实际运行需求日最高，平均绝对误差（MAE）
+mae_M2_A,114.538,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/bias_model_errors.csv,回测,,偏差修正后的 MAE（前向一步样本外）
+mae_cut_M2_A,3.37,%,1 - {mae_M2_A} / {mae_f0_A},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/bias_model_errors.csv,回测,,MAE 比 AEMO 原始预测低多少（不是准确率）
+mae_f0_B,113.465,MW,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/bias_model_errors.csv,回测,,AEMO 当天预测日最高 vs 实际运行需求日最高，平均绝对误差（MAE）
+mae_M2_B,108.412,MW,,历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/bias_model_errors.csv,回测,,偏差修正后的 MAE（前向一步样本外）
+mae_cut_M2_B,4.453,%,1 - {mae_M2_B} / {mae_f0_B},历史诊断 B：热季 2025-12-01 至 2026-03-31（121 天），历史池 2023-24 和 2024-25，官方标签,results/bias_model_errors.csv,回测,,MAE 比 AEMO 原始预测低多少（不是准确率）
+od_4th_2024,4066.85,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2025-02-06 运行需求日最高（代理第 4 高）
+od_5th_2024,4061.06,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2025-01-29 运行需求日最高（第 5 高；按电能需求它排第 4）
+od_gap_4th_5th_2024,5.793,MW,{od_4th_2024} - {od_5th_2024},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,
+f0_20241223,4178.6,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2024-12-23 AEMO 当天预测日最高
+y_20241223,3896.97,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2024-12-23 实际运行需求日最高
+err_20241223,-281.631,MW,{y_20241223} - {f0_20241223},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,实际 - 预测（负数 = AEMO 高估）
+p_M3_20241223,0.8575,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2024-12-23 M3 当天概率（不是高峰日）
+f0_20250121,4615.86,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2025-01-21 AEMO 当天预测日最高
+y_20250121,3945.66,MW,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2025-01-21 实际运行需求日最高
+err_20250121,-670.195,MW,{y_20250121} - {f0_20250121},历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,实际 - 预测（负数 = AEMO 高估）
+p_M3_20250121,0.9915,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,2025-01-21 M3 当天概率（不是高峰日）
+p_M3_20250206,0.007,1,,历史诊断 A：热季 2024-12-01 至 2025-03-31（121 天），历史池 2023-24，代理标签,results/daily_probabilities.csv,回测,,M3 漏掉的代理高峰日的当天概率
+m1_tol_same_day_frozen,216.725,MW,,训练数据 2023-10-01 至 2026-06-30（三个热季）,results/frozen_model.json,回测,,现有规则的当天容差（90% 分位），留给 2026-27 热季
+test_period_hot_days,0,天,,正式测试期 2026-07-01 至 2026-10-22（114 天）,results/frozen_model.json,回测,= 0,测试期里的热季天数
+season_days,121,天,,每个评估热季,results/daily_probabilities.csv,已核实,,2024-25、2025-26 各 121 个交易日

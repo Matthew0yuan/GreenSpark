@@ -1,0 +1,202 @@
+{
+  "status": "done",
+  "summary_zh": "在 analysis/2026-10-24/peak_day_probability/ 里独立实现并跑完三组方法：组 1 现有动态阈值（原样调用 vpp.site_bill.dynamic_flags，容差只用更早的热季）、组 2 AEMO 预测偏差修正（岭回归加前向样本外残差）、组 3 当天概率加剩余热季连续情景模拟（7 天历史块，按已知数据做水平修正），另有常数和季节固定阈值两个基准。概率和调用分开：标记类方法按日期先到先用，概率类方法用同一个动态规划门槛在线调用，预算 15/30/45 次。PLAN.md 在看任何结果之前冻结。历史诊断有两个折叠：用 2023-24 预测 2024-25（代理标签），用前两季预测 2025-26（官方标签）。主要结论：现有规则在 12 月用掉 16–18 次，预算 15 次时两季都在 12 月中下旬用完，2025-26 一个高峰日没盖到。M3 每季约 17 次，比现有规则少 10–11 次，2025-26 盖住 4/4、2024-25 盖住 3/4。M3 的 Brier 分数两季都好于季节阈值基准和组 2（J1 通过），但 2024-25 不如常数基准，原因是两天 AEMO 高估 282 和 670 MW。30 次预算下 M3 在 2024-25 少盖 1 天，J2 未通过，按 J3 不建议让 M3 直接驱动调用。漏掉的那天（2025-02-06）只比第 5 名高 5.8 MW，换成电能需求代理标签 M3 也是 4/4。偏差修正只把 MAE 降了 3.4% 和 4.5%，作用很小。钱只在 L2 假设情景下有意义：两季合计 M3 每户多 A$33；现行规则（L1）下任何调用都亏钱。建议（不在事先标准里）：2026-27 热季让 M3 影子运行，作真正的样本外检验，冻结版已写好。限制：只有 2 个历史诊断季、8 个高峰日，都被看过；正式测试期没有热季；2024-25 没有官方标签；钱用独立调用近似。",
+  "deliverables": [
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/PLAN.md",
+      "what": "看结果前冻结的方案：信息截止、标签定义核对、折叠、方法、在线策略、指标、判断标准 J1–J3"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/peakprob.py",
+      "what": "数据表、三组方法和两个基准、残差池、剩余热季模拟、DP 和先到先用策略、指标"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/run_experiment.py",
+      "what": "两个历史诊断折叠、15/30/45 次预算、复用 policy 模型算钱（L1/L2）、敏感性、冻结版"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/test_peakprob.py",
+      "what": "7 项检查：未来数据不影响更早输出（含阳性对照）、训练截止、种子复现、预算、概率范围、交易日和热季边界、缺失预测、每条路径 4 个高峰日、DP 门槛单调"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/results/daily_probabilities.csv",
+      "what": "逐日输入、标签（官方/运行需求代理/电能需求代理）、各方法当天和前一天的概率与标记"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/results/daily_calls.csv",
+      "what": "逐日各方法 × 预算的调用"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/results/season_prob_metrics.csv",
+      "what": "逐季和两季合并的 Brier、技巧分数、对数损失、概率之和、排名、平均精确率"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/results/season_call_metrics.csv",
+      "what": "逐季调用指标：覆盖天数和时段、误报、12 月消耗、用完日期、成本扫描、离线前 N 名参考、完美预知"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/results/revenue.csv",
+      "what": "L1/L2 两本账的 Zenith 和客户净额（A$/已加入户/热季）"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/results/reliability.csv",
+      "what": "两季合并的可靠性分箱表"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/results/frozen_model.json",
+      "what": "只用 2026-06-30 以前数据的冻结版（配置、容差、岭回归系数），留给 2026-27 热季"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/RESULTS.md",
+      "what": "中文结果报告：结论、机制、逐季结果、失败情形、敏感性、限制、运行命令"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/NUMBERS.csv",
+      "what": "报告里的 204 个数字，18 个公式经 agents/check.py 复算一致"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/CLAIMS.csv",
+      "what": "6 条转引的规则和时点结论，全部标待核实"
+    },
+    {
+      "path": "analysis/2026-10-24/peak_day_probability/STATUS.md",
+      "what": "进展、被拒命令、发现的问题和待办；最后一行写完成"
+    }
+  ],
+  "commands_run": [
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/_preflight.py",
+      "ok": true,
+      "purpose": "开工自检，打印 preflight ok"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/inspect_data.py",
+      "ok": true,
+      "purpose": "写方案前核对字段定义、单位、覆盖和标签"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/inspect_weather.py",
+      "ok": true,
+      "purpose": "核对天气预报覆盖（从 2024-02 起）"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/test_peakprob.py",
+      "ok": false,
+      "purpose": "第一次跑检查：6 过 1 失败（路径里排名并列），修正实现"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/test_peakprob.py",
+      "ok": true,
+      "purpose": "修正后重跑 7 项全过（之后在合并分数修正后又跑一次，7 项全过）"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/run_experiment.py",
+      "ok": true,
+      "purpose": "主实验、钱、敏感性、冻结版（跑了两次，第二次在修正合并技巧分数参照之后）"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/inspect_results.py",
+      "ok": true,
+      "purpose": "逐日排查结果"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/inspect_tables.py",
+      "ok": true,
+      "purpose": "看敏感性、成本扫描、可靠性和电能需求代理标签"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/make_numbers.py",
+      "ok": true,
+      "purpose": "从结果文件生成 NUMBERS.csv（跑了 4 次）"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/run_check.py",
+      "ok": true,
+      "purpose": "调用 agents/check.py 复算 NUMBERS 和 CLAIMS。第一次查出 1 项不通过（合并技巧分数参照错误），修正后 0 项不通过（共跑 4 次）"
+    }
+  ],
+  "tests": {
+    "ran": true,
+    "command": ".venv/Scripts/python.exe analysis/2026-10-24/peak_day_probability/test_peakprob.py",
+    "passed": 7,
+    "failed": 0
+  },
+  "blocked": [
+    {
+      "action": "Bash: git -C C:/Users/inkay/Desktop/PlayGround/GreenSpark ls-files | grep -v \"^data/\" | head -300",
+      "reason": "不在放行的写法里，被权限拒绝；没有绕过，改用 Glob 列文件，不影响任务"
+    }
+  ],
+  "key_numbers": [
+    {
+      "name": "M3 当天决策 Brier 分数（A / B）",
+      "value": "0.0371 / 0.0194",
+      "period": "热季 2024-12-01 至 2025-03-31 / 2025-12-01 至 2026-03-31（各 121 天，历史诊断）",
+      "status": "回测"
+    },
+    {
+      "name": "季节阈值基准 S1 当天 Brier（A / B）",
+      "value": "0.0439 / 0.0211",
+      "period": "同上",
+      "status": "回测"
+    },
+    {
+      "name": "常数基准 S0 Brier",
+      "value": "0.0320",
+      "period": "同上",
+      "status": "回测"
+    },
+    {
+      "name": "30 次预算：现有规则调用/盖住（A；B）",
+      "value": "28/4；27/4",
+      "period": "同上",
+      "status": "回测"
+    },
+    {
+      "name": "30 次预算：M3 调用/盖住（A；B）",
+      "value": "17/3；17/4",
+      "period": "同上",
+      "status": "回测"
+    },
+    {
+      "name": "15 次预算：现有规则 vs M3 盖住（A；B）",
+      "value": "1 vs 2；0 vs 4",
+      "period": "同上",
+      "status": "回测"
+    },
+    {
+      "name": "12 月调用数，30 次预算（现有规则 vs M3，A；B）",
+      "value": "16 vs 5；18 vs 3",
+      "period": "同上",
+      "status": "回测"
+    },
+    {
+      "name": "偏差修正 MAE 降低（A；B）",
+      "value": "3.4%；4.5%",
+      "period": "同上",
+      "status": "回测"
+    },
+    {
+      "name": "L2 情景 Zenith 净额差 M3 − 现有规则",
+      "value": "−18.87（A）；+52.00（B）；两季合计 +33.13 A$/已加入户",
+      "period": "同上",
+      "status": "推算"
+    },
+    {
+      "name": "2024-25 运行需求第 4 和第 5 名之差",
+      "value": "5.8 MW",
+      "period": "热季 2024-25",
+      "status": "回测"
+    }
+  ],
+  "open_issues": [
+    "J2（30 次预算）未通过：M3 在 2024-25 比现有规则少盖 1 天；按事先 J3 不建议让 M3 直接驱动调用，只建议 2026-27 热季影子运行",
+    "2023-24、2024-25 没有官方高峰时段，本地也没有 TSOG；2024-25 第 4 个高峰日在两种代理之间不同，需要下载 AEMO peak-intervals.csv 核对",
+    "高概率一端偏自信，残差池和历史块只来自 1–2 个热季，碰到 AEMO 大幅高估的日子会给出很高的概率",
+    "D−1 日实际值在 09:00 已公开是假设，没有核实 AEMO 的发布延迟（晚一天的敏感性结果相近）",
+    "钱用独立调用近似，没有逐时段复核连续多天调用的电量相互影响；L2 依赖 2027 年净出口记负、组合下限不起作用的假设；参与意愿没有建模",
+    "正式代码 vpp.site_bill.dynamic_flags 遇到缺失预测时不标记，等于悄悄当成低风险；policy_simulator.ircr_flags 的容差含未来季。都未改",
+    "没有使用 ST PASA 7–14 天需求预报",
+    "正式测试期 2026-07-01 至 2026-10-22 没有热季，真正的样本外检验要等 2026-27 热季"
+  ]
+}
