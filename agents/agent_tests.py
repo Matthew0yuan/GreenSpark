@@ -139,6 +139,25 @@ def test_claims_need_source_and_words():
 
 
 # ------------------------------------------------------------------------------------------------------------ log
+def test_successful_read_of_denial_text_is_not_a_denial():
+    # Grep of this checker's own source interrupted a real architecture task.
+    for content in ('28:DENIED = "has been denied"',
+                    [{"type": "text", "text": "Permission to use Bash has been denied because ..."}]):
+        for flag in (None, False):
+            result = {"type": "tool_result", "tool_use_id": "read1", "content": content}
+            if flag is not None:
+                result["is_error"] = flag
+            assert ck.denials_in({"type": "user", "message": {"content": [result]}}) == []
+
+
+def test_error_result_still_reports_permission_denial():
+    result = {"type": "tool_result", "tool_use_id": "denied1", "is_error": True,
+              "content": "Permission to use Bash has been denied because Claude Code is running in don't ask mode."}
+    assert ck.denials_in({"type": "user", "message": {"content": [result]}}) == ["denied1"]
+    assert ck.denials_in({"type": "system", "subtype": "permission_denied",
+                         "tool_use_id": "denied2"}) == ["denied2"]
+
+
 def test_log_parse_commands_and_denials():
     events = [
         {"type": "system", "subtype": "init", "session_id": "s"},

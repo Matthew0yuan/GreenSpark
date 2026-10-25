@@ -1,0 +1,55 @@
+{
+  "status": "done",
+  "summary_zh": "替 Zenith 的电池运营和商务团队设计了一个英文操作界面，暂名 GreenSpark Dispatch Desk，交给主工程师复核，复核通过前不写应用代码。工作流分 7 步：Setup → Forecast（Q2A）→ Own battery（Q2B）→ Customer activation → Incremental value → Validation → Runs & export，任务书要求的六项能力都覆盖到了。\n\n先看 wireframe.html：自包含，双击就能打开，不联网、不用构建。左侧导航可以逐页点；第 3 步点图上的时段（或按左右键），右侧会解释这个时段为什么这样安排；第 4 步点热季日历的格子；第 5 步可以切换分母、展开账本行；另有一页专门演示各种状态（结果过期 stale、不可行 infeasible、没有商业价值 no business case、不支持 unsupported、只读）。顶部固定横幅写着 \"Design prototype - illustrative data; not connected to the model\"，所有数字都是排版用的示意数，标了 illus.，图上有 ILLUSTRATIVE 水印；按 Recompute 只播放状态变化，不做任何计算。\n\n主要设计选择：\n- 计划和结果彻底分开：实际值和季后的官方高峰日默认隐藏，点 Reveal 才显示，而且永远单独画。\n- 系统高峰日指示（驱动客户调用）和价格尖峰风险（只给自有电池报价用）是两个独立信号。\n- 新的高峰日概率模型没过事先定的采用标准，所以只放在标着 \"not used for decisions\" 的研究对照框里，只显示三档，不给精确概率。\n- 没有商业价值、不可行、不支持都是正式结果，都不显示数字，也不拿别的存档结果顶替。\n- Zenith、客户、其他方、系统分开记账；给客户的补偿标为转移支付，系统列为 0；客户的对照写明是同一块电池正常自用。\n- IRCR 单独一张卡，按热季整季结算，不显示成每天的收入。\n- 条款来源分三种标清：Synergy 参考条款、模型建议、自定义；商业情景分现行规则、假设的未来规则、假设的商业安排。\n- 客户电池不画成和自有电池联合优化的电池群。\n- 原题 Q2A、Q2B 是导航里独立的两步，没有被客户电池功能挤掉。\n\n其他交付：DESIGN.md 写导航和信息架构、每页布局、用户流程、设计规范、响应式和无障碍、交互状态；HANDOFF.md 写组件、每页要的数据字段、图表语义、计划和结果怎么分、状态机、验收清单、阶段 A（10-26 首次演示）和阶段 B（完整 MVP）的优先级；DEMO_SCRIPT.md 是英文五分钟演示稿，按评分要点对应，规定现场由人自己输入新值、由真实引擎重算，引用的数字都注明出自哪份报告、哪个时间段，并列了不该说的话。\n\n限制：\n- Tesla Autobidder 官方页对抓取返回 HTTP 403（试了四个地址），只看到搜索引擎摘录的文字，在 CLAIMS.csv 里标\"待核实\"；公开 UI 图片没看到，所以设计没有参照它的任何视觉细节，也没用 Tesla 的名称、logo 或界面。\n- 这次权限不允许运行命令，原型没在浏览器里实际跑过，只逐行读代码检查过。\n- 字段名是界面侧的建议，要和架构 agent 的 API_CONTRACT、CAPABILITY_MATRIX 对齐。\n- 这次没有计算任何数字，所以没有 NUMBERS.csv。",
+  "deliverables": [
+    {
+      "path": "analysis/2026-10-25/mvp_product_design/wireframe.html",
+      "what": "自包含的 HTML 评审原型（不用外部 JS 或 CDN）：7 个产品页加 1 个状态演示页，可以切页、切标签、点选时段和日期、展开账本行、揭晓结果、演示各种状态；数据全是示意"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_product_design/DESIGN.md",
+      "what": "中文设计文档：导航和信息架构、每页布局、用户流程、英文术语、设计规范（颜色、字体、间距）、响应式和无障碍、交互状态、Tesla 参考的边界、和评分要点的对应"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_product_design/HANDOFF.md",
+      "what": "前端交接：共享组件、每页的数据字段和动作、图表语义、计划和回顾结果怎么分开、状态机、界面验收清单、阶段 A / B 优先级"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_product_design/DEMO_SCRIPT.md",
+      "what": "英文五分钟演示稿：对应评分要点，规定现场由人输入新值并真实重算，证据和限制都注明出自哪份报告，列出不该说的话"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_product_design/RESULTS.md",
+      "what": "中文评审指南：先打开哪些文件、关键设计选择、需要主工程师定的事、限制"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_product_design/CLAIMS.csv",
+      "what": "Tesla Autobidder 页面的调研记录：页面返回 403 一行标已核实，其余几行搜索摘录标待核实"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_product_design/STATUS.md",
+      "what": "进度记录，最后一行写完成"
+    }
+  ],
+  "commands_run": [],
+  "tests": {
+    "ran": false
+  },
+  "blocked": [
+    {
+      "action": "WebFetch https://www.tesla.com/support/energy/tesla-software/autobidder（以及 en_au、en_CA 地区页和 https://www.tesla.com/autobidder）",
+      "reason": "对方服务器返回 HTTP 403 Forbidden，不是本地权限拒绝；页面正文和公开 UI 图片都没读到，只拿到搜索引擎摘录，按证据缺口处理"
+    },
+    {
+      "action": "在浏览器里运行并测试 wireframe.html",
+      "reason": "research 档位不允许运行任何命令；只逐行读代码检查过，需要人工在 Chrome 或 Edge 里按 1440×900 和 1280×720 打开确认"
+    }
+  ],
+  "open_issues": [
+    "Tesla 官方页的文字和公开 UI 图片要人工在浏览器里打开核对（CLAIMS.csv 里标待核实的几行）",
+    "wireframe.html 还没在浏览器里实际运行过",
+    "哪些输入能快速重算、哪些要整体重跑、哪些不支持，原型里的分配只是示意，要和架构 agent 的 CAPABILITY_MATRIX 对齐",
+    "HANDOFF 里的字段名要和架构 agent 的 API_CONTRACT 对齐（Codex 负责）",
+    "演示时间怎么分（笔记里记过 2 分钟演示 + 3 分钟讲解）以比赛通知为准"
+  ]
+}

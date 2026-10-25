@@ -1,0 +1,67 @@
+{
+ "load_days_s": 13.74,
+ "load_days_mb": {
+  "current": 23.5,
+  "peak": 38.1,
+  "days": 570
+ },
+ "chain unseen test days 2026-10-16..2026-10-22": {
+  "seconds": 9.09,
+  "per_day_s": 1.3,
+  "largest_abs_diff_vs_saved": 1.1368683772161603e-13,
+  "days": 7
+ },
+ "chain hot season, in-sample 2026-01-15..2026-01-21": {
+  "seconds": 14.12,
+  "per_day_s": 2.02,
+  "largest_abs_diff_vs_saved": 4.547473508864641e-13,
+  "days": 7
+ },
+ "export 3 MW, 2026-10-16..22": {
+  "seconds": 8.33,
+  "recomputed": true,
+  "days_with_different_total": "6",
+  "largest_export_mwh_base": 3.40140097428802,
+  "largest_export_mwh_3mw": 1.5
+ },
+ "energy 36 MWh with the 40 MWh table": "refused: FileNotFoundError: v2_value_median_36mwh_h50_state.npz: build it first (python -m vpp.v2.value)",
+ "power 8 MW with the 10 MW table": "ran (no guard: the table was solved at 10 MW)",
+ "global_state_after_runs": {
+  "bt._DAYS": 2,
+  "bt._AUX_keys": [
+   "demand",
+   "flags0",
+   "flags1",
+   "ircr_flags_past",
+   "ircr_peaks",
+   "ircr_tolerance",
+   "ircr_value_mw",
+   "predictor0",
+   "predictor1"
+  ],
+  "hs.VALUE_INPUTS_keys": [
+   "('median', 40.0, 50.0, True, False)"
+  ],
+  "bt.REFUSED": {},
+  "bt.WARNED": {}
+ },
+ "tools_on_path": {
+  "node": true,
+  "npm": true,
+  "pnpm": true,
+  "uv": true,
+  "git": true,
+  "docker": true
+ },
+ "packages": {
+  "highspy": "1.15.1",
+  "lightgbm": "4.7.0",
+  "matplotlib": "3.11.2",
+  "numpy": "2.5.4",
+  "pandas": "3.0.6",
+  "pyarrow": "26.0.0",
+  "scikit-learn": "1.9.1",
+  "scipy": "1.18.1"
+ },
+ "python": "3.13.5"
+}

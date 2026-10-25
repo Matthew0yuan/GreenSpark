@@ -379,7 +379,8 @@ def denials_in(event: dict) -> list[str]:
         return [str(event.get("tool_use_id"))]
     if event.get("type") == "user":
         return [str(c.get("tool_use_id")) for c in _content(event)
-                if c.get("type") == "tool_result" and DENIED in _text(c.get("content")).lower()]
+                if c.get("type") == "tool_result" and c.get("is_error") is True
+                and DENIED in _text(c.get("content")).lower()]
     return []
 
 

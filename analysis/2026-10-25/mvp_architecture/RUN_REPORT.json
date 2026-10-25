@@ -1,0 +1,164 @@
+{
+  "status": "done",
+  "summary_zh": "我写了一份 MVP 架构提案，等你 review。没改任何生产代码，没装依赖，没部署，也还没开始实现。\n\n我推荐的方案：本机跑一个 FastAPI 进程，负责接口和作业调度；另有两个常驻的 Python 引擎工作进程，一个处理交互请求，一个跑长作业；前端是 React + TypeScript 单页（Vite、Mantine 组件、ECharts 图表、TanStack Query）；项目、运行和作业存在 SQLite。不选 Streamlit/Dash，因为它们没有干净的接口，前端和后端的 agent 没法分开做，长作业也很难做取消。\n\n引擎方面，vpp 一行不改，只有新写的 engine_adapter 导入它，而且只调用列出的函数。引擎从一个只读数据包里的代码副本导入。数据包约 161 MB，带 sha256 清单，并在数据和模型两个版本号上可追溯；可写的只有 var/。每个结果都标来源：本次计算、相同输入的缓存、或保存的研究结果。\n\n本机实测的几件事（每项只计时一次）：\n- 正式配置回放一天要 1.3–2.0 秒，和保存的回测结果最大差 4.5e-13 A$。所以单日可以在界面上直接等结果；全部 570 天估计要 12–19 分钟，必须做成后台作业。\n- 客户方案冷启动约 27 秒，之后算一个新方案约 0.27 秒，现场改条款可以真算。\n- 出口上限改成 3 MW 会真的重算（7 天里 6 天结果不同）；36 MWh 会因为缺价值表被拒。但 8 MW 功率引擎不报错、悄悄算出不一致的结果，适配层必须拦住。\n\n主要结论：\n1. 自有电池里，价值表不建模的参数可以真算，界面标\"未验证的情景\"。功率、容量、效率、损耗、CMD、工厂负荷锁住，因为价值表按默认电池和工厂写死了。\n2. \"只有 Zenith 自有电池\"的对照基线，只在配置等于正式配置时才用保存的账本；改了配置又没有重算结果时，显示\"待重算\"，不给数字。\n3. 客户方案每次只用 2026-06-30 以前的数据拟合调用规则，测试期结果单独放、只报告，应用里不做方案搜索。现有代码不会给 2026-27 热季标记任何一天，第二阶段要新写冻结规则。\n4. 时间、缺失值、单位、分母都定了规则：市场时间固定带 +08:00；缺失一律给 null 加原因，编码器拒绝 NaN；每个金额都带分母、统计口径和时间段。\n5. 2026-10-26 的首次演示同时包含 Q2A 预测和 Q2B 调度，两处现场输入都走真引擎：自有电池改出口上限，客户方案改条款。\n\n限制：\n- 关键路径估计约 19 小时，是工作量估计，不是测量，要从批准起连续推进才赶得上首次演示。\n- 全部 570 天没有重跑，价值表重建要多久、每个工作进程占多少内存都没测。\n- 不确定项 U-1、U-3 要模型负责人确认。\n- 第一次运行因 Grep 读 agents/check.py 被拒而中断，之后没有重试，也没有再碰 agents/。\n- 第一次运行里误跑过两条超出许可写法的只读命令，没被拒，已记在 STATUS.md。",
+  "deliverables": [
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/ARCHITECTURE.md",
+      "what": "中文评审文档：结论、检查到的事实（附代码位置）、技术栈和备选、Mermaid 组件图和两张数据流图、适配边界、数据包和版本、作业和失败处理、口径、调用规则怎么和测试期分开、启动和打包、实施边界、风险、术语对照"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/API_CONTRACT.md",
+      "what": "路由表、共享类型（TS 写法）、标明示意的最小示例、和产品设计稿字段的差异表"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/CAPABILITY_MATRIX.md",
+      "what": "默认配置怎么复现；自有电池和客户方案每个参数的支持类别；每页控件对应的现有代码、要做的改动和验收；不可用和研究专用的内容；不确定项 U-1 至 U-8"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/IMPLEMENTATION_TASKS.md",
+      "what": "模型、后端、前端、QA、manager 各自的文件归属和交接内容；阶段 A 任务和关键路径；阶段 B 两批；AC-1 至 AC-18 验收条件；2026-10-26 演示脚本；集成步骤"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/RESULTS.md",
+      "what": "给 lead engineer 的摘要：定下的方案、事实和建议分开、需要你决定或提供的、限制、实际运行过的命令"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/NUMBERS.csv",
+      "what": "58 个数字，每个带单位、公式、时间段、来源、标签"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/check_numbers_local.py",
+      "what": "本目录自己写的复算脚本（没用 agents/check.py），结果在 CHECK_RESULT.json"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/inspect_engine.py",
+      "what": "只读探查：文件结构、常量、单日回放计时和复现、客户方案计时、已装的包；输出 INSPECTION.json"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/inspect_engine2.py",
+      "what": "只读探查：两段 7 天连跑和保存结果对比、出口 3 MW 重算、36 MWh 和 8 MW 的参数守卫、全局状态、PATH 上的工具；输出 INSPECTION2.json"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/inspect_engine3.py",
+      "what": "只读探查：英文解释 dispatch.explain 和 v2 输出在 e5 上能否跑、部分期间的账和 IRCR；输出 INSPECTION3.json"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/inspect_engine4.py",
+      "what": "只读探查：情景文件覆盖范围、各时间段天数、价值表内存、缺失时段；输出 INSPECTION4.json"
+    },
+    {
+      "path": "analysis/2026-10-25/mvp_architecture/STATUS.md",
+      "what": "工作记录，含被拒操作、命令偏差和待办；最后一行写的是\"完成\""
+    }
+  ],
+  "commands_run": [
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/_preflight.py",
+      "ok": true,
+      "purpose": "开工自检（第一次运行和续跑各一次）"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/_preflight.py --help",
+      "ok": true,
+      "purpose": "误跑：多带了参数，超出许可写法；只读，没被拒"
+    },
+    {
+      "command": "wc -l vpp/*.py vpp/v2/*.py vpp/policy/*.py",
+      "ok": true,
+      "purpose": "误跑：统计代码行数的 shell 命令，超出许可写法；只读，没被拒"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/inspect_engine.py",
+      "ok": true,
+      "purpose": "只读探查结构、单日回放复现和计时、客户方案计时"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/inspect_engine2.py",
+      "ok": true,
+      "purpose": "连跑复现、参数改动和守卫、全局状态、工具"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/inspect_engine3.py",
+      "ok": true,
+      "purpose": "英文解释和 v2 输出、期间账本和 IRCR"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/inspect_engine4.py",
+      "ok": true,
+      "purpose": "情景文件、各时间段天数、价值表内存、缺失时段"
+    },
+    {
+      "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/check_numbers_local.py",
+      "ok": true,
+      "purpose": "复算 NUMBERS.csv 和数据包大小（跑了两次，第二次在把 bundle_planned_mb 改成 161.1 之后）"
+    }
+  ],
+  "tests": {
+    "ran": true,
+    "command": ".venv/Scripts/python.exe analysis/2026-10-25/mvp_architecture/check_numbers_local.py",
+    "passed": 14,
+    "failed": 0
+  },
+  "blocked": [
+    {
+      "action": "Grep 工具查 agents/check.py，模式 \"^def |UNITS|^[A-Z_]+ = \"",
+      "reason": "第一次运行时被权限拒绝，运行器因此以 stopped_denials 停止。续跑时（用户要求）没有重试，也没有用别的工具读或调用 agents/ 下的代码；NUMBERS.csv 改用本目录自己写的 check_numbers_local.py 检查"
+    }
+  ],
+  "key_numbers": [
+    {
+      "name": "正式配置单日回放耗时",
+      "value": "1.3–2.0 s/天",
+      "period": "2026-10-16 至 10-22、2026-01-15 至 01-21 两段各 7 天，本机实测（一次）",
+      "status": "推算"
+    },
+    {
+      "name": "回放和保存结果的最大差",
+      "value": "4.5e-13 A$",
+      "period": "上面两段共 14 天",
+      "status": "回测"
+    },
+    {
+      "name": "全部 570 天顺序连跑估计",
+      "value": "741–1151 s（约 12–19 分钟）",
+      "period": "2025-04-01 至 2026-10-22（570 天）",
+      "status": "推算"
+    },
+    {
+      "name": "客户模型冷启动",
+      "value": "27.2 s",
+      "period": "本机实测（一次）",
+      "status": "推算"
+    },
+    {
+      "name": "客户新方案评估",
+      "value": "0.27 s",
+      "period": "合同年 2025-26，预热后",
+      "status": "推算"
+    },
+    {
+      "name": "数据包计划大小",
+      "value": "161.1 MB（data/processed 全部 772.3 MB）",
+      "period": "数据到 2026-10-22",
+      "status": "推算"
+    },
+    {
+      "name": "阶段 A 关键路径",
+      "value": "约 19 h",
+      "period": "从批准起到彩排",
+      "status": "假设"
+    }
+  ],
+  "open_issues": [
+    "要 lead engineer 先批准，再往 .venv 装 fastapi、uvicorn、httpx，跑 npm install 并查 node --version；这是首次演示关键路径上唯一需要人的一步",
+    "前端 agent 按现在的约定不能跑 npm：要么开权限，要么由 manager 代跑",
+    "U-1：客户规则\"按时间顺序留出 2025-26\"时，训练季的标记容差含 2025-26 的预测误差，要模型负责人确认",
+    "U-3：dispatch.explain 的报价那句在 e5 上可能把边际写成 $75（实际报价用 $50）；核对之前不显示这句",
+    "U-2：价值表不建模出口上限、FCESS、循环次数，是读 docstring 得到的，实现前要核对 sv.solve",
+    "价值表重建要多久、每个工作进程占多少内存都没测",
+    "全部 570 天的复现没有重跑（列为验收条件 AC-17）",
+    "现有 ircr_flags 不会给 2026-27 热季标记任何一天，第二阶段要新写冻结规则",
+    "vpp/v2/report.py:168 的回放核对用严格相等，会因 1 个浮点末位误报\"不一致\"（任务书外，只记录，没修）",
+    "和产品设计稿的字段差异（API_CONTRACT 第 5 节）交 Codex 统一"
+  ]
+}

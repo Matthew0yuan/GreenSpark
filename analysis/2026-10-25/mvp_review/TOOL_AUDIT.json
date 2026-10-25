@@ -1,0 +1,51 @@
+{
+  "mvp_architecture": [
+    {
+      "log": "20261025-140044-5b6fe01d.jsonl",
+      "result_present": false,
+      "denials": [],
+      "writes_outside_own_task": [],
+      "note_file_read": false,
+      "tools": {
+        "Write": 5,
+        "Bash": 6,
+        "Read": 39,
+        "Glob": 6,
+        "Grep": 12,
+        "Edit": 1
+      }
+    },
+    {
+      "log": "20261025-141630-5b6fe01d.jsonl",
+      "result_present": false,
+      "denials": [],
+      "writes_outside_own_task": [],
+      "note_file_read": false,
+      "tools": {
+        "Glob": 2,
+        "Read": 4,
+        "Write": 2,
+        "Bash": 2
+      }
+    }
+  ],
+  "mvp_product_design": [
+    {
+      "log": "20261025-140043-cd5a2ae4.jsonl",
+      "result_present": true,
+      "denials": [],
+      "writes_outside_own_task": [],
+      "note_file_read": false,
+      "tools": {
+        "Write": 9,
+        "Read": 8,
+        "Glob": 1,
+        "Grep": 5,
+        "WebFetch": 4,
+        "WebSearch": 2,
+        "Edit": 12,
+        "StructuredOutput": 1
+      }
+    }
+  ]
+}

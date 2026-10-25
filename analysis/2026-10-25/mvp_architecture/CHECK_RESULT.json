@@ -1,0 +1,104 @@
+{
+ "rows": 58,
+ "findings": [
+  {
+   "name": "days_test",
+   "kind": "formula",
+   "ok": true,
+   "value": 114.0,
+   "recomputed": 114.0
+  },
+  {
+   "name": "est_full_run_s_low",
+   "kind": "formula",
+   "ok": true,
+   "value": 741.0,
+   "recomputed": 741.0
+  },
+  {
+   "name": "est_full_run_s_high",
+   "kind": "formula",
+   "ok": true,
+   "value": 1151.4,
+   "recomputed": 1151.4
+  },
+  {
+   "name": "est_test_run_s_low",
+   "kind": "formula",
+   "ok": true,
+   "value": 148.2,
+   "recomputed": 148.20000000000002
+  },
+  {
+   "name": "est_test_run_s_high",
+   "kind": "formula",
+   "ok": true,
+   "value": 230.28,
+   "recomputed": 230.28
+  },
+  {
+   "name": "est_contract_year_s_low",
+   "kind": "formula",
+   "ok": true,
+   "value": 474.5,
+   "recomputed": 474.5
+  },
+  {
+   "name": "est_contract_year_s_high",
+   "kind": "formula",
+   "ok": true,
+   "value": 737.3,
+   "recomputed": 737.3
+  },
+  {
+   "name": "replay_max_abs_diff_vs_saved",
+   "kind": "check",
+   "ok": true,
+   "value": 4.547e-13,
+   "rule": "<= 1e-6"
+  },
+  {
+   "name": "policy_warmup_s",
+   "kind": "formula",
+   "ok": true,
+   "value": 27.22,
+   "recomputed": 27.22
+  },
+  {
+   "name": "policy_flags_2026",
+   "kind": "check",
+   "ok": true,
+   "value": 0.0,
+   "rule": "== 0"
+  },
+  {
+   "name": "nominal_event_kwh",
+   "kind": "formula",
+   "ok": true,
+   "value": 10.2459,
+   "recomputed": 10.2457764
+  },
+  {
+   "name": "pay_per_event_c_s2b_aud",
+   "kind": "formula",
+   "ok": true,
+   "value": 8.709,
+   "recomputed": 8.709015
+  },
+  {
+   "name": "critical_path_h",
+   "kind": "formula",
+   "ok": true,
+   "value": 19.0,
+   "recomputed": 19.0
+  },
+  {
+   "name": "bundle_planned_mb",
+   "kind": "file sizes",
+   "ok": true,
+   "value": 161.1,
+   "recomputed": 161.1
+  }
+ ],
+ "failed": 0
+}
