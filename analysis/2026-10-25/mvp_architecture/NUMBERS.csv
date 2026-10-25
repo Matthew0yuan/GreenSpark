@@ -1,0 +1,59 @@
+name,value,unit,formula,period,source,status,check,note
+days_all,570,天,,自有电池回测全部 2025-04-01 至 2026-10-22（570 天）,reports/v2_test_daily.csv（rw50+state t5+roll 的行数）；INSPECTION4.json,回测,,load_days('0900') 也是 570 天、没有缺日
+days_in_sample,456,天,,样本内 2025-04-01 至 2026-06-30（456 天）,INSPECTION4.json,回测,,
+days_test_seen,107,天,,测试期看过部分 2026-07-01 至 2026-10-15（107 天）,INSPECTION4.json,回测,,
+days_test_unseen,7,天,,测试期没看过部分 2026-10-16 至 2026-10-22（7 天）,INSPECTION4.json,回测,,
+days_test,114,天,{days_test_seen} + {days_test_unseen},测试期 2026-07-01 至 2026-10-22（114 天）,INSPECTION4.json,回测,,
+days_contract_year_2025_26,365,天,,合同年 2025-26：2025-07-01 至 2026-06-30（365 天）,INSPECTION4.json,回测,,
+replay_s_per_day_unseen,1.3,s/天,,回放 2026-10-16 至 2026-10-22（7 天连跑）；本机实测 2026-10-25,INSPECTION2.json,推算,,单次计时，没有重复测量；尖峰少的日子
+replay_s_per_day_hot,2.02,s/天,,回放 2026-01-15 至 2026-01-21（7 天连跑，样本内热季）；本机实测 2026-10-25,INSPECTION2.json,推算,,单次计时，没有重复测量
+est_full_run_s_low,741,s,{days_all} * {replay_s_per_day_unseen},全部 570 天顺序连跑的估计,按每天秒数推算,推算,,约 12 分钟；天与天之间有状态，不能并行
+est_full_run_s_high,1151.4,s,{days_all} * {replay_s_per_day_hot},全部 570 天顺序连跑的估计,按每天秒数推算,推算,,约 19 分钟
+est_test_run_s_low,148.2,s,{days_test} * {replay_s_per_day_unseen},测试期 114 天连跑的估计,按每天秒数推算,推算,,约 2.5 分钟
+est_test_run_s_high,230.28,s,{days_test} * {replay_s_per_day_hot},测试期 114 天连跑的估计,按每天秒数推算,推算,,约 3.8 分钟
+est_contract_year_s_low,474.5,s,{days_contract_year_2025_26} * {replay_s_per_day_unseen},合同年 2025-26 连跑的估计,按每天秒数推算,推算,,约 8 分钟
+est_contract_year_s_high,737.3,s,{days_contract_year_2025_26} * {replay_s_per_day_hot},合同年 2025-26 连跑的估计,按每天秒数推算,推算,,约 12 分钟
+replay_max_abs_diff_vs_saved,4.547e-13,A$,,两段 7 天连跑：2026-01-15 至 01-21、2026-10-16 至 10-22（共 14 天）,INSPECTION2.json 对 reports/v2_test_daily.csv,回测,<= 1e-6,当天市场收入和日末存电两项取最大差
+single_day_replay_s_min,1.05,s,,单日回放 2026-10-20；本机实测,INSPECTION.json,推算,,
+single_day_replay_s_max,3.56,s,,单日回放 2026-02-02（样本内热季）；本机实测,INSPECTION.json,推算,,首次调用含部分预热
+export3_days_changed,6,天,,出口上限 3 MW 回放 2026-10-16 至 2026-10-22（7 天）,INSPECTION2.json,回测,,7 天里当天市场收入和默认不同的天数；情景结果没有验证
+export3_max_daily_export_mwh,1.5,MWh,,出口上限 3 MW 回放 2026-10-16 至 2026-10-22（7 天）,INSPECTION2.json,回测,,默认配置同期最大日出口 3.40 MWh
+default_max_daily_export_mwh,3.40140097428802,MWh,,默认配置回放 2026-10-16 至 2026-10-22（7 天）,INSPECTION2.json,回测,,
+load_days_s,5.43,s,,读 570 天输入；本机实测,INSPECTION.json,推算,,开 tracemalloc 时 13.74 s
+load_days_mb_current,23.5,MB,,570 天输入在内存里（tracemalloc 当前值）,INSPECTION2.json,推算,,峰值 38.1 MB
+value_table_disk_mb,89.59,MB,,v2_value_median_h50_state.npz（覆盖 2025-04-01 至 2026-10-22）,INSPECTION.json,推算,,
+value_table_marg_state_mb,70.04,MB,,同上；数组 marg_state 内存,INSPECTION4.json,推算,,
+value_table_marg_mb,35.02,MB,,同上；数组 marg 内存,INSPECTION4.json,推算,,
+value_table_mem_mb,106.4,MB,,同上；全部数组内存,INSPECTION4.json,推算,,两个大数组之外约 1.3 MB
+policy_load_forecasts_s,9.06,s,,客户模型预热：读 09:00 预测和标记；本机实测,INSPECTION.json,推算,,
+policy_baseline_s,5.8,s,,客户模型预热：家庭自用基线 2023-10-01 至 2026-10-22；本机实测,INSPECTION.json,推算,,
+policy_first_fit_s,12.36,s,,客户模型预热：第一次拟合调用规则（含建事件形态）；本机实测,INSPECTION.json,推算,,
+policy_warmup_s,27.22,s,{policy_load_forecasts_s} + {policy_baseline_s} + {policy_first_fit_s},客户模型冷启动合计,按三项实测相加,推算,,
+policy_custom_eval_s,0.27,s,,新方案（3 小时事件、60c/kWh、30 次）拟合加合同年 2025-26 评估；本机实测,INSPECTION.json,推算,,预热之后
+family_array_mb,6.6,MB,,一个事件形态（2 h 事件、2 h 待命、20% 保留）的数组,INSPECTION.json,推算,,lru_cache 最多 64 个
+bundle_planned_mb,161.1,MB,,数据包计划内容（ARCHITECTURE.md 5.1，不含派生文件）,check_numbers_local.py 按真实文件大小复算,推算,,
+data_processed_total_mb,772.3,MB,,data/processed 全部文件,INSPECTION.json,推算,,
+own_flags_same_day_2025,27,天,,热季 2025-26（2025-12-01 至 2026-03-31）；自有电池动态规则当天标记,INSPECTION.json（q2b_aux flags0）,回测,,
+own_flags_day_before_2025,22,天,,热季 2025-26；自有电池动态规则前一天标记,INSPECTION.json（q2b_aux flags1）,回测,,
+policy_flags_q075_2025,24,天,,热季 2025-26；客户调用规则 q = 0.75,INSPECTION.json（load_forecasts().flags）,回测,,q = 0.9 时 27 天
+policy_flags_2026,0,天,,热季 2026-27 的天数据还没有；现有代码只遍历 2023-2025 三季,INSPECTION.json,回测,== 0,结构性：即使有数据也不会标记（policy_simulator.py SEASONS）
+ircr_value_mw_proxy,9165.503889626534,A$/MW,,每个标记日的调度引导代理值（2026-27 容量价格 × 比例 ÷ 过去季平均标记数）,INSPECTION.json（q2b_aux ircr_value_mw）,推算,,不是收入；不进任何账本
+cmd_no_battery_mw,11.78,MW,,无电池时工厂按全部 570 天最高负荷提名的 CMD,INSPECTION3.json,推算,,合成负荷
+zenith_only_fy2025_26_aud,3363431.5410828833,A$,,合同年 2025-26（365 天）；默认配置自有电池,reports/policy/policy_zenith_only.csv,回测,,含工厂 IRCR 节省
+zenith_only_test_aud,237487.5757177758,A$,,测试期 2026-07-01 至 2026-10-22（114 天）；默认配置自有电池,reports/policy/policy_zenith_only.csv,回测,,测试期没有热季，IRCR 节省为 0
+factory_ircr_saving_2025_26_aud,2116715.901584805,A$,,热季 2025-26（决定 2026-27 容量年）；默认配置,reports/v2_test_ircr.csv,回测,,按整季 12 个时段中位数
+policy_c_s2b_fy_zenith_aud,2077638.335787157,A$,,合同年 2025-26（365 天）；方案 C、情景 S2b、中央参与曲线,INSPECTION.json 复算 = reports/policy/policy_backtest.csv,回测,,情景结果，不是已实现收入
+household_usable_kwh,13.5,kWh,,家庭原型（所有报名户相同）,vpp/policy/policy_simulator.py Household,假设,,
+nominal_event_kwh,10.2459,kWh,{household_usable_kwh} * 0.8 * 0.948683,满电一次事件送出的电量（保留 20%、单向效率 0.9 的平方根）,按 Policy.nominal_kwh 推算,推算,,
+pay_rate_c_aud_per_kwh,0.85,A$/kWh,,方案 C 的等价补偿单价,reports/policy/policy_refinement.csv,推算,,模型建议，不是合同
+pay_per_event_c_s2b_aud,8.709,A$,{pay_rate_c_aud_per_kwh} * {nominal_event_kwh},方案 C（S2b）每次事件的补偿,按 make_policy 推算,推算,,和报告的 A$8.71 一致
+est_L0_h,0.5,h,,阶段 A 任务 L-0 的估计,IMPLEMENTATION_TASKS.md,假设,,工作量估计，不是测量
+est_B1_h,2.5,h,,阶段 A 任务 B-1 的估计,IMPLEMENTATION_TASKS.md,假设,,
+est_B2_h,2,h,,阶段 A 任务 B-2 的估计,IMPLEMENTATION_TASKS.md,假设,,
+est_B3_h,4,h,,阶段 A 任务 B-3 的估计,IMPLEMENTATION_TASKS.md,假设,,
+est_B4_h,3,h,,阶段 A 任务 B-4 的估计,IMPLEMENTATION_TASKS.md,假设,,
+est_B5_h,1,h,,阶段 A 任务 B-5 的估计,IMPLEMENTATION_TASKS.md,假设,,
+est_I1_h,2,h,,阶段 A 任务 I-1 的估计,IMPLEMENTATION_TASKS.md,假设,,
+est_Q1_h,3,h,,阶段 A 任务 Q-1 的估计,IMPLEMENTATION_TASKS.md,假设,,
+est_I2_h,1,h,,阶段 A 任务 I-2 的估计,IMPLEMENTATION_TASKS.md,假设,,
+critical_path_h,19,h,{est_L0_h} + {est_B1_h} + {est_B2_h} + {est_B3_h} + {est_B4_h} + {est_B5_h} + {est_I1_h} + {est_Q1_h} + {est_I2_h},阶段 A 关键路径（批准起到彩排）,按任务估计相加,假设,,
