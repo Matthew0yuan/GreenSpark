@@ -17,15 +17,17 @@
     },
     {
       "log": "20261025-141630-5b6fe01d.jsonl",
-      "result_present": false,
+      "result_present": true,
       "denials": [],
       "writes_outside_own_task": [],
       "note_file_read": false,
       "tools": {
-        "Glob": 2,
-        "Read": 4,
-        "Write": 2,
-        "Bash": 2
+        "Glob": 3,
+        "Read": 5,
+        "Write": 9,
+        "Bash": 4,
+        "Edit": 12,
+        "StructuredOutput": 1
       }
     }
   ],
@@ -44,6 +46,22 @@
         "WebFetch": 4,
         "WebSearch": 2,
         "Edit": 12,
+        "StructuredOutput": 1
+      }
+    },
+    {
+      "log": "20261025-144102-cd5a2ae4.jsonl",
+      "result_present": true,
+      "denials": [],
+      "writes_outside_own_task": [],
+      "note_file_read": false,
+      "tools": {
+        "Glob": 2,
+        "Read": 17,
+        "Write": 10,
+        "WebFetch": 1,
+        "Edit": 21,
+        "Grep": 2,
         "StructuredOutput": 1
       }
     }
