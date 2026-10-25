@@ -1,0 +1,298 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="t d">
+<title id="t">GreenSpark Dispatch Desk - Customer calls (design image)</title>
+<desc id="d">High-fidelity design image of the customer battery activation screen at 1440 x 900: decision view as of 09:00 and a separate retrospective contract-period evaluation. Design prototype - illustrative data; not connected to the model.</desc>
+<style>
+  text{font-family:Inter,"Segoe UI",system-ui,-apple-system,Arial,sans-serif;fill:#111A22}
+  .nav{font-size:14px;fill:#C3CED6}
+  .navon{font-size:14px;fill:#FFFFFF;font-weight:600}
+  .navsec{font-size:10.5px;fill:#6F808B;letter-spacing:1.2px;font-weight:600}
+  .ic{fill:none;stroke:#8193A0;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .icon{fill:none;stroke:#FFFFFF;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .h1{font-size:24px;font-weight:600;letter-spacing:-0.2px}
+  .ctx{font-size:13px;fill:#4A5562}
+  .cap{font-size:10.5px;fill:#6B7682;letter-spacing:1px;font-weight:600}
+  .b13{font-size:13px;fill:#3D4853}
+  .b12{font-size:12px;fill:#6B7682}
+  .b11{font-size:11px;fill:#5B6672}
+  .tick{font-size:10.5px;fill:#7A8591}
+  .row{font-size:13px;fill:#3D4853}
+  .val{font-size:13px;fill:#111A22;font-weight:600}
+  .th{font-size:12.5px;fill:#2B3640;font-weight:600}
+  .chip{font-size:11.5px;fill:#3D4853}
+  .gl{stroke:#E8ECEF;stroke-width:1}
+  .halo{paint-order:stroke;stroke:#FFFFFF;stroke-width:3px;stroke-linejoin:round}
+</style>
+<defs>
+  <pattern id="hF" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#F7F8FA"/><line x1="0" y1="0" x2="0" y2="6" stroke="#DCE1E6" stroke-width="2"/></pattern>
+  <pattern id="hC" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#F1DDBF"/><line x1="0" y1="0" x2="0" y2="4" stroke="#C9822B" stroke-width="1.5"/></pattern>
+</defs>
+
+<rect width="1440" height="900" fill="#F4F6F8"/>
+
+<!-- disclosure strip -->
+<rect x="0" y="0" width="1440" height="24" fill="#FFF3D1"/>
+<line x1="0" y1="24" x2="1440" y2="24" stroke="#EBD9A6"/>
+<text x="720" y="16" text-anchor="middle" font-size="12" font-weight="600" style="fill:#6B4A00">Design prototype - illustrative data; not connected to the model</text>
+<text x="1428" y="16" text-anchor="end" font-size="11" style="fill:#8A6A1F">Design image · every value is illustrative</text>
+
+<!-- ============ sidebar ============ -->
+<rect x="0" y="24" width="216" height="876" fill="#0E1A22"/>
+<rect x="20" y="42" width="26" height="26" rx="6" fill="#B8E05A"/>
+<text x="33" y="59.5" text-anchor="middle" font-size="11" font-weight="700" style="fill:#0E1A22">GS</text>
+<text x="56" y="54" font-size="15" font-weight="600" style="fill:#FFFFFF">GreenSpark</text>
+<text x="56" y="70" font-size="12" style="fill:#8193A0">Dispatch Desk</text>
+<rect x="12" y="88" width="192" height="44" rx="6" fill="#16252F"/>
+<text x="24" y="107" font-size="13" style="fill:#E6ECEF">Zenith · Site A + fleet</text>
+<text x="24" y="123" font-size="11" style="fill:#7F8F9A">Demo project · replay</text>
+<path d="M186 106l4 4 4-4" class="ic"/>
+
+<text x="24" y="162" class="navsec">OPERATE</text>
+<g transform="translate(24,182)"><rect x="1.5" y="2.5" width="13" height="12" rx="2" class="ic"/><path d="M1.5 6.5h13M5 1v3M11 1v3" class="ic"/></g>
+<text x="50" y="195" class="nav">Today's plan</text>
+<g transform="translate(24,218)"><path d="M1 13l4-5 3 3 6-8M1 15.5h14" class="ic"/></g>
+<text x="50" y="231" class="nav">Forecast</text>
+<rect x="8" y="244" width="200" height="36" rx="6" fill="#1F3340"/>
+<rect x="8" y="252" width="3" height="20" rx="1.5" fill="#B8E05A"/>
+<g transform="translate(24,254)"><path d="M2 8l6-5 6 5v6.5H2zM6.5 14.5v-4h3v4" class="icon"/></g>
+<text x="50" y="267" class="navon">Customer calls</text>
+
+<text x="24" y="300" class="navsec">EVALUATE</text>
+<g transform="translate(24,320)"><path d="M2 14V9M6 14V5M10 14V7M14 14V2" class="ic"/></g>
+<text x="50" y="333" class="nav">Value by party</text>
+<g transform="translate(24,356)"><circle cx="8" cy="8" r="6.5" class="ic"/><path d="M5 8.2l2 2 4-4.2" class="ic"/></g>
+<text x="50" y="369" class="nav">Validation</text>
+
+<text x="24" y="402" class="navsec">MANAGE</text>
+<g transform="translate(24,422)"><path d="M2 4h12M2 12h12" class="ic"/><circle cx="5" cy="4" r="1.8" fill="#0E1A22" stroke="#8193A0" stroke-width="1.5"/><circle cx="11" cy="12" r="1.8" fill="#0E1A22" stroke="#8193A0" stroke-width="1.5"/></g>
+<text x="50" y="435" class="nav">Configuration</text>
+<g transform="translate(24,458)"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2 12v2.5h12V12" class="ic"/></g>
+<text x="50" y="471" class="nav">Runs &amp; export</text>
+
+<text x="24" y="722" class="navsec">DESIGN REVIEW</text>
+<g transform="translate(24,742)"><rect x="1.5" y="1.5" width="13" height="13" rx="2" class="ic" stroke-dasharray="2 2"/></g>
+<text x="50" y="755" class="nav">Interaction states</text>
+<rect x="12" y="796" width="192" height="72" rx="6" fill="#142430"/>
+<text x="24" y="817" class="navsec" style="fill:#9FB0BC">HISTORICAL REPLAY</text>
+<text x="24" y="836" font-size="12" style="fill:#C3CED6">Data to 22 Oct 2026</text>
+<text x="24" y="854" font-size="12" style="fill:#7F8F9A">No live control or offers</text>
+
+<!-- ============ header ============ -->
+<text x="248" y="66" class="h1">Customer calls</text>
+<rect x="446" y="48" width="120" height="24" rx="12" fill="#FFFFFF" stroke="#CDD4DB"/>
+<circle cx="460" cy="60" r="3.5" fill="#4B5563"/>
+<text x="470" y="64.5" class="chip">Historical replay</text>
+<rect x="574" y="48" width="78" height="24" rx="12" fill="#EEF1F4"/>
+<text x="613" y="64.5" text-anchor="middle" class="chip">In-sample</text>
+<rect x="660" y="48" width="130" height="24" rx="12" fill="#EEF1F4"/>
+<text x="725" y="64.5" text-anchor="middle" class="chip">Hot Season 2025-26</text>
+<text x="248" y="92" class="ctx">As of Wed 14 Jan 2026, 09:00 AWST  ·  Offer: Custom 85 c/kWh, 45 calls  ·  Scenario S3 Synergy TPA, 50% share (hypothetical)</text>
+
+<rect x="990" y="40" width="288" height="34" rx="6" fill="#EEF1F4"/>
+<rect x="993" y="43" width="114" height="28" rx="4" fill="#FFFFFF" stroke="#D5DBE1"/>
+<text x="1050" y="61.5" text-anchor="middle" font-size="12.5" font-weight="600">Decision view</text>
+<text x="1192" y="61.5" text-anchor="middle" font-size="12.5" style="fill:#6B7682">Season review · hindsight</text>
+<rect x="1290" y="40" width="118" height="34" rx="6" fill="#0F6B4F"/>
+<text x="1349" y="62" text-anchor="middle" font-size="13" font-weight="600" style="fill:#FFFFFF">Save run</text>
+
+<!-- ============ decision card ============ -->
+<rect x="248" y="116" width="352" height="304" rx="8" fill="#FFFFFF" stroke="#E1E6EA"/>
+<rect x="248" y="116" width="4" height="304" fill="#C9822B"/>
+<text x="272" y="140" class="cap">TONIGHT · WED 14 JAN · DECISION AT 09:00</text>
+<rect x="272" y="154" width="74" height="34" rx="6" fill="#C9822B"/>
+<text x="309" y="176.5" text-anchor="middle" font-size="16" font-weight="700" style="fill:#FFFFFF">CALL</text>
+<text x="360" y="168" font-size="16" font-weight="600">Event 17:30–19:30</text>
+<text x="360" y="185" class="b12">Standby 15:30–17:30 · 20% reserve kept</text>
+
+<text x="272" y="216" class="cap">WHY</text>
+<path d="M276 228l4 7h-8z" fill="#9B3C78"/>
+<text x="288" y="236" class="row">Customer call rule (q = 0.75) flags today:</text>
+<text x="288" y="253" class="row">forecast peak 3,870 MW ≥ threshold 3,820.</text>
+<circle cx="276" cy="272" r="3.5" fill="#C9822B"/>
+<text x="288" y="276" class="row">10th call of 45 · 35 left for 77 days.</text>
+<path d="M278 291l-4 6h3l-1 5 4-6h-3z" fill="#4A5562"/>
+<text x="288" y="299" class="row">Price spike risk is high today; it never</text>
+<text x="288" y="316" class="row">triggers a customer call.</text>
+
+<line x1="272" y1="330" x2="580" y2="330" stroke="#EEF1F4"/>
+<text x="272" y="348" class="cap">EXPECTED TONIGHT · PLAN</text>
+<text x="272" y="368" class="row">Responding homes (90% of 3,000)</text><text x="580" y="368" text-anchor="end" class="val">2,700</text>
+<text x="272" y="388" class="row">Event net export (9.0 kWh × 2,700)</text><text x="580" y="388" text-anchor="end" class="val">24,300 kWh</text>
+<text x="272" y="408" class="row">Compensation · transfer to customers</text><text x="580" y="408" text-anchor="end" class="val">A$ 20,655</text>
+
+<!-- ============ season panel ============ -->
+<rect x="616" y="116" width="792" height="304" rx="8" fill="#FFFFFF" stroke="#E1E6EA"/>
+<text x="636" y="140" font-size="15" font-weight="600">Hot Season 2025-26 · decision view</text>
+<text x="1388" y="140" text-anchor="end" class="b12">Shows only what was known at 09:00 on 14 Jan</text>
+<g font-size="11" style="fill:#4A5562">
+  <rect x="636" y="152" width="10" height="8" fill="#C3CCD5"/><text x="651" y="159.5">Daily peak demand, past days</text>
+  <rect x="822" y="152" width="10" height="8" fill="#9B3C78" opacity="0.8"/><text x="837" y="159.5">Flagged by call rule</text>
+  <rect x="962" y="152" width="10" height="8" fill="#FFFFFF" stroke="#9B3C78" stroke-dasharray="2 1.5"/><text x="977" y="159.5">Today, 09:00 forecast</text>
+  <rect x="1106" y="152" width="10" height="8" fill="url(#hF)" stroke="#DCE1E6"/><text x="1121" y="159.5">Not yet known</text>
+  <circle cx="1214" cy="156" r="3.5" fill="#C9822B"/><text x="1222" y="159.5">Called</text>
+  <circle cx="1278" cy="156" r="3.5" fill="#FFFFFF" stroke="#C9822B" stroke-width="1.5"/><text x="1286" y="159.5">Tonight</text>
+</g>
+
+<!-- plot -->
+<line x1="652" y1="180.53" x2="1378" y2="180.53" class="gl"/>
+<line x1="652" y1="223.2" x2="1378" y2="223.2" class="gl"/>
+<line x1="652" y1="265.87" x2="1378" y2="265.87" class="gl"/>
+<text x="646" y="184" text-anchor="end" class="tick">4,000</text>
+<text x="646" y="226.7" text-anchor="end" class="tick">3,500</text>
+<text x="646" y="269.4" text-anchor="end" class="tick">3,000</text>
+<text x="646" y="300" text-anchor="end" class="tick">MW</text>
+<g fill="#C3CCD5">
+  <rect x="653" y="261.6" width="4" height="38.4"/>
+  <rect x="659" y="255.63" width="4" height="44.37"/>
+  <rect x="665" y="267.57" width="4" height="32.43"/>
+  <rect x="671" y="248.8" width="4" height="51.2"/>
+  <rect x="677" y="265.01" width="4" height="34.99"/>
+  <rect x="683" y="253.07" width="4" height="46.93"/>
+  <rect x="701" y="240.27" width="4" height="59.73"/>
+  <rect x="707" y="248.8" width="4" height="51.2"/>
+  <rect x="713" y="236" width="4" height="64"/>
+  <rect x="719" y="231.73" width="4" height="68.27"/>
+  <rect x="725" y="257.33" width="4" height="42.67"/>
+  <rect x="737" y="227.47" width="4" height="72.53"/>
+  <rect x="743" y="223.2" width="4" height="76.8"/>
+  <rect x="749" y="240.27" width="4" height="59.73"/>
+  <rect x="755" y="218.93" width="4" height="81.07"/>
+  <rect x="761" y="231.73" width="4" height="68.27"/>
+  <rect x="779" y="214.67" width="4" height="85.33"/>
+  <rect x="785" y="223.2" width="4" height="76.8"/>
+  <rect x="791" y="210.4" width="4" height="89.6"/>
+  <rect x="797" y="206.13" width="4" height="93.87"/>
+  <rect x="803" y="227.47" width="4" height="72.53"/>
+  <rect x="809" y="240.27" width="4" height="59.73"/>
+  <rect x="821" y="218.93" width="4" height="81.07"/>
+  <rect x="827" y="210.4" width="4" height="89.6"/>
+  <rect x="833" y="214.67" width="4" height="85.33"/>
+  <rect x="839" y="231.73" width="4" height="68.27"/>
+  <rect x="845" y="206.13" width="4" height="93.87"/>
+  <rect x="863" y="201.87" width="4" height="98.13"/>
+  <rect x="869" y="214.67" width="4" height="85.33"/>
+  <rect x="875" y="223.2" width="4" height="76.8"/>
+  <rect x="881" y="199.31" width="4" height="100.69"/>
+  <rect x="887" y="210.4" width="4" height="89.6"/>
+  <rect x="899" y="206.13" width="4" height="93.87"/>
+  <rect x="905" y="214.67" width="4" height="85.33"/>
+  <rect x="911" y="218.93" width="4" height="81.07"/>
+</g>
+<g fill="#9B3C78" opacity="0.8">
+  <rect x="689" y="210.4" width="4" height="89.6"/>
+  <rect x="695" y="204.43" width="4" height="95.57"/>
+  <rect x="731" y="199.31" width="4" height="100.69"/>
+  <rect x="767" y="201.01" width="4" height="98.99"/>
+  <rect x="773" y="188.64" width="4" height="111.36"/>
+  <rect x="815" y="186.51" width="4" height="113.49"/>
+  <rect x="851" y="197.6" width="4" height="102.4"/>
+  <rect x="857" y="183.95" width="4" height="116.05"/>
+  <rect x="893" y="187.79" width="4" height="112.21"/>
+</g>
+<rect x="917" y="191.63" width="4" height="108.37" fill="#FFFFFF" stroke="#9B3C78" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+<rect x="922" y="172" width="456" height="128" fill="url(#hF)"/>
+<text x="1150" y="230" text-anchor="middle" font-size="12.5" font-weight="600" style="fill:#5B6672">Not yet known at the decision time</text>
+<text x="1150" y="248" text-anchor="middle" class="b11">Switch to Season review to see the whole season, labelled hindsight</text>
+<line x1="652" y1="188.64" x2="922" y2="188.64" stroke="#2B3640" stroke-width="1.2" stroke-dasharray="5 3"/>
+<text x="656" y="183" font-size="10.5" class="halo" style="fill:#2B3640">4th-highest so far · 3,905 MW</text>
+<line x1="652" y1="195.89" x2="930" y2="195.89" stroke="#9B3C78" stroke-width="1.2" stroke-dasharray="2 2"/>
+<text x="934" y="199.5" font-size="10.5" font-weight="600" class="halo" style="fill:#9B3C78">← threshold today 3,820 MW</text>
+<line x1="652" y1="300" x2="1378" y2="300" stroke="#C9D0D6"/>
+
+<!-- calls row -->
+<text x="622" y="315.5" class="b11">Calls</text>
+<g fill="#C9822B">
+  <circle cx="691" cy="312" r="3"/><circle cx="697" cy="312" r="3"/><circle cx="733" cy="312" r="3"/>
+  <circle cx="769" cy="312" r="3"/><circle cx="775" cy="312" r="3"/><circle cx="817" cy="312" r="3"/>
+  <circle cx="853" cy="312" r="3"/><circle cx="859" cy="312" r="3"/><circle cx="895" cy="312" r="3"/>
+</g>
+<circle cx="919" cy="312" r="3.5" fill="#FFFFFF" stroke="#C9822B" stroke-width="1.6"/>
+
+<!-- months -->
+<g class="tick">
+  <line x1="652" y1="300" x2="652" y2="305" stroke="#C9D0D6"/><text x="652" y="334">Dec</text>
+  <line x1="838" y1="300" x2="838" y2="305" stroke="#C9D0D6"/><text x="838" y="334">Jan</text>
+  <line x1="1024" y1="300" x2="1024" y2="305" stroke="#C9D0D6"/><text x="1024" y="334">Feb</text>
+  <line x1="1192" y1="300" x2="1192" y2="305" stroke="#C9D0D6"/><text x="1192" y="334">Mar</text>
+</g>
+
+<!-- budget -->
+<text x="636" y="358" font-size="13" font-weight="600">Activation budget</text>
+<text x="752" y="358" class="b12">contract year 2025-26 · 1 Jul – 30 Jun</text>
+<text x="1388" y="358" text-anchor="end" font-size="13" style="fill:#3D4853"><tspan font-weight="600" style="fill:#111A22">9</tspan> used · <tspan font-weight="600" style="fill:#111A22">1</tspan> tonight · <tspan font-weight="600" style="fill:#111A22">35</tspan> left of 45</text>
+<rect x="636" y="366" width="752" height="10" rx="5" fill="#EEF1F4"/>
+<rect x="636" y="366" width="150.4" height="10" rx="5" fill="#C9822B"/>
+<rect x="786.4" y="366" width="16.7" height="10" fill="url(#hC)"/>
+<text x="636" y="398" class="b11">Bars: daily peak operational demand on past days (assumed published by 09:00 the next day). Today: AEMO forecast issued before 09:00.</text>
+<text x="636" y="413" class="b11">The capacity value of a call is settled once per season on the 12 peak intervals. It is not known at 09:00.</text>
+
+<!-- ============ evaluation panel ============ -->
+<rect x="248" y="436" width="1160" height="424" rx="8" fill="#FFFFFF" stroke="#E1E6EA"/>
+<text x="268" y="464" font-size="16" font-weight="600">Contract-period evaluation</text>
+<rect x="490" y="451" width="108" height="19" rx="3" fill="#2B3640"/>
+<text x="544" y="464.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="0.8" style="fill:#FFFFFF">RETROSPECTIVE</text>
+<text x="610" y="464" class="b12">Contract year 2025-26 replay · 1 Jul 2025 – 30 Jun 2026 · 365 days · in-sample · S3, 50% share (hypothetical)</text>
+
+<!-- table -->
+<text x="640" y="496" text-anchor="end" class="th">No-call</text>
+<text x="790" y="496" text-anchor="end" class="th">Reference terms</text>
+<text x="920" y="496" text-anchor="end" class="th">Custom offer</text>
+<text x="640" y="512" text-anchor="end" class="b11">baseline</text>
+<text x="790" y="512" text-anchor="end" class="b11">70 c/kWh · 30 calls</text>
+<text x="920" y="512" text-anchor="end" class="b11">85 c/kWh · 45 calls</text>
+<rect x="808" y="480" width="122" height="234" rx="4" fill="#0F6B4F" opacity="0.045"/>
+<line x1="268" y1="522" x2="928" y2="522" stroke="#D5DBE1"/>
+<text x="268" y="542" class="row">Enrolled homes · assumed curve</text><text x="640" y="542" text-anchor="end" class="val">0</text><text x="790" y="542" text-anchor="end" class="val">2,000</text><text x="920" y="542" text-anchor="end" class="val">3,000</text>
+<line x1="268" y1="552" x2="928" y2="552" stroke="#EEF1F4"/>
+<text x="268" y="572" class="row">Calls used</text><text x="640" y="572" text-anchor="end" class="val">0</text><text x="790" y="572" text-anchor="end" class="val">30 · cap hit 20 Feb</text><text x="920" y="572" text-anchor="end" class="val">24</text>
+<line x1="268" y1="582" x2="928" y2="582" stroke="#EEF1F4"/>
+<text x="268" y="602" class="row">Peak days covered · hindsight</text><text x="640" y="602" text-anchor="end" class="val">—</text><text x="790" y="602" text-anchor="end" class="val">3 of 4</text><text x="920" y="602" text-anchor="end" class="val">4 of 4</text>
+<line x1="268" y1="612" x2="928" y2="612" stroke="#EEF1F4"/>
+<text x="268" y="632" class="row">Zenith incremental profit</text><text x="640" y="632" text-anchor="end" class="val">A$ 0</text><text x="790" y="632" text-anchor="end" class="val">A$ 149,251</text><text x="920" y="632" text-anchor="end" class="val" style="fill:#0F6B4F">A$ 327,184</text>
+<line x1="268" y1="642" x2="928" y2="642" stroke="#EEF1F4"/>
+<text x="268" y="662" class="row">Customer net vs normal self-use, per home</text><text x="640" y="662" text-anchor="end" class="val">A$ 0</text><text x="790" y="662" text-anchor="end" class="val">A$ 139.65</text><text x="920" y="662" text-anchor="end" class="val">A$ 140.45</text>
+<line x1="268" y1="672" x2="928" y2="672" stroke="#EEF1F4"/>
+<text x="268" y="692" class="row">Worst Hot Season for Zenith, 2023-24 to 2025-26</text><text x="640" y="692" text-anchor="end" class="val">A$ 0</text><text x="790" y="692" text-anchor="end" class="val" style="fill:#B42318">−A$ 406,000</text><text x="920" y="692" text-anchor="end" class="val">A$ 40,000</text>
+<line x1="268" y1="702" x2="928" y2="702" stroke="#D5DBE1"/>
+<text x="268" y="730" class="row" font-weight="600">Verdict</text>
+<text x="640" y="730" text-anchor="end" class="b12">Baseline</text>
+<rect x="672" y="715" width="118" height="22" rx="11" fill="#FDECEA" stroke="#E9A39B"/>
+<text x="731" y="730" text-anchor="middle" font-size="11.5" font-weight="600" style="fill:#B42318">No business case</text>
+<rect x="818" y="715" width="102" height="22" rx="11" fill="#E7F3EC" stroke="#9CCFB2"/>
+<text x="869" y="730" text-anchor="middle" font-size="11.5" font-weight="600" style="fill:#1E7F4F">Positive in S3</text>
+<text x="790" y="752" text-anchor="end" class="b11">fails the downside test</text>
+<text x="268" y="782" class="b11">Reference terms: public Synergy Battery Rewards terms used for comparison; not a Zenith tariff or contract.</text>
+<text x="268" y="798" class="b11">A positive verdict needs customers no worse off, zero hard-constraint violations and no Hot Season losing money.</text>
+<text x="268" y="814" class="b11">Same dispatch model and call-rule family in every column. Peak days and settlement are known only after the season.</text>
+<text x="268" y="840" font-size="12" font-weight="600" style="fill:#2F5FD0">Open the ledger by party →</text>
+
+<!-- cumulative calls chart -->
+<text x="948" y="496" font-size="13" font-weight="600">Calls used through the season</text>
+<g font-size="11" style="fill:#4A5562">
+  <line x1="948" y1="508" x2="962" y2="508" stroke="#C9822B" stroke-width="2"/><text x="966" y="512">Custom · cap 45</text>
+  <line x1="1062" y1="508" x2="1076" y2="508" stroke="#7A8591" stroke-width="2"/><text x="1080" y="512">Reference · cap 30</text>
+  <text x="1190" y="512" style="fill:#9B3C78">★</text><text x="1202" y="512">Official peak day (hindsight)</text>
+</g>
+<line x1="972" y1="546.25" x2="1384" y2="546.25" stroke="#C9822B" stroke-width="1" stroke-dasharray="4 3" opacity="0.8"/>
+<line x1="972" y1="617.5" x2="1384" y2="617.5" stroke="#7A8591" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="972" y1="688.75" x2="1384" y2="688.75" class="gl"/>
+<line x1="972" y1="760" x2="1384" y2="760" stroke="#C9D0D6"/>
+<text x="966" y="549.75" text-anchor="end" class="tick">45</text>
+<text x="966" y="621" text-anchor="end" class="tick">30</text>
+<text x="966" y="692.25" text-anchor="end" class="tick">15</text>
+<text x="966" y="763.5" text-anchor="end" class="tick">0</text>
+<text x="1384" y="541" text-anchor="end" font-size="10.5" style="fill:#A8681D">cap 45</text>
+<text x="1384" y="612" text-anchor="end" font-size="10.5" style="fill:#5B6672">cap 30</text>
+<path d="M972,760 H978.8 V755.25 H982.2 V750.5 H992.4 V745.75 H995.8 V741 H1006 V736.25 H1016.2 V731.5 H1026.4 V726.75 H1036.6 V722 H1040 V717.25 H1053.6 V712.5 H1063.8 V707.75 H1074 V703 H1084.2 V698.25 H1087.6 V693.5 H1097.8 V688.75 H1108 V684 H1121.6 V679.25 H1125 V674.5 H1138.6 V669.75 H1148.8 V665 H1159 V660.25 H1169.2 V655.5 H1172.6 V650.75 H1186.2 V646 H1189.6 V641.25 H1199.8 V636.5 H1210 V631.75 H1223.6 V627 H1237.2 V622.25 H1247.4 V617.5 H1383.4" fill="none" stroke="#7A8591" stroke-width="2"/>
+<path d="M972,760 H992.4 V755.25 H995.8 V750.5 H1016.2 V745.75 H1036.6 V741 H1040 V736.25 H1063.8 V731.5 H1084.2 V726.75 H1087.6 V722 H1108 V717.25 H1121.6 V712.5 H1125 V707.75 H1148.8 V703 H1169.2 V698.25 H1172.6 V693.5 H1186.2 V688.75 H1189.6 V684 H1210 V679.25 H1237.2 V674.5 H1261 V669.75 H1284.8 V665 H1308.6 V660.25 H1335.8 V655.5 H1339.2 V650.75 H1359.6 V646 H1383.4" fill="none" stroke="#C9822B" stroke-width="2.2"/>
+<circle cx="1247.4" cy="617.5" r="3" fill="#7A8591"/>
+<text x="1252" y="634" font-size="10.5" style="fill:#5B6672">Reference cap reached 20 Feb</text>
+<g font-size="12" text-anchor="middle" style="fill:#9B3C78">
+  <text x="1125" y="779">★</text><text x="1186.2" y="779">★</text><text x="1192.6" y="779">★</text><text x="1339.2" y="779">★</text>
+</g>
+<text x="1339.2" y="753" text-anchor="middle" font-size="10" font-weight="600" class="halo" style="fill:#B42318">missed by Reference</text>
+<g class="tick">
+  <text x="972" y="798">Dec</text><text x="1077.4" y="798">Jan</text><text x="1182.8" y="798">Feb</text><text x="1278" y="798">Mar</text>
+</g>
+<text x="948" y="824" class="b11">Each step is one call. Dashed lines are the annual caps.</text>
+<text x="948" y="840" class="b11">Calls after the cap is used up are not possible, even on a peak day.</text>
+</svg>

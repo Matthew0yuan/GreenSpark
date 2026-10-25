@@ -1,0 +1,312 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="t d">
+<title id="t">GreenSpark Dispatch Desk - Today's plan (design image)</title>
+<desc id="d">High-fidelity design image of the own-battery schedule screen at 1440 x 900. Design prototype - illustrative data; not connected to the model.</desc>
+<style>
+  text{font-family:Inter,"Segoe UI",system-ui,-apple-system,Arial,sans-serif;fill:#111A22}
+  .nav{font-size:14px;fill:#C3CED6}
+  .navon{font-size:14px;fill:#FFFFFF;font-weight:600}
+  .navsec{font-size:10.5px;fill:#6F808B;letter-spacing:1.2px;font-weight:600}
+  .ic{fill:none;stroke:#8193A0;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .icon{fill:none;stroke:#FFFFFF;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .h1{font-size:24px;font-weight:600;letter-spacing:-0.2px}
+  .ctx{font-size:13px;fill:#4A5562}
+  .cap{font-size:10.5px;fill:#6B7682;letter-spacing:1px;font-weight:600}
+  .b13{font-size:13px;fill:#3D4853}
+  .b12{font-size:12px;fill:#6B7682}
+  .b11{font-size:11px;fill:#5B6672}
+  .tick{font-size:10.5px;fill:#7A8591}
+  .lane{font-size:12px;font-weight:600;fill:#2B3640}
+  .unit{font-size:10.5px;fill:#8A949E}
+  .kv{font-size:22px;font-weight:600}
+  .gl{stroke:#E8ECEF;stroke-width:1}
+  .sec{font-size:10.5px;fill:#6B7682;letter-spacing:1px;font-weight:600}
+  .row{font-size:13px;fill:#3D4853}
+  .val{font-size:13px;fill:#111A22;font-weight:600}
+  .chip{font-size:11.5px;fill:#3D4853}
+</style>
+<defs>
+  <pattern id="hT" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#F4F6F8"/><line x1="0" y1="0" x2="0" y2="6" stroke="#D5DBE1" stroke-width="2"/></pattern>
+  <pattern id="hM" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#F6DADA"/><line x1="0" y1="0" x2="0" y2="5" stroke="#A32020" stroke-width="1.6"/></pattern>
+</defs>
+
+<!-- canvas -->
+<rect width="1440" height="900" fill="#F4F6F8"/>
+
+<!-- disclosure strip -->
+<rect x="0" y="0" width="1440" height="24" fill="#FFF3D1"/>
+<line x1="0" y1="24" x2="1440" y2="24" stroke="#EBD9A6"/>
+<text x="720" y="16" text-anchor="middle" font-size="12" font-weight="600" style="fill:#6B4A00">Design prototype - illustrative data; not connected to the model</text>
+<text x="1428" y="16" text-anchor="end" font-size="11" style="fill:#8A6A1F">Design image · every value is illustrative</text>
+
+<!-- ============ sidebar ============ -->
+<rect x="0" y="24" width="216" height="876" fill="#0E1A22"/>
+<rect x="20" y="42" width="26" height="26" rx="6" fill="#B8E05A"/>
+<text x="33" y="59.5" text-anchor="middle" font-size="11" font-weight="700" style="fill:#0E1A22">GS</text>
+<text x="56" y="54" font-size="15" font-weight="600" style="fill:#FFFFFF">GreenSpark</text>
+<text x="56" y="70" font-size="12" style="fill:#8193A0">Dispatch Desk</text>
+
+<rect x="12" y="88" width="192" height="44" rx="6" fill="#16252F"/>
+<text x="24" y="107" font-size="13" style="fill:#E6ECEF">Zenith · Site A + fleet</text>
+<text x="24" y="123" font-size="11" style="fill:#7F8F9A">Demo project · replay</text>
+<path d="M186 106l4 4 4-4" class="ic"/>
+
+<text x="24" y="162" class="navsec">OPERATE</text>
+<rect x="8" y="172" width="200" height="36" rx="6" fill="#1F3340"/>
+<rect x="8" y="180" width="3" height="20" rx="1.5" fill="#B8E05A"/>
+<g transform="translate(24,182)"><rect x="1.5" y="2.5" width="13" height="12" rx="2" class="icon"/><path d="M1.5 6.5h13M5 1v3M11 1v3" class="icon"/></g>
+<text x="50" y="195" class="navon">Today's plan</text>
+<g transform="translate(24,218)"><path d="M1 13l4-5 3 3 6-8M1 15.5h14" class="ic"/></g>
+<text x="50" y="231" class="nav">Forecast</text>
+<g transform="translate(24,254)"><path d="M2 8l6-5 6 5v6.5H2zM6.5 14.5v-4h3v4" class="ic"/></g>
+<text x="50" y="267" class="nav">Customer calls</text>
+
+<text x="24" y="300" class="navsec">EVALUATE</text>
+<g transform="translate(24,320)"><path d="M2 14V9M6 14V5M10 14V7M14 14V2" class="ic"/></g>
+<text x="50" y="333" class="nav">Value by party</text>
+<g transform="translate(24,356)"><circle cx="8" cy="8" r="6.5" class="ic"/><path d="M5 8.2l2 2 4-4.2" class="ic"/></g>
+<text x="50" y="369" class="nav">Validation</text>
+
+<text x="24" y="402" class="navsec">MANAGE</text>
+<g transform="translate(24,422)"><path d="M2 4h12M2 12h12" class="ic"/><circle cx="5" cy="4" r="1.8" fill="#0E1A22" stroke="#8193A0" stroke-width="1.5"/><circle cx="11" cy="12" r="1.8" fill="#0E1A22" stroke="#8193A0" stroke-width="1.5"/></g>
+<text x="50" y="435" class="nav">Configuration</text>
+<g transform="translate(24,458)"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2 12v2.5h12V12" class="ic"/></g>
+<text x="50" y="471" class="nav">Runs &amp; export</text>
+
+<text x="24" y="722" class="navsec">DESIGN REVIEW</text>
+<g transform="translate(24,742)"><rect x="1.5" y="1.5" width="13" height="13" rx="2" class="ic" stroke-dasharray="2 2"/></g>
+<text x="50" y="755" class="nav">Interaction states</text>
+
+<rect x="12" y="796" width="192" height="72" rx="6" fill="#142430"/>
+<text x="24" y="817" class="navsec" style="fill:#9FB0BC">HISTORICAL REPLAY</text>
+<text x="24" y="836" font-size="12" style="fill:#C3CED6">Data to 22 Oct 2026</text>
+<text x="24" y="854" font-size="12" style="fill:#7F8F9A">No live control or offers</text>
+
+<!-- ============ header ============ -->
+<text x="248" y="66" class="h1">Today's plan</text>
+<rect x="400" y="48" width="120" height="24" rx="12" fill="#FFFFFF" stroke="#CDD4DB"/>
+<circle cx="414" cy="60" r="3.5" fill="#4B5563"/>
+<text x="424" y="64.5" class="chip">Historical replay</text>
+<rect x="528" y="48" width="78" height="24" rx="12" fill="#EEF1F4"/>
+<text x="567" y="64.5" text-anchor="middle" class="chip">In-sample</text>
+<text x="248" y="92" class="ctx">Wed 14 Jan 2026  ·  Trading day 08:00–08:00 AWST  ·  Plan issued 09:00 with information available at 09:00</text>
+
+<circle cx="1108" cy="57" r="4.5" fill="#1E7F4F"/>
+<text x="1120" y="61.5" font-size="13" style="fill:#1E7F4F" font-weight="600">Up to date</text>
+<text x="1194" y="61.5" class="b12">run R-0142</text>
+<rect x="1290" y="40" width="118" height="34" rx="6" fill="#0F6B4F"/>
+<text x="1349" y="62" text-anchor="middle" font-size="13" font-weight="600" style="fill:#FFFFFF">Save run</text>
+
+<!-- ============ instruction ============ -->
+<rect x="248" y="116" width="1160" height="96" rx="8" fill="#FFFFFF" stroke="#E1E6EA"/>
+<rect x="248" y="116" width="4" height="96" fill="#0F6B4F"/>
+<text x="272" y="140" class="cap">INSTRUCTION FOR WED 14 JAN · PLAN 09:00</text>
+<text x="272" y="168" font-size="19" font-weight="600">Discharge 7.5 MW into the 17:30–20:00 evening peak</text>
+<text x="272" y="193" class="b13">Shave 0.4 MW 10:00–17:00 (CMD 9 MW)  ·  hold 6.6 MWh overnight  ·  recharge 4.2 MW 01:00–07:00</text>
+<line x1="860" y1="134" x2="860" y2="194" stroke="#E6EAEE"/>
+<line x1="1040" y1="134" x2="1040" y2="194" stroke="#E6EAEE"/>
+<line x1="1220" y1="134" x2="1220" y2="194" stroke="#E6EAEE"/>
+<text x="880" y="140" class="cap">EXPECTED NET VALUE</text>
+<text x="880" y="169" class="kv">A$ 3,117</text>
+<text x="880" y="190" class="b12">plan, not settlement</text>
+<text x="1060" y="140" class="cap">BINDING CONSTRAINT</text>
+<text x="1060" y="169" class="kv" style="fill:#A32020">CMD 9 MW</text>
+<text x="1060" y="190" class="b12">site import 10:00–17:00</text>
+<text x="1240" y="140" class="cap">LOWEST RESERVE MARGIN</text>
+<text x="1240" y="169" class="kv">+1.3 MWh</text>
+<text x="1240" y="190" class="b12">20:00–01:00, above 5.3 MWh</text>
+
+<!-- ============ chart panel ============ -->
+<rect x="248" y="228" width="852" height="632" rx="8" fill="#FFFFFF" stroke="#E1E6EA"/>
+<text x="268" y="254" font-size="15" font-weight="600">Schedule</text>
+<text x="340" y="254" class="b12">48 trading intervals · 10 MW / 40 MWh behind the factory meter</text>
+<text x="826" y="254" class="b12">Version</text>
+<rect x="872" y="239" width="62" height="22" rx="4" fill="#FFFFFF" stroke="#CDD4DB"/>
+<text x="881" y="254" font-size="12" style="fill:#2B3640">09:00</text>
+<path d="M918 248l3.5 3.5 3.5-3.5" fill="none" stroke="#6B7682" stroke-width="1.4"/>
+<rect x="944" y="239" width="140" height="22" rx="4" fill="#EEF1F4"/>
+<rect x="946" y="241" width="56" height="18" rx="3" fill="#111A22"/>
+<text x="974" y="254" text-anchor="middle" font-size="12" font-weight="600" style="fill:#FFFFFF">Plan</text>
+<text x="1044" y="254" text-anchor="middle" font-size="12" style="fill:#7A8591">Outcome</text>
+<rect x="1072" y="245" width="7" height="6" rx="1" fill="none" stroke="#7A8591" stroke-width="1.2"/>
+<path d="M1073.5 245v-1.6a2 2 0 0 1 4 0V245" fill="none" stroke="#7A8591" stroke-width="1.2"/>
+
+<!-- phases -->
+<g font-size="11" style="fill:#3D4853">
+  <text x="386" y="284">CMD shaving 0.4 MW</text>
+  <path d="M384 294v-4h224v4" fill="none" stroke="#9AA5B0"/>
+  <text x="626" y="284">Discharge</text>
+  <path d="M624 294v-4h80v4" fill="none" stroke="#2F5FD0"/>
+  <text x="708" y="284">Hold reserve</text>
+  <path d="M706 294v-4h158v4" fill="none" stroke="#9AA5B0"/>
+  <text x="868" y="284">Recharge 4.2 MW</text>
+  <path d="M866 294v-4h190v4" fill="none" stroke="#9DB7EE"/>
+</g>
+
+<!-- transition area + selected column -->
+<rect x="320" y="304" width="32" height="482" fill="url(#hT)"/>
+<text transform="translate(339,700) rotate(-90)" font-size="10" style="fill:#7A8591">08:00–09:00 transition plan</text>
+<rect x="640" y="300" width="16" height="490" fill="#111A22" opacity="0.055"/>
+<path d="M644 790l4 6 4-6z" fill="#111A22"/>
+
+<!-- lane: price -->
+<text x="256" y="318" class="lane">Price</text>
+<text x="256" y="332" class="unit">A$/MWh</text>
+<line x1="320" y1="304" x2="1088" y2="304" class="gl"/>
+<line x1="320" y1="354" x2="1088" y2="354" class="gl"/>
+<line x1="320" y1="404" x2="1088" y2="404" stroke="#C9D0D6"/>
+<text x="316" y="307.5" text-anchor="end" class="tick">500</text>
+<text x="316" y="357.5" text-anchor="end" class="tick">250</text>
+<text x="316" y="407.5" text-anchor="end" class="tick">0</text>
+<path d="M352,375.2 H384 V396 H544 V381.6 H624 V316.6 H704 V365.6 H800 V380 H992 V373.6 H1088 V392.6 H992 V395 H800 V389.6 H704 V376.4 H624 V395.6 H544 V401 H384 V393.2 H352 Z" fill="#1E2A36" opacity="0.09"/>
+<path d="M320,384 H352 V382 H384 V398 H544 V385 H624 V368 H704 V376 H800 V388 H992 V384 H1088" fill="none" stroke="#A3ADB7" stroke-width="1.4" stroke-dasharray="4 3"/>
+<path d="M352,386 H384 V399 H544 V390 H624 V358 H704 V380 H800 V389 H992 V385 H1088" fill="none" stroke="#1E2A36" stroke-width="2"/>
+<text x="628" y="352" font-size="11" font-weight="600" style="fill:#1E2A36">A$230</text>
+<!-- spike probability strip -->
+<text x="256" y="424" font-size="10" style="fill:#6B7682">P(≥A$200)</text>
+<line x1="320" y1="428" x2="1088" y2="428" stroke="#E1E6EA"/>
+<rect x="352" y="426.9" width="192" height="1.1" fill="#4A5562"/>
+<rect x="544" y="423.7" width="80" height="4.3" fill="#4A5562"/>
+<rect x="624" y="411.8" width="80" height="16.2" fill="#4A5562"/>
+<rect x="704" y="422.6" width="96" height="5.4" fill="#4A5562"/>
+<rect x="800" y="426.6" width="288" height="1.4" fill="#4A5562"/>
+<text x="708" y="420" font-size="10.5" style="fill:#4A5562">45% in 17:30–20:00 · model estimate</text>
+
+<!-- decision marker -->
+<line x1="352" y1="298" x2="352" y2="790" stroke="#111A22" stroke-width="1.2"/>
+<rect x="356" y="307" width="84" height="17" rx="3" fill="#111A22"/>
+<text x="362" y="319.5" font-size="10.5" font-weight="600" style="fill:#FFFFFF">09:00 decision</text>
+
+<!-- lane: dispatch -->
+<text x="256" y="458" class="lane">Dispatch</text>
+<text x="256" y="472" class="unit">MW</text>
+<line x1="320" y1="444" x2="1088" y2="444" stroke="#9AA5B0" stroke-dasharray="3 3"/>
+<line x1="320" y1="474" x2="1088" y2="474" class="gl"/>
+<line x1="320" y1="534" x2="1088" y2="534" class="gl"/>
+<line x1="320" y1="564" x2="1088" y2="564" stroke="#9AA5B0" stroke-dasharray="3 3"/>
+<text x="316" y="447.5" text-anchor="end" class="tick">+10</text>
+<text x="316" y="477.5" text-anchor="end" class="tick">+5</text>
+<text x="316" y="507.5" text-anchor="end" class="tick">0</text>
+<text x="316" y="537.5" text-anchor="end" class="tick">−5</text>
+<text x="316" y="567.5" text-anchor="end" class="tick">−10</text>
+<!-- raise side -->
+<rect x="320" y="498" width="64" height="6" fill="#6E56C6"/>
+<rect x="320" y="486" width="64" height="12" fill="#23928F"/>
+<rect x="384" y="501.6" width="224" height="2.4" fill="#2F5FD0"/>
+<rect x="384" y="489.6" width="224" height="12" fill="#23928F"/>
+<rect x="608" y="492" width="16" height="12" fill="#23928F"/>
+<rect x="624" y="459" width="80" height="45" fill="#2F5FD0"/>
+<rect x="624" y="447" width="80" height="12" fill="#23928F"/>
+<rect x="704" y="498" width="384" height="6" fill="#6E56C6"/>
+<rect x="704" y="486" width="384" height="12" fill="#23928F"/>
+<!-- lower side -->
+<rect x="320" y="504" width="384" height="9" fill="#A3D9D6"/>
+<rect x="704" y="504" width="160" height="6" fill="#C4B8EE"/>
+<rect x="704" y="510" width="160" height="9" fill="#A3D9D6"/>
+<rect x="864" y="504" width="192" height="25.2" fill="#9DB7EE"/>
+<rect x="864" y="529.2" width="192" height="6" fill="#C4B8EE"/>
+<rect x="864" y="535.2" width="192" height="9" fill="#A3D9D6"/>
+<rect x="1056" y="504" width="32" height="6" fill="#C4B8EE"/>
+<rect x="1056" y="510" width="32" height="9" fill="#A3D9D6"/>
+<line x1="320" y1="504" x2="1088" y2="504" stroke="#5B6672"/>
+<text x="712" y="458" font-size="11" style="fill:#3D4853">7.5 energy + 2.0 Cont Raise = 9.5 of 10 MW</text>
+<text x="870" y="556" font-size="11" style="fill:#3D4853">Charge 4.2 + lower services 2.5 MW</text>
+
+<!-- lane: SOC -->
+<text x="256" y="594" class="lane">SOC</text>
+<text x="256" y="608" class="unit">MWh</text>
+<line x1="320" y1="580" x2="1088" y2="580" class="gl"/>
+<line x1="320" y1="630" x2="1088" y2="630" class="gl"/>
+<line x1="320" y1="680" x2="1088" y2="680" stroke="#C9D0D6"/>
+<text x="316" y="583.5" text-anchor="end" class="tick">40</text>
+<text x="316" y="633.5" text-anchor="end" class="tick">20</text>
+<text x="316" y="683.5" text-anchor="end" class="tick">0</text>
+<path d="M320,667.88 H384 L624,676.15 V667.40 H704 V666.72 H1088 V675.47 H704 V676.15 H384 V675.47 H320 Z" fill="#D9B867" opacity="0.55"/>
+<path d="M320,680 V675.47 H384 V676.15 H704 V675.47 H1088 V680 Z" fill="url(#hM)"/>
+<path d="M320,605 L384,605 L608,612.59 L624,612.59 L704,663.43 L864,663.43 L1056,605.35 L1088,605.35" fill="none" stroke="#0F6B4F" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="704" cy="663.43" r="3" fill="#0F6B4F"/>
+<text x="712" y="655" font-size="11" style="fill:#0F6B4F" font-weight="600">6.6 MWh held · margin +1.3 above reserve</text>
+<text x="326" y="598" font-size="11" style="fill:#0F6B4F" font-weight="600">30.0 MWh</text>
+
+<!-- lane: site meter -->
+<text x="256" y="710" class="lane">Meter</text>
+<text x="256" y="724" class="unit">MW</text>
+<line x1="320" y1="696" x2="1088" y2="696" class="gl"/>
+<line x1="320" y1="786" x2="1088" y2="786" class="gl"/>
+<text x="316" y="699.5" text-anchor="end" class="tick">12</text>
+<text x="316" y="759.5" text-anchor="end" class="tick">0</text>
+<text x="316" y="789.5" text-anchor="end" class="tick">−6</text>
+<path d="M320,756 V716 H384 V712 H608 V738.75 H624 V776.25 H640 V778.5 H704 V741 H864 V720 H1056 V741 H1088 V756 Z" fill="#C7D0D9"/>
+<path d="M320,716 H384 V710 H608 V738.75 H640 V741 H1088" fill="none" stroke="#475569" stroke-width="1.4"/>
+<line x1="320" y1="711" x2="1088" y2="711" stroke="#A32020" stroke-width="1.3" stroke-dasharray="5 3"/>
+<line x1="320" y1="756" x2="1088" y2="756" stroke="#5B6672"/>
+<text x="1084" y="707" text-anchor="end" font-size="10.5" style="fill:#A32020" font-weight="600">CMD 9 MW</text>
+<text x="392" y="706" font-size="11" style="fill:#8B1D1D">Import held at 8.8 MW</text>
+<text x="646" y="776" font-size="11" style="fill:#3D4853">export 4.5 MW (limit 10)</text>
+
+<!-- time axis -->
+<g class="tick" text-anchor="middle">
+  <text x="320" y="804">08:00</text><text x="384" y="804">10:00</text><text x="448" y="804">12:00</text><text x="512" y="804">14:00</text>
+  <text x="576" y="804">16:00</text><text x="640" y="804">18:00</text><text x="704" y="804">20:00</text><text x="768" y="804">22:00</text>
+  <text x="832" y="804">00:00</text><text x="896" y="804">02:00</text><text x="960" y="804">04:00</text><text x="1024" y="804">06:00</text><text x="1088" y="804">08:00</text>
+</g>
+
+<!-- legend -->
+<g font-size="11.5" style="fill:#3D4853">
+  <rect x="268" y="822" width="12" height="8" rx="1.5" fill="#2F5FD0"/><text x="285" y="830">Discharge</text>
+  <rect x="352" y="822" width="12" height="8" rx="1.5" fill="#9DB7EE"/><text x="369" y="830">Charge</text>
+  <rect x="426" y="822" width="6" height="8" fill="#6E56C6"/><rect x="432" y="822" width="6" height="8" fill="#C4B8EE"/><text x="443" y="830">Regulation raise / lower</text>
+  <rect x="590" y="822" width="6" height="8" fill="#23928F"/><rect x="596" y="822" width="6" height="8" fill="#A3D9D6"/><text x="607" y="830">Contingency raise / lower</text>
+  <line x1="766" y1="826" x2="780" y2="826" stroke="#0F6B4F" stroke-width="2.5"/><text x="785" y="830">SOC (plan)</text>
+  <rect x="268" y="840" width="12" height="8" fill="url(#hM)"/><text x="285" y="848">Mandatory reserve (never sold)</text>
+  <rect x="464" y="840" width="12" height="8" fill="#D9B867"/><text x="481" y="848">Site backup reserve</text>
+  <line x1="600" y1="844" x2="614" y2="844" stroke="#1E2A36" stroke-width="2"/><rect x="618" y="840" width="10" height="8" fill="#1E2A36" opacity="0.12"/><text x="633" y="848">Price P50, P10–P90</text>
+  <line x1="752" y1="844" x2="766" y2="844" stroke="#A3ADB7" stroke-width="1.4" stroke-dasharray="4 3"/><text x="771" y="848">Yesterday's prices</text>
+  <line x1="888" y1="844" x2="902" y2="844" stroke="#A32020" stroke-width="1.3" stroke-dasharray="5 3"/><text x="907" y="848">CMD</text>
+  <rect x="948" y="840" width="12" height="8" fill="url(#hT)" stroke="#D5DBE1"/><text x="965" y="848">Before 09:00</text>
+</g>
+
+<!-- ============ right rail ============ -->
+<rect x="1116" y="228" width="292" height="632" rx="8" fill="#FFFFFF" stroke="#E1E6EA"/>
+<text x="1136" y="258" font-size="18" font-weight="600">18:00–18:30</text>
+<rect x="1252" y="244" width="40" height="18" rx="3" fill="none" stroke="#2F5FD0"/>
+<text x="1272" y="257" text-anchor="middle" font-size="10.5" font-weight="700" style="fill:#2F5FD0">PLAN</text>
+<text x="1136" y="278" class="b12">Selected interval · ← → to step</text>
+<text x="1136" y="312" font-size="22" font-weight="600" style="fill:#2F5FD0">Discharge 7.5 MW</text>
+
+<text x="1136" y="342" class="sec">WHY</text>
+<circle cx="1140" cy="358" r="2.2" fill="#3D4853"/>
+<text x="1150" y="362" class="row">Forecast A$230/MWh beats the stored-</text>
+<text x="1150" y="379" class="row">energy value plus wear for this slice.</text>
+<circle cx="1140" cy="397" r="2.2" fill="#3D4853"/>
+<text x="1150" y="401" class="row">Meter exports 4.5 MW; the 10 MW</text>
+<text x="1150" y="418" class="row">export limit is not binding.</text>
+<circle cx="1140" cy="436" r="2.2" fill="#3D4853"/>
+<text x="1150" y="440" class="row">Stops at 6.6 MWh: 3.5 MWh is held</text>
+<text x="1150" y="457" class="row">for tomorrow's CMD shaving.</text>
+
+<line x1="1136" y1="474" x2="1388" y2="474" stroke="#EEF1F4"/>
+<text x="1136" y="496" class="sec">ALLOCATION · MW</text>
+<text x="1136" y="518" class="row">Energy discharge</text><text x="1388" y="518" text-anchor="end" class="val">7.5</text>
+<text x="1136" y="538" class="row">Contingency raise</text><text x="1388" y="538" text-anchor="end" class="val">2.0</text>
+<text x="1136" y="558" class="row">Contingency lower</text><text x="1388" y="558" text-anchor="end" class="val">1.5</text>
+<text x="1136" y="578" class="row">Raise side vs rating</text><text x="1388" y="578" text-anchor="end" class="val">9.5 / 10</text>
+<rect x="1136" y="586" width="252" height="6" rx="3" fill="#EEF1F4"/>
+<rect x="1136" y="586" width="189" height="6" rx="3" fill="#2F5FD0"/>
+<rect x="1325" y="586" width="50.4" height="6" fill="#23928F"/>
+
+<line x1="1136" y1="608" x2="1388" y2="608" stroke="#EEF1F4"/>
+<text x="1136" y="630" class="sec">ENERGY · MWh</text>
+<text x="1136" y="652" class="row">SOC start → end</text><text x="1388" y="652" text-anchor="end" class="val">22.9 → 18.8</text>
+<text x="1136" y="672" class="row">Mandatory reserve</text><text x="1388" y="672" text-anchor="end" class="val">1.5</text>
+<text x="1136" y="692" class="row">Site backup reserve</text><text x="1388" y="692" text-anchor="end" class="val">3.5</text>
+<text x="1136" y="712" class="row">Available to markets</text><text x="1388" y="712" text-anchor="end" class="val">17.9</text>
+
+<line x1="1136" y1="728" x2="1388" y2="728" stroke="#EEF1F4"/>
+<text x="1136" y="750" class="sec">ENERGY OFFER BANDS</text>
+<text x="1136" y="772" class="row">A$150/MWh</text><text x="1388" y="772" text-anchor="end" class="val">7.5 MW · planned</text>
+<text x="1136" y="792" class="row">A$600/MWh</text><text x="1388" y="792" text-anchor="end" class="val">0.5 MW · headroom</text>
+
+<rect x="1136" y="808" width="252" height="38" rx="6" fill="#F7F8FA" stroke="#D5DBE1" stroke-dasharray="4 3"/>
+<text x="1148" y="824" font-size="11.5" style="fill:#4A5562">Outcome hidden until you reveal it.</text>
+<text x="1148" y="839" font-size="11.5" style="fill:#2F5FD0" font-weight="600">Reveal outcome →</text>
+</svg>
