@@ -761,7 +761,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
             export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
             reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None, on_plan=None,
-            offer_lag: int = 1, extend=None, offer_end: bool = False, curve=()):
+            offer_lag: int = 1, extend=None, offer_end: bool = False, curve=(), on_step=None):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -815,6 +815,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     in place of the plan; charging beyond the plan's only within the room the caps at the day's start leave over the
     planned (or actual) load and the point's regulation lower use, and a step that departs from the plan is followed
     by a re-plan at the end of its interval, as after a sale. The log then has the curves and bid_mwh.
+    on_step(step): called at the end of every 5-min step with a dict of what the step decided from (stored energy and
+    budget at its start, the plan's MW, sellable MW, the price seen, keep_e, the rooms, the plan in force and its first
+    interval, the bids) and what it did (the offers' target, the MW after the offer and at the end, FCESS enabled), for
+    vpp.v2.offers. It only observes: the plan and the bids are the step's own objects, to be read at once.
     """
     bat = asset.battery
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
@@ -1170,6 +1174,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                 if abs(pw_b - pw) > 1e-9:
                     bid_mwh[t] += (pw - pw_b) * DT5
                     moved[t], pw = True, pw_b
+            s_step, budget_step, pw_plan, sold = s, budget, pw, None  # for on_step
             if strat.offer and price >= strat.k_min and sellable > max(pw, 0.0) + 1e-6:
                 target = sellable  # MW to discharge if the offer is taken
                 if table_rule:
@@ -1178,6 +1183,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                     seen = p5[i5 - offer_lag] if i5 >= offer_lag else float(np.asarray(fc_e, float)[t])
                     target, k_offer[t] = bids.sell(t, s, max(pw, 0.0), sellable, price, seen, eta, strat.alpha, dw,
                                                    strat.k_min)
+                    sold = target
                 elif not k_ready:
                     # the offer is in before this step's prices exist: priced from the latest step already seen
                     i5 = t * STEPS + j
@@ -1199,6 +1205,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                         if reserve is not None and reserve.start <= t < reserve.end:
                             res_left = max(0.0, res_left - (target - max(pw, 0.0)) * DT5)
                         pw, triggered[t] = target, True
+            pw_offer = pw
             safety = pw <= 0 and s - pw * DT5 * eta < keep
             if safety:
                 # obligation safety: stored energy is at the least that can still be refilled in time
@@ -1254,6 +1261,16 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                     reg_out, reg_in = reg_out + up, reg_in + down
             if comp:
                 shortfall = max(shortfall, obligation_need(bat, comp, hours, lf) - s)
+            if on_step is not None:
+                i5 = t * STEPS + j
+                on_step({"step": i5, "t": t, "s": s_step, "budget": budget_step, "pw_plan": pw_plan,
+                         "sellable": sellable, "keep_e": keep_e, "price": price,
+                         "seen": p5[i5 - offer_lag] if i5 >= offer_lag else float(np.asarray(fc_e, float)[t]),
+                         "sold": sold, "pw_offer": pw_offer, "pw": pw, "safety": safety, "forced_mw": forced_mw,
+                         "exp_room": exp_room[t], "imp_room": imp_room[t], "load_act": la[t],
+                         "load_fc": None if lfe is None else lfe[t], "plan": cur, "plan_t0": cur_t0,
+                         "offer_f": offer_f, "enabled": enabled if fcess else None, "bids": bids,
+                         "alpha": strat.alpha, "dw": dw, "k_min": strat.k_min})
         soc[t] = s
         if full:
             for x in layers:
