@@ -28,13 +28,23 @@ the next 08:00); a day not yet spiked spikes in a slot with the share of that sl
 state that reach SPIKE at the table's level. The transitions split by regime are the state's plus the regime's
 shrunk deviation (regime_split). The plans' end value is not split: the regime resets at the next 08:00.
 
+battery and site (TableParams, 2026-10-26): every table is solved for one battery (power, energy, round trip, wear)
+behind one site (CMD, import limit, the synthetic factory load times a scale); the defaults are the 10 MW / 40 MWh
+battery behind the factory with m1's CMD, and their tables keep their names. Other parameters add _p<8 hex digits>
+to the name (a hash of the parameters) and a .json of the same name records them; vpp.v2.harness finds the table by
+the battery and site the dispatcher sees and refuses one solved for others (check_table).
+
 Run:  python -m vpp.v2.value [--stat mean] [--energy 36] [--hurdle 0] [--state] [--regime]   builds the per-day arrays
+          [--power 8] [--round-trip 0.88] [--wear 40] [--cmd 10] [--import-limit 12] [--load-scale 10] [--rebuild]
       python -m vpp.v2.value --b1                                         round 4, B1: builds and checks the tables
 """
 
+import hashlib
+import json
 import sys
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import replace
+from dataclasses import asdict, dataclass, fields, replace
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -42,7 +52,9 @@ import pandas as pd
 
 from vpp import aemo_correction as ac
 from vpp import backtest as bt
+from vpp import config as cf
 from vpp import dispatch as dp
+from vpp import site as st
 from vpp import storage_value as sv
 from vpp.data import PROCESSED
 from vpp.evaluate import CUTOFF, TRAIN_END
@@ -55,11 +67,129 @@ SPIKE = 150.0     # $/MWh: a settled half-hour at least this has spiked (as vpp.
 FIRST, LAST = pd.Timestamp("2025-04-01"), pd.Timestamp("2026-10-31")  # the backtest's days, with the forward days
 
 
+@dataclass(frozen=True)
+class TableParams:
+    """The battery and site a table is solved for. Defaults: the 10 MW / 40 MWh battery (bt.Q2B_ASSET) behind the
+    factory (st.FACTORY) with m1's CMD (sv.CMD). The table sees the import limit only as the charging room's
+    min(import limit, CMD), so key() puts that in its place: every import limit at or above the CMD shares a table."""
+    power_mw: float = bt.Q2B_ASSET.battery.power_mw
+    energy_mwh: float = bt.Q2B_ASSET.battery.energy_mwh
+    round_trip: float = bt.Q2B_ASSET.battery.round_trip
+    wear_per_mwh: float = bt.Q2B_ASSET.wear_per_mwh
+    cmd_mw: float = sv.CMD
+    import_limit_mw: float = st.FACTORY.import_limit_mw
+    load_scale: float = st.FACTORY.load_scale
+
+    def __post_init__(self):
+        for f in fields(self):
+            object.__setattr__(self, f.name, float(getattr(self, f.name)))
+        ok = {"power_mw": self.power_mw > 0, "energy_mwh": self.energy_mwh >= sv.GRID,
+              "round_trip": 0 < self.round_trip <= 1, "wear_per_mwh": self.wear_per_mwh >= 0, "cmd_mw": self.cmd_mw > 0,
+              "import_limit_mw": self.import_limit_mw > 0, "load_scale": self.load_scale >= 0}
+        bad = [k for k, v in ok.items() if not v]
+        if bad:
+            raise ValueError(f"value table parameters out of range: {', '.join(f'{k}={getattr(self, k)}' for k in bad)}")
+        if abs(self.energy_mwh / sv.GRID - round(self.energy_mwh / sv.GRID)) > 1e-9:
+            raise ValueError(f"the value table's stored energy is in {sv.GRID:g} MWh segments: {self.energy_mwh:g} MWh "
+                             "is not a whole number of them")
+
+    def key(self) -> "TableParams":
+        """The parameters as the table sees them (the import limit as min(import limit, CMD))."""
+        return replace(self, import_limit_mw=min(self.import_limit_mw, self.cmd_mw))
+
+    def kwargs(self) -> dict:
+        """As path and build take them."""
+        return asdict(self)
+
+    def only_energy(self) -> bool:
+        """The defaults but perhaps the energy (whose tables were always named by it: _<MWh>mwh)."""
+        return replace(self.key(), energy_mwh=DEFAULT_PARAMS.energy_mwh) == DEFAULT_PARAMS.key()
+
+    def is_default(self) -> bool:
+        return self.key() == DEFAULT_PARAMS.key()
+
+    def digest(self) -> str:
+        """8 hex digits of the sha256 of the parameters as the table sees them."""
+        return hashlib.sha256(json.dumps(asdict(self.key()), sort_keys=True).encode()).hexdigest()[:8]
+
+    def asset(self) -> cf.Asset:
+        base = bt.Q2B_ASSET
+        return replace(base, battery=replace(base.battery, power_mw=self.power_mw, energy_mwh=self.energy_mwh,
+                                             round_trip=self.round_trip), wear_per_mwh=self.wear_per_mwh)
+
+    def site(self) -> st.Site:
+        return replace(st.FACTORY, import_limit_mw=self.import_limit_mw, load_scale=self.load_scale)
+
+    def describe(self) -> str:
+        k = self.key()
+        return (f"{k.power_mw:g} MW / {k.energy_mwh:g} MWh, round trip {k.round_trip:g}, wear ${k.wear_per_mwh:g}/MWh, "
+                f"CMD {k.cmd_mw:g} MW, charging room min(import limit, CMD) {k.import_limit_mw:g} MW, "
+                f"load x{k.load_scale:g}")
+
+
+DEFAULT_PARAMS = TableParams()
+_D = DEFAULT_PARAMS
+CLI = {"--power": "power_mw", "--energy": "energy_mwh", "--round-trip": "round_trip", "--wear": "wear_per_mwh",
+       "--cmd": "cmd_mw", "--import-limit": "import_limit_mw", "--load-scale": "load_scale"}
+
+
 def path(stat: str = "median", energy_mwh: float = 40.0, hurdle: float = bt.HURDLE, state: bool = False,
-         regime: bool = False) -> Path:
+         regime: bool = False, *, power_mw: float = _D.power_mw, round_trip: float = _D.round_trip,
+         wear_per_mwh: float = _D.wear_per_mwh, cmd_mw: float = _D.cmd_mw, import_limit_mw: float = _D.import_limit_mw,
+         load_scale: float = _D.load_scale) -> Path:
+    """Where the table for these options and this battery and site is kept: the name of the defaults is as it always
+    was (the energy as _<MWh>mwh); any other battery or site parameter adds _p<digest>."""
+    p = TableParams(power_mw, energy_mwh, round_trip, wear_per_mwh, cmd_mw, import_limit_mw, load_scale)
     return PROCESSED / (f"v2_value_{stat}{'' if energy_mwh == 40.0 else f'_{energy_mwh:g}mwh'}"
                         f"{'' if hurdle == bt.HURDLE else f'_h{hurdle:g}'}{'_state' if state else ''}"
-                        f"{'_regime' if regime else ''}.npz")
+                        f"{'_regime' if regime else ''}{'' if p.only_energy() else f'_p{p.digest()}'}.npz")
+
+
+def command(params: TableParams, stat: str = "median", hurdle: float = bt.HURDLE, state: bool = False,
+            regime: bool = False) -> str:
+    """The command line that builds the table for these options, battery and site."""
+    k = params.key()
+    plain = replace(_D, cmd_mw=k.cmd_mw).key()  # left out, the import limit is the default's (then min'd with the CMD)
+    args = [f"--stat {stat}"] if stat != "median" else []
+    args += [f"{flag} {getattr(k, name):g}" for flag, name in CLI.items()
+             if getattr(k, name) != (plain.import_limit_mw if name == "import_limit_mw" else getattr(_D, name))]
+    args += ([f"--hurdle {hurdle:g}"] if hurdle != bt.HURDLE else []) + (["--state"] if state else []) + \
+            (["--regime"] if regime else [])
+    return " ".join(["python -m vpp.v2.value", *args])
+
+
+def _record(params: TableParams, stat: str, hurdle: float, state: bool, regime: bool) -> dict:
+    """What the .json beside a table records (the options and the parameters as the table sees them)."""
+    return {"stat": stat, "hurdle": float(hurdle), "state": bool(state), "regime": bool(regime),
+            "params": asdict(params.key()), "digest": params.digest()}
+
+
+def recorded(p: Path) -> dict | None:
+    """The record beside the table at p, or None without one."""
+    rec = p.with_suffix(".json")
+    return json.loads(rec.read_text()) if rec.exists() else None
+
+
+def check_table(p: Path, inputs: dict, params: TableParams, stat: str = "median", hurdle: float = bt.HURDLE,
+                state: bool = False, regime: bool = False) -> None:
+    """Raise ValueError unless the table at p (loaded: inputs) was solved for these options and parameters: its
+    record must say so; without a record only a table of the defaults (but perhaps the energy) is taken; and its
+    segments must be the battery's MWh."""
+    rec = recorded(p)
+    if rec is not None:
+        got = TableParams(**rec["params"])
+        if got.key() != params.key() or (rec["stat"], rec["hurdle"], rec["state"], rec["regime"]) != \
+                (stat, float(hurdle), bool(state), bool(regime)):
+            raise ValueError(f"{p.name} was solved for {got.describe()} ({rec['stat']}, hurdle {rec['hurdle']:g}, "
+                             f"state {rec['state']}, regime {rec['regime']}); the dispatcher sees {params.describe()} "
+                             f"({stat}, hurdle {hurdle:g}, state {state}, regime {regime}): {command(params, stat, hurdle, state, regime)}")
+    elif not params.only_energy():
+        raise ValueError(f"{p.name} has no record of its parameters ({p.with_suffix('.json').name}); the dispatcher "
+                         f"sees {params.describe()}: rebuild it ({command(params, stat, hurdle, state, regime)} --rebuild)")
+    segments = inputs["curve"].shape[1]
+    if segments != round(params.energy_mwh / sv.GRID):
+        raise ValueError(f"{p.name} has {segments} segments of {sv.GRID:g} MWh; the dispatcher's battery stores "
+                         f"{params.energy_mwh:g} MWh")
 
 
 def prices() -> pd.DataFrame:
@@ -241,16 +371,16 @@ def _by_state(V: np.ndarray, ps: dict, acts: dict, rtrans: np.ndarray, E: float)
 
 
 def _solve(task: tuple) -> tuple:
-    month, level, ps, energy_mwh, hurdle, rtrans, split = task
-    asset = bt.Q2B_ASSET if energy_mwh == bt.Q2B_ASSET.battery.energy_mwh else \
-        replace(bt.Q2B_ASSET, battery=replace(bt.Q2B_ASSET.battery, energy_mwh=energy_mwh))
+    month, level, ps, params, hurdle, rtrans, split = task
+    asset, site = params.asset(), params.site()
     prefs = bt.PREFS if hurdle == bt.HURDLE else replace(bt.PREFS, hurdle_per_mwh=hurdle)
     at_level = {**ps, "means": level + ps["means"]}
-    V, weeks = sv.solve(at_level, sv.load_profiles(month), asset=asset, prefs=prefs, short_penalty=0.0)
+    load = sv.load_profiles(month, site)
+    V, weeks = sv.solve(at_level, load, asset=asset, prefs=prefs, site=site, short_penalty=0.0, cmd_mw=params.cmd_mw)
     curve, marg = _marginals(V, ps)
     out = [month, level, curve.astype(np.float32), marg.astype(np.float32), weeks]
     if rtrans is not None:
-        acts = sv.actions(at_level, sv.load_profiles(month), asset, prefs, short_penalty=0.0)
+        acts = sv.actions(at_level, load, asset, prefs, site, short_penalty=0.0, cmd_mw=params.cmd_mw)
         curve_s, marg_s = _by_state(V, ps, acts, rtrans, asset.battery.energy_mwh)
         out += [curve_s.astype(np.float32), marg_s.astype(np.float32)]
         if split is not None:  # round 5, c5: also by whether the day has spiked
@@ -260,17 +390,29 @@ def _solve(task: tuple) -> tuple:
 
 
 def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False, hurdle: float = bt.HURDLE,
-          out: Path | None = None, state: bool = False, regime: bool = False) -> Path:
-    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh, hurdle, state, regime), or written to
-    out); with state, also each day's values by market state and the states of the day and the next (B4); with regime
-    (round 5, c5; needs state), also the day's offer values for its own state (pooled without a call) by whether the
-    day has spiked, and reports/v2_c5_cells.csv (the split's days, shrinkage and largest change per month and slot)."""
+          out: Path | None = None, state: bool = False, regime: bool = False, *, power_mw: float = _D.power_mw,
+          round_trip: float = _D.round_trip, wear_per_mwh: float = _D.wear_per_mwh, cmd_mw: float = _D.cmd_mw,
+          import_limit_mw: float = _D.import_limit_mw, load_scale: float = _D.load_scale) -> Path:
+    """Per-day arrays for every backtest day (cached at path(stat, energy_mwh, hurdle, state, regime, ...), or written
+    to out); with state, also each day's values by market state and the states of the day and the next (B4); with
+    regime (round 5, c5; needs state), also the day's offer values for its own state (pooled without a call) by
+    whether the day has spiked, and reports/v2_c5_cells.csv (the split's days, shrinkage and largest change per month
+    and slot; _p<digest> added for other than the default battery and site).
+    The battery and site (power_mw ... load_scale, with energy_mwh: TableParams) are what the table is solved for;
+    other than the defaults, a .json beside the table records them (vpp.v2.harness checks it)."""
     if regime and not state:
         raise ValueError("values by regime are split from the values by market state")
+    params = TableParams(power_mw, energy_mwh, round_trip, wear_per_mwh, cmd_mw, import_limit_mw, load_scale)
+    record = _record(params, stat, hurdle, state, regime)
     if out is None:
-        out = path(stat, energy_mwh, hurdle, state, regime)
-        # a cache that stops before the backtest's last day (made before data were added) is built again
-        if out.exists() and not rebuild and pd.to_datetime(np.load(out)["day"]).max() >= pd.Timestamp(bt.LAST_DAY):
+        out = path(stat, energy_mwh, hurdle, state, regime, **{k: v for k, v in params.kwargs().items()
+                                                              if k != "energy_mwh"})
+        # a cache that stops before the backtest's last day (made before data were added), or whose record is of
+        # other parameters, is built again
+        rec = recorded(out)
+        same = (rec is None and params.only_energy()) or (rec is not None and all(rec.get(k) == v for k, v in record.items()))
+        if out.exists() and not rebuild and same and \
+                pd.to_datetime(np.load(out)["day"]).max() >= pd.Timestamp(bt.LAST_DAY):
             return out
     table = prices()
     lv = levels(table, stat)
@@ -296,9 +438,10 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
         grid = np.arange(np.floor(lo / GRID_STEP) * GRID_STEP, np.ceil(hi / GRID_STEP) * GRID_STEP + 1e-9, GRID_STEP)
         if len(grid) == 1:
             grid = np.r_[grid, grid + GRID_STEP]
-        tasks += [(month, float(g), ps, energy_mwh, hurdle, rtrans, split) for g in grid]
+        tasks += [(month, float(g), ps, params.key(), hurdle, rtrans, split) for g in grid]
     if cells:
-        pd.DataFrame(cells).to_csv(bt.REPORTS / "v2_c5_cells.csv", index=False)
+        pd.DataFrame(cells).to_csv(bt.REPORTS / f"v2_c5_cells{'' if params.is_default() else '_p' + params.digest()}.csv",
+                                   index=False)
     with ProcessPoolExecutor() as pool:
         solved = {(r[0], r[1]): r[2:] for r in pool.map(_solve, tasks)}
     rows = {"day": [], "level": [], "curve": [], "marg": [], "edges": [], "curve_state": [], "marg_state": [],
@@ -339,6 +482,13 @@ def build(stat: str = "median", energy_mwh: float = 40.0, rebuild: bool = False,
                         weeks=np.array([v[2] for v in solved.values()]), n_tables=len(solved),
                         grid_month=np.array([str(m) for m, _ in keys]), grid_level=np.array([g for _, g in keys]),
                         grid_curve=np.array([solved[k][0] for k in keys], np.float32), **extra)
+    rec_path = out.with_suffix(".json")
+    # the defaults write no record, unless one left at this name by another table would misdescribe this one
+    if not params.is_default() or rec_path.exists():
+        rec_path.write_text(json.dumps({**record, "file": out.name, "asked": asdict(params),
+                                        "command": command(params, stat, hurdle, state, regime),
+                                        "days": len(rows["day"]), "first": rows["day"][0], "last": rows["day"][-1],
+                                        "built": datetime.now().isoformat(timespec="seconds")}, indent=1) + "\n")
     return out
 
 
@@ -431,17 +581,18 @@ def main(argv: list[str] | None = None) -> None:
     if "--b1" in argv:
         sys.exit(0 if b1() else 1)
     stat = argv[argv.index("--stat") + 1] if "--stat" in argv else "median"
-    energy = float(argv[argv.index("--energy") + 1]) if "--energy" in argv else 40.0
     hurdle = float(argv[argv.index("--hurdle") + 1]) if "--hurdle" in argv else bt.HURDLE
-    p = build(stat, energy, "--rebuild" in argv, hurdle, state="--state" in argv or "--regime" in argv,
-              regime="--regime" in argv)
+    params = TableParams(**{name: float(argv[argv.index(flag) + 1]) for flag, name in CLI.items() if flag in argv})
+    p = build(stat, params.energy_mwh, "--rebuild" in argv, hurdle, state="--state" in argv or "--regime" in argv,
+              regime="--regime" in argv, **{k: v for k, v in params.kwargs().items() if k != "energy_mwh"})
     z = load(p)
     lv = pd.Series(z["level"], index=list(z["index"]))
-    print(f"{p.name}: {len(lv)} days; level ${lv.min():.0f}-{lv.max():.0f}/MWh (median {lv.median():.0f})")
+    print(f"{p.name}: {len(lv)} days; level ${lv.min():.0f}-{lv.max():.0f}/MWh (median {lv.median():.0f}); "
+          f"solved for {params.describe()}")
     for d in ("2025-07-02", "2026-01-07", "2026-08-05"):
         i = z["index"][pd.Timestamp(d)]
         c = z["curve"][i]
-        print(f"  {d} (L ${z['level'][i]:.0f}): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: "
+        print(f"  {d} (L ${z['level'][i]:.0f}): 08:00 value $/MWh at 0/5/10/20/30/{len(c) - 1} MWh: "
               + " / ".join(f"{c[s]:.0f}" for s in (0, 5, 10, 20, 30, len(c) - 1)))
 
 

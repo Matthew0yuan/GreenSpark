@@ -1,0 +1,19 @@
+{
+ "config": "rw50+state t5+roll+lock",
+ "battery": "Battery(power_mw=8.0, energy_mwh=40.0, round_trip=0.85)",
+ "days": 570,
+ "first": "2025-04-01",
+ "last": "2026-10-22",
+ "seconds": 350.1,
+ "tables": [
+  "v2_value_median_h50_state_pddde91fa.npz"
+ ],
+ "week_days": 7,
+ "week_sum": {
+  "total": 1638.6813576767727,
+  "energy": 1843.9872709128854,
+  "fcess": 228.83284754728422
+ },
+ "week_max_abs_grid_mw": 7.999999999999999,
+ "days_over_power": 21
+}

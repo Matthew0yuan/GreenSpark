@@ -1,0 +1,32 @@
+{
+ "tag": "default",
+ "battery": "Battery(power_mw=10.0, energy_mwh=40.0, round_trip=0.85)",
+ "wear_per_mwh": 30.0,
+ "power_mw": 10.0,
+ "days": 570,
+ "first": "2025-04-01",
+ "last": "2026-10-22",
+ "seconds": 275.5,
+ "tables": [
+  "v2_value_median_h50_state.npz"
+ ],
+ "power_ok": false,
+ "max_mw": {
+  "max_grid_mw": 10.503902692168559,
+  "max_up_mw": 11.399999999999999,
+  "max_down_mw": 6.95232689457877
+ },
+ "vs_reference": {
+  "reference_days": 563,
+  "days_compared": 563,
+  "from": "2025-04-01",
+  "to": "2026-10-15",
+  "max_abs_diff": {
+   "total": 1.2732925824820995e-11,
+   "energy": 1.2732925824820995e-11,
+   "fcess": 1.1937117960769683e-11,
+   "soc_end": 4.263256414560601e-14
+  },
+  "pass": true
+ }
+}

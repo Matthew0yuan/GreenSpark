@@ -1,0 +1,50 @@
+{
+ "names": {
+  "{}": true,
+  "{\"stat\": \"mean\"}": true,
+  "{\"energy_mwh\": 36.0}": true,
+  "{\"hurdle\": 0.0}": true,
+  "{\"hurdle\": 25.0}": true,
+  "{\"hurdle\": 50.0}": true,
+  "{\"hurdle\": 50.0, \"state\": true}": true,
+  "{\"hurdle\": 50.0, \"state\": true, \"regime\": true}": true,
+  "{\"energy_mwh\": 36.0, \"hurdle\": 50.0, \"state\": true}": true,
+  "{\"stat\": \"mean\", \"energy_mwh\": 30.0, \"hurdle\": 75.0}": true,
+  "import 15 == default": true,
+  "import 9 == default": true,
+  "import 8.99 has digest": true,
+  "CMD 8 has digest": true,
+  "CMD 8 import 8 == CMD 8 import 12": true,
+  "int 8 == float 8.0": true,
+  "energy 36 + power 8 keeps _36mwh and adds digest": "v2_value_median_36mwh_p1bed6f85.npz"
+ },
+ "command_round_trip": {
+  "python -m vpp.v2.value --power 8 --hurdle 50 --state": true,
+  "python -m vpp.v2.value --cmd 10 --hurdle 50 --state": true,
+  "python -m vpp.v2.value --cmd 13 --hurdle 50 --state": true,
+  "python -m vpp.v2.value --import-limit 8 --hurdle 50 --state": true,
+  "python -m vpp.v2.value --cmd 10 --import-limit 9.5 --hurdle 50 --state": true,
+  "python -m vpp.v2.value --cmd 7 --hurdle 50 --state": true,
+  "python -m vpp.v2.value --round-trip 0.9 --load-scale 12 --hurdle 50 --state": true,
+  "python -m vpp.v2.value --power 7.5 --energy 30 --round-trip 0.9 --wear 35 --cmd 10.5 --import-limit 9.5 --load-scale 11 --hurdle 50 --state": true
+ },
+ "guard": {
+  "8 MW own record": "accepted",
+  "8 MW record, asked hurdle 75": "ValueError: v2_value_median_h50_state_pddde91fa.npz was solved for 8 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging ",
+  "8 MW record, asked state False": "ValueError: v2_value_median_h50_state_pddde91fa.npz was solved for 8 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging ",
+  "8 MW record, asked rt 0.88": "ValueError: v2_value_median_h50_state_pddde91fa.npz was solved for 8 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging ",
+  "CMD 10 table with the 8 MW record, asked CMD 10": "ValueError: v2_value_median_h50_state_pbd524b06.npz was solved for 8 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging ",
+  "36 MWh table, no record": "accepted",
+  "36 MWh table, no record, asked 36 MWh at 8 MW": "ValueError: v2_value_median_36mwh_h50_state.npz has no record of its parameters (v2_value_median_36mwh_h50_state.json); the dispatch"
+ },
+ "out_of_range": {
+  "{\"power_mw\": 0.0}": "ValueError: value table parameters out of range: power_mw=0.0",
+  "{\"round_trip\": 1.2}": "ValueError: value table parameters out of range: round_trip=1.2",
+  "{\"round_trip\": 0.0}": "ValueError: value table parameters out of range: round_trip=0.0",
+  "{\"wear_per_mwh\": -1.0}": "ValueError: value table parameters out of range: wear_per_mwh=-1.0",
+  "{\"cmd_mw\": 0.0}": "ValueError: value table parameters out of range: cmd_mw=0.0",
+  "{\"energy_mwh\": 37.5}": "ValueError: the value table's stored energy is in 1 MWh segments: 37.5 MWh is not a whole number of them",
+  "{\"energy_mwh\": 0.5}": "ValueError: value table parameters out of range: energy_mwh=0.5",
+  "{\"load_scale\": -1.0}": "ValueError: value table parameters out of range: load_scale=-1.0"
+ }
+}

@@ -1,0 +1,5 @@
+$ (cwd /Users/matthew.yuan/Desktop/HGS/.claude/worktrees/wf_99c47f23-799-2) /Users/matthew.yuan/Desktop/HGS/.venv/bin/python -m vpp.v2.checks --parity
+PASS  parity in one process, 30 days, records off: summaries True, logs True, 0 plans recorded
+PASS  parity in one process, 30 days, records on: summaries True, logs True, 65 plans recorded
+ALL CHECKS PASS
+exit code: 0

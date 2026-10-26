@@ -1,0 +1,58 @@
+check,source,variant,period,days,with_value,public_by_issue,violations,unknown_time,missing_share,expect,mismatches,compared,note,changed,pairs_equal,share_flagged,pass
+A1,predispatch,delivered,all,1026.0,1014.0,1014.0,0.0,0.0,0.0117,0,,,,,,,True
+A1,predispatch,delivered,history,456.0,450.0,450.0,0.0,0.0,0.0132,0,,,,,,,True
+A1,predispatch,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,predispatch,delivered,test_seen,107.0,107.0,107.0,0.0,0.0,0.0,0,,,,,,,True
+A1,predispatch,delivered,test_unseen,7.0,1.0,1.0,0.0,0.0,0.8571,0,,,,,,,True
+A1,outages,delivered,all,1026.0,1021.0,1021.0,0.0,0.0,0.0049,0,,,,,,,True
+A1,outages,delivered,history,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,outages,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,outages,delivered,test_seen,107.0,107.0,107.0,0.0,0.0,0.0,0,,,,,,,True
+A1,outages,delivered,test_unseen,7.0,2.0,2.0,0.0,0.0,0.7143,0,,,,,,,True
+A1,capacity_credits,delivered,all,1026.0,1026.0,1026.0,0.0,0.0,0.0,0,,,,,,,True
+A1,capacity_credits,delivered,history,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,capacity_credits,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,capacity_credits,delivered,test_seen,107.0,107.0,107.0,0.0,0.0,0.0,0,,,,,,,True
+A1,capacity_credits,delivered,test_unseen,7.0,7.0,7.0,0.0,0.0,0.0,0,,,,,,,True
+A1,battery,delivered,all,1026.0,1022.0,1022.0,0.0,0.0,0.0039,0,,,,,,,True
+A1,battery,delivered,history,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,battery,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,battery,delivered,test_seen,107.0,107.0,107.0,0.0,0.0,0.0,0,,,,,,,True
+A1,battery,delivered,test_unseen,7.0,3.0,3.0,0.0,0.0,0.5714,0,,,,,,,True
+A1,stpasa,delivered,all,1026.0,1020.0,1020.0,0.0,0.0,0.0058,0,,,,,,,True
+A1,stpasa,delivered,history,456.0,454.0,454.0,0.0,0.0,0.0044,0,,,,,,,True
+A1,stpasa,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,stpasa,delivered,test_seen,107.0,103.0,103.0,0.0,0.0,0.0374,0,,,,,,,True
+A1,stpasa,delivered,test_unseen,7.0,7.0,7.0,0.0,0.0,0.0,0,,,,,,,True
+A1,weather,delivered,all,1026.0,991.0,991.0,0.0,0.0,0.0341,0,,,,,,,True
+A1,weather,delivered,history,456.0,421.0,421.0,0.0,0.0,0.0768,0,,,,,,,True
+A1,weather,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,,True
+A1,weather,delivered,test_seen,107.0,107.0,107.0,0.0,0.0,0.0,0,,,,,,,True
+A1,weather,delivered,test_unseen,7.0,7.0,7.0,0.0,0.0,0.0,0,,,,,,,True
+A2,predispatch,delivered,all,,1014.0,,,,,0,0.0,,,,,,True
+A2,outages,delivered,all,,1021.0,,,,,0,0.0,,,,,,True
+A2,capacity_credits,delivered,all,,1026.0,,,,,0,0.0,,,,,,True
+A2,battery,delivered,all,,1022.0,,,,,0,0.0,,,,,,True
+A2,stpasa,delivered,all,,1020.0,,,,,0,0.0,,,,,,True
+A2,weather,delivered,all,,991.0,,,,,0,0.0,,,,,,True
+A1,high_risk_d1 (comparison only),delivered,all,,902.0,,0.0,,,0,,,,,,,True
+A3,predispatch,delivered,100 random days,,,,,,,0,0.0,1000.0,,,,,True
+A3,stpasa,delivered,100 random days,,,,,,,0,0.0,1000.0,,,,,True
+A3,weather: Perth temperature,delivered,100 random days,,,,,,,0,0.0,500.0,,,,,True
+A3,weather: Midwest wind,delivered,100 random days,,,,,,,0,0.0,500.0,,,,,True
+A3,outages,delivered,20 random days,,,,,,,0,0.0,200.0,,,,,True
+A4,predispatch,vs spike_table,overlap,,,,,,,0,0.0,10140.0,,,,,True
+A4,outages: snapshot file,vs spike_table,overlap,,,,,,,0,0.0,10200.0,,,,,True
+A4,outages: thermal <= all scheduled,vs spike_table,overlap,,,,,,,0,0.0,10200.0,,,,,True
+A4,weather: Perth temperature,vs spike_table,overlap,,,,,,,0,0.0,9850.0,,,,,True
+A4,stpasa: Reference,vs spike_table,overlap,,,,,,,report only,3.0,10140.0,3 of them use a different report; days ['2024-03-18'],,,,True
+A5,all inputs,delivered,40 random days,,,,,,,0,,6000.0,,0.0,,,True
+P7,battery shift(1),leak control,40 random days,,,,,,,> 0,,6000.0,,370.0,,,True
+A6,inputs vs ex-post labels,delivered,all,,,,,,,0,,,"ex-ante by definition, listed only: ['thermal_cap_mw=thermal_cap_at_min_mw']",,0.0,,True
+P1,outages,snapshot of D itself (08:30 on D),all,1026.0,1020.0,0.0,1020.0,0.0,0.0058,>= 99%,,,,,,1.0,True
+P2,battery,battery shift(1),all,1026.0,1021.0,0.0,1021.0,0.0,0.0049,>= 99%,,,,,,1.0,True
+P3,predispatch,D's own 08:00 run,all,1026.0,1019.0,0.0,1019.0,0.0,0.0068,> 0,,,,,,1.0,True
+P4,weather,fixed previous_day1 vintage,all,1026.0,992.0,0.0,992.0,0.0,0.0331,> 0,,,,,,1.0,True
+P5,stpasa,report dated D-1,all,1026.0,985.0,0.0,985.0,0.0,0.04,> 0,,,,,,1.0,True
+P6,LRC advisory as input,leak control,all LRC days,,43.0,,43.0,,,report only,,,,,,1.0,True
+C1,label vs step 1,consistency,days with step-1 minimum in 16:00-20:30,,,,,,,0,0.0,942.0,,,,,True

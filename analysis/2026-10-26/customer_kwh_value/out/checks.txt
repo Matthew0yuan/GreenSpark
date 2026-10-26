@@ -1,0 +1,27 @@
+数据：2023-10-01 至 2026-10-22，1118 天；窗口 ['15:00-17:00', '15:30-17:30', '16:00-18:00', '16:30-18:30', '17:00-19:00', '17:30-19:30', '18:00-20:00', '18:30-20:30', '19:00-21:00']
+[1] 重算一致（我按阶段重跑 vs family()，最大绝对差，≤ 1e-09）：PASS
+      d_net              0.000e+00
+      w_actual           3.553e-15
+      paid_kwh           0.000e+00
+      standby_kwh        0.000e+00
+      d_import_kwh       7.105e-15
+      d_feedin_event     0.000e+00
+      d_feedin_other     1.388e-17
+      d_through_kwh      0.000e+00
+      delivered_kwh      0.000e+00
+      gap_kwh            0.000e+00
+      net_peak           0.000e+00
+      baseline re-step   0.000e+00
+[2] 电量收支闭合（每天、每窗口，残差 ≤ 1e-06 kWh）：PASS  事件内最大 3.55e-15，跟踪期增量最大 1.32e-14；共 10062 次候选调用
+[3] 对账（22 组：方案 × 情景 × 时间段，415 次调用）：PASS
+      每次调用最大差 2.66e-15 A$（≤ 1e-06）；每季容量最大差 0.00e+00 A$（≤ 1e-06）
+      和 evaluate_policy 最大差 5.68e-14 A$/报名户；和保存的 policy_backtest.csv 最大差 Zenith 2.33e-10 A$（全客户群）、客户 5.68e-14 A$/报名户（≤ 0.01）；保存的规则和条款一致：True
+[4] 09:00 事前毛利 = 现有 energy_scores 单窗口打分（不含次日缺口项）：PASS  最大差 1.78e-15 A$
+[5] 不偷看：09:00 以后实际价格乱改 → 事前值不变 True、事后值变了 True；2026-07-01 以后家庭物理量加噪 → 事前值不变 True、事后值变了 True：PASS
+[6] 埋错检查（对账必须报错）：PASS  w_no_div1000 差 4.77e+03 A$ → 抓到；denominator_dN 差 1.8e+308 A$ → 抓到；per_enrolled_as_responding 差 0.615 A$ → 抓到
+[3b] 全年口径乘回去 = evaluate_policy（每报名户）：PASS  最大差 1.14e-13 A$
+      PASS NUMBERS.csv：123 个数字，27 个公式按单位复算一致
+[7] NUMBERS.csv 按单位复算（agents.check.check_numbers）：PASS
+
+总结：1 重算一致 PASS；2 电量收支闭合 PASS；3 对账 PASS；4 09:00与energy_scores一致 PASS；5 不偷看 PASS；6 埋错能抓到 PASS；3b 全年口径对账 PASS；7 单位复算 PASS
+用时 6 秒

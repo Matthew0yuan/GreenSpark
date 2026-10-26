@@ -1,0 +1,223 @@
+{
+ "short_penalty_for(9) == original SHORT_PENALTY": true,
+ "SHORT_PENALTY unchanged": true,
+ "short_penalty_for(10) == RT7 at 10 MW": true,
+ "groups": {
+  "default": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": 0.0
+  },
+  "8 MW": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": 8.358039855957031
+  },
+  "36 MWh": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": null
+  },
+  "rt 0.88": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": 1.5167770385742188
+  },
+  "wear 40": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": 6.001983642578125
+  },
+  "CMD 10": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": 24.392860412597656
+  },
+  "import 8": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": 18.132049560546875
+  },
+  "load x12": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": 18.124908447265625
+  },
+  "all": {
+   "weeks_same": true,
+   "curve": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "curve_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "marg_state": {
+    "shape_same": true,
+    "bytes_same": true,
+    "max_abs": 0.0
+   },
+   "differs_from_default_curve": null
+  }
+ }
+}

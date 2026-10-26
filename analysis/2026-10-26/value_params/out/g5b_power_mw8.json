@@ -1,0 +1,19 @@
+{
+ "tag": "power_mw8",
+ "battery": "Battery(power_mw=8.0, energy_mwh=40.0, round_trip=0.85)",
+ "wear_per_mwh": 30.0,
+ "power_mw": 8.0,
+ "days": 570,
+ "first": "2025-04-01",
+ "last": "2026-10-22",
+ "seconds": 272.0,
+ "tables": [
+  "v2_value_median_h50_state_pddde91fa.npz"
+ ],
+ "power_ok": false,
+ "max_mw": {
+  "max_grid_mw": 10.503902692168559,
+  "max_up_mw": 10.503902692168559,
+  "max_down_mw": 6.952376439075727
+ }
+}

@@ -1,0 +1,401 @@
+{
+ "names": [
+  {
+   "options": {},
+   "new": "v2_value_median.npz",
+   "old": "v2_value_median.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "energy_mwh": 36.0
+   },
+   "new": "v2_value_median_36mwh.npz",
+   "old": "v2_value_median_36mwh.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "stat": "mean"
+   },
+   "new": "v2_value_mean.npz",
+   "old": "v2_value_mean.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "hurdle": 50.0
+   },
+   "new": "v2_value_median_h50.npz",
+   "old": "v2_value_median_h50.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "hurdle": 0.0
+   },
+   "new": "v2_value_median_h0.npz",
+   "old": "v2_value_median_h0.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "hurdle": 25.0
+   },
+   "new": "v2_value_median_h25.npz",
+   "old": "v2_value_median_h25.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "hurdle": 50.0,
+    "state": true
+   },
+   "new": "v2_value_median_h50_state.npz",
+   "old": "v2_value_median_h50_state.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "hurdle": 50.0,
+    "state": true,
+    "regime": true
+   },
+   "new": "v2_value_median_h50_state_regime.npz",
+   "old": "v2_value_median_h50_state_regime.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "energy_mwh": 36.0,
+    "hurdle": 50.0
+   },
+   "new": "v2_value_median_36mwh_h50.npz",
+   "old": "v2_value_median_36mwh_h50.npz",
+   "same": true
+  },
+  {
+   "options": {
+    "hurdle": 50.0,
+    "state": true,
+    "import_limit_mw": 15.0
+   },
+   "new": "v2_value_median_h50_state.npz",
+   "old": "v2_value_median_h50_state.npz",
+   "same": true
+  }
+ ],
+ "tables": {
+  "A": {
+   "file": "v2_value_median.npz",
+   "seconds": 4.47,
+   "no_json": true,
+   "pass": true,
+   "same_keys": true,
+   "keys_only_a": [],
+   "keys_only_b": [],
+   "n_arrays": 10,
+   "differ": [],
+   "identical": true,
+   "arrays": {
+    "curve": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "day": {
+     "dtype": "<U10",
+     "shape": [
+      570
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "edges": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      48,
+      9
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "grid_curve": {
+     "dtype": "float32",
+     "shape": [
+      75,
+      7,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "grid_level": {
+     "dtype": "float64",
+     "shape": [
+      75
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "grid_month": {
+     "dtype": "<U7",
+     "shape": [
+      75
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "level": {
+     "dtype": "float64",
+     "shape": [
+      570
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "marg": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      48,
+      8,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "n_tables": {
+     "dtype": "int64",
+     "shape": [],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "weeks": {
+     "dtype": "int64",
+     "shape": [
+      75
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    }
+   }
+  },
+  "B": {
+   "file": "v2_value_median_h50_state.npz",
+   "seconds": 7.74,
+   "no_json": true,
+   "pass": true,
+   "same_keys": true,
+   "keys_only_a": [],
+   "keys_only_b": [],
+   "n_arrays": 14,
+   "differ": [],
+   "identical": true,
+   "arrays": {
+    "curve": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "curve_state": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      2,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "day": {
+     "dtype": "<U10",
+     "shape": [
+      570
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "edges": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      48,
+      9
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "grid_curve": {
+     "dtype": "float32",
+     "shape": [
+      75,
+      7,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "grid_level": {
+     "dtype": "float64",
+     "shape": [
+      75
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "grid_month": {
+     "dtype": "<U7",
+     "shape": [
+      75
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "level": {
+     "dtype": "float64",
+     "shape": [
+      570
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "marg": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      48,
+      8,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "marg_state": {
+     "dtype": "float32",
+     "shape": [
+      570,
+      2,
+      48,
+      8,
+      40
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "n_tables": {
+     "dtype": "int64",
+     "shape": [],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "state_today": {
+     "dtype": "float64",
+     "shape": [
+      570
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    },
+    "state_tomorrow": {
+     "dtype": "float64",
+     "shape": [
+      570
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": false,
+     "bytes_equal": true,
+     "nan_count": 1
+    },
+    "weeks": {
+     "dtype": "int64",
+     "shape": [
+      75
+     ],
+     "same_dtype_shape": true,
+     "array_equal": true,
+     "array_equal_plain": true,
+     "bytes_equal": true,
+     "nan_count": 0
+    }
+   }
+  }
+ },
+ "pass": true
+}

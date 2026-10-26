@@ -1,0 +1,10 @@
+check,month,fit_month,train_last_day,changed,values,pass,note
+T1,2024-07,2024-07,2024-06-26,0,62,True,
+T2,2024-07,2024-07,2024-07-31,62,62,True,
+T1,2025-12,2025-12,2025-11-26,0,62,True,
+T2,2025-12,2025-12,2025-12-31,62,62,True,
+T1,2026-08,2026-07,2026-06-26,0,62,True,
+T2,2026-08,2026-08,2026-08-31,62,62,True,
+T3,in_sample,,,0,20,True,
+T4,all,,,0,1014,True,
+T5,in_sample,,,0,46,True,"perfect 1.0, reversed 0.0, interval [1.0, 1.0]"

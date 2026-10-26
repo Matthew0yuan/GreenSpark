@@ -1,0 +1,81 @@
+{
+ "head": "681bbad4f5fa2cc9317e3c2afb074698028386b1",
+ "vpp_changes_at_build": " M vpp/__pycache__/__init__.cpython-313.pyc\n M vpp/__pycache__/aemo_correction.cpython-313.pyc\n M vpp/__pycache__/backtest.cpython-313.pyc\n M vpp/__pycache__/config.cpython-313.pyc\n M vpp/__pycache__/contracts.cpython-313.pyc\n M vpp/__pycache__/data.cpython-313.pyc\n M vpp/__pycache__/dispatch.cpython-313.pyc\n M vpp/__pycache__/evaluate.cpython-313.pyc\n M vpp/__pycache__/forecast.cpython-313.pyc\n M vpp/__pycache__/scenarios.cpython-313.pyc\n M vpp/__pycache__/site.cpython-313.pyc\n M vpp/__pycache__/site_bill.cpython-313.pyc\n M vpp/__pycache__/stochastic.cpython-313.pyc\n M vpp/__pycache__/storage_value.cpython-313.pyc\n M vpp/__pycache__/wa_calendar.cpython-313.pyc\n M vpp/spike/__pycache__/__init__.cpython-313.pyc\n M vpp/spike/__pycache__/outages.cpython-313.pyc\n M vpp/v2/__pycache__/__init__.cpython-313.pyc\n M vpp/v2/__pycache__/value.cpython-313.pyc\n",
+ "tables": {
+  "A": {
+   "file": "v2_value_median.npz",
+   "seconds": 6.11,
+   "days": 570,
+   "first": "2025-04-01",
+   "last": "2026-10-22",
+   "n_tables": 75,
+   "arrays": [
+    "curve",
+    "day",
+    "edges",
+    "grid_curve",
+    "grid_level",
+    "grid_month",
+    "level",
+    "marg",
+    "n_tables",
+    "weeks"
+   ],
+   "vs_main_workspace": {
+    "same_keys": true,
+    "differ": [
+     "curve",
+     "day",
+     "edges",
+     "grid_curve",
+     "grid_level",
+     "grid_month",
+     "level",
+     "marg",
+     "n_tables",
+     "weeks"
+    ],
+    "n_arrays": 10,
+    "days": [
+     570,
+     563
+    ]
+   }
+  },
+  "B": {
+   "file": "v2_value_median_h50_state.npz",
+   "seconds": 10.72,
+   "days": 570,
+   "first": "2025-04-01",
+   "last": "2026-10-22",
+   "n_tables": 75,
+   "arrays": [
+    "curve",
+    "curve_state",
+    "day",
+    "edges",
+    "grid_curve",
+    "grid_level",
+    "grid_month",
+    "level",
+    "marg",
+    "marg_state",
+    "n_tables",
+    "state_today",
+    "state_tomorrow",
+    "weeks"
+   ],
+   "vs_main_workspace": {
+    "same_keys": true,
+    "differ": [
+     "state_tomorrow"
+    ],
+    "n_arrays": 14,
+    "days": [
+     570,
+     570
+    ]
+   }
+  }
+ }
+}
