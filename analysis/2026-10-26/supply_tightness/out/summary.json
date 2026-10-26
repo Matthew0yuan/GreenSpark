@@ -1,0 +1,50 @@
+{
+ "in_sample": {
+  "days": 456,
+  "spike_days": 114,
+  "lrc_days": 3,
+  "ircr_peak_days": 4,
+  "margin_q": [
+   378.0,
+   1249.0,
+   1900.0,
+   2969.0,
+   3819.0
+  ],
+  "rho_margin_residual": -0.6979857065656905,
+  "rho_margin_cont_raise": -0.32014592086509175,
+  "min_time_share_16_21": 0.9210526315789473,
+  "low_day_main_cause": {
+   "d_residual": 30,
+   "d_outage": 16
+  },
+  "median_components_at_min": {
+   "residual_at_min_mw": 2371.0,
+   "outage_at_min_mw": 477.0,
+   "battery_cap_mw": 579.0,
+   "thermal_cap_mw": 4233.0
+  },
+  "high_risk_d1_flagged_on_low_full": "23/46"
+ },
+ "history": {
+  "days": 456,
+  "spike_days": 308,
+  "lrc_days": 36,
+  "ircr_peak_days": 8,
+  "margin_q": [
+   27.0,
+   1008.0,
+   1608.0,
+   2444.0,
+   3172.0
+  ],
+  "rho_margin_residual": -0.7037283918430989,
+  "rho_margin_cont_raise": -0.22083337879304102,
+  "min_time_share_16_21": 0.9364035087719298,
+  "lrc_pct_median": 0.06359649122807018,
+  "lrc_in_bottom10_full": "22/36",
+  "lrc_in_bottom10_month": "15/36",
+  "lrc_in_bottom25": "34/36",
+  "lrc_spike_share": 0.8888888888888888
+ }
+}

@@ -1,0 +1,111 @@
+<body data-home="plan">
+{{PROTO}}
+<header class="topbar">
+  <div class="tb-in">
+    <div class="tb-brand"><span class="mk" aria-hidden="true">GS</span><b>GreenSpark</b></div>
+    {{ASSET_SW}}
+    <nav class="tb-nav pages" data-grp="plan compare svalid" aria-label="Site battery pages">{{PAGES_SITE}}</nav>
+    <nav class="tb-nav pages" data-grp="calls value fvalid" aria-label="Customer fleet pages">{{PAGES_FLEET}}</nav>
+    <span class="sp"></span>
+    <div class="tb-run">{{RUN}}{{PRI}}{{GEAR}}</div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <header class="ph">
+    <div class="ph-line"><h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span></div>
+    <div class="ctx" id="ph-ctx"></div>
+  </header>
+  {{STRIPS}}
+
+  <!-- Site battery · Decide: is the plan executable, what to do, what it is worth, why; the detail further down -->
+  <section class="screen" id="s-plan" aria-label="Today's plan">
+    <div class="plan-st" id="plan-status" role="status"></div>
+    <div class="hero res">
+      <div id="plan-head"></div>
+      <div class="kpis">{{PLAN_KPIS}}</div>
+    </div>
+    <section class="blk res"><div class="blk-h"><h2>The day at a glance</h2><span class="sub">08:00 Wed 14 Jan to 08:00 Thu 15 Jan</span></div><div id="plan-timeline"></div></section>
+    <section class="blk res"><h2>Why this plan</h2><ul class="why-list" id="plan-why"></ul>{{PLAN_CTA}}</section>
+    <section class="blk res" id="plan-detail">
+      <div class="blk-h"><h2>Dispatch detail</h2><span class="sub">plan issued 09:00 · 10 MW / 40 MWh battery behind the factory meter</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
+      <div id="sch-chart" class="chartbox"></div>
+      <p class="chart-note" id="sch-note"></p>
+    </section>
+    <section class="blk res strip-detail" id="sch-rail" aria-live="polite"></section>
+    <div class="cols2">
+      <section class="blk res"><h2>Plan and outcome for the trading day</h2><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}</section>
+      <section class="blk res"><h2>Checks on this plan</h2><ul class="chk" id="sch-checks"></ul></section>
+    </div>
+  </section>
+
+  <!-- Site battery · Improve: the adopted dispatch against the frozen baseline -->
+  <section class="screen" id="s-compare" aria-label="Compare with the baseline">
+    <div class="toolbar">{{CPER_TOOLS}}</div>
+    <section class="blk res" id="cmp-hero"></section>
+    <section class="blk res"><h2>Price forecast against yesterday's prices</h2><div id="cmp-q2a"></div></section>
+  </section>
+
+  <!-- Site battery · Prove: hard limits with their scope, and how much test evidence there is -->
+  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
+    <div class="toolbar">{{PER_TOOLS}}</div>
+    <div class="vt-tiles res" id="sv-tiles"></div>
+    <div class="note v-note" id="val-note"></div>
+    <section class="blk res"><div class="blk-h"><h2>Physical and contract checks</h2><span class="sub">site battery · click a row to open it</span></div><table class="tbl" id="val-checks"></table></section>
+  </section>
+
+  <!-- Customer fleet · Decide: the call, the demand forecast behind it, the season it was made in -->
+  <section class="screen" id="s-calls" aria-label="Tonight's call">
+    <div class="toolbar">{{ACT_TOOLS}}</div>
+    <section class="blk res strip-decision" id="act-card" aria-live="polite"></section>
+    <section class="blk res">
+      <div class="blk-h"><h2>System demand forecast</h2><span class="sub" id="act-dem-sub"></span></div>
+      <div id="act-dem" class="chartbox"></div>
+    </section>
+    <section class="blk res">
+      <div class="blk-h"><h2 id="act-title"></h2><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span><span class="ctools" data-csv="act"></span></div>
+      <div class="legend legend-top" id="act-legend"></div>
+      <div id="act-chart" class="chartbox"></div>
+      <div class="budget" id="act-budget"></div>
+      <p class="foot">{{ACT_FOOT}}</p>
+    </section>
+  </section>
+
+  <!-- Customer fleet · Improve: the offer's gain over reference terms first, then who gains what -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="toolbar">{{VAL_TOOLS}}</div>
+    <section class="blk res" id="v-hero"></section>
+    <div class="scenline" id="v-scen"></div>
+    <div class="res v-verdict" id="v-verdict"></div>
+    <div class="parties res" id="v-parties"></div>
+    <section class="blk res"><div class="blk-h"><h2>The offer against the alternatives</h2><span class="sub" id="v-cmp-sub"></span></div><table class="tbl" id="v-cmp"></table><p class="foot" id="v-cmp-foot"></p></section>
+    <section class="blk res">{{V_LEDGER}}</section>
+    <div class="cols2">
+      <section class="blk res" id="v-ircr"></section>
+      <section class="blk res" id="v-own"></section>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Prove -->
+  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
+    <div class="vt-tiles res" id="fv-tiles"></div>
+    <div class="cols2">
+      <section class="blk res"><h2>Hot Season holdouts</h2><div id="fv-hold"></div></section>
+      <section class="blk res"><h2>Customer constraints</h2><table class="tbl" id="fv-checks"></table></section>
+    </div>
+  </section>
+
+  <!-- Settings: one reading column, the input check stays in view -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="form-grid">
+      <div class="form-main">
+        <section class="blk blk-first"><h2>Customer offer <span class="sub">evaluated as the Custom offer</span></h2>{{CFG_OFFER}}</section>
+        <section class="blk"><h2>Commercial scenario <span class="sub">who receives energy and capacity value</span></h2>{{CFG_SCEN}}</section>
+        <section class="blk"><h2>Customer fleet assumptions <span class="sub">every value here is an assumption · baseline is normal self-use</span></h2>{{CFG_FLEET}}</section>
+        <section class="blk"><h2>Own battery and site <span class="sub">behind the factory meter</span></h2>{{CFG_OWN}}</section>
+      </div>
+      <aside class="form-side"><section class="blk blk-first"><h2>Input check</h2><ul class="chk" id="c-checks"></ul></section></aside>
+    </div>
+  </section>
+</main>
+{{STY}}

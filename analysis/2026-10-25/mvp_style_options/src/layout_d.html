@@ -1,0 +1,117 @@
+<body data-home="plan">
+{{PROTO}}
+<div class="dapp">
+<!-- floating sidebar: which asset, that asset's three pages (Decide, Improve, Prove), settings at the foot -->
+<aside class="dside" aria-label="Navigation">
+  <div class="brand"><span class="mk" aria-hidden="true">GS</span><div><b>GreenSpark</b><small>Dispatch Desk</small></div></div>
+  <div class="navsec">Asset</div>
+  {{ASSET_SW}}
+  <nav class="dpages pages" data-grp="plan compare svalid" aria-label="Site battery pages"><div class="navsec">Site battery</div>{{PAGES_SITE}}</nav>
+  <nav class="dpages pages" data-grp="calls value fvalid" aria-label="Customer fleet pages"><div class="navsec">Customer fleet</div>{{PAGES_FLEET}}</nav>
+  <div class="sfoot">{{GEAR}}</div>
+</aside>
+
+<main id="main" class="dmain">
+  <header class="ph">
+    <div class="ph-line"><h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span><span class="sp"></span><div class="ph-r">{{RUN}}{{PRI}}</div></div>
+    <div class="ctx" id="ph-ctx"></div>
+  </header>
+  {{STRIPS}}
+
+  <!-- Site battery · Decide: the decision card (plan status, then the action) over three figure cards, the day, why; the detail below -->
+  <section class="screen" id="s-plan" aria-label="Today's plan">
+    <div class="dgrid">
+      <article class="card span-12 dec-main">
+        <div class="plan-st" id="plan-status" role="status"></div>
+        <div class="res" id="plan-head"></div>
+      </article>
+      <div class="span-12 kpi-cards res">{{PLAN_KPIS}}</div>
+      <article class="card span-12 res"><div class="card-h"><h2>The day at a glance</h2><span class="sub">08:00 Wed 14 Jan to 08:00 Thu 15 Jan</span></div><div id="plan-timeline"></div></article>
+      <article class="card span-12 why-card res"><h2>Why this plan</h2><ul class="why-list" id="plan-why"></ul>{{PLAN_CTA}}</article>
+      <article class="card span-12 res" id="plan-detail">
+        <div class="card-h"><h2>Dispatch detail</h2><span class="sub">plan issued 09:00 · 10 MW / 40 MWh battery behind the factory meter</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
+        <div id="sch-chart" class="chartbox"></div>
+        <p class="chart-note" id="sch-note"></p>
+      </article>
+      <article class="card span-5 rail-card res" id="sch-rail" aria-live="polite"></article>
+      <article class="card span-7 res"><h2>Plan and outcome for the trading day</h2><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}<h3 class="chk-h">Checks on this plan</h3><ul class="chk" id="sch-checks"></ul></article>
+    </div>
+  </section>
+
+  <!-- Site battery · Improve: the uplift as a hero card, then the price forecast -->
+  <section class="screen" id="s-compare" aria-label="Compare with the baseline">
+    <div class="dgrid">
+      <div class="span-12 toolbar">{{CPER_TOOLS}}</div>
+      <article class="card span-12 hero-card res" id="cmp-hero"></article>
+      <article class="card span-12 res"><h2>Price forecast against yesterday's prices</h2><div id="cmp-q2a"></div></article>
+    </div>
+  </section>
+
+  <!-- Site battery · Prove: three results as cards, the period note, the checks -->
+  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
+    <div class="dgrid">
+      <div class="span-12 toolbar">{{PER_TOOLS}}</div>
+      <div class="span-12 vt-tiles res" id="sv-tiles"></div>
+      <div class="span-12 note v-note" id="val-note"></div>
+      <article class="card span-12 res"><div class="card-h"><h2>Physical and contract checks</h2><span class="sub">site battery · click a row to open it</span></div><table class="tbl" id="val-checks"></table></article>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Decide: the call read across one wide card, the demand forecast behind it, the season below -->
+  <section class="screen" id="s-calls" aria-label="Tonight's call">
+    <div class="dgrid">
+      <div class="span-12 toolbar">{{ACT_TOOLS}}</div>
+      <article class="card span-12 dec-card res" id="act-card" aria-live="polite"></article>
+      <article class="card span-12 res">
+        <div class="card-h"><h2>System demand forecast</h2><span class="sp"></span><span class="sub" id="act-dem-sub"></span></div>
+        <div id="act-dem" class="chartbox"></div>
+      </article>
+      <article class="card span-12 res">
+        <div class="card-h"><h2 id="act-title"></h2><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span><span class="ctools" data-csv="act"></span></div>
+        <div class="legend legend-top" id="act-legend"></div>
+        <div id="act-chart" class="chartbox"></div>
+        <div class="budget" id="act-budget"></div>
+        <p class="foot">{{ACT_FOOT}}</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Improve: the gain over reference terms as a hero card, then who gains what -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="dgrid">
+      <div class="span-12 toolbar">{{VAL_TOOLS}}</div>
+      <article class="card span-12 hero-card res" id="v-hero"></article>
+      <div class="span-12 scenline" id="v-scen"></div>
+      <div class="span-12 res v-verdict" id="v-verdict"></div>
+      <div class="span-12 parties res" id="v-parties"></div>
+      <article class="card span-12 res"><div class="card-h"><h2>The offer against the alternatives</h2><span class="sub" id="v-cmp-sub"></span></div><table class="tbl" id="v-cmp"></table><p class="foot" id="v-cmp-foot"></p></article>
+      <article class="card span-12 fold-card res">{{V_LEDGER}}</article>
+      <article class="card span-8 res" id="v-ircr"></article>
+      <article class="card span-4 own-card res" id="v-own"></article>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Prove -->
+  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
+    <div class="dgrid">
+      <div class="span-12 vt-tiles res" id="fv-tiles"></div>
+      <article class="card span-6 res"><h2>Hot Season holdouts</h2><div id="fv-hold"></div></article>
+      <article class="card span-6 res"><h2>Customer constraints</h2><table class="tbl" id="fv-checks"></table></article>
+    </div>
+  </section>
+
+  <!-- Settings: the inputs as cards, the input check stays in view -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="dgrid">
+      <div class="span-8 stack-cards">
+        <article class="card"><h2>Customer offer <span class="sub">evaluated as the Custom offer</span></h2>{{CFG_OFFER}}</article>
+        <article class="card"><h2>Commercial scenario <span class="sub">who receives energy and capacity value</span></h2>{{CFG_SCEN}}</article>
+        <article class="card"><h2>Customer fleet assumptions <span class="sub">every value here is an assumption · baseline is normal self-use</span></h2>{{CFG_FLEET}}</article>
+        <article class="card"><h2>Own battery and site <span class="sub">behind the factory meter</span></h2>{{CFG_OWN}}</article>
+      </div>
+      <aside class="span-4 cfg-side"><article class="card"><h2>Input check</h2><ul class="chk" id="c-checks"></ul></article></aside>
+    </div>
+  </section>
+</main>
+</div>
+{{STY}}

@@ -1,0 +1,5 @@
+,cause,days,spike_days,high_risk_known,high_risk_flagged
+in_sample_low_days,demand,30,16,30,13
+in_sample_low_days,supply,16,11,16,10
+history_lrc_days,demand,29,25,14,6
+history_lrc_days,supply,7,7,7,5

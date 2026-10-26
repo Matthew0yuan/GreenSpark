@@ -94,6 +94,21 @@ def _reference_lines(ref: dict | None) -> list[str]:
             f"后天 08:00 存电 {soc[-1]:.1f} MWh。只作参考，会随新信息重排。", "", head + "\n".join(rows)]
 
 
+def _value_now_lines(snap: op.Snapshot) -> list[str]:
+    """What the top MWh stored at the decision is worth (vpp.v2.outputs.value_now), as a one-row table."""
+    vn = op.value_now(snap)
+    if vn is None:
+        return ["这个配置不用分层报价，报告里没有决策时刻的存电价值。"]
+    return [_table(pd.DataFrame([vn]), {"time": "时点", "stored": "存电 MWh", "protected": "受保护 MWh",
+                                        "fcess_backing": "FCESS 上调要撑 MWh", "layer": "最上面 1 MWh 属于",
+                                        "table": "存电价值表 $/MWh", "extra": "受保护加价 $/MWh", "worth": "合计 $/MWh",
+                                        "c_per_kwh": "折合 分/kWh"},
+                   {k: "{:.1f}" for k in ("stored", "protected", "fcess_backing", "c_per_kwh")}
+                   | {k: "{:,.0f}" for k in ("table", "extra", "worth")}),
+            "\n- 用的是报价用的那张存电价值表：本时段结束时的值，价格档按本时段计划电价所在的档；表里每卖 1 MWh 已扣损耗和"
+            "安全边际。受保护的电（守约和明天工厂要用）再加上这部分电每 MWh 的价值，和报价门槛的算法一致。"]
+
+
 def _start_state(step: str, name: str, days: list[dict], day: pd.Timestamp) -> tuple[float, dict, pd.Series]:
     """The stored energy at the day's start, each month's highest import before it, and the day's saved row."""
     daily = pd.read_csv(REPORTS / f"v2_{step}_daily.csv", parse_dates=["day"])
@@ -188,17 +203,18 @@ def report(day: pd.Timestamp, at: str, name: str = "rel+ladder", step: str = "s3
           "\n## 决策说明\n", *[f"- {x}" for x in lines],
           "\n## ① 充电计划\n", _table(op.charging_plan(snap), {"time": "时段", "charge_mw": "充电 MW", "grid_mwh": "买电 MWh",
                                                                "price": "预计电价 $/MWh", "cost": "预计成本 $",
-                                                               "layer": "填哪一层", "worth_at_0800": "这度电存到明早值 $/MWh",
+                                                               "layer": "填哪一层", "worth_at_0800": "再多存 1 MWh 到明早值 $/MWh",
                                                                "max_price": "电价高于这个就不值 $/MWh"},
                                  {"charge_mw": "{:.2f}", "grid_mwh": "{:.2f}", "price": "{:.0f}", "cost": "{:,.0f}",
                                   "worth_at_0800": "{:.0f}", "max_price": "{:.0f}"}),
           "\n## ② 留电计划\n", _table(op.reserve_plan(snap), {"time": "时点", "stored": "计划存电 MWh", "mandatory": "强制预留",
                                                               "site": "工厂备电", "site_ircr": "其中 IRCR",
-                                                              "opportunity": "机会电", "next_mwh_worth": "再多一度值 $/MWh"},
+                                                              "opportunity": "机会电", "next_mwh_worth": "再多存 1 MWh 值 $/MWh"},
                                   {k: "{:.1f}" for k in ("stored", "mandatory", "site", "site_ircr", "opportunity")}
                                   | {"next_mwh_worth": "{:.0f}"}),
+          f"\n### {op.clock(int(rec['t0']))} 电池里最上面 1 MWh 值多少\n", *_value_now_lines(snap),
           "\n## ③ 报价计划（今后 4 小时，按预测价所在的价格档估算）\n",
-          _table(op.bidding_plan(snap), {"time": "时段", "stored": "计划存电 MWh", "first_mwh": "第一度电 $/MWh",
+          _table(op.bidding_plan(snap), {"time": "时段", "stored": "计划存电 MWh", "first_mwh": "最上面 1 MWh $/MWh",
                                           "for_5_mwh": "卖到 5 MWh $/MWh", "for_10_mwh": "卖到 10 MWh $/MWh",
                                           "protected_mwh": "受保护 MWh", "protected_from": "受保护的电门槛 $/MWh",
                                           "locked": "已过截止", "first_fill_freq": "第一档历史成交频率（未校准）"},
