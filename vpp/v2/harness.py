@@ -129,12 +129,13 @@ def _ladder(inputs: dict, i: int, level: float, bat, site, prefs, load_fc, cmd_c
 
 
 def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | None = None, until=None, on_day=None,
-               decide=None):
+               decide=None, on_step=None):
     """One v2 configuration through every day on a 10 MW route, yielding (day, terms, summary, log, records): as
     vpp.backtest._route_days for forecast+offer(value), with cfg's features (records: [] unless cfg.record).
     To replay one day of a run (vpp.v2.report): soc0 and mtd0, the stored energy and each month's highest import
     when the first day starts; until, the last day; on_day(day, kw, summary, log), called after each day.
-    decide(d, kw): a choice made at 09:00 (vpp.v2.candidates), returning run_day arguments to change."""
+    decide(d, kw): a choice made at 09:00 (vpp.v2.candidates), returning run_day arguments to change.
+    on_step(day, step): run_day's on_step for every day (vpp.v2.offers); it only observes."""
     sc = scenario(sc, cfg)
     route, asset, site = sc.route, sc.asset, sc.site
     bat = asset.battery
@@ -299,6 +300,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
         recorder = rc.Recorder(day, {"config": cfg.name, "carry_mwh": carry, **context}) if cfg.record else None
         if recorder is not None:
             kw["on_plan"] = recorder
+        if on_step is not None:
+            kw["on_step"] = lambda step, day=day: on_step(day, step)
         summary, log = dp.run_day(**kw)
         if on_day is not None:
             on_day(day, kw, summary, log)
