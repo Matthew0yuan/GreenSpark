@@ -1,0 +1,5 @@
+season,rule,budget,flagged,calls,last_call,covered_days,peak_days
+2023,"q=0.75 flags, first come first served",30,42,30,2024-01-15,0,2024-02-01 2024-02-18 2024-02-19 2024-02-20
+2023,"q=0.75 flags, first come first served",45,42,42,2024-02-20,4,2024-02-01 2024-02-18 2024-02-19 2024-02-20
+2023,"q=0.9 flags, first come first served",30,50,30,2024-01-09,0,2024-02-01 2024-02-18 2024-02-19 2024-02-20
+2023,"q=0.9 flags, first come first served",45,50,45,2024-02-12,1,2024-02-01 2024-02-18 2024-02-19 2024-02-20

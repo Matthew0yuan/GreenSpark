@@ -1,0 +1,33 @@
+{
+  "written": "2026-10-26 22:26",
+  "data_up_to": "2026-06-30",
+  "first_use": "Hot Season 2026-12-01 .. 2027-03-31 (shadow run)",
+  "history_seasons": [
+    2023,
+    2024,
+    2025
+  ],
+  "q": 0.75,
+  "kw_by_peak_days_covered": [
+    0.0,
+    0.0,
+    0.8038317367185276,
+    3.176612088025647,
+    3.3382130334637683
+  ],
+  "rcp_2027_28": 360700.0,
+  "value_aud_by_peak_days_covered": [
+    0.0,
+    0.0,
+    260.94789669093564,
+    1031.2235821357658,
+    1083.6840970533433
+  ],
+  "cost_per_call_aud": 4.489924995361598,
+  "dVbar_aud": 383.7876325000536,
+  "c_unit": 0.011698983018586382,
+  "thresholds_file": "frozen_dp_thresholds_money.csv",
+  "m3_model": "analysis/2026-10-24/peak_day_probability/results/frozen_model.json",
+  "rule": "call when dV_i - cost_per_call >= dVbar x max(theta(calls left, days left) - c_unit, 0); dV_i from M3's 2,000 paths at 09:00 (PLAN section 3)",
+  "units": "A$ per enrolled home, L2 ledger (2027 scenario, assumption), response rate 0.9"
+}

@@ -45,11 +45,11 @@ td:first-child{color:var(--text);white-space:nowrap}
 <body>
 <div class="wrap">
   <h1>五个风格方案对比</h1>
-  <p class="lead">同一套示意数据和交互，五种风格。这一轮按外部评审意见重排了信息架构：先选资产，每种资产按"决定 → 改进 → 证明"三步看；计划能不能执行、哪些操作是排定的、哪些取决于价格、每个结论的范围，都放到第一屏。点截图或"打开原型"进入；原型底部的黑色切换条可以在五个方案之间切换，并停留在同一页。</p>
+  <p class="lead">同一套示意数据和交互，五种风格。这一轮按外部评审意见重排了信息架构：先选资产，每种资产按"决定 → 改进 → 证明"三步看；计划能不能执行、哪些操作是排定的、哪些取决于价格、每个结论的范围，都放到第一屏。10-26 又改了一轮，只改方案 A 的今日计划页：先看图、先给决定、少用文字（见下面 A 一节）。点截图或"打开原型"进入；原型底部的黑色切换条可以在五个方案之间切换，并停留在同一页。</p>
   <p class="note">方案截图都是 1440×900 屏幕的第一屏，其余截图从页面里裁出。所有数字都是示意，原型没有接模型。</p>
 
   <section class="opt">
-    <h2>这一轮改了什么</h2>
+    <h2>第四轮改了什么（B～E 的计划页仍是这样）</h2>
     <div class="flow">
       <div><b>决定 · Plan / Tonight's call</b>计划能不能执行；建议操作分"排定"和"条件"两行；预计净值、晚间放电、约束三个数字；一天的时间轴；为什么这样排。</div>
       <div><b>改进 · Compare / Value</b>比基准每天多赚多少（默认看测试期 +A$350/天），或自定方案比参考条款多给 Zenith 多少；下面一行写明范围。</div>
@@ -63,12 +63,12 @@ td:first-child{color:var(--text);white-space:nowrap}
       <tr><td>验证对商业结论支持不够</td><td>对。收益页的结论下面写明：历史模拟、样本内、假设情景、运行 R‑0142、还没有样本外检验；7 天的未看过测试期显示"区间包含 0"。</td></tr>
     </table>
     <div class="grid one">
-      <figure><a href="shots/plan_blocked.png"><img src="shots/plan_blocked.png" alt="计划被拦时的首页"></a><figcaption>计划被拦：出口上限改成 3 MW 后，首页显示违反的时段和 Inspect，预计净值标为仅模拟</figcaption></figure>
+      <figure><a href="shots/plan_blocked.png"><img src="shots/plan_blocked.png" alt="计划被拦时的首页"></a><figcaption>计划被拦（方案 A，第五轮）：出口上限改成 3 MW 后，首页显示违反的时段和 Inspect，图上红框标出超限时段，预计净值标为仅模拟</figcaption></figure>
     </div>
   </section>
 
   <section class="opt">
-    <h2>详细图表（五个方案共用）</h2>
+    <h2>详细图表（B～E 共用；A 的今日计划页第五轮换成了泳道图）</h2>
     <div class="grid">
       <figure><a href="shots/chart_before.png"><img src="shots/chart_before.png" alt="最早的调度图：四条泳道、12 个图例"></a><figcaption>最早的版本：四条泳道，12 个图例</figcaption></figure>
       <figure><a href="shots/chart_after.png"><img src="shots/chart_after.png" alt="现在的图：上面是电池功率和价格，下面是电量"></a><figcaption>现在：实心柱是排定的功率，斜线是条件报价，点线是最低报价 A$150</figcaption></figure>
@@ -89,7 +89,7 @@ td:first-child{color:var(--text);white-space:nowrap}
       <figure><a href="A_minimal_focus.html#calls"><img src="shots/A_calls.png" alt="A 方案的今晚调用页"></a><figcaption>客户电池群 · 今晚是否调用（Tonight's call）</figcaption></figure>
     </div>
     <dl>
-      <dt>布局</dt><dd>顶栏放资产切换、该资产的三个页面、结果状态和设置。页面是一条居中的阅读栏：计划状态、建议操作和三个关键数字、一天的时间轴、为什么这样排，下面才是详细图表。不加卡片框，只用细分隔线。</dd>
+      <dt>布局</dt><dd>顶栏放资产切换、该资产的三个页面、结果状态和设置。今日计划页（第五轮）：第一行回答能不能执行、做什么、值多少；下面是一张泳道图（排定动作、条件报价、FCESS 待命、价格），和存电图共用一条时间轴，原因直接标在图上；再往下是所选时段、净值瀑布图和 7 个检查小格。其余页面是一条居中的阅读栏。不加卡片框，只用细分隔线。</dd>
       <dt>适合</dt><dd>演示时一页一页地讲。投影和打印效果最干净。评审看的就是这一版。</dd>
       <dt>代价</dt><dd>内容要往下滚，同一屏能看到的东西比 C 少。</dd>
     </dl>

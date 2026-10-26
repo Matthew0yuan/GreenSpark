@@ -171,6 +171,7 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
     fixed = route.retail == "fixed"
     if fixed:
         strat = replace(strat, offer=False)
+    strat = ct.market_strategy(route, strat)  # not Scheduled: acts on prices already published
     aux, days = bt._AUX, bt._DAYS
     events = {c.name: ct.call_days(c, aux["demand"]) for c in route.contracts}
     peaks = aux["ircr_peaks"] if route.ircr_hindsight else {}

@@ -416,6 +416,8 @@ a.btn{text-decoration:none}
 
 /* review fixes: the blocked instruction stays readable while results are stale; the story step on each page */
 body.stale.plan-blocked .res:has(#plan-head),body.stale.plan-blocked #plan-head.res{opacity:1;filter:none}
+/* the limit marks on the chart and the selected half-hour are checked against the current inputs, so they stay readable too */
+body.stale.plan-blocked #plan-detail,body.stale.plan-blocked #sch-rail{opacity:1;filter:none}
 .chip.step{border-color:var(--accent);color:var(--accent);font-weight:600}
 .hero-n.muted{color:var(--text-3)}
 

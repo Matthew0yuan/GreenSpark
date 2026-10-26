@@ -1,0 +1,53 @@
+check 4 - energy balance: largest error 1.14e-13 MWh -> PASS
+consistency: plan-only identical in B, C, D: True
+                         period               scenario              strategy  days  energy  fcess  wear  total  discharged_mwh  share_of_perfect
+    样本内 2025-04-01 至 2026-06-30    A Scheduled + FCESS              forecast   456   179.1 3765.0  67.0 3877.1             2.2               0.8
+    样本内 2025-04-01 至 2026-06-30    A Scheduled + FCESS forecast+offer(value)   456   459.2 3692.8 119.5 4032.5             3.9               0.8
+    样本内 2025-04-01 至 2026-06-30    A Scheduled + FCESS               perfect   456  1636.5 3704.0 538.4 4802.2            17.9               1.0
+    样本内 2025-04-01 至 2026-06-30  B Scheduled, no FCESS              forecast   456   442.9    0.0 165.6  277.3             5.5               0.2
+    样本内 2025-04-01 至 2026-06-30  B Scheduled, no FCESS forecast+offer(value)   456  1090.6    0.0 286.1  804.5             9.5               0.5
+    样本内 2025-04-01 至 2026-06-30  B Scheduled, no FCESS               perfect   456  2604.3    0.0 823.0 1781.2            27.4               1.0
+    样本内 2025-04-01 至 2026-06-30 C Non-Scheduled, lag 1              forecast   456   442.9    0.0 165.6  277.3             5.5               0.2
+    样本内 2025-04-01 至 2026-06-30 C Non-Scheduled, lag 1 forecast+offer(value)   456  1061.6    0.0 280.4  781.2             9.3               0.4
+    样本内 2025-04-01 至 2026-06-30 C Non-Scheduled, lag 1               perfect   456  2604.3    0.0 823.0 1781.2            27.4               1.0
+    样本内 2025-04-01 至 2026-06-30 D Non-Scheduled, lag 2              forecast   456   442.9    0.0 165.6  277.3             5.5               0.2
+    样本内 2025-04-01 至 2026-06-30 D Non-Scheduled, lag 2 forecast+offer(value)   456  1033.5    0.0 279.3  754.2             9.2               0.4
+    样本内 2025-04-01 至 2026-06-30 D Non-Scheduled, lag 2               perfect   456  2604.3    0.0 823.0 1781.2            27.4               1.0
+测试期（没看过）2026-10-16 至 2026-10-22    A Scheduled + FCESS              forecast     7    34.6  108.4  50.9   92.1             1.7               0.1
+测试期（没看过）2026-10-16 至 2026-10-22    A Scheduled + FCESS forecast+offer(value)     7   266.2   73.7 111.6  228.3             3.7               0.3
+测试期（没看过）2026-10-16 至 2026-10-22    A Scheduled + FCESS               perfect     7  1210.0  141.9 565.5  786.5            18.8               1.0
+测试期（没看过）2026-10-16 至 2026-10-22  B Scheduled, no FCESS              forecast     7     9.9    0.0  42.9  -32.9             1.4              -0.0
+测试期（没看过）2026-10-16 至 2026-10-22  B Scheduled, no FCESS forecast+offer(value)     7   236.5    0.0 103.6  132.9             3.5               0.2
+测试期（没看过）2026-10-16 至 2026-10-22  B Scheduled, no FCESS               perfect     7  1335.2    0.0 641.8  693.4            21.4               1.0
+测试期（没看过）2026-10-16 至 2026-10-22 C Non-Scheduled, lag 1              forecast     7     9.9    0.0  42.9  -32.9             1.4              -0.0
+测试期（没看过）2026-10-16 至 2026-10-22 C Non-Scheduled, lag 1 forecast+offer(value)     7   211.2    0.0 100.0  111.2             3.3               0.2
+测试期（没看过）2026-10-16 至 2026-10-22 C Non-Scheduled, lag 1               perfect     7  1335.2    0.0 641.8  693.4            21.4               1.0
+测试期（没看过）2026-10-16 至 2026-10-22 D Non-Scheduled, lag 2              forecast     7     9.9    0.0  42.9  -32.9             1.4              -0.0
+测试期（没看过）2026-10-16 至 2026-10-22 D Non-Scheduled, lag 2 forecast+offer(value)     7   184.0    0.0  96.4   87.6             3.2               0.1
+测试期（没看过）2026-10-16 至 2026-10-22 D Non-Scheduled, lag 2               perfect     7  1335.2    0.0 641.8  693.4            21.4               1.0
+ 测试期（看过）2026-07-01 至 2026-10-15    A Scheduled + FCESS              forecast   107    16.0   70.0  15.8   70.2             0.5               0.1
+ 测试期（看过）2026-07-01 至 2026-10-15    A Scheduled + FCESS forecast+offer(value)   107   754.9   72.7 201.7  625.9             6.7               0.5
+ 测试期（看过）2026-07-01 至 2026-10-15    A Scheduled + FCESS               perfect   107  2010.6   70.7 729.3 1352.0            24.3               1.0
+ 测试期（看过）2026-07-01 至 2026-10-15  B Scheduled, no FCESS              forecast   107    -3.1    0.0  12.2  -15.3             0.4              -0.0
+ 测试期（看过）2026-07-01 至 2026-10-15  B Scheduled, no FCESS forecast+offer(value)   107   793.4    0.0 212.5  581.0             7.0               0.4
+ 测试期（看过）2026-07-01 至 2026-10-15  B Scheduled, no FCESS               perfect   107  2052.9    0.0 746.6 1306.3            24.9               1.0
+ 测试期（看过）2026-07-01 至 2026-10-15 C Non-Scheduled, lag 1              forecast   107    -3.1    0.0  12.2  -15.3             0.4              -0.0
+ 测试期（看过）2026-07-01 至 2026-10-15 C Non-Scheduled, lag 1 forecast+offer(value)   107   752.1    0.0 207.3  544.8             6.9               0.4
+ 测试期（看过）2026-07-01 至 2026-10-15 C Non-Scheduled, lag 1               perfect   107  2052.9    0.0 746.6 1306.3            24.9               1.0
+ 测试期（看过）2026-07-01 至 2026-10-15 D Non-Scheduled, lag 2              forecast   107    -3.1    0.0  12.2  -15.3             0.4              -0.0
+ 测试期（看过）2026-07-01 至 2026-10-15 D Non-Scheduled, lag 2 forecast+offer(value)   107   683.0    0.0 200.8  482.2             6.6               0.4
+ 测试期（看过）2026-07-01 至 2026-10-15 D Non-Scheduled, lag 2               perfect   107  2052.9    0.0 746.6 1306.3            24.9               1.0
+                         period  days                  comparison   mean   lo95   hi95
+    样本内 2025-04-01 至 2026-06-30   456                A - B: FCESS 3228.0 2876.8 3592.0
+    样本内 2025-04-01 至 2026-06-30   456 B - C: Non-Scheduled, lag 1   23.2    2.5   43.7
+    样本内 2025-04-01 至 2026-06-30   456 B - D: Non-Scheduled, lag 2   50.3   23.9   76.9
+    样本内 2025-04-01 至 2026-06-30   456           C - D: lag 1 vs 2   27.0   13.2   41.4
+ 测试期（看过）2026-07-01 至 2026-10-15   107                A - B: FCESS   44.9  -40.2  125.7
+ 测试期（看过）2026-07-01 至 2026-10-15   107 B - C: Non-Scheduled, lag 1   36.2    6.9   67.5
+ 测试期（看过）2026-07-01 至 2026-10-15   107 B - D: Non-Scheduled, lag 2   98.7    6.1  191.6
+ 测试期（看过）2026-07-01 至 2026-10-15   107           C - D: lag 1 vs 2   62.5  -15.7  148.6
+测试期（没看过）2026-10-16 至 2026-10-22     7                A - B: FCESS   95.4  -99.7  302.8
+测试期（没看过）2026-10-16 至 2026-10-22     7 B - C: Non-Scheduled, lag 1   21.7  -20.5   85.7
+测试期（没看过）2026-10-16 至 2026-10-22     7 B - D: Non-Scheduled, lag 2   45.3  -35.6  171.4
+测试期（没看过）2026-10-16 至 2026-10-22     7           C - D: lag 1 vs 2   23.6  -15.1   85.7
+exit=0

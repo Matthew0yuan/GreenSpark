@@ -1,0 +1,134 @@
+<body>
+<div class="proto" role="note"><b>Prototype</b> Replayed historical days from the backtest. Values come from saved model outputs; anything the model does not produce is marked Not available. Settings mark results stale and do not recompute.</div>
+
+<header class="topbar">
+  <div class="tb-in">
+    <div class="tb-brand"><span class="mk" aria-hidden="true">GS</span><b>GreenSpark</b></div>
+    <div class="asset-sw" role="group" aria-label="Asset">
+      <button data-go="today" data-grp="today svalid">Site battery<small>10 MW · 40 MWh</small></button>
+      <button data-go="calls" data-grp="calls value fvalid">Customer fleet<small>home batteries · VPP</small></button>
+    </div>
+    <nav class="tb-nav pages" data-grp="today svalid" aria-label="Site battery pages">
+      <button class="nav" data-go="today">Today<span class="dot" aria-hidden="true"></span></button>
+      <button class="nav" data-go="svalid" data-dep="1">Validation<span class="dot" aria-hidden="true"></span></button>
+    </nav>
+    <nav class="tb-nav pages" data-grp="calls value fvalid" aria-label="Customer fleet pages">
+      <button class="nav" data-go="calls" data-dep="1">Tonight's call<span class="dot" aria-hidden="true"></span></button>
+      <button class="nav" data-go="value" data-dep="1">Value by party<span class="dot" aria-hidden="true"></span></button>
+      <button class="nav" data-go="fvalid" data-dep="1">Validation<span class="dot" aria-hidden="true"></span></button>
+    </nav>
+    <span class="sp"></span>
+    <div class="tb-run">
+      <div class="run ok" id="run" role="status" aria-live="polite"><i></i><span id="run-t">Results up to date</span><small id="run-s"></small></div>
+      <button class="btn" id="exp-all">Export</button><button class="btn pri" id="pri">Save run</button>
+      <button class="gear" data-go="config" data-grp="config" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <header class="ph">
+    <div class="ph-line"><h1 id="ph-title"></h1><span class="chips" id="ph-chips"></span><span class="sp"></span><span class="ctx" id="ph-ctx"></span></div>
+  </header>
+  <div class="strip st" id="strip-st" role="status"><span id="st-text"></span><span class="sp"></span><button class="btn sm" id="revert">Revert inputs</button></div>
+  <div class="strip nc" id="strip-nc" role="status"><span><b>Not connected.</b> This prototype cannot recompute. Results keep the stale label until the engine runs again.</span><span class="sp"></span><button class="btn sm" id="nc-close">Close</button></div>
+
+  <!-- Site battery · Today: (1) the decision, (2) the day as one time axis, (3) performance and safety -->
+  <section class="screen" id="s-today" aria-label="Today, site battery">
+    <div class="l1" id="t-dec">
+      <div class="l1-main">
+        <div class="xstat" id="t-status" role="status"></div>
+        <h2 class="dec-h res" id="t-head"></h2>
+        <div class="acts res" id="t-acts"></div>
+      </div>
+      <div class="l1-val res" id="t-val"></div>
+    </div>
+
+    <div class="daybar">
+      <div class="seg" id="t-days" role="group" aria-label="Trading day"></div>
+      <span class="sp"></span>
+      <span class="hint">click a block · ← → to step</span>
+      <div class="seg" role="group" aria-label="Plan or outcome"><button data-po="plan" class="on">Plan</button><button data-po="outcome">Outcome <svg class="lk" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5"/></svg></button></div>
+      <span class="ctools" data-csv="day"></span>
+    </div>
+    <section class="l2" id="t-day">
+      <div class="l2-chart res" id="t-chart-wrap"><div id="t-chart" class="chartbox"></div></div>
+      <aside class="l2-panel res" id="t-panel" aria-live="polite"></aside>
+    </section>
+
+    <div class="l3">
+      <section class="pnl res" id="t-perf"></section>
+      <section class="pnl res" id="t-safe"></section>
+    </div>
+  </section>
+
+  <!-- Site battery · Validation: forecast (Q2A), dispatch (Q2B), constraints, each by period -->
+  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
+    <div class="vgrid">
+      <section class="pnl res" id="sv-q2a"></section>
+      <section class="pnl res" id="sv-q2b"></section>
+    </div>
+    <section class="pnl res" id="sv-lim"></section>
+    <section class="pnl res" id="sv-risk"></section>
+    <details class="fold res" id="sv-more"><summary>Sources and method</summary><div id="sv-src"></div></details>
+  </section>
+
+  <!-- Customer fleet · Tonight's call -->
+  <section class="screen" id="s-calls" aria-label="Tonight's call">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="View"><button data-view="decision" class="on">Decision at 09:00</button><button data-view="review">Season review · hindsight</button></div>
+      <div class="seg" role="group" aria-label="Offer" id="c-offer-seg"></div>
+      <div class="seg" role="group" aria-label="Commercial scenario" id="c-scen-seg"></div>
+      <span class="sp"></span>
+      <span class="daystep"><button class="btn sm" id="day-prev" aria-label="Previous day">&#8249;</button><span id="day-label"></span><button class="btn sm" id="day-next" aria-label="Next day">&#8250;</button></span>
+      <span class="ctools" data-csv="act"></span>
+    </div>
+    <div class="l1 l1-call res" id="c-dec"></div>
+    <section class="pnl res" id="c-season"></section>
+    <section class="pnl res" id="c-budget"></section>
+  </section>
+
+  <!-- Customer fleet · Value by party: value created, transfers, who ends up with what -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="toolbar"><div class="seg" role="group" aria-label="Commercial scenario" id="v-scen-seg"></div><div class="seg" role="group" aria-label="Period" id="v-per-seg"></div><div class="seg" role="group" aria-label="Unit" id="v-unit-seg"></div><span class="sp"></span><span class="sub" id="v-scope"></span></div>
+    <section class="pnl res" id="v-flow"></section>
+    <div class="vgrid">
+      <section class="pnl res" id="v-cmp"></section>
+      <section class="pnl res" id="v-unit"></section>
+    </div>
+    <details class="fold res"><summary>Ledger by party <span class="sub" id="v-ledger-sub"></span></summary><div id="v-ledger"></div></details>
+  </section>
+
+  <!-- Customer fleet · Validation -->
+  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
+    <div class="toolbar"><div class="seg" role="group" aria-label="Commercial scenario" id="fv-scen-seg"></div></div>
+    <div class="vgrid">
+      <section class="pnl res" id="fv-hold"></section>
+      <section class="pnl res" id="fv-chk"></section>
+    </div>
+    <section class="pnl res" id="fv-notes"></section>
+  </section>
+
+  <!-- Settings -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="form-grid">
+      <div class="form-main">
+        <section class="pnl"><h2>Site battery <span class="sub">behind the factory meter</span></h2>
+          <p class="foot" id="c-fixed"></p>
+          <div class="f"><label for="c-exp">Export limit at the meter <span class="src as">ASSUMPTION</span></label><div class="fc"><select id="c-exp" data-k="exp"><option>10</option><option>3</option></select><span class="u">MW</span></div><span class="sup uv">Checks today's plan</span></div>
+          <div class="f"><label for="c-fcess">FCESS services</label><div class="fc"><select id="c-fcess" data-k="fcess"><option>RR, RL, CR, CL</option><option>Contingency only</option><option>None</option></select></div><span class="sup uv">Needs a re-run</span></div>
+        </section>
+        <section class="pnl"><h2>Customer offer <span class="sub">evaluated as the custom offer</span></h2>
+          <div class="f"><label for="c-pay">Payment per kWh of billed event net export</label><div class="fc"><input id="c-pay" type="number" step="1" data-k="pay"><span class="u">c/kWh</span></div><span class="sup uv">Needs a re-run</span></div>
+          <div class="f"><label for="c-cap">Annual activation cap</label><div class="fc"><input id="c-cap" type="number" step="1" data-k="cap"><span class="u">calls</span></div><span class="sup uv">Needs a re-run</span></div>
+          <div class="f"><label for="c-ev">Event length</label><div class="fc"><select id="c-ev" data-k="ev"><option>1</option><option>2</option><option>3</option><option>4</option></select><span class="u">h</span></div><span class="sup uv">Needs a re-run</span></div>
+          <div class="f"><label for="c-sb">Standby before the event</label><div class="fc"><select id="c-sb" data-k="sb"><option>1</option><option>2</option></select><span class="u">h</span></div><span class="sup uv">Needs a re-run</span></div>
+          <div class="f"><label for="c-mx">Maximum control per event</label><div class="fc"><input id="c-mx" type="number" step="1" data-k="mx"><span class="u">h</span></div><span class="sup uv">Needs a re-run</span></div>
+          <div class="f"><label for="c-res">Customer reserve, never discharged</label><div class="fc"><input id="c-res" type="number" step="5" data-k="res"><span class="u">%</span></div><span class="sup uv">Needs a re-run</span></div>
+        </section>
+      </div>
+      <aside class="form-side"><section class="pnl"><h2>Input check</h2><ul class="chk" id="c-checks"></ul></section></aside>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
