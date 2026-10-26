@@ -1,0 +1,215 @@
+{
+ "m1 | rw50+state t5+roll": {
+  "power_mw": 10.0,
+  "before_days_over": 3,
+  "before_max_mw": 10.50390269216856,
+  "after_days_over": 0,
+  "after_max_mw": 9.999999999999998,
+  "first_bug_day": "2025-12-05",
+  "bug_days": [
+   "2025-12-05",
+   "2025-12-08",
+   "2026-02-02"
+  ],
+  "p2_days_before_first_bug": 248,
+  "p2_max_abs_diff": 0.0,
+  "days_changed": 3,
+  "first_changed": "2025-12-05",
+  "ircr_mw": [
+   0.0,
+   0.0
+  ],
+  "ircr_saving_per_year": [
+   2116715.901584805,
+   2116715.901584805
+  ],
+  "periods": {
+   "样本内": {
+    "days": 456,
+    "days_changed": 3,
+    "d_ledger_total_total": 11.369117412337744,
+    "d_bill_total": 0.0,
+    "d_money_total": 11.369117412338028,
+    "d_ledger_total_per_day": 0.024932275027056455,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.02493227502705708,
+    "money_before_per_day": 4668.944315476523,
+    "money_after_per_day": 4668.969247751551
+   },
+   "测试期A": {
+    "days": 107,
+    "days_changed": 0,
+    "d_ledger_total_total": 0.0,
+    "d_bill_total": 0.0,
+    "d_money_total": 0.0,
+    "d_ledger_total_per_day": 0.0,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.0,
+    "money_before_per_day": 2101.401005957033,
+    "money_after_per_day": 2101.401005957033
+   },
+   "测试期B": {
+    "days": 7,
+    "days_changed": 0,
+    "d_ledger_total_total": 0.0,
+    "d_bill_total": 0.0,
+    "d_money_total": 0.0,
+    "d_ledger_total_per_day": 0.0,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.0,
+    "money_before_per_day": 1805.3811543390532,
+    "money_after_per_day": 1805.3811543390532
+   }
+  },
+  "P1": true,
+  "P2": true
+ },
+ "m1 | rw50+state t5+roll+lock": {
+  "power_mw": 10.0,
+  "before_days_over": 3,
+  "before_max_mw": 10.50390269216856,
+  "after_days_over": 0,
+  "after_max_mw": 9.999999999999998,
+  "first_bug_day": "2025-12-05",
+  "bug_days": [
+   "2025-12-05",
+   "2025-12-08",
+   "2026-02-02"
+  ],
+  "p2_days_before_first_bug": 248,
+  "p2_max_abs_diff": 0.0,
+  "days_changed": 3,
+  "first_changed": "2025-12-05",
+  "ircr_mw": [
+   0.0,
+   0.0
+  ],
+  "ircr_saving_per_year": [
+   2116715.901584805,
+   2116715.901584805
+  ],
+  "periods": {
+   "样本内": {
+    "days": 456,
+    "days_changed": 3,
+    "d_ledger_total_total": 10.08440914826133,
+    "d_bill_total": 0.0,
+    "d_money_total": 10.08440914826133,
+    "d_ledger_total_per_day": 0.022114932342678355,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.022114932342678355,
+    "money_before_per_day": 4667.911210153836,
+    "money_after_per_day": 4667.933325086179
+   },
+   "测试期A": {
+    "days": 107,
+    "days_changed": 0,
+    "d_ledger_total_total": 0.0,
+    "d_bill_total": 0.0,
+    "d_money_total": 0.0,
+    "d_ledger_total_per_day": 0.0,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.0,
+    "money_before_per_day": 2098.2897690186824,
+    "money_after_per_day": 2098.2897690186824
+   },
+   "测试期B": {
+    "days": 7,
+    "days_changed": 0,
+    "d_ledger_total_total": 0.0,
+    "d_bill_total": 0.0,
+    "d_money_total": 0.0,
+    "d_ledger_total_per_day": 0.0,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.0,
+    "money_before_per_day": 1805.3811543390532,
+    "money_after_per_day": 1805.3811543390532
+   }
+  },
+  "P1": true,
+  "P2": true
+ },
+ "m1 8 MW | rw50+state t5+roll+lock": {
+  "power_mw": 8.0,
+  "before_days_over": 21,
+  "before_max_mw": 10.50390269216856,
+  "after_days_over": 0,
+  "after_max_mw": 7.999999999999999,
+  "first_bug_day": "2025-12-01",
+  "bug_days": [
+   "2025-12-01",
+   "2025-12-02",
+   "2025-12-03",
+   "2025-12-04",
+   "2025-12-05",
+   "2025-12-08",
+   "2025-12-09",
+   "2025-12-10",
+   "2025-12-11",
+   "2025-12-12",
+   "2025-12-15",
+   "2025-12-23",
+   "2025-12-25",
+   "2026-01-02",
+   "2026-01-20",
+   "2026-01-21",
+   "2026-02-02",
+   "2026-03-04",
+   "2026-03-05",
+   "2026-03-06",
+   "2026-03-18"
+  ],
+  "p2_days_before_first_bug": 244,
+  "p2_max_abs_diff": 0.0,
+  "days_changed": 24,
+  "first_changed": "2025-12-01",
+  "ircr_mw": [
+   0.0,
+   0.0
+  ],
+  "ircr_saving_per_year": [
+   2116715.901584805,
+   2116715.901584805
+  ],
+  "periods": {
+   "样本内": {
+    "days": 456,
+    "days_changed": 24,
+    "d_ledger_total_total": 365.57440085144526,
+    "d_bill_total": 0.0,
+    "d_money_total": 365.5744008514446,
+    "d_ledger_total_per_day": 0.8016982474812396,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.8016982474812381,
+    "money_before_per_day": 4115.927101006359,
+    "money_after_per_day": 4116.72879925384
+   },
+   "测试期A": {
+    "days": 107,
+    "days_changed": 0,
+    "d_ledger_total_total": 0.0,
+    "d_bill_total": 0.0,
+    "d_money_total": 0.0,
+    "d_ledger_total_per_day": 0.0,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.0,
+    "money_before_per_day": 2028.4017612234206,
+    "money_after_per_day": 2028.4017612234206
+   },
+   "测试期B": {
+    "days": 7,
+    "days_changed": 0,
+    "d_ledger_total_total": 0.0,
+    "d_bill_total": 0.0,
+    "d_money_total": 0.0,
+    "d_ledger_total_per_day": 0.0,
+    "d_bill_per_day": 0.0,
+    "d_money_per_day": 0.0,
+    "money_before_per_day": 1760.8603368109673,
+    "money_after_per_day": 1760.8603368109673
+   }
+  },
+  "P1": true,
+  "P2": true
+ }
+}

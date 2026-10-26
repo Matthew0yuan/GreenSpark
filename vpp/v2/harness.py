@@ -25,7 +25,9 @@ from vpp.v2 import reserves as rv
 from vpp.v2 import value as vl
 from vpp.v2.config import V2Config
 
-VALUE_INPUTS: dict = {}  # the relative value curve's per-day arrays by (level statistic, MWh), loaded on first use
+# the relative value curve's per-day arrays by (level statistic, hurdle, state, regime, battery and site as the
+# table sees them), loaded on first use
+VALUE_INPUTS: dict = {}
 FLOORS: dict = {}  # f5's cheap charging price per day by (CMD, load scale, load margin), made on first use
 
 
@@ -37,15 +39,31 @@ def charge_floors(cmd_mw: float, load_scale: float, margin: float) -> pd.Series:
     return FLOORS[key]
 
 
-def value_inputs(cfg: V2Config, bat) -> dict:
-    """The relative value curve's per-day arrays for cfg's level statistic, hurdle and the battery the dispatcher
-    sees (built beforehand: python -m vpp.v2.value)."""
-    key = (cfg.level_stat, bat.energy_mwh, bt.HURDLE if cfg.hurdle is None else cfg.hurdle, cfg.state, cfg.regime)
+def table_params(asset, site, cmd_mw: float | None) -> vl.TableParams:
+    """The battery (power, energy, round trip, wear), site (import limit, load scale) and CMD the dispatcher sees, as
+    a value table is solved for them. The tables are solved for a battery behind a site with a CMD only."""
+    if site is None or cmd_mw is None:
+        raise ValueError(f"no value table for a battery {'without a site' if site is None else 'on a route without a CMD'}: "
+                         "the tables are solved for a battery behind a site with a CMD (vpp.v2.value)")
+    bat = asset.battery
+    return vl.TableParams(bat.power_mw, bat.energy_mwh, bat.round_trip, asset.wear_per_mwh, cmd_mw, site.import_limit_mw,
+                          site.load_scale)
+
+
+def value_inputs(cfg: V2Config, asset, site, cmd_mw: float | None) -> dict:
+    """The relative value curve's per-day arrays for cfg's level statistic, hurdle and options and the battery, site
+    and CMD the dispatcher sees (built beforehand: python -m vpp.v2.value ..., the command is in the error). A table
+    solved for another battery or site is refused (vpp.v2.value.check_table: ValueError)."""
+    params = table_params(asset, site, cmd_mw)
+    hurdle = bt.HURDLE if cfg.hurdle is None else cfg.hurdle
+    key = (cfg.level_stat, hurdle, cfg.state, cfg.regime, params.key())
     if key not in VALUE_INPUTS:
-        p = vl.path(*key)
+        p = vl.path(cfg.level_stat, hurdle=hurdle, state=cfg.state, regime=cfg.regime, **params.kwargs())
         if not p.exists():
-            raise FileNotFoundError(f"{p.name}: build it first (python -m vpp.v2.value)")
-        VALUE_INPUTS[key] = vl.load(p)
+            raise FileNotFoundError(f"{p.name}: build it first ({vl.command(params, cfg.level_stat, hurdle, cfg.state, cfg.regime)})")
+        inputs = vl.load(p)
+        vl.check_table(p, inputs, params, cfg.level_stat, hurdle, cfg.state, cfg.regime)
+        VALUE_INPUTS[key] = inputs
     return VALUE_INPUTS[key]
 
 
@@ -146,9 +164,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
         strat = replace(strat, name=cfg.name, offer_rule="table")
     if cfg.replan_every:  # e5 (round 5): the plans are also redone on the clock, the forecast nudged to the latest price
         strat = replace(strat, name=cfg.name, planner="roll", every=cfg.replan_every)
-    inputs = value_inputs(cfg, bat) if cfg.value == "relative" or cfg.ladder else None
-    if inputs is not None and inputs["curve"].shape[1] != round(bat.energy_mwh / vl.sv.GRID):
-        raise ValueError("the value curve's segments do not match the battery the dispatcher sees")
+    # the table of the battery, site and CMD the dispatcher sees; one solved for others is refused
+    inputs = value_inputs(cfg, asset, site, route.cmd_mw) if cfg.value == "relative" or cfg.ladder else None
     res_mwh = cfg.spike_reserve_mwh
     perfect = source == "actual"
     fixed = route.retail == "fixed"

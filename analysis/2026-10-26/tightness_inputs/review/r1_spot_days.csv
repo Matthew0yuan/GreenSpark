@@ -1,0 +1,386 @@
+day,item,mine,table,match,note
+2024-06-12,pd: run id,202406110800,202406110800,True,"issued 2024-06-11 08:30:13, public 2024-06-11 08:50:13, issue 2024-06-11 09:00:00"
+2024-06-12,pd_req_max_1621_mw,2958.652,2958.652,True,
+2024-06-12,pd_req_mean_1621_mw,2756.5053,2756.5053,True,
+2024-06-12,pd_inservice_min_1621_mw,3781.917,3781.917,True,
+2024-06-12,pd_avail_mean_1621_mw,1136.4,1136.4,True,
+2024-06-12,pd: public runs covering D,202406110800,202406110800,True,if another public run covers D the table should use the newest one
+2024-06-12,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202406110830.csv,GeneratorOutages_202406110830.csv,True,listed 2024-06-11 08:31:00; extract file holds GeneratorOutages_202406110830.csv
+2024-06-12,out_thermal_max_1621_mw,747.5,747.5,True,
+2024-06-12,out_thermal_mean_1621_mw,747.5,747.5,True,
+2024-06-12,outage: listed_at <= issue,True,True,True,2024-06-11 08:31:00
+2024-06-12,thermal_cap_mw,4515.4310000000005,4515.4310000000005,True,
+2024-06-12,bat_cap_mw (D-91..D-2),100.416,100.416,True,shift(1) would give 100.4
+2024-06-12,st: report,2024-06-10,2024-06-10,True,"version 92dabc21e877, public 2024-06-10 14:37:00 (manifest), issue 2024-06-11 09:00:00"
+2024-06-12,st: public <= issue (manifest),True,True,True,
+2024-06-12,st_ref_max_1621_mw,2957.0,2957.0,True,
+2024-06-12,st_high_max_1621_mw,3080.0,3080.0,True,
+2024-06-12,st_low_max_1621_mw,2833.0,2833.0,True,
+2024-06-12,wx_temp_perth_max_day_c,18.6,18.6,True,
+2024-06-12,wx_temp_perth_max_1621_c,17.1,17.1,True,
+2024-06-12,wx_wind_midwest_1621_kmh,10.315000000000001,10.315000000000001,True,
+2024-06-12,wx_wind_merredin_1621_kmh,10.09,10.09,True,
+2024-06-12,wx_ghi_perth_mean_1621_wm2,22.8,22.8,True,
+2024-06-12,wx_ghi_perth_mean_day_wm2,123.91666666666667,123.91666666666667,True,
+2024-06-12,predispatch_available_at <= issue_at,True,True,True,2024-06-11 08:50:13
+2024-06-12,outages_available_at <= issue_at,True,True,True,2024-06-11 08:31:00
+2024-06-12,capacity_credits_available_at <= issue_at,True,True,True,2022-10-01 00:00:00
+2024-06-12,battery_available_at <= issue_at,True,True,True,2024-06-11 08:00:00
+2024-06-12,stpasa_available_at <= issue_at,True,True,True,2024-06-10 14:37:00
+2024-06-12,weather_available_at <= issue_at,True,True,True,2024-06-11 04:00:00
+2024-06-12,high_risk_available_at <= issue_at,True,True,True,2024-06-11 09:00:00
+2024-06-12,I2 spike_table pd_req max,2958.652,2958.652,True,
+2024-06-12,I2 spike_table wx_temp max (half-hours),17.1,17.1,True,
+2024-06-12,I2 spike_table snapshot,GeneratorOutages_202406110830.csv,GeneratorOutages_202406110830.csv,True,
+2024-06-12,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2024-06-12,I2 spike_table st_ref max,2957.0,2957.0,True,spike_table report 2024-06-10
+2024-09-09,pd: run id,202409080800,202409080800,True,"issued 2024-09-08 08:15:09, public 2024-09-08 08:35:09, issue 2024-09-08 09:00:00"
+2024-09-09,pd_req_max_1621_mw,2718.396,2718.396,True,
+2024-09-09,pd_req_mean_1621_mw,2475.0427,2475.0427,True,
+2024-09-09,pd_inservice_min_1621_mw,3776.795,3776.795,True,
+2024-09-09,pd_avail_mean_1621_mw,1150.6833,1150.6833000000001,True,
+2024-09-09,pd: public runs covering D,202409080800,202409080800,True,if another public run covers D the table should use the newest one
+2024-09-09,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202409080830.csv,GeneratorOutages_202409080830.csv,True,listed 2024-09-08 08:31:00; extract file holds GeneratorOutages_202409080830.csv
+2024-09-09,out_thermal_max_1621_mw,591.755,591.755,True,
+2024-09-09,out_thermal_mean_1621_mw,591.755,591.755,True,
+2024-09-09,outage: listed_at <= issue,True,True,True,2024-09-08 08:31:00
+2024-09-09,thermal_cap_mw,4515.4310000000005,4515.4310000000005,True,
+2024-09-09,bat_cap_mw (D-91..D-2),119.532,119.532,True,shift(1) would give 119.5
+2024-09-09,st: report,2024-09-07,2024-09-07,True,"version 8452597029c2, public 2024-09-07 11:07:00 (manifest), issue 2024-09-08 09:00:00"
+2024-09-09,st: public <= issue (manifest),True,True,True,
+2024-09-09,st_ref_max_1621_mw,2717.798,2717.798,True,
+2024-09-09,st_high_max_1621_mw,2896.075,2896.075,True,
+2024-09-09,st_low_max_1621_mw,2539.521,2539.521,True,
+2024-09-09,wx_temp_perth_max_day_c,20.4,20.4,True,
+2024-09-09,wx_temp_perth_max_1621_c,18.4,18.4,True,
+2024-09-09,wx_wind_midwest_1621_kmh,27.294999999999998,27.294999999999998,True,
+2024-09-09,wx_wind_merredin_1621_kmh,15.069999999999999,15.070000000000002,True,
+2024-09-09,wx_ghi_perth_mean_1621_wm2,71.4,71.4,True,
+2024-09-09,wx_ghi_perth_mean_day_wm2,228.20833333333334,228.20833333333334,True,
+2024-09-09,predispatch_available_at <= issue_at,True,True,True,2024-09-08 08:35:09
+2024-09-09,outages_available_at <= issue_at,True,True,True,2024-09-08 08:31:00
+2024-09-09,capacity_credits_available_at <= issue_at,True,True,True,2022-10-01 00:00:00
+2024-09-09,battery_available_at <= issue_at,True,True,True,2024-09-08 08:00:00
+2024-09-09,stpasa_available_at <= issue_at,True,True,True,2024-09-07 11:07:00
+2024-09-09,weather_available_at <= issue_at,True,True,True,2024-09-08 04:00:00
+2024-09-09,high_risk_available_at <= issue_at,True,True,True,2024-09-08 09:00:00
+2024-09-09,I2 spike_table pd_req max,2718.396,2718.396,True,
+2024-09-09,I2 spike_table wx_temp max (half-hours),18.4,18.4,True,
+2024-09-09,I2 spike_table snapshot,GeneratorOutages_202409080830.csv,GeneratorOutages_202409080830.csv,True,
+2024-09-09,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2024-09-09,I2 spike_table st_ref max,2717.798,2717.798,True,spike_table report 2024-09-07
+2024-09-14,pd: run id,202409130800,202409130800,True,"issued 2024-09-13 08:15:14, public 2024-09-13 08:35:14, issue 2024-09-13 09:00:00"
+2024-09-14,pd_req_max_1621_mw,2402.995,2402.995,True,
+2024-09-14,pd_req_mean_1621_mw,2203.7885,2203.7885,True,
+2024-09-14,pd_inservice_min_1621_mw,3008.197,3008.197,True,
+2024-09-14,pd_avail_mean_1621_mw,2126.1992999999998,2126.1993,True,
+2024-09-14,pd: public runs covering D,202409130800,202409130800,True,if another public run covers D the table should use the newest one
+2024-09-14,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202409130830.csv,GeneratorOutages_202409130830.csv,True,listed 2024-09-13 08:31:00; extract file holds GeneratorOutages_202409130830.csv
+2024-09-14,out_thermal_max_1621_mw,591.755,591.755,True,
+2024-09-14,out_thermal_mean_1621_mw,591.755,591.755,True,
+2024-09-14,outage: listed_at <= issue,True,True,True,2024-09-13 08:31:00
+2024-09-14,thermal_cap_mw,4515.4310000000005,4515.4310000000005,True,
+2024-09-14,bat_cap_mw (D-91..D-2),213.104,213.104,True,shift(1) would give 213.1
+2024-09-14,st: report,2024-09-12,2024-09-12,True,"version 4dddf6b2b638, public 2024-09-12 11:07:00 (manifest), issue 2024-09-13 09:00:00"
+2024-09-14,st: public <= issue (manifest),True,True,True,
+2024-09-14,st_ref_max_1621_mw,2444.936,2444.936,True,
+2024-09-14,st_high_max_1621_mw,2621.199,2621.199,True,
+2024-09-14,st_low_max_1621_mw,2268.673,2268.673,True,
+2024-09-14,wx_temp_perth_max_day_c,24.7,24.7,True,
+2024-09-14,wx_temp_perth_max_1621_c,23.9,23.9,True,
+2024-09-14,wx_wind_midwest_1621_kmh,28.555,28.555,True,
+2024-09-14,wx_wind_merredin_1621_kmh,27.434999999999995,27.435000000000002,True,
+2024-09-14,wx_ghi_perth_mean_1621_wm2,78.2,78.2,True,
+2024-09-14,wx_ghi_perth_mean_day_wm2,253.83333333333334,253.83333333333334,True,
+2024-09-14,predispatch_available_at <= issue_at,True,True,True,2024-09-13 08:35:14
+2024-09-14,outages_available_at <= issue_at,True,True,True,2024-09-13 08:31:00
+2024-09-14,capacity_credits_available_at <= issue_at,True,True,True,2022-10-01 00:00:00
+2024-09-14,battery_available_at <= issue_at,True,True,True,2024-09-13 08:00:00
+2024-09-14,stpasa_available_at <= issue_at,True,True,True,2024-09-12 11:07:00
+2024-09-14,weather_available_at <= issue_at,True,True,True,2024-09-13 04:00:00
+2024-09-14,high_risk_available_at <= issue_at,True,True,True,2024-09-13 09:00:00
+2024-09-14,I2 spike_table pd_req max,2402.995,2402.995,True,
+2024-09-14,I2 spike_table wx_temp max (half-hours),23.9,23.9,True,
+2024-09-14,I2 spike_table snapshot,GeneratorOutages_202409130830.csv,GeneratorOutages_202409130830.csv,True,
+2024-09-14,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2024-09-14,I2 spike_table st_ref max,2444.936,2444.936,True,spike_table report 2024-09-12
+2025-05-19,pd: run id,202505180800,202505180800,True,"issued 2025-05-18 08:15:04, public 2025-05-18 08:35:04, issue 2025-05-18 09:00:00"
+2025-05-19,pd_req_max_1621_mw,2677.426,2677.426,True,
+2025-05-19,pd_req_mean_1621_mw,2488.0994,2488.0994,True,
+2025-05-19,pd_inservice_min_1621_mw,3840.043,3840.043,True,
+2025-05-19,pd_avail_mean_1621_mw,1139.3586,1139.3586,True,
+2025-05-19,pd: public runs covering D,202505180800,202505180800,True,if another public run covers D the table should use the newest one
+2025-05-19,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202505180830.csv,GeneratorOutages_202505180830.csv,True,listed 2025-05-18 08:31:00; extract file holds GeneratorOutages_202505180830.csv
+2025-05-19,out_thermal_max_1621_mw,905.8340000000001,905.8340000000001,True,
+2025-05-19,out_thermal_mean_1621_mw,905.8340000000001,905.8340000000001,True,
+2025-05-19,outage: listed_at <= issue,True,True,True,2025-05-18 08:31:00
+2025-05-19,thermal_cap_mw,4309.371,4309.371,True,
+2025-05-19,bat_cap_mw (D-91..D-2),391.628,391.628,True,shift(1) would give 391.6
+2025-05-19,st: report,2025-05-17,2025-05-17,True,"version 0d4acbecb80e, public 2025-05-17 11:07:00 (manifest), issue 2025-05-18 09:00:00"
+2025-05-19,st: public <= issue (manifest),True,True,True,
+2025-05-19,st_ref_max_1621_mw,2661.403,2661.403,True,
+2025-05-19,st_high_max_1621_mw,2835.399,2835.399,True,
+2025-05-19,st_low_max_1621_mw,2487.407,2487.407,True,
+2025-05-19,wx_temp_perth_max_day_c,24.0,24.0,True,
+2025-05-19,wx_temp_perth_max_1621_c,21.1,21.1,True,
+2025-05-19,wx_wind_midwest_1621_kmh,26.915,26.915000000000003,True,
+2025-05-19,wx_wind_merredin_1621_kmh,24.71,24.71,True,
+2025-05-19,wx_ghi_perth_mean_1621_wm2,23.2,23.2,True,
+2025-05-19,wx_ghi_perth_mean_day_wm2,153.33333333333334,153.33333333333334,True,
+2025-05-19,predispatch_available_at <= issue_at,True,True,True,2025-05-18 08:35:04
+2025-05-19,outages_available_at <= issue_at,True,True,True,2025-05-18 08:31:00
+2025-05-19,capacity_credits_available_at <= issue_at,True,True,True,2023-10-01 00:00:00
+2025-05-19,battery_available_at <= issue_at,True,True,True,2025-05-18 08:00:00
+2025-05-19,stpasa_available_at <= issue_at,True,True,True,2025-05-17 11:07:00
+2025-05-19,weather_available_at <= issue_at,True,True,True,2025-05-18 04:00:00
+2025-05-19,high_risk_available_at <= issue_at,True,True,True,2025-05-18 09:00:00
+2025-05-19,I2 spike_table pd_req max,2677.426,2677.426,True,
+2025-05-19,I2 spike_table wx_temp max (half-hours),21.1,21.1,True,
+2025-05-19,I2 spike_table snapshot,GeneratorOutages_202505180830.csv,GeneratorOutages_202505180830.csv,True,
+2025-05-19,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2025-05-19,I2 spike_table st_ref max,2661.403,2661.403,True,spike_table report 2025-05-17
+2025-07-15,pd: run id,202507140800,202507140800,True,"issued 2025-07-14 08:15:04, public 2025-07-14 08:35:04, issue 2025-07-14 09:00:00"
+2025-07-15,pd_req_max_1621_mw,3083.626,3083.626,True,
+2025-07-15,pd_req_mean_1621_mw,2856.5132000000003,2856.5132000000003,True,
+2025-07-15,pd_inservice_min_1621_mw,4496.933,4496.933,True,
+2025-07-15,pd_avail_mean_1621_mw,582.1670999999999,582.1671,True,
+2025-07-15,pd: public runs covering D,202507140800,202507140800,True,if another public run covers D the table should use the newest one
+2025-07-15,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202507140830.csv,GeneratorOutages_202507140830.csv,True,listed 2025-07-14 08:31:00; extract file holds GeneratorOutages_202507140830.csv
+2025-07-15,out_thermal_max_1621_mw,732.0840000000001,732.0840000000001,True,
+2025-07-15,out_thermal_mean_1621_mw,626.5840000000001,626.5840000000001,True,
+2025-07-15,outage: listed_at <= issue,True,True,True,2025-07-14 08:31:00
+2025-07-15,thermal_cap_mw,4309.371,4309.371,True,
+2025-07-15,bat_cap_mw (D-91..D-2),502.208,502.208,True,shift(1) would give 502.2
+2025-07-15,st: report,2025-07-13,2025-07-13,True,"version 6bbca476aa1e, public 2025-07-13 11:07:00 (manifest), issue 2025-07-14 09:00:00"
+2025-07-15,st: public <= issue (manifest),True,True,True,
+2025-07-15,st_ref_max_1621_mw,3106.381,3106.381,True,
+2025-07-15,st_high_max_1621_mw,3236.623,3236.623,True,
+2025-07-15,st_low_max_1621_mw,2976.139,2976.139,True,
+2025-07-15,wx_temp_perth_max_day_c,16.1,16.1,True,
+2025-07-15,wx_temp_perth_max_1621_c,15.2,15.2,True,
+2025-07-15,wx_wind_midwest_1621_kmh,11.319999999999999,11.32,True,
+2025-07-15,wx_wind_merredin_1621_kmh,13.804999999999998,13.805000000000001,True,
+2025-07-15,wx_ghi_perth_mean_1621_wm2,12.2,12.2,True,
+2025-07-15,wx_ghi_perth_mean_day_wm2,107.70833333333333,107.70833333333333,True,
+2025-07-15,predispatch_available_at <= issue_at,True,True,True,2025-07-14 08:35:04
+2025-07-15,outages_available_at <= issue_at,True,True,True,2025-07-14 08:31:00
+2025-07-15,capacity_credits_available_at <= issue_at,True,True,True,2023-10-01 00:00:00
+2025-07-15,battery_available_at <= issue_at,True,True,True,2025-07-14 08:00:00
+2025-07-15,stpasa_available_at <= issue_at,True,True,True,2025-07-13 11:07:00
+2025-07-15,weather_available_at <= issue_at,True,True,True,2025-07-14 04:00:00
+2025-07-15,high_risk_available_at <= issue_at,True,True,True,2025-07-14 09:00:00
+2025-07-15,I2 spike_table pd_req max,3083.626,3083.626,True,
+2025-07-15,I2 spike_table wx_temp max (half-hours),15.2,15.2,True,
+2025-07-15,I2 spike_table snapshot,GeneratorOutages_202507140830.csv,GeneratorOutages_202507140830.csv,True,
+2025-07-15,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2025-07-15,I2 spike_table st_ref max,3106.381,3106.381,True,spike_table report 2025-07-13
+2025-08-10,pd: run id,202508090800,202508090800,True,"issued 2025-08-09 08:15:13, public 2025-08-09 08:35:13, issue 2025-08-09 09:00:00"
+2025-08-10,pd_req_max_1621_mw,2844.426,2844.426,True,
+2025-08-10,pd_req_mean_1621_mw,2628.7381,2628.7381,True,
+2025-08-10,pd_inservice_min_1621_mw,4529.804,4529.804,True,
+2025-08-10,pd_avail_mean_1621_mw,1296.8139,1296.8138999999999,True,
+2025-08-10,pd: public runs covering D,202508090800,202508090800,True,if another public run covers D the table should use the newest one
+2025-08-10,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202508090830.csv,GeneratorOutages_202508090830.csv,True,listed 2025-08-09 08:31:00; extract file holds GeneratorOutages_202508090830.csv
+2025-08-10,out_thermal_max_1621_mw,178.499,178.499,True,
+2025-08-10,out_thermal_mean_1621_mw,178.499,178.499,True,
+2025-08-10,outage: listed_at <= issue,True,True,True,2025-08-09 08:31:00
+2025-08-10,thermal_cap_mw,4309.371,4309.371,True,
+2025-08-10,bat_cap_mw (D-91..D-2),551.478,551.478,True,shift(1) would give 551.5
+2025-08-10,st: report,2025-08-08,2025-08-08,True,"version f6a9f9c1e73b, public 2025-08-08 11:07:00 (manifest), issue 2025-08-09 09:00:00"
+2025-08-10,st: public <= issue (manifest),True,True,True,
+2025-08-10,st_ref_max_1621_mw,2862.829,2862.829,True,
+2025-08-10,st_high_max_1621_mw,2987.581,2987.581,True,
+2025-08-10,st_low_max_1621_mw,2738.077,2738.077,True,
+2025-08-10,wx_temp_perth_max_day_c,15.9,15.9,True,
+2025-08-10,wx_temp_perth_max_1621_c,15.0,15.0,True,
+2025-08-10,wx_wind_midwest_1621_kmh,19.205,19.205000000000002,True,
+2025-08-10,wx_wind_merredin_1621_kmh,23.005,23.005000000000003,True,
+2025-08-10,wx_ghi_perth_mean_1621_wm2,45.6,45.6,True,
+2025-08-10,wx_ghi_perth_mean_day_wm2,155.33333333333334,155.33333333333334,True,
+2025-08-10,predispatch_available_at <= issue_at,True,True,True,2025-08-09 08:35:13
+2025-08-10,outages_available_at <= issue_at,True,True,True,2025-08-09 08:31:00
+2025-08-10,capacity_credits_available_at <= issue_at,True,True,True,2023-10-01 00:00:00
+2025-08-10,battery_available_at <= issue_at,True,True,True,2025-08-09 08:00:00
+2025-08-10,stpasa_available_at <= issue_at,True,True,True,2025-08-08 11:07:00
+2025-08-10,weather_available_at <= issue_at,True,True,True,2025-08-09 04:00:00
+2025-08-10,high_risk_available_at <= issue_at,True,True,True,2025-08-09 09:00:00
+2025-08-10,I2 spike_table pd_req max,2844.426,2844.426,True,
+2025-08-10,I2 spike_table wx_temp max (half-hours),15.0,15.0,True,
+2025-08-10,I2 spike_table snapshot,GeneratorOutages_202508090830.csv,GeneratorOutages_202508090830.csv,True,
+2025-08-10,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2025-08-10,I2 spike_table st_ref max,2862.829,2862.829,True,spike_table report 2025-08-08
+2025-08-19,pd: run id,202508180800,202508180800,True,"issued 2025-08-18 08:15:12, public 2025-08-18 08:35:12, issue 2025-08-18 09:00:00"
+2025-08-19,pd_req_max_1621_mw,2894.05,2894.05,True,
+2025-08-19,pd_req_mean_1621_mw,2681.4903999999997,2681.4903999999997,True,
+2025-08-19,pd_inservice_min_1621_mw,4156.072,4156.072,True,
+2025-08-19,pd_avail_mean_1621_mw,1377.9874999999997,1377.9875,True,
+2025-08-19,pd: public runs covering D,202508180800,202508180800,True,if another public run covers D the table should use the newest one
+2025-08-19,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202508180830.csv,GeneratorOutages_202508180830.csv,True,listed 2025-08-18 08:31:00; extract file holds GeneratorOutages_202508180830.csv
+2025-08-19,out_thermal_max_1621_mw,429.45,429.45,True,
+2025-08-19,out_thermal_mean_1621_mw,378.215,378.21500000000003,True,
+2025-08-19,outage: listed_at <= issue,True,True,True,2025-08-18 08:31:00
+2025-08-19,thermal_cap_mw,4309.371,4309.371,True,
+2025-08-19,bat_cap_mw (D-91..D-2),551.516,551.516,True,shift(1) would give 551.5
+2025-08-19,st: report,2025-08-17,2025-08-17,True,"version 058c79e2df79, public 2025-08-17 11:07:00 (manifest), issue 2025-08-18 09:00:00"
+2025-08-19,st: public <= issue (manifest),True,True,True,
+2025-08-19,st_ref_max_1621_mw,2858.475,2858.475,True,
+2025-08-19,st_high_max_1621_mw,3045.98,3045.98,True,
+2025-08-19,st_low_max_1621_mw,2670.97,2670.97,True,
+2025-08-19,wx_temp_perth_max_day_c,15.6,15.6,True,
+2025-08-19,wx_temp_perth_max_1621_c,14.6,14.6,True,
+2025-08-19,wx_wind_midwest_1621_kmh,21.96,21.96,True,
+2025-08-19,wx_wind_merredin_1621_kmh,27.390000000000004,27.389999999999997,True,
+2025-08-19,wx_ghi_perth_mean_1621_wm2,13.0,13.0,True,
+2025-08-19,wx_ghi_perth_mean_day_wm2,26.958333333333332,26.958333333333332,True,
+2025-08-19,predispatch_available_at <= issue_at,True,True,True,2025-08-18 08:35:12
+2025-08-19,outages_available_at <= issue_at,True,True,True,2025-08-18 08:31:00
+2025-08-19,capacity_credits_available_at <= issue_at,True,True,True,2023-10-01 00:00:00
+2025-08-19,battery_available_at <= issue_at,True,True,True,2025-08-18 08:00:00
+2025-08-19,stpasa_available_at <= issue_at,True,True,True,2025-08-17 11:07:00
+2025-08-19,weather_available_at <= issue_at,True,True,True,2025-08-18 04:00:00
+2025-08-19,high_risk_available_at <= issue_at,True,True,True,2025-08-18 09:00:00
+2025-08-19,I2 spike_table pd_req max,2894.05,2894.05,True,
+2025-08-19,I2 spike_table wx_temp max (half-hours),14.6,14.6,True,
+2025-08-19,I2 spike_table snapshot,GeneratorOutages_202508180830.csv,GeneratorOutages_202508180830.csv,True,
+2025-08-19,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2025-08-19,I2 spike_table st_ref max,2858.475,2858.475,True,spike_table report 2025-08-17
+2026-01-31,pd: run id,202601300800,202601300800,True,"issued 2026-01-30 08:15:07, public 2026-01-30 08:35:07, issue 2026-01-30 09:00:00"
+2026-01-31,pd_req_max_1621_mw,3383.048,3383.048,True,
+2026-01-31,pd_req_mean_1621_mw,3194.8568,3194.8568,True,
+2026-01-31,pd_inservice_min_1621_mw,4777.071,4777.071,True,
+2026-01-31,pd_avail_mean_1621_mw,2020.1963,2020.1963,True,
+2026-01-31,pd: public runs covering D,202601300800,202601300800,True,if another public run covers D the table should use the newest one
+2026-01-31,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202601300830.csv,GeneratorOutages_202601300830.csv,True,listed 2026-01-30 08:31:00; extract file holds GeneratorOutages_202601300830.csv
+2026-01-31,out_thermal_max_1621_mw,2.0,2.0,True,
+2026-01-31,out_thermal_mean_1621_mw,2.0,2.0,True,
+2026-01-31,outage: listed_at <= issue,True,True,True,2026-01-30 08:31:00
+2026-01-31,thermal_cap_mw,4233.1320000000005,4233.1320000000005,True,
+2026-01-31,bat_cap_mw (D-91..D-2),1002.494,1002.494,True,shift(1) would give 1002.5
+2026-01-31,st: report,2026-01-29,2026-01-29,True,"version edfb09d4e895, public 2026-01-29 11:37:00 (manifest), issue 2026-01-30 09:00:00"
+2026-01-31,st: public <= issue (manifest),True,True,True,
+2026-01-31,st_ref_max_1621_mw,3402.34,3402.34,True,
+2026-01-31,st_high_max_1621_mw,3649.25,3649.25,True,
+2026-01-31,st_low_max_1621_mw,3157.055,3157.055,True,
+2026-01-31,wx_temp_perth_max_day_c,37.5,37.5,True,
+2026-01-31,wx_temp_perth_max_1621_c,37.3,37.3,True,
+2026-01-31,wx_wind_midwest_1621_kmh,29.734999999999996,29.735000000000003,True,
+2026-01-31,wx_wind_merredin_1621_kmh,27.945000000000004,27.945,True,
+2026-01-31,wx_ghi_perth_mean_1621_wm2,177.6,177.6,True,
+2026-01-31,wx_ghi_perth_mean_day_wm2,328.625,328.625,True,
+2026-01-31,predispatch_available_at <= issue_at,True,True,True,2026-01-30 08:35:07
+2026-01-31,outages_available_at <= issue_at,True,True,True,2026-01-30 08:31:00
+2026-01-31,capacity_credits_available_at <= issue_at,True,True,True,2024-10-01 00:00:00
+2026-01-31,battery_available_at <= issue_at,True,True,True,2026-01-30 08:00:00
+2026-01-31,stpasa_available_at <= issue_at,True,True,True,2026-01-29 11:37:00
+2026-01-31,weather_available_at <= issue_at,True,True,True,2026-01-30 04:00:00
+2026-01-31,high_risk_available_at <= issue_at,True,True,True,2026-01-30 09:00:00
+2026-01-31,I2 spike_table pd_req max,3383.048,3383.048,True,
+2026-01-31,I2 spike_table wx_temp max (half-hours),37.3,37.3,True,
+2026-01-31,I2 spike_table snapshot,GeneratorOutages_202601300830.csv,GeneratorOutages_202601300830.csv,True,
+2026-01-31,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2026-01-31,I2 spike_table st_ref max,3402.34,3402.34,True,spike_table report 2026-01-29
+2026-07-02,pd: run id,202607010800,202607010800,True,"issued 2026-07-01 08:15:10, public 2026-07-01 08:35:10, issue 2026-07-01 09:00:00"
+2026-07-02,pd_req_max_1621_mw,3280.888,3280.888,True,
+2026-07-02,pd_req_mean_1621_mw,3063.188,3063.188,True,
+2026-07-02,pd_inservice_min_1621_mw,5010.048,5010.048,True,
+2026-07-02,pd_avail_mean_1621_mw,975.5606,975.5606,True,
+2026-07-02,pd: public runs covering D,202607010800,202607010800,True,if another public run covers D the table should use the newest one
+2026-07-02,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202607010830.csv,GeneratorOutages_202607010830.csv,True,listed 2026-07-01 08:31:00; extract file holds GeneratorOutages_202607010830.csv
+2026-07-02,out_thermal_max_1621_mw,649.522,649.5219999999999,True,
+2026-07-02,out_thermal_mean_1621_mw,521.922,521.9219999999999,True,
+2026-07-02,outage: listed_at <= issue,True,True,True,2026-07-01 08:31:00
+2026-07-02,thermal_cap_mw,4233.1320000000005,4233.1320000000005,True,
+2026-07-02,bat_cap_mw (D-91..D-2),866.75,866.75,True,shift(1) would give 866.8
+2026-07-02,st: report,2026-06-29,2026-06-29,True,"version 33e3504c3d60, public 2026-06-29 11:37:00 (manifest), issue 2026-07-01 09:00:00"
+2026-07-02,st: public <= issue (manifest),True,True,True,
+2026-07-02,st_ref_max_1621_mw,3432.931,3432.931,True,
+2026-07-02,st_high_max_1621_mw,3588.023,3588.023,True,
+2026-07-02,st_low_max_1621_mw,3277.84,3277.84,True,
+2026-07-02,wx_temp_perth_max_day_c,15.4,15.4,True,
+2026-07-02,wx_temp_perth_max_1621_c,14.7,14.7,True,
+2026-07-02,wx_wind_midwest_1621_kmh,21.925,21.925,True,
+2026-07-02,wx_wind_merredin_1621_kmh,16.325,16.325,True,
+2026-07-02,wx_ghi_perth_mean_1621_wm2,14.0,14.0,True,
+2026-07-02,wx_ghi_perth_mean_day_wm2,98.625,98.625,True,
+2026-07-02,predispatch_available_at <= issue_at,True,True,True,2026-07-01 08:35:10
+2026-07-02,outages_available_at <= issue_at,True,True,True,2026-07-01 08:31:00
+2026-07-02,capacity_credits_available_at <= issue_at,True,True,True,2024-10-01 00:00:00
+2026-07-02,battery_available_at <= issue_at,True,True,True,2026-07-01 08:00:00
+2026-07-02,stpasa_available_at <= issue_at,True,True,True,2026-06-29 11:37:00
+2026-07-02,weather_available_at <= issue_at,True,True,True,2026-07-01 04:00:00
+2026-07-02,high_risk_available_at <= issue_at,True,True,True,2026-07-01 09:00:00
+2026-07-02,I2 spike_table pd_req max,3280.888,3280.888,True,
+2026-07-02,I2 spike_table wx_temp max (half-hours),14.7,14.7,True,
+2026-07-02,I2 spike_table snapshot,GeneratorOutages_202607010830.csv,GeneratorOutages_202607010830.csv,True,
+2026-07-02,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2026-07-02,I2 spike_table st_ref max,3432.931,3432.931,True,spike_table report 2026-06-29
+2026-08-29,pd: run id,202608280800,202608280800,True,"issued 2026-08-28 08:15:09, public 2026-08-28 08:35:09, issue 2026-08-28 09:00:00"
+2026-08-29,pd_req_max_1621_mw,2590.51,2590.51,True,
+2026-08-29,pd_req_mean_1621_mw,2409.1911999999998,2409.1912,True,
+2026-08-29,pd_inservice_min_1621_mw,3877.401,3877.401,True,
+2026-08-29,pd_avail_mean_1621_mw,1479.1906999999999,1479.1906999999999,True,
+2026-08-29,pd: public runs covering D,202608280800,202608280800,True,if another public run covers D the table should use the newest one
+2026-08-29,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202608280830.csv,GeneratorOutages_202608280830.csv,True,listed 2026-08-28 08:31:00; extract file holds GeneratorOutages_202608280830.csv
+2026-08-29,out_thermal_max_1621_mw,894.9,894.9000000000001,True,
+2026-08-29,out_thermal_mean_1621_mw,894.9,894.9,True,
+2026-08-29,outage: listed_at <= issue,True,True,True,2026-08-28 08:31:00
+2026-08-29,thermal_cap_mw,4233.1320000000005,4233.1320000000005,True,
+2026-08-29,bat_cap_mw (D-91..D-2),963.668,963.668,True,shift(1) would give 963.7
+2026-08-29,st: report,2026-08-27,2026-08-27,True,"version 2173845a6056, public 2026-08-27 11:37:00 (manifest), issue 2026-08-28 09:00:00"
+2026-08-29,st: public <= issue (manifest),True,True,True,
+2026-08-29,st_ref_max_1621_mw,2568.905,2568.905,True,
+2026-08-29,st_high_max_1621_mw,2754.105,2754.105,True,
+2026-08-29,st_low_max_1621_mw,2383.705,2383.705,True,
+2026-08-29,wx_temp_perth_max_day_c,19.0,19.0,True,
+2026-08-29,wx_temp_perth_max_1621_c,18.8,18.8,True,
+2026-08-29,wx_wind_midwest_1621_kmh,20.98,20.979999999999997,True,
+2026-08-29,wx_wind_merredin_1621_kmh,26.5,26.5,True,
+2026-08-29,wx_ghi_perth_mean_1621_wm2,41.4,41.4,True,
+2026-08-29,wx_ghi_perth_mean_day_wm2,148.125,148.125,True,
+2026-08-29,predispatch_available_at <= issue_at,True,True,True,2026-08-28 08:35:09
+2026-08-29,outages_available_at <= issue_at,True,True,True,2026-08-28 08:31:00
+2026-08-29,capacity_credits_available_at <= issue_at,True,True,True,2024-10-01 00:00:00
+2026-08-29,battery_available_at <= issue_at,True,True,True,2026-08-28 08:00:00
+2026-08-29,stpasa_available_at <= issue_at,True,True,True,2026-08-27 11:37:00
+2026-08-29,weather_available_at <= issue_at,True,True,True,2026-08-28 04:00:00
+2026-08-29,high_risk_available_at <= issue_at,True,True,True,2026-08-28 09:00:00
+2026-08-29,I2 spike_table pd_req max,2590.51,2590.51,True,
+2026-08-29,I2 spike_table wx_temp max (half-hours),18.8,18.8,True,
+2026-08-29,I2 spike_table snapshot,GeneratorOutages_202608280830.csv,GeneratorOutages_202608280830.csv,True,
+2026-08-29,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2026-08-29,I2 spike_table st_ref max,2568.905,2568.905,True,spike_table report 2026-08-27
+2026-10-16,pd: run id,202610150800,202610150800,True,"issued 2026-10-15 08:15:05, public 2026-10-15 08:35:05, issue 2026-10-15 09:00:00"
+2026-10-16,pd_req_max_1621_mw,2397.924,2397.924,True,
+2026-10-16,pd_req_mean_1621_mw,2205.2992999999997,2205.2992999999997,True,
+2026-10-16,pd_inservice_min_1621_mw,4880.879,4880.879,True,
+2026-10-16,pd_avail_mean_1621_mw,593.375,593.375,True,
+2026-10-16,pd: public runs covering D,202610150800,202610150800,True,if another public run covers D the table should use the newest one
+2026-10-16,outage: newest snapshot listed <= issue (listing.csv),GeneratorOutages_202610150830.csv,GeneratorOutages_202610150830.csv,True,listed 2026-10-15 08:31:00; extract file holds GeneratorOutages_202610150830.csv
+2026-10-16,out_thermal_max_1621_mw,1216.741,1216.741,True,
+2026-10-16,out_thermal_mean_1621_mw,1216.741,1216.741,True,
+2026-10-16,outage: listed_at <= issue,True,True,True,2026-10-15 08:31:00
+2026-10-16,thermal_cap_mw,4433.959,4433.959,True,
+2026-10-16,bat_cap_mw (D-91..D-2),963.668,963.668,True,shift(1) would give 963.7
+2026-10-16,st: report,2026-10-14,2026-10-14,True,"version 0bd4f0600570, public 2026-10-14 11:07:00 (manifest), issue 2026-10-15 09:00:00"
+2026-10-16,st: public <= issue (manifest),True,True,True,
+2026-10-16,st_ref_max_1621_mw,2395.542,2395.542,True,
+2026-10-16,st_high_max_1621_mw,2553.204,2553.204,True,
+2026-10-16,st_low_max_1621_mw,2237.881,2237.881,True,
+2026-10-16,wx_temp_perth_max_day_c,21.6,21.6,True,
+2026-10-16,wx_temp_perth_max_1621_c,20.1,20.1,True,
+2026-10-16,wx_wind_midwest_1621_kmh,19.36,19.36,True,
+2026-10-16,wx_wind_merredin_1621_kmh,18.725,18.725,True,
+2026-10-16,wx_ghi_perth_mean_1621_wm2,111.0,111.0,True,
+2026-10-16,wx_ghi_perth_mean_day_wm2,312.6666666666667,312.6666666666667,True,
+2026-10-16,predispatch_available_at <= issue_at,True,True,True,2026-10-15 08:35:05
+2026-10-16,outages_available_at <= issue_at,True,True,True,2026-10-15 08:31:00
+2026-10-16,capacity_credits_available_at <= issue_at,True,True,True,2025-10-01 00:00:00
+2026-10-16,battery_available_at <= issue_at,True,True,True,2026-10-15 08:00:00
+2026-10-16,stpasa_available_at <= issue_at,True,True,True,2026-10-14 11:07:00
+2026-10-16,weather_available_at <= issue_at,True,True,True,2026-10-15 04:00:00
+2026-10-16,high_risk_available_at <= issue_at,True,True,True,2026-10-15 09:00:00
+2026-10-16,I2 spike_table pd_req max,2397.924,2397.924,True,
+2026-10-16,I2 spike_table wx_temp max (half-hours),20.1,20.1,True,
+2026-10-16,I2 spike_table snapshot,GeneratorOutages_202610150830.csv,GeneratorOutages_202610150830.csv,True,
+2026-10-16,I2 spike_table out_loss_mw max >= thermal max,True,True,True,
+2026-10-16,I2 spike_table st_ref max,2395.542,2395.542,True,spike_table report 2026-10-14

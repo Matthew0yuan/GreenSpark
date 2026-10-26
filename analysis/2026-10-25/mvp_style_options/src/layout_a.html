@@ -18,24 +18,29 @@
   </header>
   {{STRIPS}}
 
-  <!-- Site battery · Decide: is the plan executable, what to do, what it is worth, why; the detail further down -->
+  <!-- Site battery · Decide: one line says whether the plan can run, what to do and what it is worth; the day is drawn
+       underneath as lanes on one time axis; the reasons sit on the chart and in the half-hour you click -->
   <section class="screen" id="s-plan" aria-label="Today's plan">
-    <div class="plan-st" id="plan-status" role="status"></div>
-    <div class="hero res">
-      <div id="plan-head"></div>
-      <div class="kpis">{{PLAN_KPIS}}</div>
+    <div class="dec-row" id="plan-dec">
+      <div class="res">
+        <div class="pst" id="plan-status" role="status"></div>
+        <div class="dec-h" id="plan-head"></div>
+      </div>
+      <div class="dec-val res" id="plan-val"></div>
     </div>
-    <section class="blk res"><div class="blk-h"><h2>The day at a glance</h2><span class="sub">08:00 Wed 14 Jan to 08:00 Thu 15 Jan</span></div><div id="plan-timeline"></div></section>
-    <section class="blk res"><h2>Why this plan</h2><ul class="why-list" id="plan-why"></ul>{{PLAN_CTA}}</section>
-    <section class="blk res" id="plan-detail">
-      <div class="blk-h"><h2>Dispatch detail</h2><span class="sub">plan issued 09:00 · 10 MW / 40 MWh battery behind the factory meter</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
+    <section class="blk res day-blk" id="plan-detail">
+      <div class="blk-h"><h2>Trading day</h2><span class="sub">hover for values · click a half-hour for detail</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
       <div id="sch-chart" class="chartbox"></div>
-      <p class="chart-note" id="sch-note"></p>
     </section>
     <section class="blk res strip-detail" id="sch-rail" aria-live="polite"></section>
     <div class="cols2">
-      <section class="blk res"><h2>Plan and outcome for the trading day</h2><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}</section>
-      <section class="blk res"><h2>Checks on this plan</h2><ul class="chk" id="sch-checks"></ul></section>
+      <section class="blk res"><div class="blk-h"><h2>Value</h2><span class="sub">trading day, A$</span><span class="sp"></span><button class="lnk" data-go="compare">Against the baseline →</button></div>
+        <div id="plan-vbar"></div>
+        <details class="fold sm"><summary>Breakdown</summary><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}</details>
+      </section>
+      <section class="blk res"><div class="blk-h"><h2>Checks</h2><span class="sub">hover for each check</span><span class="sp"></span><button class="lnk" data-go="svalid">Backtest record →</button></div>
+        <div class="ckgrid" id="sch-checks"></div>
+      </section>
     </div>
   </section>
 

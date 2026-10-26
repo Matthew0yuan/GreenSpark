@@ -1,0 +1,677 @@
+{
+ "options": {
+  "stat": "median",
+  "hurdle": 50.0,
+  "state": true
+ },
+ "groups": {
+  "default": {
+   "file": "v2_value_median_h50_state.npz",
+   "seconds": 12.71,
+   "days": 570,
+   "n_tables": 75,
+   "weeks_max": 4,
+   "json": null,
+   "checks": {
+    "curve": {
+     "shape": [
+      570,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg": {
+     "shape": [
+      570,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "curve_state": {
+     "shape": [
+      570,
+      2,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg_state": {
+     "shape": [
+      570,
+      2,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    }
+   },
+   "mean_curve": {
+    "0": 127.73646588241844,
+    "5": 111.02038214834113,
+    "10": 97.19936602408426,
+    "20": 76.22568348332456,
+    "30": 60.202125711954736,
+    "35": 44.39081021845341
+   },
+   "identical_to_ref": true
+  },
+  "8 MW": {
+   "file": "v2_value_median_h50_state_pddde91fa.npz",
+   "seconds": 12.45,
+   "days": 570,
+   "n_tables": 75,
+   "weeks_max": 5,
+   "json": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 8.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "ddde91fa",
+    "file": "v2_value_median_h50_state_pddde91fa.npz",
+    "asked": {
+     "power_mw": 8.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --power 8 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:05:04"
+   },
+   "checks": {
+    "curve": {
+     "shape": [
+      570,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg": {
+     "shape": [
+      570,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "curve_state": {
+     "shape": [
+      570,
+      2,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg_state": {
+     "shape": [
+      570,
+      2,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    }
+   },
+   "mean_curve": {
+    "0": 122.7180173037345,
+    "5": 103.03425379970618,
+    "10": 89.89601125215229,
+    "20": 70.39693946671068,
+    "30": 56.00656182959414,
+    "35": 41.51585391622952
+   },
+   "vs_default_curve_max_abs_diff": 18.116012573242188
+  },
+  "36 MWh": {
+   "file": "v2_value_median_36mwh_h50_state.npz",
+   "seconds": 12.99,
+   "days": 570,
+   "n_tables": 75,
+   "weeks_max": 4,
+   "json": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 36.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "f6016420",
+    "file": "v2_value_median_36mwh_h50_state.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 36.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --energy 36 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:05:17"
+   },
+   "checks": {
+    "curve": {
+     "shape": [
+      570,
+      36
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg": {
+     "shape": [
+      570,
+      48,
+      8,
+      36
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "curve_state": {
+     "shape": [
+      570,
+      2,
+      36
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg_state": {
+     "shape": [
+      570,
+      2,
+      48,
+      8,
+      36
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    }
+   },
+   "mean_curve": {
+    "0": 126.85003047742342,
+    "5": 109.37938261199416,
+    "10": 94.76764048526162,
+    "20": 73.26864098666007,
+    "30": 49.97595330492446,
+    "35": 28.777665513923818
+   },
+   "vs_default_curve_max_abs_diff": null
+  },
+  "round trip 0.88": {
+   "file": "v2_value_median_h50_state_p9c12852e.npz",
+   "seconds": 20.63,
+   "days": 570,
+   "n_tables": 75,
+   "weeks_max": 4,
+   "json": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.88,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "9c12852e",
+    "file": "v2_value_median_h50_state_p9c12852e.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.88,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --round-trip 0.88 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:05:39"
+   },
+   "checks": {
+    "curve": {
+     "shape": [
+      570,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg": {
+     "shape": [
+      570,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "curve_state": {
+     "shape": [
+      570,
+      2,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg_state": {
+     "shape": [
+      570,
+      2,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    }
+   },
+   "mean_curve": {
+    "0": 126.76988603023061,
+    "5": 110.14578846713952,
+    "10": 96.15151130274722,
+    "20": 75.57336119601601,
+    "30": 59.88792521381065,
+    "35": 44.07955561808327
+   },
+   "vs_default_curve_max_abs_diff": 2.5449371337890625
+  },
+  "wear $40": {
+   "file": "v2_value_median_h50_state_pb313fa69.npz",
+   "seconds": 16.08,
+   "days": 570,
+   "n_tables": 75,
+   "weeks_max": 5,
+   "json": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 40.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "b313fa69",
+    "file": "v2_value_median_h50_state_pb313fa69.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 40.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --wear 40 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:05:55"
+   },
+   "checks": {
+    "curve": {
+     "shape": [
+      570,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg": {
+     "shape": [
+      570,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "curve_state": {
+     "shape": [
+      570,
+      2,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg_state": {
+     "shape": [
+      570,
+      2,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    }
+   },
+   "mean_curve": {
+    "0": 124.78562220523231,
+    "5": 108.1624077780205,
+    "10": 94.27512448628744,
+    "20": 72.79925434714869,
+    "30": 56.254272066200514,
+    "35": 41.000762517815055
+   },
+   "vs_default_curve_max_abs_diff": 7.405113220214844
+  },
+  "CMD 10 MW": {
+   "file": "v2_value_median_h50_state_pbd524b06.npz",
+   "seconds": 16.98,
+   "days": 570,
+   "n_tables": 75,
+   "weeks_max": 4,
+   "json": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 10.0,
+     "import_limit_mw": 10.0,
+     "load_scale": 10.0
+    },
+    "digest": "bd524b06",
+    "file": "v2_value_median_h50_state_pbd524b06.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 10.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --cmd 10 --import-limit 10 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:06:12"
+   },
+   "checks": {
+    "curve": {
+     "shape": [
+      570,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg": {
+     "shape": [
+      570,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "curve_state": {
+     "shape": [
+      570,
+      2,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    },
+    "marg_state": {
+     "shape": [
+      570,
+      2,
+      48,
+      8,
+      40
+     ],
+     "rising_cells": 0,
+     "negative_cells": 0,
+     "nan_cells": 0
+    }
+   },
+   "mean_curve": {
+    "0": 111.01986104061729,
+    "5": 98.17003584744637,
+    "10": 85.87615531787537,
+    "20": 67.78864429038867,
+    "30": 45.62904742088888,
+    "35": 31.214414561396104
+   },
+   "vs_default_curve_max_abs_diff": 45.34825897216797
+  }
+ },
+ "direction": {
+  "round trip 0.88 vs 0.85": {
+   "curve": {
+    "cells": 22800,
+    "cells_lower": 20989,
+    "share_lower": 0.9205701754385965,
+    "largest_drop": 2.5449371337890625,
+    "largest_rise": 0.5959243774414062,
+    "mean_curve_lower_segments": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39
+    ],
+    "mean_gain_by_segment": {
+     "0": -0.9665798521878344,
+     "5": -0.8745936812016026,
+     "10": -1.047854721337032,
+     "20": -0.6523222873085501,
+     "30": -0.3142004981440891,
+     "35": -0.3112546003701411
+    }
+   },
+   "curve_state": {
+    "cells": 45600,
+    "cells_lower": 41611,
+    "share_lower": 0.9125219298245614,
+    "largest_drop": 2.9138107299804688,
+    "largest_rise": 0.9172515869140625,
+    "mean_curve_lower_segments": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39
+    ],
+    "mean_gain_by_segment": {
+     "0": -0.9017819220559602,
+     "5": -0.8582204986036857,
+     "10": -1.0290867454127266,
+     "20": -0.6745563540542321,
+     "30": -0.3177082076930162,
+     "35": -0.31525747532477766
+    }
+   }
+  },
+  "wear $30 vs $40": {
+   "curve": {
+    "cells": 22800,
+    "cells_lower": 0,
+    "share_lower": 0.0,
+    "largest_drop": 0.0,
+    "largest_rise": 7.405113220214844,
+    "mean_curve_lower_segments": [],
+    "mean_gain_by_segment": {
+     "0": 2.9508436771861284,
+     "5": 2.8579743703206333,
+     "10": 2.924241537796817,
+     "20": 3.4264291361758694,
+     "30": 3.947853645754222,
+     "35": 3.3900477006383554
+    }
+   },
+   "curve_state": {
+    "cells": 45600,
+    "cells_lower": 0,
+    "share_lower": 0.0,
+    "largest_drop": 0.0,
+    "largest_rise": 7.567569732666016,
+    "mean_curve_lower_segments": [],
+    "mean_gain_by_segment": {
+     "0": 3.0465801607098513,
+     "5": 2.9110605139481436,
+     "10": 2.943185334456601,
+     "20": 3.4308223322818208,
+     "30": 3.993879761062395,
+     "35": 3.477494746000552
+    }
+   }
+  }
+ }
+}

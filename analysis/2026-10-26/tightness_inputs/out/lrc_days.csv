@@ -1,0 +1,49 @@
+day,n_advisories,ids,first_issued,kinds,reason,in_step1,status,lrc,advisories_issued_to
+2023-11-21,1,210153,2023-11-21 14:40:53,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2023-11-22,1,210154,2023-11-22 12:46:08,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2023-11-23,1,210157,2023-11-23 12:30:35,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-01-13,1,210298,2024-01-13 15:29:16,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-01-14,1,210303,2024-01-14 11:02:17,declared,Due to [heatwaves forecast across the SWIS] driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-01-15,1,210305,2024-01-15 09:13:17,declared,Due to [heatwaves forecast across the SWIS] driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-01-16,1,210307,2024-01-16 09:11:16,declared,Due to [heatwaves forecast across the SWIS] driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-01-31,1,210353,2024-01-31 12:12:33,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-01,1,210355,2024-02-01 10:27:12,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-02,1,210357,2024-02-02 10:35:19,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-08,1,210377,2024-02-08 11:52:29,declared,Due to [heatwaves forecast across the SWIS] driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-09,1,210381,2024-02-09 11:39:28,declared,Due to [heatwaves forecast across the SWIS] driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-15,1,210393,2024-02-15 11:52:13,declared,Due to [heatwaves forecast across the SWIS] driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-18,1,210398,2024-02-18 09:15:46,declared,Due to [heatwaves forecast across the SWIS] driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-19,2,210400|210403,2024-02-19 10:28:00,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-20,1,210409,2024-02-20 11:40:25,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-02-23,1,210413,2024-02-23 09:45:35,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-03-07,2,210437|210439,2024-03-07 12:24:44,declared,Due to heatwave forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-05-05,0,,,,,True,removed_by_fix,False,2026-10-25 11:51:07
+2024-05-06,1,210590,2024-05-06 11:44:56,other,"To manage Power System Security and Reliability, AEMO has Recalled MRT-NOR81 Outage in respond to forecast Low Reserve C",False,added_by_fix,True,2026-10-25 11:51:07
+2024-05-20,2,210632|210633,2024-05-20 12:15:00,declared,Due to forced outages on MUJA _G6 and BW1_BLUEWATERS_G2 ,True,unchanged,True,2026-10-25 11:51:07
+2024-05-21,1,210641,2024-05-21 10:38:50,declared,Due to forced outages on MUJA _G6 and BW1_BLUEWATERS_G2 ,True,unchanged,True,2026-10-25 11:51:07
+2024-05-22,1,210647,2024-05-22 09:41:29,declared,Due to forced outages on MUJA _G6 and BW1_BLUEWATERS_G2,True,unchanged,True,2026-10-25 11:51:07
+2024-05-23,1,210654,2024-05-23 10:35:51,declared,Due to forced outages on MUJA _G6 and BW1_BLUEWATERS_G2,True,unchanged,True,2026-10-25 11:51:07
+2024-06-04,1,210696,2024-06-04 09:20:29,declared,Due to forced outages on COCKBURN_CCG1 and low forecast Semi-Scheduled generation,True,unchanged,True,2026-10-25 11:51:07
+2024-06-10,1,210734,2024-06-10 08:48:03,declared,Due to scheduled generation outages and low forecast wind availability,True,unchanged,True,2026-10-25 11:51:07
+2024-06-11,2,210752|210753,2024-06-11 07:28:11,declared,Due to scheduled generation outages and low forecast wind availability,True,unchanged,True,2026-10-25 11:51:07
+2024-06-12,1,210772,2024-06-12 07:48:48,declared,Due to scheduled generation outages and low forecast wind availability,False,added_by_fix,True,2026-10-25 11:51:07
+2024-06-13,2,210794|210795,2024-06-13 08:18:04,declared,Due to scheduled generation outages and low forecast wind availability,True,unchanged,True,2026-10-25 11:51:07
+2024-06-25,1,210818,2024-06-25 10:23:30,declared,Due to scheduled generation outages and low forecast wind availability,True,unchanged,True,2026-10-25 11:51:07
+2024-08-01,1,210880,2024-08-01 08:51:35,declared,Due to scheduled and unscheduled generation outages and low forecast wind availability,True,unchanged,True,2026-10-25 11:51:07
+2024-08-04,1,210887,2024-08-04 09:34:16,declared,Due to scheduled and unscheduled generation outages and low forecast wind availability,True,unchanged,True,2026-10-25 11:51:07
+2024-09-27,0,,,,,True,removed_by_fix,False,2026-10-25 11:51:07
+2024-09-28,1,210995,2024-09-28 04:27:01,declared, AEMO has declared Low Reserve Conditions (LRC) for the period between the 28 Sep 2024 through to at least the 31 Oct 20,False,added_by_fix,True,2026-10-25 11:51:07
+2024-12-10,2,210376|211158,2024-12-10 09:30:00,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2024-12-11,1,211160,2024-12-11 10:44:07,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2025-01-20,2,211227|211228,2025-01-20 12:15:35,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2025-01-21,2,211236|211239,2025-01-21 09:46:54,declared,Due to heatwaves forecast across the SWIS driving high Operational Demand,True,unchanged,True,2026-10-25 11:51:07
+2025-01-23,1,211244,2025-01-23 12:33:05,declared,AEMO has declared Low Reserve Conditions (LRC) for the peak period on 23/01/2025 13:00 - 20:30.The forecast condition le,True,unchanged,True,2026-10-25 11:51:07
+2025-03-06,1,211373,2025-03-06 11:27:46,declared,Due to scheduled generation Outages and low forecast wind availability,True,unchanged,True,2026-10-25 11:51:07
+2025-03-24,1,211402,2025-03-24 15:35:58,declared,Due to higher than forecast temperatures,True,unchanged,True,2026-10-25 11:51:07
+2025-03-26,1,211407,2025-03-26 10:52:25,declared,Due to higher than forecast temperatures,True,unchanged,True,2026-10-25 11:51:07
+2025-12-14,1,212284,2025-12-13 20:03:14,forecast,Due to high Forecast Unscheduled Operational Demand across the SWIS,True,unchanged,True,2026-10-25 11:51:07
+2026-01-21,1,212405,2026-01-20 21:49:32,forecast,Due to high Forecast Unscheduled Operational Demand across the SWIS,True,unchanged,True,2026-10-25 11:51:07
+2026-02-01,1,212430,2026-01-31 21:14:05,forecast,Due to high Forecast Unscheduled Operational Demand across the SWIS,True,unchanged,True,2026-10-25 11:51:07
+2026-06-09,1,300031,2026-06-08 22:11:26,forecast,Due to high Forecast Unscheduled Operational Demand across the SWIS,False,added_from_new_file,True,2026-10-25 11:51:07
+2026-07-21,1,300063,2026-07-21 08:51:01,forecast,"AEMO is forecasting potential Low Reserve Conditions (LRC) for the peak period on 21/07/2026, 17:30- 19:30. This is base",False,added_from_new_file,True,2026-10-25 11:51:07
+2026-10-13,1,300139,2026-10-12 20:12:08,forecast,Due to a number of Forced generator outages in the SWIS,False,added_from_new_file,True,2026-10-25 11:51:07

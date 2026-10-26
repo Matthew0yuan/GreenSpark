@@ -1,0 +1,190 @@
+{
+ "configs": {
+  "rel": {
+   "old": "v2_value_median.npz",
+   "new": "v2_value_median.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rel+ladder": {
+   "old": "v2_value_median.npz",
+   "new": "v2_value_median.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rel+ladder 48h": {
+   "old": "v2_value_median.npz",
+   "new": "v2_value_median.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw0": {
+   "old": "v2_value_median_h0.npz",
+   "new": "v2_value_median_h0.npz",
+   "same_name": true,
+   "guard": "table not at hand: v2_value_median_h0.npz: build it first (python -m vpp.v2.value --hurdle 0)"
+  },
+  "rw25": {
+   "old": "v2_value_median_h25.npz",
+   "new": "v2_value_median_h25.npz",
+   "same_name": true,
+   "guard": "table not at hand: v2_value_median_h25.npz: build it first (python -m vpp.v2.value --hurdle 25)"
+  },
+  "rw50": {
+   "old": "v2_value_median_h50.npz",
+   "new": "v2_value_median_h50.npz",
+   "same_name": true,
+   "guard": "table not at hand: v2_value_median_h50.npz: build it first (python -m vpp.v2.value --hurdle 50)"
+  },
+  "rw50+buy": {
+   "old": "v2_value_median_h50.npz",
+   "new": "v2_value_median_h50.npz",
+   "same_name": true,
+   "guard": "table not at hand: v2_value_median_h50.npz: build it first (python -m vpp.v2.value --hurdle 50)"
+  },
+  "rw50+state": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+regime": {
+   "old": "v2_value_median_h50_state_regime.npz",
+   "new": "v2_value_median_h50_state_regime.npz",
+   "same_name": true,
+   "guard": "table not at hand: v2_value_median_h50_state_regime.npz: build it first (python -m vpp.v2.value --hurdle 50 --state --regime)"
+  },
+  "rw50+state t5+roll": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+bid": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+bid floor": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+fill": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+lag20": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+lock": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+lock+cap": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+bid room": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+bid floor room": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+fill room": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+buy room": {
+   "old": "v2_value_median_h50.npz",
+   "new": "v2_value_median_h50.npz",
+   "same_name": true,
+   "guard": "table not at hand: v2_value_median_h50.npz: build it first (python -m vpp.v2.value --hurdle 50)"
+  },
+  "rw50+state t5+roll+curve": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rw50+state t5+roll+curve0": {
+   "old": "v2_value_median_h50_state.npz",
+   "new": "v2_value_median_h50_state.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rel+ladder lag 15 min": {
+   "old": "v2_value_median.npz",
+   "new": "v2_value_median.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rel+ladder lag 30 min": {
+   "old": "v2_value_median.npz",
+   "new": "v2_value_median.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rel+ladder 36 MWh": {
+   "old": "v2_value_median_36mwh.npz",
+   "new": "v2_value_median_36mwh.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rel+ladder unshifted": {
+   "old": "v2_value_median.npz",
+   "new": "v2_value_median.npz",
+   "same_name": true,
+   "guard": "accepted"
+  },
+  "rel+ladder mean level": {
+   "old": "v2_value_mean.npz",
+   "new": "v2_value_mean.npz",
+   "same_name": true,
+   "guard": "accepted"
+  }
+ },
+ "one_day": {
+  "rw50+state t5+roll": {
+   "day": "2025-04-01",
+   "total": 8507.785883660343
+  },
+  "rw50+state t5+roll+lock": {
+   "day": "2025-04-01",
+   "total": 8507.785883660343
+  },
+  "rel+ladder 36 MWh": {
+   "day": "2025-04-01",
+   "total": 7975.4031595258275
+  },
+  "rel+ladder mean level": {
+   "day": "2025-04-01",
+   "total": 7703.768201016068
+  }
+ }
+}

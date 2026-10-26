@@ -1,0 +1,83 @@
+{
+ "pass": true,
+ "calls": [
+  {
+   "argv": [
+    "--power",
+    "8",
+    "--hurdle",
+    "50",
+    "--state"
+   ],
+   "file": "v2_value_median_h50_state_pddde91fa.npz",
+   "seconds": 0.22,
+   "rewritten": false,
+   "command": "python -m vpp.v2.value --power 8 --hurdle 50 --state"
+  },
+  {
+   "argv": [
+    "--energy",
+    "36",
+    "--hurdle",
+    "50",
+    "--state"
+   ],
+   "file": "v2_value_median_36mwh_h50_state.npz",
+   "seconds": 0.19,
+   "rewritten": false,
+   "command": "python -m vpp.v2.value --energy 36 --hurdle 50 --state"
+  },
+  {
+   "argv": [
+    "--round-trip",
+    "0.88",
+    "--hurdle",
+    "50",
+    "--state"
+   ],
+   "file": "v2_value_median_h50_state_p9c12852e.npz",
+   "seconds": 0.21,
+   "rewritten": false,
+   "command": "python -m vpp.v2.value --round-trip 0.88 --hurdle 50 --state"
+  },
+  {
+   "argv": [
+    "--wear",
+    "40",
+    "--hurdle",
+    "50",
+    "--state"
+   ],
+   "file": "v2_value_median_h50_state_pb313fa69.npz",
+   "seconds": 0.22,
+   "rewritten": false,
+   "command": "python -m vpp.v2.value --wear 40 --hurdle 50 --state"
+  },
+  {
+   "argv": [
+    "--cmd",
+    "10",
+    "--hurdle",
+    "50",
+    "--state"
+   ],
+   "file": "v2_value_median_h50_state_pbd524b06.npz",
+   "seconds": 0.22,
+   "rewritten": false,
+   "command": "python -m vpp.v2.value --cmd 10 --hurdle 50 --state"
+  },
+  {
+   "argv": [
+    "--import-limit",
+    "15",
+    "--hurdle",
+    "50",
+    "--state"
+   ],
+   "file": "v2_value_median_h50_state.npz",
+   "seconds": 0.21,
+   "rewritten": false,
+   "command": "python -m vpp.v2.value --hurdle 50 --state"
+  }
+ ]
+}

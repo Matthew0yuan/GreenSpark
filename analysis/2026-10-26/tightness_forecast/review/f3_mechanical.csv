@@ -1,0 +1,5 @@
+score,n,k,hits,spearman_vs_label
+thermal + battery only,456,46,0,0.462
+thermal + battery - registered outage max,456,46,12,0.576
+M1,456,46,29,0.928
+B0 (minus demand),456,46,15,0.404

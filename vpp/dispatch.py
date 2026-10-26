@@ -780,7 +780,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     plan_shortfall_mwh); economic obligations are soft floors. Real time meets, in this order, the
     compliance caps (from any stored energy, even past the cycle limit), the compliance obligations'
     safety charging, then the economic caps (only from energy above what compliance needs, within the
-    cycle limit). Information arriving during the day (Reveal: e.g. the 09:00 forecast after an 08:00
+    cycle limit), all within the battery's power. Information arriving during the day (Reveal: e.g. the 09:00 forecast after an 08:00
     bridge plan, event notices) is followed by a re-plan from the actual state of charge; the capacity
     and availability tests are scored. With terms the summary and log also report the meter, the caps
     and the tests. terms=None is the plain dispatcher of the 1 MW study, unchanged.
@@ -1221,7 +1221,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                         pw, forced_mw = need_mw, max(forced_mw, need_mw)
                     elif not safety:  # an economic cap never holds back charging that compliance needs
                         pw = max(pw, min(need_mw, max(0.0, (s - keep_e) * eta / DT5)))
-            pw = min(max(pw, -imp_room[t]), exp_room[t])  # the connection, with the site's actual load
+            # the connection, with the site's actual load, and the battery's power: what a cap asks beyond it stays on
+            # the meter (the caps' excess and the bills count it)
+            pw = min(max(pw, -imp_room[t], -P), exp_room[t], P)
             if pw > 0:
                 pw = min(pw, s * eta / DT5, budget / DT5 if forced_mw <= 0 else max(budget / DT5, forced_mw))
                 s -= pw * DT5 / eta

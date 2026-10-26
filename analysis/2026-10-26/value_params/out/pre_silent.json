@@ -1,0 +1,25 @@
+{
+ "vpp_changes_at_run": " M vpp/__pycache__/__init__.cpython-313.pyc\n M vpp/__pycache__/aemo_correction.cpython-313.pyc\n M vpp/__pycache__/backtest.cpython-313.pyc\n M vpp/__pycache__/config.cpython-313.pyc\n M vpp/__pycache__/contracts.cpython-313.pyc\n M vpp/__pycache__/data.cpython-313.pyc\n M vpp/__pycache__/dispatch.cpython-313.pyc\n M vpp/__pycache__/evaluate.cpython-313.pyc\n M vpp/__pycache__/forecast.cpython-313.pyc\n M vpp/__pycache__/scenarios.cpython-313.pyc\n M vpp/__pycache__/site.cpython-313.pyc\n M vpp/__pycache__/site_bill.cpython-313.pyc\n M vpp/__pycache__/spike_risk.cpython-313.pyc\n M vpp/__pycache__/stochastic.cpython-313.pyc\n M vpp/__pycache__/storage_value.cpython-313.pyc\n M vpp/__pycache__/wa_calendar.cpython-313.pyc\n M vpp/spike/__pycache__/__init__.cpython-313.pyc\n M vpp/spike/__pycache__/outages.cpython-313.pyc\n M vpp/v2/__pycache__/__init__.cpython-313.pyc\n M vpp/v2/__pycache__/backtest.cpython-313.pyc\n M vpp/v2/__pycache__/bids.cpython-313.pyc\n M vpp/v2/__pycache__/config.cpython-313.pyc\n M vpp/v2/__pycache__/harness.cpython-313.pyc\n M vpp/v2/__pycache__/horizon.cpython-313.pyc\n M vpp/v2/__pycache__/record.cpython-313.pyc\n M vpp/v2/__pycache__/reserves.cpython-313.pyc\n M vpp/v2/__pycache__/risk.cpython-313.pyc\n M vpp/v2/__pycache__/value.cpython-313.pyc\n",
+ "battery": "Battery(power_mw=8.0, energy_mwh=40.0, round_trip=0.85)",
+ "days": [
+  {
+   "day": "2025-04-01",
+   "total": 6601.6171954784095,
+   "soc_end": 19.467250733975042,
+   "max_grid_mw": 6.0
+  },
+  {
+   "day": "2025-04-02",
+   "total": 8586.002504201515,
+   "soc_end": 32.880550116508964,
+   "max_grid_mw": 6.157625
+  }
+ ],
+ "error": null,
+ "tables_looked_up": [
+  "v2_value_median_h50_state.npz"
+ ],
+ "value_inputs_keys": [
+  "('median', 40.0, 50.0, True, False)"
+ ]
+}

@@ -248,7 +248,7 @@ def report(day: pd.Timestamp, at: str, name: str = "rel+ladder", step: str = "s3
         tom = sub[1]
         slots = np.arange(*sb.IRCR_SLOTS) if tom["day"] in set(aux["flags1"]) else None  # flagged at 09:00 today
         part = hs.tomorrow_part(day, tom, sub[2] if len(sub) > 2 else None, route, site, sc.asset, prefs, mtd0, slots,
-                                hs.value_inputs(cfg, sc.asset.battery), aux["ircr_value_mw"],
+                                hs.value_inputs(cfg, sc.asset, site, route.cmd_mw), aux["ircr_value_mw"],
                                 sb.RT7(route.cmd_mw / sb.PF * 1000).enuc_per_mw(), cfg.curve_shift)
         if part is not None:
             ref = hz.reference(rec, part, sc.asset, site, prefs, dp.decision_wear(sc.asset, prefs))

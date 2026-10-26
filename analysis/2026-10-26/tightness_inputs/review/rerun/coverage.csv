@@ -1,0 +1,5 @@
+period,start,end,days,with_predispatch,with_outages,with_capacity_credits,with_battery,with_stpasa,with_weather,inputs_complete,label_complete,inputs_and_label,spike_known,lrc_days
+history,2024-01-01,2025-03-31,456,450,456,456,456,454,388,381,456,381,456,37
+in_sample,2025-04-01,2026-06-30,456,456,456,456,456,455,456,455,456,455,456,4
+test_seen,2026-07-01,2026-10-15,107,107,107,107,107,103,107,103,106,102,107,2
+test_unseen,2026-10-16,2026-10-22,7,1,2,7,3,7,7,1,0,0,7,0

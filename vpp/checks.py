@@ -9,6 +9,7 @@ stay within their limits, the reported caps, tests and money can be recomputed f
   I6  energy revenue = sum(RTP x MWh) of the log; ledger = market + capacity - refunds + contracts
   I7  energy discharged <= the daily budget + called events' MWh + recorded overrun
   I8  capacity-year prices switch on 1 October
+  I11 the battery's half-hour mean output within its power
   bills: a meter equal to the factory's own load saves nothing and pays no excess charge at its own CMD;
          the IRCR of the logged runs recomputes from their meter at the 12 peak intervals
 
@@ -20,6 +21,7 @@ import pandas as pd
 
 from vpp import backtest as bt
 from vpp import contracts as ct
+from vpp import dispatch as dp
 from vpp import site as st
 from vpp import site_bill as sb
 from vpp.data import PROCESSED
@@ -59,6 +61,10 @@ def main() -> None:
     # I3
     soc_bad = ((logs["soc"] < -TOL) | (logs["soc"] > bt.Q2B_ASSET.battery.energy_mwh + TOL)).sum()
     ok &= _result("I3 stored energy within 0-40 MWh", int(soc_bad), len(logs), "intervals")
+
+    # I11 the battery's power: no half-hour's mean output (regulation's energy included) beyond what it can deliver
+    over_p = (np.abs(logs["energy_mwh"]) / dp.DT > bt.Q2B_ASSET.battery.power_mw + TOL).sum()
+    ok &= _result("I11 battery output within its power", int(over_p), len(logs), "intervals")
 
     # I4
     rcm = logs[logs["scenario"] == "RCM netted 4h"]

@@ -115,3 +115,10 @@ body{background:#FFFFFF}
 #cmp-hero,#v-hero{margin-top:18px}
 .vt-tiles{margin:6px 0 18px}
 @media (max-width:1365px){ .tb-in{gap:12px} .asset-sw button small{display:none} .tb-run .run small{display:none} }
+
+/* round 5: today's plan decides in one line, then the day */
+.dec-h,.dv{font-size:34px}
+.dec-row + .blk{margin-top:22px}
+.day-blk .blk-h{margin-bottom:4px}
+.day-blk .chartbox svg + svg{margin-top:12px}
+@media (max-width:1365px){ .dec-h,.dv{font-size:29px} }

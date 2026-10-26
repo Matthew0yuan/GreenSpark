@@ -13,8 +13,8 @@ One table per calendar month, from the WINDOW days of 30-min prices (RTP) before
             decisions are charged (so keeping energy and selling it are charged alike)
   limits    the battery's power and energy; charging keeps the meter within the CMD and the import limit at the
             factory's expected load for the month (no margin); where that load is above the CMD the battery must
-            discharge the excess, each MWh short costing SHORT_PENALTY (the RT7 excess charge per MW-month;
-            steering only). Left out: FCESS, IRCR and the cycle limit.
+            discharge the excess, each MWh short costing the RT7 excess charge per MW-month at the CMD
+            (short_penalty_for; steering only). Left out: FCESS, IRCR and the cycle limit.
   next      the next half-hour's price state, from transitions counted between consecutive half-hours (07:30 to
             the next 08:00 too), plus one pseudo-count spread over the next slot's bins by their frequency
 Solved by relative value iteration over the week until no marginal value moves more than TOL $/MWh (at most
@@ -56,8 +56,15 @@ B = len(BIN_Q) - 1
 WINDOW = pd.Timedelta(days=365)  # [fixed]
 GRID = 1.0                        # MWh between stored-energy points [fixed]
 STEP = 0.25                       # MWh of stored energy between decisions [fixed]
-CMD = 9.0                         # MW, m1's CMD (chosen on validation, q2b_main)
-SHORT_PENALTY = sb.RT7(sb.cmd_kva(CMD)).enuc_per_mw()  # $ per MWh the battery cannot shave above the CMD (steering)
+CMD = 9.0                         # MW, m1's CMD (chosen on validation, q2b_main): the default of actions and solve
+
+
+def short_penalty_for(cmd_mw: float) -> float:
+    """$ per MWh the battery cannot shave above a CMD of cmd_mw (the RT7 excess charge per MW-month; steering)."""
+    return sb.RT7(sb.cmd_kva(cmd_mw)).enuc_per_mw()
+
+
+SHORT_PENALTY = short_penalty_for(CMD)  # at the default CMD (actions and solve compute it from the CMD they are given)
 TOL, MAX_WEEKS = 0.01, 60
 MONTHS = pd.period_range("2025-04", "2026-10", freq="M")
 STRATS = {"value": bt.VALUE, "vt": f"{bt.VALUE}|vt", "vt+bid": f"{bt.VALUE}|vt|bid", "R=20": f"{bt.VALUE}|res=20"}
@@ -115,9 +122,13 @@ def load_profiles(month: pd.Period, site: st.Site = st.FACTORY) -> np.ndarray:
 
 
 def actions(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: st.Site = st.FACTORY,
-            short_penalty: float = SHORT_PENALTY) -> dict:
+            short_penalty: float | None = None, cmd_mw: float = CMD) -> dict:
     """(day of the week, slot) -> (stored energy after each decision from each point, which are feasible, and the
-    money of each decision in each price state), as solve takes them."""
+    money of each decision in each price state), as solve takes them. cmd_mw: the CMD charging keeps the meter
+    within (with the site's import limit); short_penalty: $ per MWh short of the load above it (None: the RT7 charge
+    at cmd_mw, short_penalty_for)."""
+    if short_penalty is None:
+        short_penalty = short_penalty_for(cmd_mw)
     bat = asset.battery
     E, P, eta = bat.energy_mwh, bat.power_mw, bat.eta
     grid = np.arange(0.0, E + 1e-9, GRID)
@@ -125,11 +136,11 @@ def actions(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site
     acts = {}
     for dow in range(7):
         for t in range(dp.N):
-            room = max(0.0, min(site.import_limit_mw, CMD) - load[dow, t])
+            room = max(0.0, min(site.import_limit_mw, cmd_mw) - load[dow, t])
             cmax, dmax = eta * min(P, room) * dp.DT, P * dp.DT / eta
             a = np.unique(np.r_[np.arange(-dmax, cmax, STEP), -dmax, 0.0, cmax])
             deliver, buy = np.clip(-a, 0.0, None) * eta, np.clip(a, 0.0, None) / eta
-            short = np.clip(max(0.0, load[dow, t] - CMD) * dp.DT - deliver, 0.0, None)
+            short = np.clip(max(0.0, load[dow, t] - cmd_mw) * dp.DT - deliver, 0.0, None)
             x = grid[:, None] + a[None, :]
             acts[dow, t] = (x, (x >= -1e-9) & (x <= E + 1e-9),
                             ps["means"][t][:, None] * (deliver - buy)[None, :] - dw * deliver - short_penalty * short)
@@ -150,12 +161,13 @@ def backward(V: np.ndarray, acts: dict, dow: int, trans: np.ndarray, E: float) -
 
 
 def solve(ps: dict, load: np.ndarray, asset=bt.Q2B_ASSET, prefs=bt.PREFS, site: st.Site = st.FACTORY,
-          short_penalty: float = SHORT_PENALTY) -> tuple[np.ndarray, int]:
+          short_penalty: float | None = None, cmd_mw: float = CMD) -> tuple[np.ndarray, int]:
     """V[day of the week, slot 0..48, stored-energy point, price state] (relative values) and the weeks it took.
-    short_penalty: $ per MWh the battery cannot shave above the CMD (0: shaving left to the caller, vpp.v2)."""
+    short_penalty: $ per MWh the battery cannot shave above the CMD (0: shaving left to the caller, vpp.v2; None:
+    the RT7 charge at cmd_mw). cmd_mw: the site's CMD (see actions)."""
     E = asset.battery.energy_mwh
     V = np.zeros((7, dp.N + 1, len(np.arange(0.0, E + 1e-9, GRID)), B))
-    acts = actions(ps, load, asset, prefs, site, short_penalty)
+    acts = actions(ps, load, asset, prefs, site, short_penalty, cmd_mw)
     prev = None
     for week in range(1, MAX_WEEKS + 1):
         V[6, dp.N] = V[0, 0]
