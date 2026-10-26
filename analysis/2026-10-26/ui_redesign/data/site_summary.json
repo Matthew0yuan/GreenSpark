@@ -1,0 +1,453 @@
+{
+ "generated": "2026-10-26",
+ "site": {
+  "battery": {
+   "power_mw": 10.0,
+   "energy_mwh": 40.0,
+   "round_trip": 0.85
+  },
+  "limits": {
+   "import_mw": 12.0,
+   "export_mw": 10.0,
+   "cmd_mw": 9.0
+  },
+  "route": "m1 (behind the factory meter)",
+  "config": "e5 = rw50+state t5+roll (adopted, reports/v2_plan.md section 12.9)",
+  "baseline": "v1, frozen at commit 90515d3 (reports/v2_plan.md header)"
+ },
+ "q2b": {
+  "periods": [
+   {
+    "period": {
+     "label": "in-sample",
+     "from": "2025-04-01",
+     "to": "2026-06-30",
+     "days": 456
+    },
+    "baseline_aud_per_day": 4262.11,
+    "optimizer_aud_per_day": 4668.97,
+    "uplift_aud_per_day": 406.86,
+    "uplift_pct": 9.5,
+    "ci95_aud_per_day": [
+     204.8,
+     600.2
+    ],
+    "ci95_note": "month-block bootstrap (vpp.v2.backtest.month_ci: whole calendar months resampled, 4000 draws, seed 0) on the current-code daily money; published (old code) [205.7, 601.5]. 7-day moving-block interval (vpp.stochastic.block_ci) [286.8, 542.2]",
+    "p10_daily_uplift_aud": -287.33,
+    "share_days_below_baseline": 0.3268,
+    "days_below_baseline": 149,
+    "worst_day": {
+     "day": "2026-04-28",
+     "uplift_aud": -11178.02
+    },
+    "market_uplift_aud_per_day": 185.89,
+    "published_old_code": {
+     "baseline_aud_per_day": 4260.79,
+     "optimizer_aud_per_day": 4668.94,
+     "uplift_aud_per_day": 408.16
+    }
+   },
+   {
+    "period": {
+     "label": "test-seen",
+     "from": "2026-07-01",
+     "to": "2026-10-15",
+     "days": 107
+    },
+    "baseline_aud_per_day": 1703.24,
+    "optimizer_aud_per_day": 2101.4,
+    "uplift_aud_per_day": 398.16,
+    "uplift_pct": 23.4,
+    "ci95_aud_per_day": null,
+    "ci95_note": "null: the repo reports intervals only for the combined 114-day test (see reference_test_combined); it lists this segment's mean without an interval (reports/v2_test_result.csv)",
+    "p10_daily_uplift_aud": -521.04,
+    "share_days_below_baseline": 0.3458,
+    "days_below_baseline": 37,
+    "worst_day": {
+     "day": "2026-08-26",
+     "uplift_aud": -1855.26
+    },
+    "market_uplift_aud_per_day": 168.37,
+    "published_old_code": {
+     "baseline_aud_per_day": 1703.24,
+     "optimizer_aud_per_day": 2101.4,
+     "uplift_aud_per_day": 398.16
+    }
+   },
+   {
+    "period": {
+     "label": "test-unseen",
+     "from": "2026-10-16",
+     "to": "2026-10-22",
+     "days": 7
+    },
+    "baseline_aud_per_day": 1770.08,
+    "optimizer_aud_per_day": 1805.38,
+    "uplift_aud_per_day": 35.3,
+    "uplift_pct": 2.0,
+    "ci95_aud_per_day": null,
+    "ci95_note": "null: the repo reports intervals only for the combined 114-day test (see reference_test_combined); findings.md section 27: 'only 7 days, no interval'",
+    "p10_daily_uplift_aud": -293.88,
+    "share_days_below_baseline": 0.4286,
+    "days_below_baseline": 3,
+    "worst_day": {
+     "day": "2026-10-20",
+     "uplift_aud": -583.09
+    },
+    "market_uplift_aud_per_day": 35.3,
+    "published_old_code": {
+     "baseline_aud_per_day": 1770.08,
+     "optimizer_aud_per_day": 1805.38,
+     "uplift_aud_per_day": 35.3
+    }
+   }
+  ],
+  "reference_test_combined": {
+   "period": {
+    "label": "test (seen + unseen combined, as the repo reports it)",
+    "from": "2026-07-01",
+    "to": "2026-10-22",
+    "days": 114
+   },
+   "uplift_aud_per_day": 375.88,
+   "ci95_aud_per_day": [
+    133.4,
+    579.2
+   ],
+   "ci95_7day_block_aud_per_day": [
+    233.6,
+    518.4
+   ],
+   "published_old_code": {
+    "uplift_aud_per_day": 375.88,
+    "ci95_aud_per_day": [
+     133.4,
+     579.2
+    ],
+    "ci95_7day_block_aud_per_day": [
+     233.6,
+     518.4
+    ]
+   },
+   "note": "Mixes the seen and unseen segments; not for display as a segment. It is the only test-period interval the repo reports (reports/v2_test_result.csv row test / rw50+state t5+roll / v1; findings.md section 27)."
+  },
+  "status": "backtest",
+  "derived": {
+   "uplift_pct": "100 * uplift_aud_per_day / baseline_aud_per_day",
+   "p10_daily_uplift_aud": "numpy.percentile(daily uplift, 10), linear interpolation; daily uplift = e5 money - v1 money",
+   "share_days_below_baseline": "(days with daily uplift < 0) / days, a fraction 0-1",
+   "worst_day": "day of the smallest daily uplift",
+   "market_uplift_aud_per_day": "mean of (e5 ledger_total - v1 ledger_total): market part only, no bill",
+   "ci95_aud_per_day": "in-sample only: the repo's own interval method (vpp.v2.backtest.month_ci) re-run on the current-code daily uplift; the published value (old code) is in ci95_note"
+  },
+  "money_definition": "A day's money = its ledger (energy + FCESS - wear; capacity, refunds, contracts are 0 on m1) + its calendar month's RT7 bill saving against the factory without a battery, per day (vpp.stochastic.daily_money). IRCR is not in it (see own_value).",
+  "source": "analysis/2026-10-26/ui_redesign/export/site_summary_replay.py -> export/site_summary_replay_money.csv (current code, columns v1 and rw50+state t5+roll); published (old code): reports/v2_test_daily.csv + reports/v2_test_bills.csv via vpp.stochastic.daily_money, reproducing reports/v2_test_result.csv; interval: vpp.v2.backtest.month_ci",
+  "note": "Current code differs from the published outputs on: e5 ['2025-12-05', '2025-12-08', '2026-02-02'], v1 ['2025-12-05', '2025-12-08', '2026-02-02'] (both were over 10 MW there before the 2026-10-26 fix). On those days v1 gains more than e5, so the in-sample uplift is a little lower than the published reports (see published_old_code); on 2026-10-26 reports/v2_test_*.csv and findings.md section 27 were regenerated with the fixed code and now equal these values. The test's seen / unseen split is reported by the repo for the means (reports/v2_test_result.csv rows 'test to 2026-10-15' and 'test from 2026-10-16'); p10, share and worst day are computed here from the daily money. Bill savings are monthly and spread over the month's days, so the unseen segment shares October's bill with the seen one. 2026-10-22 has no 'tomorrow' yet and changes at the next data refresh (findings.md 27.5)."
+ },
+ "q2a": {
+  "metric": "MAE, A$/MWh (energy price, half-hours 09:00-07:30 of each trading day)",
+  "baseline": "yesterday's price (same half-hour of the previous trading day, yday_energy)",
+  "forecast": "strict 09:00 same-day forecast the dispatcher uses: 50/50 blend of (AEMO pre-dispatch + ML correction + weather) and (ML + weather, no AEMO), walk-forward monthly refits, trained on data to 2026-06-30 at most (vpp/forecast.py)",
+  "periods": [
+   {
+    "period": {
+     "label": "in-sample",
+     "from": "2025-04-01",
+     "to": "2026-06-30",
+     "days": 456
+    },
+    "model": 20.12,
+    "baseline": 27.6,
+    "change_pct": -27.1,
+    "intervals": 20976
+   },
+   {
+    "period": {
+     "label": "test-seen",
+     "from": "2026-07-01",
+     "to": "2026-10-15",
+     "days": 107
+    },
+    "model": 19.66,
+    "baseline": 28.79,
+    "change_pct": -31.7,
+    "intervals": 4922
+   },
+   {
+    "period": {
+     "label": "test-unseen",
+     "from": "2026-10-16",
+     "to": "2026-10-22",
+     "days": 7
+    },
+    "model": 12.52,
+    "baseline": 16.12,
+    "change_pct": -22.3,
+    "intervals": 322
+   }
+  ],
+  "status": "derived",
+  "derived": {
+   "model": "mean |energy - actual_energy|",
+   "baseline": "mean |yday_energy - actual_energy|",
+   "change_pct": "100 * (model - baseline) / baseline (negative = smaller error than the baseline)"
+  },
+  "source": "data/processed/forecast_dispatch_0900.parquet columns energy, yday_energy, actual_energy, target_date; the same computation as vpp/forecast.py main(), split by period. Reproduces findings.md:754 (test 07-01..10-15: 19.66 vs 28.79) and findings.md:879 (in-sample point MAE 20.12).",
+  "note": "The repo reports the in-sample model MAE and the test-seen pair; the in-sample baseline and the test-unseen pair are computed here. Not an accuracy: a lower MAE is a smaller average error in A$/MWh."
+ },
+ "hard_limits": {
+  "periods": [
+   {
+    "period": {
+     "label": "in-sample",
+     "from": "2025-04-01",
+     "to": "2026-06-30",
+     "days": 456
+    },
+    "power": 0,
+    "soc": 0,
+    "meter_import": 0,
+    "meter_export": 0,
+    "cmd_exceeded_halfhours": 627,
+    "cmd_exceeded_days": 147,
+    "cmd_exceeded_halfhours_by_more_than_0_01_mw": 578,
+    "cmd_exceeded_halfhours_by_more_than_0_1_mw": 207,
+    "max_battery_mw": 10.0,
+    "max_meter_import_mw": 9.621,
+    "max_meter_export_mw": 7.626,
+    "halfhours_checked": 21888,
+    "published_old_code": {
+     "power": 3,
+     "power_days": 3,
+     "soc": 0,
+     "meter_import": 0,
+     "meter_export": 0,
+     "cmd_exceeded_halfhours": 627,
+     "max_battery_mw": 10.504
+    },
+    "baseline_v1": {
+     "power": 0,
+     "soc": 0,
+     "meter_import": 0,
+     "meter_export": 0,
+     "cmd_exceeded_halfhours": 1240,
+     "published_old_code_power": 3,
+     "published_old_code_power_days": [
+      "2025-12-05",
+      "2025-12-08",
+      "2026-02-02"
+     ]
+    },
+    "note": "Counts of half-hours (e5, current code) over: battery power 10 MW (|energy_mwh| / 0.5 h, vpp/checks.py I11), stored energy outside 0-40 MWh (I3), meter import 12 MW and export 10 MW (I1). CMD 9 MW is an economic limit priced in the RT7 bill (excess network use charge on the month's highest half-hour), not a hard limit; the dispatcher's cap is max(CMD, the month-to-date peak) (vpp/v2/harness.py:207), so once a month has gone above the CMD, later half-hours up to that peak add no charge. Meter above the CMD in 627 half-hours on 147 days (578 by more than 0.01 MW, 207 by more than 0.1 MW); months whose bill peak is above the CMD: 2025-04 9.621 MW, 2025-05 9.167 MW, 2025-06 9.290 MW, 2025-07 9.060 MW, 2025-08 9.059 MW, 2025-09 9.282 MW, 2025-10 9.121 MW, 2025-11 9.074 MW, 2026-01 9.032 MW, 2026-04 9.033 MW, 2026-06 9.115 MW, excess charge in those months A$26,308 (in the money above)"
+   },
+   {
+    "period": {
+     "label": "test-seen",
+     "from": "2026-07-01",
+     "to": "2026-10-15",
+     "days": 107
+    },
+    "power": 0,
+    "soc": 0,
+    "meter_import": 0,
+    "meter_export": 0,
+    "cmd_exceeded_halfhours": 116,
+    "cmd_exceeded_days": 27,
+    "cmd_exceeded_halfhours_by_more_than_0_01_mw": 115,
+    "cmd_exceeded_halfhours_by_more_than_0_1_mw": 91,
+    "max_battery_mw": 10.0,
+    "max_meter_import_mw": 9.115,
+    "max_meter_export_mw": 7.27,
+    "halfhours_checked": 5136,
+    "published_old_code": {
+     "power": 0,
+     "power_days": 0,
+     "soc": 0,
+     "meter_import": 0,
+     "meter_export": 0,
+     "cmd_exceeded_halfhours": 116,
+     "max_battery_mw": 10.0
+    },
+    "baseline_v1": {
+     "power": 0,
+     "soc": 0,
+     "meter_import": 0,
+     "meter_export": 0,
+     "cmd_exceeded_halfhours": 236,
+     "published_old_code_power": 0,
+     "published_old_code_power_days": []
+    },
+    "note": "Counts of half-hours (e5, current code) over: battery power 10 MW (|energy_mwh| / 0.5 h, vpp/checks.py I11), stored energy outside 0-40 MWh (I3), meter import 12 MW and export 10 MW (I1). CMD 9 MW is an economic limit priced in the RT7 bill (excess network use charge on the month's highest half-hour), not a hard limit; the dispatcher's cap is max(CMD, the month-to-date peak) (vpp/v2/harness.py:207), so once a month has gone above the CMD, later half-hours up to that peak add no charge. Meter above the CMD in 116 half-hours on 27 days (115 by more than 0.01 MW, 91 by more than 0.1 MW); months whose bill peak is above the CMD: 2026-07 9.115 MW, 2026-10 9.017 MW, excess charge in those months A$1,553 (in the money above)"
+   },
+   {
+    "period": {
+     "label": "test-unseen",
+     "from": "2026-10-16",
+     "to": "2026-10-22",
+     "days": 7
+    },
+    "power": 0,
+    "soc": 0,
+    "meter_import": 0,
+    "meter_export": 0,
+    "cmd_exceeded_halfhours": 10,
+    "cmd_exceeded_days": 5,
+    "cmd_exceeded_halfhours_by_more_than_0_01_mw": 10,
+    "cmd_exceeded_halfhours_by_more_than_0_1_mw": 0,
+    "max_battery_mw": 10.0,
+    "max_meter_import_mw": 9.017,
+    "max_meter_export_mw": 5.442,
+    "halfhours_checked": 336,
+    "published_old_code": {
+     "power": 0,
+     "power_days": 0,
+     "soc": 0,
+     "meter_import": 0,
+     "meter_export": 0,
+     "cmd_exceeded_halfhours": 10,
+     "max_battery_mw": 10.0
+    },
+    "baseline_v1": {
+     "power": 0,
+     "soc": 0,
+     "meter_import": 0,
+     "meter_export": 0,
+     "cmd_exceeded_halfhours": 0,
+     "published_old_code_power": 0,
+     "published_old_code_power_days": []
+    },
+    "note": "Counts of half-hours (e5, current code) over: battery power 10 MW (|energy_mwh| / 0.5 h, vpp/checks.py I11), stored energy outside 0-40 MWh (I3), meter import 12 MW and export 10 MW (I1). CMD 9 MW is an economic limit priced in the RT7 bill (excess network use charge on the month's highest half-hour), not a hard limit; the dispatcher's cap is max(CMD, the month-to-date peak) (vpp/v2/harness.py:207), so once a month has gone above the CMD, later half-hours up to that peak add no charge. Meter above the CMD in 10 half-hours on 5 days (10 by more than 0.01 MW, 0 by more than 0.1 MW); the October bill is shared with the seen segment (10-01..10-15), so this segment's charge is not separable (October 2026 bill peak 9.017 MW, excess charge A$0)"
+   }
+  ],
+  "power_cap_note": "Results made before the 2026-10-26 fix (analysis/2026-10-26/power_cap_fix): e5 was over 10 MW on 3 in-sample days (2025-12-05, 2025-12-08, 2026-02-02, 17:00-17:30, up to 10.50 MW; 3 half-hours); fixed code: 0 on every day. Money effect on e5 in-sample +A$0.02/day, test 0. The v1 baseline was also over 10 MW in the published outputs (3 half-hours on 2025-12-05, 2025-12-08, 2026-02-02); with the fixed code it is 0 and v1 earns +A$1.32/day more in-sample, so the in-sample uplift is 406.86 (published 408.16). Test periods unchanged.",
+  "status": "derived",
+  "derived": {
+   "power": "count of half-hours with |energy_mwh| / 0.5 h > 10 MW + 1e-6",
+   "soc": "count of half-hours with soc < -1e-6 or > 40 MWh + 1e-6",
+   "meter_import": "count of half-hours with meter_mw > 12 MW + 1e-6",
+   "meter_export": "count of half-hours with -meter_mw > 10 MW + 1e-6",
+   "cmd_exceeded_halfhours": "count of half-hours with meter_mw > 9 MW + 1e-6"
+  },
+  "source": "analysis/2026-10-26/ui_redesign/export/site_summary_replay.py -> export/site_summary_replay_log.parquet (current code; conditions as vpp/v2/checks.py execution() I1, I3 and vpp/checks.py I11, tolerance 1e-6), run here on the half-hour log, not by vpp/checks.py itself; published: data/processed/v2_test_log.parquet; month peaks and excess charge: export/site_summary_replay_bills.csv columns peak_mw, enuc"
+ },
+ "own_value": {
+  "periods": [
+   {
+    "period": {
+     "label": "in-sample",
+     "from": "2025-04-01",
+     "to": "2026-06-30",
+     "days": 456
+    },
+    "market_plus_bill_aud_per_day": 4669.0,
+    "market_aud_per_day": 3200.1,
+    "bill_saving_aud_per_day": 1468.8
+   },
+   {
+    "period": {
+     "label": "test-seen",
+     "from": "2026-07-01",
+     "to": "2026-10-15",
+     "days": 107
+    },
+    "market_plus_bill_aud_per_day": 2101.4,
+    "market_aud_per_day": 589.2,
+    "bill_saving_aud_per_day": 1512.2
+   },
+   {
+    "period": {
+     "label": "test-unseen",
+     "from": "2026-10-16",
+     "to": "2026-10-22",
+     "days": 7
+    },
+    "market_plus_bill_aud_per_day": 1805.4,
+    "market_aud_per_day": 278.6,
+    "bill_saving_aud_per_day": 1526.8
+   }
+  ],
+  "ircr_saving_aud_per_year": 2116715.9,
+  "ircr_season": "2025-26",
+  "ircr": {
+   "period": {
+    "label": "in-sample",
+    "from": "2025-12-01",
+    "to": "2026-03-31",
+    "season": "Hot Season 2025-26",
+    "sets": "the factory's IRCR for capacity year 2026-27"
+   },
+   "ircr_mw": 0.0,
+   "ircr_no_battery_mw": 6.242,
+   "peak_intervals_covered": 12,
+   "peak_intervals": 12,
+   "peak_days_covered": 4,
+   "peak_days": 4,
+   "formula": "(ircr_no_battery_mw - ircr_mw) x 216,091.78 A$/(MW*yr) (vpp/contracts.py RCP[2026], 2026-27) x 1.5693 (vpp/site_bill.py IRCR_RATIO, AEMO TDL x Total ratio for 2026-10)",
+   "note": "Current (old) IRCR definition: 4 peak days x 3 half-hours = 12 Peak SWIS Trading Intervals (AEMO's published 2025-26 intervals, vpp/site_bill.py OFFICIAL_PEAK_INTERVALS). In-sample only; no out-of-sample test until the 2026-27 Hot Season (2026-12-01..2027-03-31). Not in the per-day money."
+  },
+  "status": "backtest",
+  "derived": {
+   "market_plus_bill_aud_per_day": "mean daily money (ledger + monthly bill saving per day)",
+   "bill_saving_aud_per_day": "market_plus_bill - market"
+  },
+  "source": "analysis/2026-10-26/ui_redesign/export/site_summary_replay.py -> export/site_summary_replay_money.csv, _ledger.csv, _ircr.csv; equals analysis/2026-10-26/power_cap_fix/out/after_money.csv and after_ircr.csv; published (old code) values in power_cap_fix/RESULTS.md section 2"
+ },
+ "gaps": [
+  {
+   "field": "q2b.periods[test-seen].ci95_aud_per_day",
+   "reason": "null: the repo reports intervals only for the combined 114-day test (see reference_test_combined); it lists this segment's mean without an interval (reports/v2_test_result.csv)"
+  },
+  {
+   "field": "q2b.periods[test-unseen].ci95_aud_per_day",
+   "reason": "null: the repo reports intervals only for the combined 114-day test (see reference_test_combined); findings.md section 27: 'only 7 days, no interval'"
+  },
+  {
+   "field": "own_value.ircr (test-seen, test-unseen)",
+   "reason": "No Hot Season after the cutoff; IRCR cannot be scored out of sample until 2026-27 (findings.md 16.6)."
+  },
+  {
+   "field": "hard_limits (contractual, market eligibility)",
+   "reason": "No check exists in the repo for these; not part of the counts."
+  },
+  {
+   "field": "hard_limits (check runner)",
+   "reason": "vpp/checks.py and vpp.v2.checks were not run on the current-code replay (they read the published files and would rewrite nothing, but are wired to reports/ and data/processed/); the counts apply their conditions (I1, I3, I11) to the replay's half-hour log here."
+  },
+  {
+   "field": "q2b, own_value bill part",
+   "reason": "The bill saving rests on a synthetic factory load (findings.md 27.5); no real load or retail contract verified."
+  }
+ ],
+ "sources": {
+  "adopted_config_and_baseline": "reports/v2_plan.md (header; sections 12.9, 14, 15.7)",
+  "published_results": "reports/findings.md section 27; reports/v2_test_result.csv",
+  "power_cap_fix": "analysis/2026-10-26/power_cap_fix/RESULTS.md, out/compare.json, out/after_*.csv",
+  "replay": "analysis/2026-10-26/ui_redesign/export/site_summary_replay.py",
+  "export": "analysis/2026-10-26/ui_redesign/export/site_summary_export.py",
+  "reviews_checked": "No number used here is reported as wrong or unverified in analysis/2026-10-26/{value_params,customer_kwh_value,tightness_forecast,tightness_inputs}/REVIEW.md or analysis/2026-10-25/mvp_review/REVIEW_*.md. value_params/REVIEW.md issue 4 (power over the rating; 8 MW Hot Season IRCR overstated) is the bug the 2026-10-26 fix removed; no 8 MW figure is used.",
+  "checks_run": [
+   "PASS  replay money = daily_money(replay ledger, replay bills)",
+   "PASS  same 570 days in published, fix rerun and replay",
+   "PASS  in-sample has 456 days: 456",
+   "PASS  test-seen has 107 days: 107",
+   "PASS  published money reproduces v2_test_result.csv, in-sample: e5 4668.94/day, e5 - v1 408.16/day",
+   "PASS  published money reproduces v2_test_result.csv, test-seen: e5 2101.40/day, e5 - v1 398.16/day",
+   "PASS  published money reproduces v2_test_result.csv, test-unseen: e5 1805.38/day, e5 - v1 35.30/day",
+   "PASS  replay e5 = power_cap_fix/out/after_money.csv e5: largest daily difference 5.5e-12",
+   "PASS  e5 differs from published only on the 3 days power_cap_fix names: ['2025-12-05', '2025-12-08', '2026-02-02']",
+   "PASS  month_ci on published money reproduces the published in-sample interval: [205.7, 601.5]",
+   "PASS  month_ci on published money reproduces the published 114-day test interval: [133.4, 579.2]",
+   "PASS  q2a in-sample: forecast covers every day: 456 days",
+   "PASS  q2a test-seen: forecast covers every day: 107 days",
+   "PASS  q2a test-unseen: forecast covers every day: 7 days",
+   "PASS  q2a test-seen reproduces findings.md:754 (MAE 19.66, yesterday 28.79): 19.66 / 28.79",
+   "PASS  q2a in-sample model reproduces findings.md:879 (point MAE 20.12): 20.12",
+   "PASS  published log: e5 power excess days = power_cap_fix before_power: [3, 0, 0]",
+   "PASS  replay log: e5 power excess = power_cap_fix after_power (0): [0, 0, 0]",
+   "PASS  own value in-sample: published (old code) 4668.9 = power_cap_fix RESULTS.md 4668.9: current code 4669.0",
+   "PASS  own value test-seen: published (old code) 2101.4 = power_cap_fix RESULTS.md 2101.4: current code 2101.4",
+   "PASS  own value test-unseen: published (old code) 1805.4 = power_cap_fix RESULTS.md 1805.4: current code 1805.4",
+   "PASS  IRCR saving: replay = published = power_cap_fix after_ircr: 2,116,715.90"
+  ]
+ }
+}

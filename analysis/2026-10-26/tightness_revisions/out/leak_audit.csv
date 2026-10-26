@@ -1,0 +1,41 @@
+check,source,variant,period,days,with_value,public_by_issue,violations,unknown_time,missing_share,expect,mismatches,compared,note,changed,share_flagged,pass
+A1,outages,delivered,all,1026.0,1021.0,1021.0,0.0,0.0,0.0049,0,,,,,,True
+A1,outages,delivered,history,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,True
+A1,outages,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,True
+A1,outages,delivered,test_seen,107.0,107.0,107.0,0.0,0.0,0.0,0,,,,,,True
+A1,outages,delivered,test_unseen,7.0,2.0,2.0,0.0,0.0,0.7143,0,,,,,,True
+A1,stpasa,delivered,all,1026.0,1020.0,1020.0,0.0,0.0,0.0058,0,,,,,,True
+A1,stpasa,delivered,history,456.0,454.0,454.0,0.0,0.0,0.0044,0,,,,,,True
+A1,stpasa,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,True
+A1,stpasa,delivered,test_seen,107.0,103.0,103.0,0.0,0.0,0.0374,0,,,,,,True
+A1,stpasa,delivered,test_unseen,7.0,7.0,7.0,0.0,0.0,0.0,0,,,,,,True
+A1,cross,delivered,all,1026.0,1008.0,1008.0,0.0,0.0,0.0175,0,,,,,,True
+A1,cross,delivered,history,456.0,448.0,448.0,0.0,0.0,0.0175,0,,,,,,True
+A1,cross,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,True
+A1,cross,delivered,test_seen,107.0,103.0,103.0,0.0,0.0,0.0374,0,,,,,,True
+A1,cross,delivered,test_unseen,7.0,1.0,1.0,0.0,0.0,0.8571,0,,,,,,True
+A1,weather,delivered,all,1026.0,990.0,990.0,0.0,0.0,0.0351,0,,,,,,True
+A1,weather,delivered,history,456.0,420.0,420.0,0.0,0.0,0.0789,0,,,,,,True
+A1,weather,delivered,in_sample,456.0,456.0,456.0,0.0,0.0,0.0,0,,,,,,True
+A1,weather,delivered,test_seen,107.0,107.0,107.0,0.0,0.0,0.0,0,,,,,,True
+A1,weather,delivered,test_unseen,7.0,7.0,7.0,0.0,0.0,0.0,0,,,,,,True
+A2,outages: current,delivered,all,,1021.0,,,,,0,0.0,,,,,True
+A2,outages: previous,delivered,all,,1021.0,,,,,0,0.0,,,,,True
+A2,stpasa: current,delivered,all,,1020.0,,,,,0,0.0,,,,,True
+A2,stpasa: previous,delivered,all,,1013.0,,,,,0,0.0,,,,,True
+A2,cross: stpasa,delivered,all,,1008.0,,,,,0,0.0,,,,,True
+A2,cross: predispatch,delivered,all,,1008.0,,,,,0,0.0,,,,,True
+A2,weather: current,delivered,all,,990.0,,,,,0,0.0,,,,,True
+A2,weather: previous,delivered,all,,990.0,,,,,0,0.0,,,,,True
+A3,outages: revision and 24 h new loss,delivered,20 random days,,,,,,,0,0.0,400.0,,,,True
+A3,stpasa: Reference revision,delivered,100 random days,,,,,,,0,0.0,1000.0,,,,True
+A3,weather: Perth daytime max revision,delivered,100 random days,,,,,,,0,0.0,100.0,,,,True
+A4,outages: forced records in 24 h (facilities),vs spike_table,overlap,,,,,,,0,0.0,10200.0,,,,True
+A4,outages: thermal 24 h new <= all scheduled,vs spike_table,overlap,,,,,,,0,0.0,10200.0,,,,True
+A4,stpasa: Reference revision,vs spike_table,overlap,,,,,,,report only,13.0,10080.0,"3 with a different report used; days ['2024-03-18', '2024-06-12']",,,True
+A4,stpasa: energy shortfall flag,vs spike_table,overlap,,,,,,,report only,0.0,10140.0,,,,True
+A5,all revision columns,delivered,40 random days,,,,,,,0,,4400.0,,0.0,,True
+P4,A5 on the D / D-1 snapshot variant,leak control,40 random days,,,,,,,> 0,,4400.0,,882.0,,True
+P1,outages,snapshots of D and D-1,all,1026.0,1020.0,0.0,1020.0,0.0,0.0058,>= 99%,,,,,1.0,True
+P2,stpasa,reports dated D-1 and D-2,all,1026.0,967.0,0.0,967.0,0.0,0.0575,> 0,,,,,1.0,True
+P3,weather,fixed day-1 / day-2 vintages,all,1026.0,959.0,0.0,959.0,0.0,0.0653,> 0,,,,,1.0,True

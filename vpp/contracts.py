@@ -7,6 +7,12 @@ capacity up to the connection's CMD) must register as a Scheduled facility (ESM 
 battery and the factory behind one meter are one facility (2.29.1B(c)). Market obligations are net
 injection at the meter: the battery first supplies the factory's load. A registered facility can only
 sign the registered-facility form of a contract.
+Non-Scheduled [verified, ESM Rules 1 Oct 2026]: only below 10 MW of system size per facility (2.29.4G-J); a
+network of storage sites can be several facilities, as only facilities at one zone substation aggregate
+(2.30.5(d)). Each 5 minutes it submits the MW it intends to inject at the price floor, or to withdraw at the
+price ceiling (7.4.8); AEMO does not dispatch it (7.6.12), so it cannot offer into a price, and it is not
+enabled for FCESS (7.6.2). It acts on prices already published: how many 5-minute steps after a price it can
+act depends on AEMO's Gate Closure [not verified].
 
 Capacity credits [verified]: certified capacity is net of the loads behind the meter (4.11.3); the
 netted credits here are a proxy, as AEMO's method is not published. The obligation: in every 5-minute
@@ -30,7 +36,7 @@ own output); its fee is not published.
 PPA / energy supply to the factory: a backup reserve kept for outages (battery only) [assumed].
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 import pandas as pd
@@ -51,6 +57,8 @@ SCM_AO_PRICE = 500.0    # $/MWh, activation-only contracts (unregistered equipme
 HOT_DAY = pd.Timestamp("2026-02-03")  # a hot-season Tuesday: the load profile capacity is certified on
 ESR_DURATION_H = 4.0  # duration requirement behind an ESR's capacity credits before the 7 h rule [researched]
 SCHEDULED_MIN_MW = 10.0  # a facility of 10 MW or more must register as Scheduled (ESM Rules 2.29.4) [verified]
+                         # and can never be Non-Scheduled (2.29.4J) [verified]
+REGISTRATIONS = ("scheduled", "non_scheduled", "none")
 FCESS_MIN_MW = {"reg_raise": 10.0, "cont_raise": 5.0, "reg_lower": 10.0, "cont_lower": 5.0}  # accredited capability
                                                          # (AEMO FCESS accreditation procedure v3.0) [verified]
 SCM_MIN_MW = 5.0         # each 2025-26 Supplementary Capacity contract is at least 5 MW [verified]
@@ -89,6 +97,15 @@ def window_7h(day: pd.Timestamp) -> tuple[int, int]:
 def hot_weekday_load(site: st.Site) -> np.ndarray:
     ts = pd.date_range(HOT_DAY + pd.Timedelta(hours=8), periods=dp.N, freq="30min")
     return st.example_load(ts)[0] * site.load_scale
+
+
+def system_size_mw(bat: Battery, site: st.Site | None = None, cmd_mw: float | None = None, facilities: int = 1) -> float:
+    """System Size of each facility (ESM Rules glossary, p. 829): what it can send out (the battery's power, at most
+    the connection's export limit) plus the storage's charging power (at most the connection's CMD: the route's,
+    else the site's import limit), split evenly over `facilities`."""
+    out = bat.power_mw if site is None else min(bat.power_mw, site.export_limit_mw)
+    cmd = cmd_mw if cmd_mw is not None else (np.inf if site is None else site.import_limit_mw)
+    return (out + min(bat.power_mw, cmd)) / facilities
 
 
 def credited_mw(bat: Battery, duration_h: float = ESR_DURATION_H) -> float:
@@ -197,7 +214,11 @@ class Route:
     capacity obligation is held is a risk preference (vpp.config.RiskPrefs.capacity_floor)."""
     name: str
     metering: str = "behind"            # "behind" the factory's meter, or "standalone" (own connection, no factory)
-    registration: str = "scheduled"     # "scheduled" (required from 10 MW of system size) or "none"
+    # "scheduled" (required from 10 MW of system size: offers, FCESS), "non_scheduled" (below 10 MW per facility:
+    # self-scheduled on prices already published, no FCESS) or "none" (not registered)
+    registration: str = "scheduled"
+    facilities: int = 1                 # facilities the battery's MW are split over (e.g. one per zone substation)
+    gate_lag: int = 1                   # not Scheduled: acts this many 5-min steps after the price it acts on [assumed]
     fcess: tuple = tuple(dp.FCESS)      # FCESS services the facility is accredited for; () for none
     retail: str = "wholesale"           # the meter's energy: "wholesale" (RTP passed through) or "fixed" (RETAIL_FIXED, no paid export)
     export_service: bool = True         # a network service that lets the meter export (RT7 is import-only) [assumed, cost not modelled]
@@ -216,18 +237,30 @@ class Route:
     def check(self, bat: Battery, site: st.Site | None = None, load_margin: float = 0.0) -> list[str]:
         """Raise if the configuration is not allowed or cannot be had; return warnings about what it
         commits to that the battery cannot always cover (see firmness)."""
-        power_mw = bat.power_mw
         errors, warnings = [], []
         behind = self.metering == "behind"
+        if self.registration not in REGISTRATIONS:
+            errors.append(f"registration {self.registration!r} is not one of {', '.join(REGISTRATIONS)}")
+        if self.facilities < 1:
+            errors.append("at least one facility")
+        power_mw = bat.power_mw / max(1, self.facilities)  # each facility's
+        size = system_size_mw(bat, site if behind else None, self.cmd_mw if behind else None, max(1, self.facilities))
         if self.rcm == "gross" and behind:
             errors.append("gross credits need the battery metered on its own")
         if self.rcm and behind and (self.ircr is not None or self.ircr_hindsight):
             errors.append("a facility with capacity credits and a load must not run its battery to reduce IRCR (ESM 7.10.6B)")
-        if power_mw >= SCHEDULED_MIN_MW and self.registration != "scheduled":
-            errors.append(f"a system size of {SCHEDULED_MIN_MW:g} MW or more must register as Scheduled (ESM Rules 2.29.4)")
+        if size >= SCHEDULED_MIN_MW and self.registration != "scheduled":
+            errors.append(f"a system size of {size:.3g} MW per facility (sending out plus charging) must register as Scheduled, "
+                          f"never Non-Scheduled, from {SCHEDULED_MIN_MW:g} MW (ESM Rules 2.29.4, 2.29.4J)")
         if self.fcess and self.registration != "scheduled":
             errors.append("only a registered (Scheduled) facility can be enabled for FCESS (ESM 7.6.2)")
         errors += [f"{k} needs at least {FCESS_MIN_MW[k]:g} MW" for k in self.fcess if power_mw < FCESS_MIN_MW[k]]
+        if self.registration != "scheduled":
+            if self.rcm:
+                errors.append("capacity credits are modelled for a Scheduled facility only: how a Non-Scheduled or "
+                              "unregistered storage facility's obligation is tested is not verified")
+            if self.gate_lag < 1:
+                errors.append("a facility AEMO does not dispatch acts only on prices already published (gate_lag >= 1)")
         names = [c.name for c in self.contracts]
         if len(set(names)) < len(names):
             errors.append("at most one contract of each kind")
@@ -236,8 +269,11 @@ class Route:
         for c in self.contracts:
             if c.on_offer:
                 errors.append(f"{c.name} is not on offer: {c.on_offer}")
-            if self.registration == "scheduled" and c.form == "unregistered" and c.name.startswith("scm"):
+            if self.registration != "none" and c.form == "unregistered" and c.name.startswith("scm"):
                 errors.append(f"{c.name} is the unregistered-equipment form; a registered facility signs the registered form")
+            if self.registration != "scheduled" and c.form == "registered":
+                errors.append(f"{c.name} is the registered-facility form: AEMO dispatches the contracted MW every 5 minutes, "
+                              "and only a Scheduled facility is dispatched here (ESM 7.6.12)")
             if self.rcm and c.excludes_capacity:
                 errors.append(f"{c.name} cannot be held with capacity credits for the same MW")
             if c.name.startswith("scm") and c.mw < SCM_MIN_MW:
@@ -254,6 +290,12 @@ class Route:
     def assumptions(self) -> list[str]:
         """The market access this configuration assumes that the project has not verified."""
         out = []
+        if self.registration != "scheduled":
+            out.append(f"{self.registration}: acts {self.gate_lag} 5-min step(s) after the latest published price it acts on "
+                       "(AEMO's Gate Closure) [not verified]")
+        if self.facilities > 1:
+            out.append(f"the battery's MW split evenly over {self.facilities} facilities, e.g. one per zone substation "
+                       "(ESM 2.30.5(d)) [assumed]")
         if self.fcess:
             out.append(f"FCESS accreditation for {', '.join(self.fcess)} [not verified]")
         if self.retail == "wholesale" and self.metering == "behind":
@@ -261,7 +303,7 @@ class Route:
         if self.export_service and self.metering == "behind":
             out.append("a Western Power entry or bidirectional service lets the meter export (RT7 is import-only) "
                        "[not verified; its cost is not included]")
-        if any(self.reg_util):
+        if any(self.reg_util) and {"reg_raise", "reg_lower"} & set(self.fcess):
             out.append(f"regulation used at {self.reg_util[0]:.0%} (raise) / {self.reg_util[1]:.0%} (lower) of the MW "
                        "enabled [estimated from Sep 2026 data]")
         if self.rcm and self.metering == "behind":
@@ -273,6 +315,12 @@ class Route:
                 out.append("the factory is on one of Western Power's 7 named feeders (round from 1 Dec 2027); "
                            "fee assumed [no source]")
         return out
+
+
+def market_strategy(route: Route, strat: dp.Strategy) -> dp.Strategy:
+    """The strategy as the route's registration lets it act in real time: a Scheduled facility's offers clear on each
+    5-min price; one AEMO does not dispatch acts on the price published route.gate_lag steps back."""
+    return strat if route.registration == "scheduled" else replace(strat, act_lag=route.gate_lag)
 
 
 def firmness(spec: ContractSpec, bat: Battery, site: st.Site | None, load_margin: float) -> tuple[list[str], list[str]]:

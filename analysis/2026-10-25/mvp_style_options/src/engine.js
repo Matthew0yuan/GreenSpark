@@ -382,7 +382,8 @@ function timelineHTML(){
 /* ---------- Today's plan, scheme A (round 5): decide in one line, the day as lanes, reasons on the chart ----------
    A layout with a #plan-dec slot gets this page; the other schemes keep the round-4 page in renderPlan below.
    Scheduled actions are solid blocks; the conditional offer is a dashed outline, because it runs only if the price
-   reaches it; hatching means "not known at 09:00" and nothing else. Full wording sits in hover notes (data-note). */
+   reaches it; hatching marks 08:00–09:00, still on the earlier plan with no 09:00 forecast, and nothing else.
+   Full wording sits in hover notes (data-note). */
 function noteAttr(t){ return ' tabindex="0" data-note="' + String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;") + '"'; }
 function segsOf(from, f){ var g = [], k = from; while (k < N) { var m = f(k), e = k; while (e + 1 < N && f(e + 1) === m) e++; g.push({m:m, a:k, b:e + 1}); k = e + 1; } return g; }
 var SEGC = {shave:["color-mix(in srgb,var(--dis) 20%,var(--surface))", "var(--dis)"], dis:["var(--dis)", "var(--surface)"], chg:["var(--chg)", "var(--text)"], hold:["var(--surface-3)", "var(--text-3)"]};
@@ -403,18 +404,20 @@ function laneSVG(sel){
   s.push(rc(X(0), yA, X(2) - X(0), y1 - yA, 'fill="url(#hDy)"'));
   /* the price panel: forecast with its P10–P90 band, the offer price, and the actual price once revealed */
   [0, 250, 500].forEach(function(v){ s.push(ln(X0, yp(v), XR, yp(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yp(v) + 3.5, nf(v), "", ' text-anchor="end"')); });
-  s.push(tx(X0, y0 - 10, "Price forecast, A$/MWh", "lnm halo") + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
+  s.push(tx(X(2) + 6, y0 - 10, "Price forecast, A$/MWh", "lnm halo") + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
   if (shown("pw", "p50")) {
     s.push('<path d="' + bandPath(P.lo, P.hi, yp, 2, N) + '" style="fill:var(--price)" opacity="0.045"/><path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" style="stroke:var(--price)" stroke-width="1.8" stroke-dasharray="5 3"/>');
     var pk = 2, lo = -1, k;
     for (k = 2; k < N; k++) { if (P.price[k] > P.price[pk]) pk = k; if (P.chg[k] > 0 && (lo < 0 || P.price[k] < P.price[lo])) lo = k; }
     [pk, lo].forEach(function(q){ if (q < 0) return; var a = q, b = q + 1; while (a > 2 && P.price[a - 1] === P.price[q]) a--; while (b < N && P.price[b] === P.price[q]) b++;
-      s.push(tx(mid(a, b), yp(P.price[q]) - 7, "A$" + nf(P.price[q]), "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
+      /* once the outcome is shown the actual price runs over the evening run, so its label moves left of the step */
+      s.push(rev && q === pk ? tx(X(a) - 4, yp(P.price[q]) + 4, "A$" + nf(P.price[q]), "halo vl", ' text-anchor="end" style="fill:var(--price)"')
+        : tx(mid(a, b), yp(P.price[q]) - 7, "A$" + nf(P.price[q]), "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
       /* the shaded band is named once, just right of the evening peak, clear of the actual price once revealed */
       if (q === pk) s.push(tx(X(b) + 5, yp(P.hi[q]) + 4, "P10–P90", "halo"));
     });
   }
-  s.push(ln(X(o.a), yp(o.price), X(o.b), yp(o.price), 'style="stroke:var(--dis)" stroke-width="1.6" stroke-dasharray="3 2"') + tx(X(o.b) + 5, yp(o.price) + 4, "offer A$" + o.price, "halo vl", ' style="fill:var(--dis)"'));
+  s.push(ln(X(o.a), yp(o.price), X(o.b), yp(o.price), 'style="stroke:var(--dis)" stroke-width="1.6" stroke-dasharray="3 2"') + tx(mid(o.a, o.b), yp(o.price) + 13, "offer A$" + o.price, "halo vl", ' text-anchor="middle" style="fill:var(--dis)"'));
   if (rev) {
     s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" fill="none" style="stroke:var(--price)" stroke-width="2"/>');
     var am = P.actual.indexOf(Math.max.apply(null, P.actual));

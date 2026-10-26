@@ -1,0 +1,5 @@
+period,start,end,days,with_outages,with_stpasa,with_cross,with_weather,revisions_complete
+history,2024-01-01,2025-03-31,456,456,452,448,388,379
+in_sample,2025-04-01,2026-06-30,456,456,454,456,456,454
+test_seen,2026-07-01,2026-10-15,107,107,101,103,107,101
+test_unseen,2026-10-16,2026-10-22,7,2,6,1,7,1
