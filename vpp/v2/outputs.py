@@ -3,7 +3,8 @@
   1 charging plan    each half-hour's charging, its expected price and cost, the layer it fills, and the most a MWh
                      stored is worth at 08:00 tomorrow (the price above which charging would not pay)
   2 reserve plan     now, 16:00 and 08:00 tomorrow: mandatory (①), site reserve (②, CMD and IRCR parts) and
-                     opportunity energy (③), and what one more MWh is worth
+                     opportunity energy (③), and what one more MWh is worth; and what the top MWh stored at the
+                     decision is worth now and which layer it is in (value_now)
   3 bidding plan     the layered offers of the next hours (with the offer rule "table"): the price of the first MWh,
                      of 5 and 10 MWh, the protected energy and its lowest price, whether the offer is already locked,
                      and how often the price has reached the first layer in that half-hour (uncalibrated)
@@ -20,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 from vpp import dispatch as dp
+from vpp import storage_value as sv
 from vpp.v2 import bids as bd
 
 SITE_FLOORS = ("site reserve: IRCR hours", "site reserve: CMD and IRCR", "peak-day reserve")
@@ -105,6 +107,32 @@ def reserve_plan(s: Snapshot) -> pd.DataFrame:
                      "opportunity": max(0.0, stored - m - two),
                      "next_mwh_worth": s.curve_value(stored) if slot == dp.N else np.nan})
     return pd.DataFrame(rows)
+
+
+def value_now(s: Snapshot) -> dict | None:
+    """What the top MWh stored at the decision is worth if kept, by the values the layered offers use: the table's at
+    the end of this half-hour, in the price state of the plan's price for it (as the bidding plan's first row), plus,
+    when the offers protect that MWh for compliance or the factory, the protected energy's value per MWh. Its layer is
+    read the way the offers read it: by the segment's bottom against the protected energy, then the FCESS raise
+    backing. None without layered offers."""
+    if s.bids is None:
+        return None
+    t, stored = s.t0, float(s.rec["stored"])
+    m = np.asarray(s.bids._values(t, float(s.rec["prices"][0])), float)
+    top = int(np.clip(np.ceil(stored / sv.GRID - 1e-9) - 1, 0, len(m) - 1))
+    bottom, protect = top * sv.GRID, float(s.bids.protect[t])
+    rr, cr = (s.arr(k)[0] for k in dp.FCESS[:2])
+    backing = (rr + cr) * s.sustain_h / s.bat.eta
+    if bottom < protect - 1e-9:
+        layer, extra = "①/② 守约和工厂要用（受保护）", float(s.bids.value)
+    elif bottom < protect + backing - 1e-9:
+        layer, extra = "FCESS 上调要撑的电", 0.0
+    else:
+        layer, extra = "③ 机会电", 0.0
+    worth = float(m[top]) + extra
+    return {"time": clock(t), "stored": stored, "protected": min(protect, stored), "fcess_backing": backing,
+            "layer": layer, "table": float(m[top]), "extra": extra, "worth": worth,
+            "c_per_kwh": worth / 10.0}  # $/MWh -> c/kWh
 
 
 def fill_frequency(s: Snapshot, slot: int, price: float) -> float:

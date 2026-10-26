@@ -1,0 +1,136 @@
+<body data-home="plan">
+{{PROTO}}
+<header class="mast">
+  <div class="mast-in">
+    <div class="mast-l"><span id="mast-day">Wednesday 14 January 2026</span><br>Decision time 09:00 AWST</div>
+    <div class="mast-title">GreenSpark <em>Dispatch Desk</em></div>
+    <div class="mast-r">Zenith · Site A + customer fleet<br>Demo project</div>
+  </div>
+</header>
+<!-- the sections bar: which asset (the newspaper's section), its three pages, then run state and settings -->
+<div class="sections">
+  <div class="sec-in">
+    {{ASSET_SW}}
+    <nav class="sec-pages pages" data-grp="plan compare svalid" aria-label="Site battery pages">{{PAGES_SITE}}</nav>
+    <nav class="sec-pages pages" data-grp="calls value fvalid" aria-label="Customer fleet pages">{{PAGES_FLEET}}</nav>
+    <span class="sp"></span>
+    <div class="sec-run">{{RUN}}{{PRI}}{{GEAR}}</div>
+  </div>
+</div>
+
+<main id="main" class="paper">
+  <header class="ph">
+    <div class="kicker"><h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span></div>
+    <div class="ctx dateline" id="ph-ctx"></div>
+  </header>
+  {{STRIPS}}
+
+  <!-- Site battery · Decide: status and the action as the headline, the three figures, Figure 1, why, then the detail -->
+  <section class="screen" id="s-plan" aria-label="Today's plan">
+    <div class="plan-st" id="plan-status" role="status"></div>
+    <div class="lede plan-lede res" id="plan-head"></div>
+    <div class="factbox res">{{PLAN_KPIS}}</div>
+    <figure class="fig res">
+      <div class="fig-tools"><span class="fig-n">Figure 1 · The day at a glance</span><span class="sp"></span><span class="sub">08:00 Wed 14 Jan to 08:00 Thu 15 Jan</span></div>
+      <div id="plan-timeline"></div>
+    </figure>
+    <div class="article art-why res">
+      <div class="main-col">
+        <h3 class="sect sect-first">Why this plan</h3>
+        <ul class="why-list" id="plan-why"></ul>
+      </div>
+      <aside class="margin-col"><div class="side-note"><div class="sn-h">Read on</div>{{PLAN_CTA}}</div></aside>
+    </div>
+    <figure class="fig res" id="plan-detail">
+      <div class="fig-tools"><span class="fig-n">Figure 2 · Dispatch detail</span><span class="sub">plan issued 09:00 · 10 MW / 40 MWh battery behind the factory meter</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
+      <div id="sch-chart" class="chartbox"></div>
+      <figcaption><b>Figure 2.</b> Top: battery power (bars up discharge, down charge) under the forecast price; the hatched layer is the conditional offer, sold only if the price reaches it. Bottom: the energy the battery holds, never below the reserve floor. Dashed lines are the plan or forecast, solid lines what actually happened. <span id="sch-note"></span></figcaption>
+    </figure>
+    <div class="article">
+      <div class="main-col">
+        <h3 class="sect sect-first">The selected interval</h3>
+        <div class="interval res" id="sch-rail" aria-live="polite"></div>
+        <h3 class="sect">Table 1 · Plan and outcome for the trading day</h3>
+        <table class="tbl res" id="sch-money"></table>
+        {{MONEY_FOOT}}
+      </div>
+      <aside class="margin-col">
+        <div class="side-note res"><div class="sn-h">Checks on this plan</div><ul class="chk" id="sch-checks"></ul></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Site battery · Improve: the uplift over the frozen baseline as the headline figure, its scope in the margin -->
+  <section class="screen" id="s-compare" aria-label="Compare with the baseline">
+    <div class="toolbar">{{CPER_TOOLS}}</div>
+    <div class="hero-lede res" id="cmp-hero"></div>
+    <h3 class="sect">Table 1 · Price forecast against yesterday's prices</h3>
+    <div class="res" id="cmp-q2a"></div>
+  </section>
+
+  <!-- Site battery · Prove: three results as a fact box, then the checks -->
+  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
+    <div class="toolbar">{{PER_TOOLS}}</div>
+    <div class="vt-tiles res" id="sv-tiles"></div>
+    <div class="note" id="val-note"></div>
+    <h3 class="sect">Table 1 · Physical and contract checks <span class="sub">site battery · click a row to open it</span></h3>
+    <table class="tbl res" id="val-checks"></table>
+  </section>
+
+  <!-- Customer fleet · Decide: the decision as the headline, the demand forecast behind it, then the season -->
+  <section class="screen" id="s-calls" aria-label="Tonight's call">
+    <div class="toolbar">{{ACT_TOOLS}}</div>
+    <div class="decision res" id="act-card" aria-live="polite"></div>
+    <figure class="fig res">
+      <div class="fig-tools"><span class="fig-n">Figure 1 · System demand forecast</span><span class="sp"></span><span class="sub" id="act-dem-sub"></span></div>
+      <div id="act-dem" class="chartbox"></div>
+      <figcaption><b>Figure 1.</b> The forecast that decides tonight's call: a call is made when the forecast peak reaches the threshold and calls are left.</figcaption>
+    </figure>
+    <figure class="fig res">
+      <div class="fig-tools"><span class="fig-n" id="act-title"></span><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span><span class="ctools" data-csv="act"></span></div>
+      <div class="legend legend-top" id="act-legend"></div>
+      <div id="act-chart" class="chartbox"></div>
+      <div class="budget" id="act-budget"></div>
+      <figcaption><b>Figure 2.</b> {{ACT_FOOT}}</figcaption>
+    </figure>
+  </section>
+
+  <!-- Customer fleet · Improve: the offer's gain over reference terms as the headline figure, then who gains what -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="toolbar">{{VAL_TOOLS}}</div>
+    <div class="hero-lede res" id="v-hero"></div>
+    <div class="dateline scen" id="v-scen"></div>
+    <div class="verdict-lede res" id="v-verdict"></div>
+    <div class="factbox parties res" id="v-parties"></div>
+    <div class="article">
+      <div class="main-col">
+        <h3 class="sect sect-first">Table 1 · The offer against the alternatives</h3><div class="dateline" id="v-cmp-sub"></div><table class="tbl res" id="v-cmp"></table><p class="foot" id="v-cmp-foot"></p>
+        <div class="ledger res">{{V_LEDGER}}</div>
+      </div>
+      <aside class="margin-col"><div class="side-note res" id="v-ircr"></div><div class="side-note res" id="v-own"></div></aside>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Prove -->
+  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
+    <div class="vt-tiles res" id="fv-tiles"></div>
+    <div class="cols2">
+      <div><h3 class="sect sect-first">Table 1 · Hot Season holdouts</h3><div class="res" id="fv-hold"></div></div>
+      <div><h3 class="sect sect-first">Table 2 · Customer constraints</h3><table class="tbl res" id="fv-checks"></table></div>
+    </div>
+  </section>
+
+  <!-- Settings: numbered sections, the input check in the margin -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="article">
+      <div class="main-col form">
+        <h3 class="sect"><span class="sn">1</span>Customer offer <span class="sub">evaluated as the Custom offer</span></h3>{{CFG_OFFER}}
+        <h3 class="sect"><span class="sn">2</span>Commercial scenario <span class="sub">who receives energy and capacity value</span></h3>{{CFG_SCEN}}
+        <h3 class="sect"><span class="sn">3</span>Customer fleet assumptions <span class="sub">every value here is an assumption · baseline is normal self-use</span></h3>{{CFG_FLEET}}
+        <h3 class="sect"><span class="sn">4</span>Own battery and site <span class="sub">behind the factory meter</span></h3>{{CFG_OWN}}
+      </div>
+      <aside class="margin-col"><div class="side-note sticky"><div class="sn-h">Input check</div><ul class="chk" id="c-checks"></ul></div></aside>
+    </div>
+  </section>
+</main>
+{{STY}}

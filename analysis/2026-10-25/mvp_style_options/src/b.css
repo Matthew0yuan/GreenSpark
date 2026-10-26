@@ -1,0 +1,255 @@
+/* B · editorial briefing: warm paper, serif headlines, a masthead with section navigation,
+   each page reads like a short report with numbered figures and tables and notes in the margin. */
+html{
+  --font-display:"Source Serif 4","Source Serif Pro",Georgia,"Times New Roman",serif;
+  --font-num:"Source Serif 4","Source Serif Pro",Georgia,serif;
+  --r:0px; --r-sm:0px; --r-pill:0px;
+  --bg:#F4EFE6; --surface:#F4EFE6; --surface-2:#ECE6DA; --surface-3:#E4DDCE;
+  --border:#1A1A1A; --divider:#DDD5C6; --rule:#C9C0AE;
+  --text:#1A1A1A; --text-2:#37342F; --text-3:#6B655B; --text-4:#9A9283;
+  --accent:#1A1A1A; --accent-hover:#000000; --accent-text:#F4EFE6; --accent-soft:#EAE3D4;
+  --ok:#2F6B3F; --ok-soft:#E4E7D5; --ok-line:#B3C2A1;
+  --warn:#94650F; --warn-soft:#F1E5C8; --warn-line:#D8BF88; --warn-text:#5A3F00;
+  --bad:#A3271D; --bad-soft:#F1DDD5; --bad-line:#D7A293;
+  --info:#24479E; --info-soft:#E2E3EA; --info-line:#B2BAD3; --info-text:#1E3570;
+  --unsup:#6B655B; --on-status:#F4EFE6;
+  --hyp-text:#8A5310; --hyp-line:#C99A5B; --hyp-soft:#EFE3CC;
+  --fut-text:#4A3B88; --fut-line:#9C90C9; --fut-soft:#E7E2EE;
+  --proto-bg:#1A1A1A; --proto-text:#F4EFE6; --proto-line:#1A1A1A;
+  --dis:#27489C; --chg:#AEBBDA; --chg-text:#3F5DA8; --rr:#9C93BC; --rl:#DCD7E8; --cr:#86A9A2; --cl:#D2DFDB;
+  --soc:#1F5D45; --mand:#A3271D; --mand-soft:#F0DFD7; --mand-hatch:#D29C8C; --econ:#E3D3A4;
+  --load:#4A4740; --meter:#E2DACB; --price:#1A1A1A; --base:#A39B8B; --actual:#C2462F;
+  --peak:#7C2E61; --peak-soft:#EBDDE4; --cust:#A8661C; --cust-soft:#EEDFC9; --cust-text:#7D4A10; --on-cust:#FFFFFF;
+  --zen:#1F5D45; --oth:#6B655B; --spike:#4A4740; --bar:#D2C9B8;
+  --grid:#E4DDCF; --axis:#A39B8B; --axis-light:#CFC6B4; --axis-strong:#4A4740;
+  --hatch-bg:#EFE9DD; --hatch-ln:#D6CCB9; --chart-text:#6B655B; --chart-label:#1A1A1A;
+  --wm:rgba(26,26,26,.045); --mark:#1A1A1A; --mark-text:#F4EFE6; --sel:rgba(26,26,26,.06); --halo:#F4EFE6;
+}
+.kv,.party .big,.ov-big,.tbl td.n,.kvt td.n,.hero-n,.vt-big{font-variant-numeric:lining-nums tabular-nums}
+
+/* masthead */
+.mast-in{max-width:1240px;margin:0 auto;padding:16px 48px 12px;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:24px}
+.mast-l,.mast-r{font-size:11.5px;line-height:1.5;color:var(--text-3)}
+.mast-r{text-align:right}
+.mast-title{font-family:var(--font-display);font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1;white-space:nowrap}
+.mast-title em{font-weight:400}
+
+/* sections bar: the asset is the newspaper section, its three pages follow, then run state and settings */
+.sections{position:sticky;top:24px;z-index:40;background:var(--bg);border-top:1px solid var(--text);border-bottom:3px double var(--text)}
+.sec-in{max-width:1240px;margin:0 auto;padding:0 48px;display:flex;align-items:center;height:54px;gap:0}
+.asset-sw{background:transparent;padding:0;gap:0;border-radius:0;box-shadow:inset 0 0 0 1px var(--text)}
+.asset-sw button{border-radius:0;padding:4px 13px 5px;color:var(--text-2);font-family:var(--font-display);font-size:15px;font-weight:600;line-height:1.2}
+.asset-sw button small{font-family:var(--font);font-size:10.5px;letter-spacing:.02em;color:var(--text-3);margin-top:1px}
+.asset-sw button + button{box-shadow:inset 1px 0 0 var(--text)}
+.asset-sw button:hover{background:var(--surface-2);color:var(--text)}
+.asset-sw button.on{background:var(--text);color:var(--bg);box-shadow:none}
+.asset-sw button.on small{color:var(--bg);opacity:.72}
+.sec-pages{display:flex;align-items:stretch;align-self:stretch}
+.sec-pages::before{content:"";flex:none;align-self:center;width:1px;height:24px;background:var(--rule);margin:0 10px 0 16px}
+.sec-pages .nav{height:100%;padding:0 11px;font-size:13.5px;color:var(--text-2);gap:5px}
+.sec-pages .nav:hover{color:var(--text);text-decoration:underline;text-underline-offset:4px}
+.sec-pages .nav.on{color:var(--text);font-weight:600;box-shadow:inset 0 -3px 0 var(--text)}
+.sec-run{display:flex;align-items:center;gap:8px;flex:none}
+.sec-run .run{margin-right:8px}
+.btn{border-color:var(--text);background:transparent}
+.btn:hover{background:var(--surface-2)}
+.gear{border-radius:0;border-color:var(--text);background:transparent;color:var(--text)}
+.gear:hover{background:var(--surface-2)}
+.gear.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* page */
+.paper{max-width:1240px;margin:0 auto;padding:26px 48px 120px}
+.ph{margin-bottom:8px}
+.kicker{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.kicker h1{font-family:var(--font);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text)}
+.chip{text-transform:uppercase;font-size:9.5px;letter-spacing:.09em;font-weight:600;height:19px;border-color:var(--text-3);color:var(--text-2)}
+.dateline{font-family:var(--font-display);font-style:italic;font-size:14.5px;color:var(--text-3);margin-top:4px}
+.cap{letter-spacing:.11em;font-size:10.5px}
+.lede{margin:14px 0 0}
+
+/* plan status: a ruled notice above the headline, apart from the run status in the bar */
+.plan-st{margin:16px 0 0;padding:9px 0;border:0;border-top:1px solid;border-bottom:1px solid;border-radius:0;font-size:13.5px}
+.plan-st b{font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.plan-st.ok{background:transparent;border-color:var(--ok-line)}
+.plan-st.bad{background:var(--bad-soft);border-color:var(--bad);padding:9px 14px}
+.plan-st.bad b::before{content:"!\00A0\00A0"}
+
+/* the recommended action is the headline; scheduled and conditional are the standfirst */
+.plan-lede{margin-top:20px}
+.plan-lede .cap{color:var(--text)}
+.plan-lede .instr-h{font-size:44px;letter-spacing:-.022em;line-height:1.08;margin-top:10px}
+.plan-lede .acts{margin-top:16px;gap:10px;max-width:1000px}
+.plan-lede .acts li{font-family:var(--font-display);font-size:18px;line-height:1.45;color:var(--text-2);gap:14px}
+.tg{border-radius:0;min-width:104px;font-family:var(--font);font-size:9.5px;letter-spacing:.11em;padding:3px 7px;position:relative;top:-2px}
+
+/* key figures as a fact box between rules */
+.factbox{display:flex;margin:26px 0 30px;padding:14px 0 16px;border-top:1px solid var(--text);border-bottom:1px solid var(--text)}
+.factbox .kpi{flex:1;min-width:0;padding:0 24px;border-left:1px solid var(--rule)}
+.factbox .kpi:first-child{padding-left:0;border-left:0}
+.factbox .kv{font-size:31px;margin-top:6px}
+.factbox .ks{white-space:normal;line-height:1.45}
+
+/* figures and captions */
+.fig{margin:0 0 30px}
+.fig-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0 10px;border-top:2px solid var(--text)}
+.fig-n{font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text)}
+figure{margin:0}
+figcaption{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule);font-size:13px;line-height:1.5;color:var(--text-2)}
+figcaption .legend{margin-top:8px;font-size:11.5px}
+.legend-top{padding-bottom:6px}
+.seg{background:transparent;box-shadow:inset 0 0 0 1px var(--text);padding:0;gap:0}
+.seg button{padding:5px 12px;color:var(--text-2)}
+.seg button + button{box-shadow:inset 1px 0 0 var(--rule)}
+.seg button.on{background:var(--text);color:var(--bg);box-shadow:none}
+.sel{background:#FBF8F2;border-color:var(--text-3)}
+.toolbar{padding:10px 0;margin:14px 0 6px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+
+/* the day at a glance: square blocks, the key set as a caption */
+.tl{height:40px}
+.tl-b{font-size:12.5px}
+.tl-key{margin-top:10px;padding-top:9px;border-top:1px solid var(--rule)}
+
+/* article with a margin column */
+.article{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:56px;align-items:start}
+.sect{font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:-.01em;margin:22px 0 10px;padding-top:10px;border-top:1px solid var(--text)}
+.sect-first{margin-top:0}
+.sect .sub{font-family:var(--font);font-size:12px;margin-left:6px}
+.sect .sn{display:inline-block;min-width:22px;font-weight:700}
+.margin-col{border-left:1px solid var(--rule);padding-left:24px}
+.side-note{padding:12px 0 16px;border-bottom:1px solid var(--rule)}
+.side-note:first-child{padding-top:12px}
+.side-note:last-child{border-bottom:0}
+.sn-h{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text);margin-bottom:6px}
+.side-note p{margin:0;font-size:13px;line-height:1.55;color:var(--text-2)}
+.side-note .chk li{font-size:12.5px;padding:4px 0;border-bottom:0}
+.side-note.sticky{position:sticky;top:118px}
+.side-note .cap{color:var(--text)}
+.side-note .tbl td,.side-note .tbl th{padding:6px 4px}
+.side-note .foot{margin-top:6px;font-size:12.5px;line-height:1.55}
+.margin-col .cta{flex-direction:column;align-items:flex-start;margin-top:10px}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px;align-items:start}
+.art-why{margin-bottom:34px}
+
+/* why this plan, as body text */
+.why-list{max-width:800px;margin:4px 0 0;padding-left:20px;list-style:square;font-family:var(--font-display);font-size:17px;line-height:1.55;color:var(--text-2)}
+.why-list li{margin:0 0 8px;padding-left:4px}
+.why-list li::marker{color:var(--text-4)}
+#plan-detail{scroll-margin-top:96px}
+
+/* the selected half hour, written out */
+.interval .ri-head{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:14px}
+.interval .act{font-size:28px;margin:0}
+.interval .ri-say{font-family:var(--font-display);font-size:19px;line-height:1.45;margin-top:6px;max-width:760px}
+.interval .ri-facts{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:24px;margin-top:14px}
+.interval .ri-facts div{flex-direction:column;align-items:flex-start;gap:2px;border-top:1px solid var(--text);font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+.interval .ri-facts b{font-family:var(--font-num);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;text-align:left}
+.interval .rsec{border-top-color:var(--rule)}
+.interval .locked{background:transparent}
+
+/* Compare and Value: the result as a headline figure, its scope as a note in the margin */
+.hero-lede{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:repeat(4,auto) 1fr;column-gap:56px;margin:22px 0 8px}
+.hero-lede > *{grid-column:1}
+.hero-lede > .cap{color:var(--text)}
+.hero-n{font-family:var(--font-display);font-size:64px;letter-spacing:-.025em;line-height:1;margin:12px 0 10px}
+.hero-n small{font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:400;margin-left:10px}
+.hero-lede > p.sub{margin:0;font-family:var(--font-display);font-style:italic;font-size:16px;color:var(--text-2)}
+.hero-lede > .scope{grid-column:2;grid-row:1 / -1;align-self:start;margin:0;padding:2px 0 4px 24px;border-left:1px solid var(--rule);background:transparent;font-size:13px;line-height:1.55}
+.hero-lede > .scope b{display:block;margin:0 0 6px;font-size:10.5px;letter-spacing:.11em;color:var(--text)}
+.hero-bars{gap:0;margin:6px 0 0;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.hero-bars > div{padding:0 28px;border-left:1px solid var(--rule)}
+.hero-bars > div:first-child{padding-left:0;border-left:0}
+.hero-bars b{font-family:var(--font-display);font-size:24px;letter-spacing:0;text-transform:none;margin-top:4px}
+.cmp-bars{max-width:none;margin:22px 0 2px;padding-top:14px;border-top:1px solid var(--rule)}
+.cb{grid-template-columns:minmax(0,250px) minmax(0,1fr) 84px}
+.cb i{border-radius:0;height:16px}
+.cb b{font-family:var(--font-display);font-size:15px}
+
+/* the call decision as the page headline */
+.decision{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"head exp" "why exp" "out exp";column-gap:56px;margin:22px 0 30px}
+.decision .ac-head{grid-area:head}
+.decision .dec{gap:18px;margin-top:10px}
+.decision .dec-pill{font-size:13px;letter-spacing:.14em;padding:7px 12px}
+.decision .dec b{font-family:var(--font-display);font-size:42px;font-weight:600;letter-spacing:-.022em;line-height:1.08}
+.decision .dec small{font-family:var(--font-display);font-size:17px;font-style:italic;color:var(--text-2);margin-top:4px}
+.decision .ac-why{grid-area:why;margin-top:16px}
+.decision .ac-why > .cap{display:none}
+.decision .wl li{font-family:var(--font-display);font-size:16.5px;line-height:1.5}
+.decision .ac-exp{grid-area:exp;margin-top:0;padding-top:12px;border-top:2px solid var(--text)}
+.decision .ac-out{grid-area:out}
+.retro,.hind,.tag,.src,.st8,.trt,.verdict .vt{border-radius:0}
+
+/* value: the verdict follows the headline figure as a subhead */
+.scen{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:20px}
+.scen b{font-style:normal}
+.scen .chip{font-family:var(--font);font-style:normal}
+.scen .sub{font-family:var(--font);font-style:normal}
+.verdict-lede{margin-top:14px}
+.verdict-lede .verdict{display:block;background:transparent;border:0;padding:0}
+.verdict-lede .vt{display:inline-block}
+.verdict-lede b{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:-.018em;line-height:1.15;margin:10px 0 8px}
+.verdict-lede p{font-family:var(--font-display);font-size:17.5px;line-height:1.5;color:var(--text-2);max-width:960px}
+.parties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:0;border-top:0}
+.panel{background:transparent;border:0;border-radius:0}
+.party{border-top:3px solid var(--pc);padding:12px 24px 0 0}
+.party .cap::before{display:none}
+.party .big{font-size:36px}
+.party .sub{display:block;padding-bottom:14px}
+/* the ledger stays folded: its summary reads as the Table 2 heading */
+.ledger{margin-top:8px}
+.fold > summary{list-style:none;display:flex;align-items:baseline;flex-wrap:wrap;font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:-.01em;margin:22px 0 0;padding:10px 0 2px;border-top:1px solid var(--text)}
+.fold > summary::-webkit-details-marker{display:none}
+.fold > summary::before{content:"Table 2 \00B7\00A0"}
+.fold > summary::after{content:"Show \25BE";margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;letter-spacing:0;color:var(--info)}
+.fold[open] > summary::after{content:"Hide \25B4"}
+.fold > summary .sub{font-family:var(--font);margin-left:8px}
+.fold[open] > summary{margin-bottom:10px}
+
+/* validation: three results as a fact box, square, rule on top */
+.vt-tiles{gap:0 32px;margin:22px 0 8px}
+.vt-tile{background:transparent;border:0;border-top:3px solid var(--rule);border-radius:0;padding:12px 0 4px}
+.vt-big{font-family:var(--font-display);font-size:30px;margin:8px 0 4px}
+.vt-tile .sub{font-size:12.5px}
+.note{background:transparent;border-left:2px solid var(--text);padding:2px 0 2px 14px;font-family:var(--font-display);font-style:italic;font-size:15px;margin:18px 0 6px}
+.note.w,.note.i,.note.p{background:transparent;color:var(--text-2)}
+.tbl th{text-transform:uppercase;letter-spacing:.06em;font-size:10px;border-bottom-color:var(--text)}
+.tbl tr.tot td{border-top-color:var(--text)}
+.tbl th .sub{text-transform:none;letter-spacing:0;font-size:11px}
+.passmark,.tbl .pill{font-family:var(--font)}
+#act-title::before{content:"Figure 2 \00B7\00A0"}
+#s-fvalid .cols2{margin-top:26px}
+
+/* settings */
+#s-config .article{margin-top:18px}
+.form .sect:first-child{margin-top:0}
+.form .f{grid-template-columns:minmax(0,1fr) 172px 124px}
+.f input,.f select{background:#FBF8F2;border-color:var(--rule)}
+.sc{background:transparent}
+.sc.on{background:var(--accent-soft);border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.locked{background:transparent}
+
+@media (max-width:1365px){
+  .mast-in,.sec-in{padding-left:28px;padding-right:28px}
+  .mast-title{font-size:32px}
+  .sec-pages .nav{padding:0 8px;font-size:13px}
+  .sec-run .run small{display:none}
+  .paper{padding:22px 28px 120px}
+  .plan-lede .instr-h{font-size:36px}
+  .plan-lede .acts li{font-size:17px}
+  .hero-n{font-size:54px}
+  .decision .dec b{font-size:34px}
+  .verdict-lede b{font-size:26px}
+  .article,.hero-lede{grid-template-columns:minmax(0,1fr) 260px;column-gap:36px}
+  .decision{grid-template-columns:minmax(0,1fr) 260px;column-gap:36px}
+  .factbox .kv{font-size:26px}
+}
+@media (max-width:1100px){
+  .article,.cols2,.parties,.decision,.hero-lede{grid-template-columns:minmax(0,1fr)}
+  .decision{grid-template-areas:"head" "why" "exp" "out"}
+  .hero-lede > .scope{grid-column:1;grid-row:auto;margin-top:16px}
+  .margin-col{border-left:0;padding-left:0}
+  .mast-l,.mast-r{display:none}
+  .mast-in{grid-template-columns:1fr}
+  .sec-in{height:auto;flex-wrap:wrap;row-gap:6px;padding-top:6px;padding-bottom:6px}
+  .sec-pages{height:40px}
+  .factbox{flex-wrap:wrap;row-gap:14px}
+}

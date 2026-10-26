@@ -1,0 +1,223 @@
+/* D · soft cards: tinted canvas, a floating sidebar with the asset switch and that asset's pages,
+   every page laid out on the same 12-column card grid; pill controls, rounded type. */
+html{
+  --font:"Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --r:16px; --r-sm:10px; --r-pill:999px;
+  --shadow:0 1px 2px rgba(20,28,45,.04),0 6px 22px rgba(20,28,45,.055);
+  --bg:#F1F3F7; --surface:#FFFFFF; --surface-2:#F6F7FA; --surface-3:#EDF0F5;
+  --border:transparent; --divider:#EEF1F5; --rule:#E2E6EE;
+  --text:#121826; --text-2:#394357; --text-3:#6A7388; --text-4:#9AA2B4;
+  --accent:#0E8A5F; --accent-hover:#0B7550; --accent-text:#FFFFFF; --accent-soft:#E7F6EF;
+  --ok:#11845A; --ok-soft:#E7F6EF; --ok-line:#BFE6D4;
+  --warn:#B66A00; --warn-soft:#FFF5E5; --warn-line:#F7D9A6; --warn-text:#6B4100;
+  --bad:#D92D3A; --bad-soft:#FEEFF0; --bad-line:#F8C3C7;
+  --info:#3B6FF0; --info-soft:#EEF3FF; --info-line:#C8D7FC; --info-text:#2547A8;
+  --unsup:#6A7388; --on-status:#FFFFFF;
+  --hyp-text:#9A5B0E; --hyp-line:#F2C98F; --hyp-soft:#FFF4E3;
+  --fut-text:#5B47C2; --fut-line:#C9BEF7; --fut-soft:#F2EFFF;
+  --proto-bg:#FFF6DD; --proto-text:#6E4B00; --proto-line:#F5E5B5;
+  --dis:#4C7BF3; --chg:#BCD0FB; --chg-text:#5B7FD6; --rr:#A79BF2; --rl:#E1DBFC; --cr:#62C2B6; --cl:#CDEEE9;
+  --soc:#0E9A68; --mand:#E5484D; --mand-soft:#FDECEC; --mand-hatch:#F4AFB1; --econ:#F6DE9F;
+  --load:#56607A; --meter:#E8ECF3; --price:#1C2438; --base:#A9B1C2; --actual:#F0603F;
+  --peak:#C2418A; --peak-soft:#FBEAF4; --cust:#EE8B2B; --cust-soft:#FDEBD8; --cust-text:#A85A0C; --on-cust:#FFFFFF;
+  --zen:#0E9A68; --oth:#8C95A8; --spike:#56607A; --bar:#DCE1EA;
+  --grid:#F0F2F6; --axis:#B2BAC9; --axis-light:#DDE2EA; --axis-strong:#56607A;
+  --hatch-bg:#F7F8FB; --hatch-ln:#E1E5EC; --chart-text:#7C859A; --chart-label:#394357;
+  --wm:rgba(90,100,130,.05); --mark:#1C2438; --mark-text:#FFFFFF; --sel:rgba(28,36,56,.05); --halo:#FFFFFF;
+}
+body{background:var(--bg)}
+.cap{text-transform:none;letter-spacing:0;font-size:12px;font-weight:600}
+.kv,.party .big,.vt-big,.hero-n{font-weight:700;letter-spacing:-.02em}
+
+/* floating sidebar */
+.dapp{display:grid;grid-template-columns:240px minmax(0,1fr)}
+.dside{position:sticky;top:36px;height:calc(100vh - 48px);margin:12px 0 12px 12px;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;padding:16px 12px 12px;overflow-y:auto}
+.dside .brand{display:flex;align-items:center;gap:10px;padding:2px 8px 10px}
+.dside .mk{width:30px;height:30px;border-radius:9px}
+.dside .brand b{display:block;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.dside .brand small{display:block;font-size:12px;color:var(--text-3)}
+.dside .navsec{padding:14px 10px 6px;font-size:11.5px;font-weight:700;color:var(--text-4)}
+
+/* the asset switch, stacked full width: the open asset is a raised white pill with its colour */
+.dside .asset-sw{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;padding:5px;border-radius:16px;background:var(--surface-3)}
+.dside .asset-sw button{position:relative;padding:8px 12px 8px 30px;border-radius:12px;font-size:14px;font-weight:700;color:var(--text-3)}
+.dside .asset-sw button::before{content:"";position:absolute;left:13px;top:15px;width:8px;height:8px;border-radius:50%;background:var(--text-4)}
+.dside .asset-sw button small{margin-top:1px;font-size:11.5px;font-weight:500;color:var(--text-4)}
+.dside .asset-sw button:hover{color:var(--text)}
+.dside .asset-sw button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(20,28,45,.08),0 4px 12px rgba(20,28,45,.07)}
+.dside .asset-sw button.on small{color:var(--text-3)}
+.dside .asset-sw button[data-go="plan"].on::before{background:var(--accent)}
+.dside .asset-sw button[data-go="calls"].on::before{background:var(--cust)}
+
+/* that asset's pages: icon, name, and the step each page answers */
+.dside .pages{display:grid;gap:2px;margin-top:4px}
+.dside .nav{width:100%;padding:8px 10px;border-radius:10px;font-size:14px;color:var(--text-2);font-weight:500}
+.dside .nav::before{content:"";flex:none;width:16px;height:16px;background:currentColor;opacity:.7;-webkit-mask:var(--ic) center/16px 16px no-repeat;mask:var(--ic) center/16px 16px no-repeat}
+.dside .nav::after{margin-left:auto;font-size:11px;font-weight:600;color:var(--text-4)}
+.dside .nav .dot{margin-left:-4px}
+.dside .nav:hover{background:var(--surface-2)}
+.dside .nav.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.dside .nav.on::before{opacity:1}
+.dside .nav.on::after{color:color-mix(in srgb,var(--accent) 70%,var(--surface))}
+.dside .nav[data-go="plan"]::after,.dside .nav[data-go="calls"]::after{content:"Decide"}
+.dside .nav[data-go="compare"]::after,.dside .nav[data-go="value"]::after{content:"Improve"}
+.dside .nav[data-go="svalid"]::after,.dside .nav[data-go="fvalid"]::after{content:"Prove"}
+.dside .nav[data-go="plan"]{--ic:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><rect x='1.5' y='2.5' width='13' height='12' rx='2'/><path d='M1.5 6.5h13M5 1v3M11 1v3'/></svg>")}
+.dside .nav[data-go="compare"]{--ic:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 5h11l-3-3M14 11H3l3 3'/></svg>")}
+.dside .nav[data-go="svalid"],.dside .nav[data-go="fvalid"]{--ic:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='8' cy='8' r='6.5'/><path d='M5 8.2l2 2 4-4.2'/></svg>")}
+.dside .nav[data-go="calls"]{--ic:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M9 1.5L3.5 9H8l-1 5.5L12.5 7H8z'/></svg>")}
+.dside .nav[data-go="value"]{--ic:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 14V9M6 14V5M10 14V7M14 14V2'/></svg>")}
+
+/* settings at the foot of the sidebar: the gear with its name */
+.dside .sfoot{margin-top:auto;padding-top:10px;border-top:1px solid var(--divider)}
+.dside .gear{display:flex;align-items:center;gap:10px;width:100%;height:auto;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--text-2);font-size:14px;font-weight:500;text-align:left}
+.dside .gear::after{content:"Settings"}
+.dside .gear svg{width:16px;height:16px;opacity:.7}
+.dside .gear:hover{background:var(--surface-2);color:var(--text)}
+.dside .gear.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.dside .gear.on svg{opacity:1}
+
+/* page */
+.dmain{min-width:0;padding:22px 28px 110px}
+.ph{margin-bottom:20px}
+.ph-line{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.ph h1{font-size:27px;font-weight:800;letter-spacing:-.03em}
+.ph .ctx{margin-top:4px}
+.ph-r{display:flex;align-items:center;gap:10px;flex:none}
+.ph-r .run{margin-right:6px}
+.btn{border-radius:999px}
+.btn.pri{box-shadow:0 4px 14px rgba(14,138,95,.25)}
+.chip{border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--rule);color:var(--text-2);font-weight:600}
+.chip.hyp{background:var(--hyp-soft);box-shadow:none;color:var(--hyp-text)}
+.chip.fut{background:var(--fut-soft);box-shadow:none;color:var(--fut-text)}
+.seg{border-radius:999px;padding:4px}
+.seg button{border-radius:999px;padding:5px 13px}
+.seg button.on{box-shadow:0 1px 3px rgba(20,28,45,.14)}
+.sel{border-radius:10px;background:var(--surface-2);border-color:var(--divider)}
+.strip{border-radius:14px}
+
+/* a page's controls sit on the canvas: white pills, the chosen one tinted */
+.dgrid > .toolbar{padding:0 2px}
+.dgrid > .toolbar .seg{background:var(--surface);box-shadow:var(--shadow)}
+.dgrid > .toolbar .seg button.on{background:var(--accent-soft);color:var(--accent);box-shadow:none}
+
+/* cards on a 12-column grid */
+.dgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px;align-items:stretch}
+.card{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:20px 22px;min-width:0}
+.card > h2,.card-h h2{font-size:15px;font-weight:700}
+.card > h2{margin-bottom:12px}
+.card > h2 .sub{margin-left:6px}
+.card-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:8px}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}
+.stack-cards{display:grid;gap:18px;align-content:start}
+.legend{padding-top:12px}
+.legend-top{padding:0 0 8px}
+.tbl th{border-bottom-color:var(--divider)}
+.note{border-radius:14px;background:var(--surface)}
+.f input,.f select{border-radius:10px;background:var(--surface-2);border-color:var(--divider)}
+.sc{border-radius:14px}
+.locked{border-radius:12px;border-style:solid;border-color:var(--divider)}
+.tag,.src,.retro,.hind,.st8,.trt,.verdict .vt,.dec-pill,.tg{border-radius:999px}
+.chk-h{margin-top:20px}
+
+/* today's plan: the decision card (plan status as a pill, then the action) over three figure cards */
+.dec-main{display:flex;flex-direction:column;align-items:flex-start;padding:22px 26px 24px}
+.dec-main > .res{align-self:stretch}
+.plan-st{border:0;border-radius:999px;padding:8px 16px;margin-bottom:18px;max-width:100%}
+.plan-st .btn{margin-left:8px}
+.dec-main .instr-h{font-size:28px;margin:8px 0 6px;letter-spacing:-.025em}
+.dec-main .acts{margin-top:14px;gap:10px}
+.tg{min-width:96px;padding:3px 8px}
+.kpi-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.kpi-cards .kpi{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:18px 22px}
+.kpi-cards .kv{font-size:26px;margin-top:6px}
+.kpi-cards .ks,.party .sub,.vt-tile .sub,.dec-card .dec small{white-space:normal;text-wrap:pretty}
+/* the day as rounded action blocks */
+.tl{height:44px;gap:4px;border-radius:12px}
+.tl-b{border-radius:8px}
+.tl-x{margin-top:7px}
+.tl-key{margin-top:10px}
+.why-card .why-list{margin-top:0}
+.cta{margin-top:16px}
+#plan-detail{scroll-margin-top:40px}
+.rail-card .act{font-size:22px}
+
+/* hero cards on Compare and Value: the number on the left, its comparison on the right, the scope across */
+.hero-card{padding:24px 28px}
+.hero-n{font-size:46px;letter-spacing:-.035em;margin:10px 0 6px}
+.hero-n small{font-size:16px;font-weight:600}
+.scope{border-left:0;border-radius:12px;padding:10px 14px;margin-top:18px}
+#cmp-hero{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);column-gap:48px;align-items:start}
+#cmp-hero > *{grid-column:1}
+#cmp-hero > .cmp-bars{grid-column:2;grid-row:1 / span 3;align-self:center;max-width:none;margin:0;gap:12px}
+#cmp-hero > .scope{grid-column:1 / -1}
+.cb i{height:16px;border-radius:999px}
+#v-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:48px;align-items:center}
+#v-hero > *{grid-column:1}
+#v-hero > .hero-bars{grid-column:2;grid-row:1 / span 2;margin:0;gap:12px}
+#v-hero > .scope{grid-column:1 / -1}
+.hero-bars > div{min-width:170px;padding:12px 18px;border-radius:16px;background:var(--surface-2)}
+.hero-bars > .on{background:var(--ok-soft);color:var(--ok)}
+.hero-bars b{font-size:20px;margin-top:2px}
+
+/* validation: the three results as cards, the status as a coloured dot */
+.vt-tiles{gap:18px}
+.vt-tile{--tc:var(--text-4);border:0;border-radius:20px;box-shadow:var(--shadow);padding:18px 22px}
+.vt-tile.ok{--tc:var(--ok)}.vt-tile.w{--tc:var(--warn)}.vt-tile.bad{--tc:var(--bad)}
+.vt-tile .cap::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:1px;background:var(--tc)}
+.vt-big{font-size:28px;margin:8px 0 4px}
+.v-note{padding:12px 16px}
+
+/* customer calls, value */
+/* tonight's call, read across: the decision, why, then what is expected (and, in review, the outcome) */
+.dec-card{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr) minmax(0,1.3fr);grid-template-areas:"head why exp" "head why out";align-items:start;padding:22px 0}
+.dec-card.no{grid-template-columns:minmax(220px,.8fr) minmax(0,2.5fr);grid-template-areas:"head why" "head out"}
+.dec-card > *{padding:0 26px;min-width:0}
+.dec-card .ac-head{grid-area:head}
+.dec-card .ac-why{grid-area:why;align-self:stretch;margin-top:0;border-left:1px solid var(--divider)}
+.dec-card .ac-exp{grid-area:exp;align-self:stretch;border-left:1px solid var(--divider)}
+.dec-card .ac-out{grid-area:out;align-self:stretch;border-left:1px solid var(--divider)}
+.dec-card .rsec{margin-top:0;padding-top:0;border-top:0}
+.dec-card .ac-exp + .ac-out{padding-top:14px}
+.dec-card .dec{flex-direction:column;align-items:flex-start;gap:10px;margin-top:12px}
+.dec-card .dec b{font-size:19px}
+.dec-card .dec-pill{font-size:16px;padding:9px 18px}
+.scenline{padding:0 4px}
+.verdict{border:0;border-radius:18px;padding:16px 20px}
+.parties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.party{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:20px 22px}
+.party .cap::before{width:10px;height:10px}
+.party .big{font-size:30px}
+/* the ledger, folded: one rounded row that opens */
+.fold-card{padding-top:16px;padding-bottom:16px}
+.fold > summary{display:flex;align-items:center;gap:10px;list-style:none;font-size:15px;font-weight:700}
+.fold > summary::-webkit-details-marker{display:none}
+.fold > summary::before{content:"\203A";display:inline-grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--surface-3);color:var(--text-2);font-size:18px;line-height:1;transition:transform .15s}
+.fold[open] > summary::before{transform:rotate(90deg)}
+.fold > summary .sub{margin-left:0}
+.fold[open] > summary{margin-bottom:12px}
+.own-card{align-self:start;background:var(--surface-2);box-shadow:none}
+
+/* settings: the inputs as cards, the input check stays in view */
+.cfg-side{position:sticky;top:36px;align-self:start}
+
+@media (max-width:1365px){
+  .dapp{grid-template-columns:212px minmax(0,1fr)}
+  .dmain{padding:18px 20px 110px}
+  .dside .nav,.dside .gear{font-size:13.5px}
+  .dgrid{gap:14px}
+  .dec-main .instr-h{font-size:24px}
+  .kpi-cards{gap:14px}
+  .kpi-cards .kv{font-size:22px}
+  .hero-n{font-size:38px}
+  .ph .run small{display:none}
+}
+@media (max-width:1100px){
+  .dgrid > *{grid-column:span 12!important;grid-row:auto!important}
+  .parties{grid-template-columns:minmax(0,1fr)}
+  .dec-card,.dec-card.no{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"head why" "exp out";row-gap:16px}
+  .dec-card .ac-exp{border-left:0}
+  #cmp-hero,#v-hero{grid-template-columns:minmax(0,1fr)}
+  #cmp-hero > .cmp-bars,#v-hero > .hero-bars{grid-column:1;grid-row:auto;margin-top:12px}
+}
