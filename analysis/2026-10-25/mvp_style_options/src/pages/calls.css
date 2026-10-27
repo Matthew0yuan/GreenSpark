@@ -16,8 +16,9 @@
 .tipc.cl-oc.ok{border-color:var(--ok-line);background:var(--ok-soft);color:var(--ok)}
 .tipc.cl-oc.mu{background:var(--surface-2);color:var(--text-2)}
 
-/* the call budget: one cell per call of the contract year's cap; hatched = tonight, not yet happened at 09:00 */
-.cl-budget{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;margin-top:24px}
+/* the call budget: one cell per call of the contract year's cap; hatched = tonight, not yet happened at 09:00.
+   Round 6: no caption; the cap and the two denominators sit in the counts' hover notes */
+.cl-budget{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;margin-top:24px}
 .cl-bcap{font-size:13px;font-weight:600;color:var(--text-2);cursor:help;text-decoration:underline dotted var(--text-4);text-underline-offset:4px}
 .cl-cells{display:flex;gap:2px;height:14px}
 .cl-cells i{flex:1 1 0;min-width:0;border-radius:2px;background:var(--surface-3)}
@@ -47,3 +48,6 @@
 }
 /* the right column's chips (payment, response) wrap onto two lines so the headline keeps one line */
 .cl-dec .dec-val{max-width:460px}
+
+/* round 6: the season chart's days are clickable; the cursor says so instead of a "click a day" hint */
+#act-chart .hit{cursor:pointer}

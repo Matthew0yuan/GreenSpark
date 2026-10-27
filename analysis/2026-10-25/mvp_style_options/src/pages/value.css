@@ -66,10 +66,13 @@
 #v-f-ircr > summary{cursor:pointer}
 .vopt .hit.vo-fn{cursor:help}
 
-/* glossary pass (2026-10-27): Synergy named in the toolbar, the Synergy chip under the parties chart, chips in the
-   holdout caption and its table head */
-#v-syn{margin-left:8px}
-.v-pnote{margin:4px 0 0 28px}
-.v-pnote:empty{display:none}
+/* glossary pass (2026-10-27): chips in the holdout caption and its table head */
 #v-hold-sub .tipc{height:20px;font-size:11px;margin-left:4px}
 .v-hold th .tipc{height:20px;font-size:11px;padding:0 7px}
+
+/* round 6: the headline is the number and "vs reference terms"; the number opens its basis on hover, the words open the
+   glossary (drawn as words with a dotted cue, like the Evidence headline, not a pill) */
+#v-head .v-n[data-note]{cursor:help}
+#v-head .tipc.v-def{display:inline;height:auto;padding:0;border:0;border-radius:0;font:inherit;color:inherit;white-space:nowrap;text-decoration:underline dotted var(--text-4);text-decoration-thickness:2px;text-underline-offset:6px}
+#v-head .tipc.v-def:hover::after,#v-head .tipc.v-def:focus-visible::after{font:400 12px/1.45 var(--font)}
+.v-dec .dec-val{max-width:360px}
