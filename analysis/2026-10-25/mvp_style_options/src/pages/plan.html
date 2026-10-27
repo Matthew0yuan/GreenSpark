@@ -1,0 +1,25 @@
+<!-- Site battery · Decide: one line says whether the plan can run, what to do and what it is worth; the day is drawn
+     underneath as lanes on one time axis; the reasons sit on the chart and in the half-hour you click -->
+<section class="screen" id="s-plan" aria-label="Today's plan">
+  <div class="dec-row" id="plan-dec">
+    <div class="res">
+      <div class="pst" id="plan-status" role="status"></div>
+      <div class="dec-h" id="plan-head"></div>
+    </div>
+    <div class="dec-val res" id="plan-val"></div>
+  </div>
+  <section class="blk res day-blk" id="plan-detail">
+    <div class="blk-h"><h2>Trading day</h2><span class="sub">hover for values · click a half-hour for detail</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
+    <div id="sch-chart" class="chartbox"></div>
+  </section>
+  <section class="blk res strip-detail" id="sch-rail" aria-live="polite"></section>
+  <div class="cols2">
+    <section class="blk res"><div class="blk-h"><h2>Value</h2><span class="sub">trading day, A$</span><span class="sp"></span><button class="lnk" data-go="evidence">vs previous dispatcher →</button></div>
+      <div id="plan-vbar"></div>
+      <details class="fold sm"><summary>Breakdown</summary><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}</details>
+    </section>
+    <section class="blk res"><div class="blk-h"><h2>Checks</h2><span class="sub">hover for each check</span><span class="sp"></span><button class="lnk" data-go="evidence">See the evidence →</button></div>
+      <div class="ckgrid" id="sch-checks"></div>
+    </section>
+  </div>
+</section>

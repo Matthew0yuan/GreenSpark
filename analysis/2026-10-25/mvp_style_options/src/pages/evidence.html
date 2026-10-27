@@ -1,0 +1,28 @@
+<!-- Site battery · Prove: one line answers "how much more than the previous dispatcher?" and "any limit broken?";
+     the three periods are one dot plot, and the row you click drives the headline, the bars and the blocks below -->
+<section class="screen" id="s-evidence" aria-label="Evidence, site battery">
+  <div class="dec-row" id="ev-dec">
+    <div class="res">
+      <div class="dec-h" id="ev-head" aria-live="polite"></div>
+      <div class="chips ev-chips" id="ev-chips"></div>
+    </div>
+    <div class="dec-val res" id="ev-viol"></div>
+  </div>
+  <section class="blk res" id="ev-up">
+    <div class="blk-h"><h2>Extra profit per day, by period</h2><span class="sub">click a row</span></div>
+    <div id="ev-dots" class="chartbox ev-plot"></div>
+    <div id="ev-abs" class="chartbox"></div>
+  </section>
+  <div class="cols2">
+    <section class="blk res" id="ev-fc">
+      <div class="blk-h"><h2>Price forecast</h2><span class="sub" id="ev-q2a-per"></span></div>
+      <div id="ev-q2a" class="chartbox"></div>
+      <div class="chips ev-foot" id="ev-q2a-chips"></div>
+    </section>
+    <section class="blk res" id="ev-lim">
+      <div class="blk-h"><h2>Limits held, by period</h2></div>
+      <table class="ev-mx" id="ev-matrix" aria-label="Limit checks by period"></table>
+      <div class="chips ev-foot" id="ev-mx-chips"></div>
+    </section>
+  </div>
+</section>

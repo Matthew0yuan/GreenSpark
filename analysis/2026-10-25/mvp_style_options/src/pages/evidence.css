@@ -1,0 +1,55 @@
+/* Evidence, site battery (round 5): decision row, dot plot with its bars, forecast pairs, constraint matrix.
+   Colours come from base.css tokens only. */
+
+/* the headline: the number carries the verdict colour, grey when the 95% interval includes 0 */
+/* claim and period sit on one line when they fit; otherwise the period wraps under the claim, never inside it */
+#ev-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:14px;row-gap:2px}
+#ev-head small{font-size:15px;font-weight:500;letter-spacing:0;color:var(--text-3);white-space:nowrap}
+.ev-num{color:var(--ok)}
+.ev-num.zero{color:var(--text-4)}
+/* the baseline's definition opens on hover, like a chip; the dotted underline says it can */
+.ev-def{white-space:nowrap;text-decoration:underline dotted var(--text-4);text-decoration-thickness:2px;text-underline-offset:7px;cursor:help}
+.ev-chips{display:flex;margin-top:12px}
+.tipc.ev-cav{border-style:dashed;border-color:var(--text-4);color:var(--text-2);font-weight:600}
+
+/* limits broken, right of the headline; the caption opens its definition on hover */
+#ev-viol .dv.ok{color:var(--ok)}
+#ev-viol .dv.bad{color:var(--bad)}
+#ev-viol .dv small{font-size:13px;font-weight:500;letter-spacing:0;font-variant-numeric:normal;color:var(--text-3);margin-left:2px}
+#ev-viol .ck{display:inline-flex}
+.ev-capn{cursor:help;text-decoration:underline dotted var(--text-4);text-underline-offset:3px}
+/* a period name with its dates on hover: same dotted cue as the dispatcher's definition, lighter */
+.ev-per{text-decoration:underline dotted var(--text-4);text-underline-offset:4px;cursor:help}
+
+/* dot plot: rows are buttons; the training period's "not a test" chip sits over the chart, after its name */
+.ev-plot{position:relative}
+.ev-ov{position:absolute;z-index:2}
+#ev-dots .hit:hover{fill:var(--sel)}
+#ev-dots .hit:focus{outline:none}
+#ev-dots .hit:focus-visible{outline:2px solid var(--info);outline-offset:-2px}
+#ev-abs{margin-top:6px}
+.ev-foot{display:flex;margin-top:12px}
+
+/* limits matrix: icons only, the counts open on hover; the selected period's column is shaded */
+.ev-mx{width:100%;border-collapse:collapse;font-size:12.5px}
+.ev-mx th,.ev-mx td{padding:6px 10px;border-bottom:1px solid var(--divider);text-align:left;font-weight:500;color:var(--text-2);white-space:nowrap}
+.ev-mx thead th,.ev-mx thead td{font-size:12px;font-weight:600;color:var(--text-2);vertical-align:bottom;border-bottom:1px solid var(--rule)}
+.ev-mx .c{text-align:center;width:21%}
+.ev-mx .on{background:var(--sel)}
+.ev-mx [data-note]{cursor:help}
+.ev-mx tbody th .sub{margin-left:4px}
+/* the period's days under its name; the import contract's "a cost, not a hard limit" under its name, so the name
+   column stays narrow */
+.ev-mx thead .ev-d{display:block;margin-top:1px;font-size:11px;font-weight:400}
+.ev-mx tbody th .ev-why{display:block;margin:1px 0 0;font-size:11.5px}
+.ev-mx td .ci{display:inline-grid;vertical-align:middle;margin-top:0}
+.ev-mx .ev-pr{font-size:11.5px;color:var(--warn-text);margin-left:6px;vertical-align:middle}
+.ev-mx .ev-n{margin-left:6px;color:var(--bad);vertical-align:middle}
+
+/* the previous dispatcher is a glossary chip (gl) inside the headline: drawn as words with the dotted cue, not a pill */
+#ev-head .tipc.ev-def{display:inline;height:auto;padding:0;border:0;border-radius:0;font:inherit;color:inherit;white-space:nowrap}
+/* the "not a test" chip may run into the empty left edge of the plot, so it hides the grid line under it */
+.ev-ov{background:var(--surface)}
+/* transparent hover areas over SVG labels that carry a note (evHots); the charts are their positioning box */
+#ev-abs,#ev-q2a{position:relative}
+#s-evidence .ev-hot{position:absolute;display:block;cursor:help;z-index:2}

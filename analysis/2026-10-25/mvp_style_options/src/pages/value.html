@@ -1,0 +1,32 @@
+<!-- Customer fleet · Improve (round 5): one line says what the custom offer adds for Zenith and under which scenario,
+     with the verdict's four conditions under it; one chart sets the offer against no calls and the reference terms, with
+     each option's worst Hot Season on the same axis; who gets what follows; the evidence is folded.
+     Wording follows ROUND5.md section 7: plain labels, acronyms spelled out with a hover note, periods with dates. -->
+<section class="screen" id="s-value" aria-label="Value by party">
+  <!-- scenario names and notes come from GLOSS (S3, S2b, S1, S2a, SYNERGY); renderValue fills them -->
+  <div class="toolbar"><span class="lbl">Scenario</span><div class="seg" role="group" aria-label="Commercial scenario"><button data-vscen="S3" class="on">S3 · via Synergy (hypothetical)</button><button data-vscen="S2b">S2b · assumed 2027 capacity rule</button></div><span class="tipc" id="v-noscen" tabindex="0">today's rules (S1, S2a): no business case</span><span id="v-syn"></span></div>
+  <div class="dec-row v-dec" id="v-dec">
+    <div class="res">
+      <div class="pst" id="v-pill" role="status"></div>
+      <div class="dec-h" id="v-head"></div>
+    </div>
+    <div class="dec-val res"><div class="chips" id="v-chips"></div></div>
+    <!-- the four conditions span the full width so the longer share label keeps them on one row -->
+    <div class="v-status res" id="v-status" role="list" aria-label="Conditions of the verdict"></div>
+  </div>
+  <section class="blk res" id="v-opts-blk">
+    <div class="blk-h"><h2>Against the alternatives</h2></div>
+    <div id="v-opts" class="chartbox"></div>
+  </section>
+  <section class="blk res" id="v-parties-blk">
+    <div class="blk-h"><h2>Who gets what</h2><span class="chips" id="v-pchips"></span></div>
+    <div id="v-parties" class="chartbox"></div><div class="v-pnote" id="v-pnote"></div>
+  </section>
+  <section class="blk res v-folds">
+    <details class="fold sm" id="v-f-ledger"><summary>Full accounts by party</summary><p class="v-fsub" id="v-ledger-sub"></p><table class="tbl" id="v-ledger"></table><p class="foot" id="v-ledger-foot"></p></details>
+    <details class="fold sm" id="v-f-ircr"><summary>How the capacity charge (IRCR) saving is calculated</summary><div id="v-ircr"></div></details>
+    <details class="fold sm" id="v-f-own"><summary>Zenith's own battery</summary><div id="v-own"></div></details>
+    <details class="fold sm" id="v-f-hold"><summary>Season-by-season tests</summary><p class="v-fsub" id="v-hold-sub"></p><div id="v-hold"></div></details>
+    <details class="fold sm" id="v-f-cons"><summary>Customer limits</summary><div class="ckgrid" id="v-cons"></div><p class="foot" id="v-cons-foot"></p></details>
+  </section>
+</section>
