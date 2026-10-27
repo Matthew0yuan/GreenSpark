@@ -1,0 +1,82 @@
+fold,season,label,method,policy,budget,calls,covered_days,false_calls,missed_days,dec_calls,exhausted_on,left_at_end,covered_intervals,covered_intervals_17_20,median_cut,right_day_interval_outside_window
+A,2024,proxy_od,R0 existing rule,FCFS,15,15,1,14,3,15,2024-12-22,0,3,3,0,0
+A,2024,proxy_od,R1 M3 + DP c=0.03,DP,15,12,2,10,2,5,,3,6,6,0,0
+A,2024,proxy_od,ref M3 + DP c=0 (spend all),DP,15,15,2,13,2,5,2025-03-14,0,6,6,0,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.75,DP,15,13,2,11,2,5,,2,6,6,0,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.75,marginal,15,12,2,10,2,5,,3,6,6,0,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.5,DP,15,13,2,11,2,5,,2,6,6,0,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.5,marginal,15,13,2,11,2,5,,2,6,6,0,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.9,DP,15,12,2,10,2,5,,3,6,6,0,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.9,marginal,15,12,2,10,2,5,,3,6,6,0,0
+A,2024,proxy_od,R0 existing rule,FCFS,30,28,4,24,0,16,,2,12,12,1,0
+A,2024,proxy_od,R1 M3 + DP c=0.03,DP,30,17,3,14,1,5,,13,9,9,1,0
+A,2024,proxy_od,ref M3 + DP c=0 (spend all),DP,30,30,4,26,0,6,2025-03-14,0,12,12,1,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.75,DP,30,17,3,14,1,5,,13,9,9,1,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.75,marginal,30,16,3,13,1,5,,14,9,9,1,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.5,DP,30,17,3,14,1,5,,13,9,9,1,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.5,marginal,30,16,3,13,1,5,,14,9,9,1,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.9,DP,30,17,3,14,1,5,,13,9,9,1,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.9,marginal,30,15,3,12,1,5,,15,9,9,1,0
+A,2024,proxy_od,R0 existing rule,FCFS,45,28,4,24,0,16,,17,12,12,1,0
+A,2024,proxy_od,R1 M3 + DP c=0.03,DP,45,17,3,14,1,5,,28,9,9,1,0
+A,2024,proxy_od,ref M3 + DP c=0 (spend all),DP,45,45,4,41,0,6,2025-03-14,0,12,12,1,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.75,DP,45,17,3,14,1,5,,28,9,9,1,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.75,marginal,45,16,3,13,1,5,,29,9,9,1,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.5,DP,45,17,3,14,1,5,,28,9,9,1,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.5,marginal,45,16,3,13,1,5,,29,9,9,1,0
+A,2024,proxy_od,R2 M3 + DP money cost q=0.9,DP,45,17,3,14,1,5,,28,9,9,1,0
+A,2024,proxy_od,R3 M3 + money marginal q=0.9,marginal,45,15,3,12,1,5,,30,9,9,1,0
+A,2024,proxy_er,R0 existing rule,FCFS,15,15,1,14,3,15,2024-12-22,0,3,3,0,0
+A,2024,proxy_er,R1 M3 + DP c=0.03,DP,15,12,2,10,2,5,,3,6,6,0,0
+A,2024,proxy_er,ref M3 + DP c=0 (spend all),DP,15,15,3,12,1,5,2025-03-14,0,9,9,1,0
+A,2024,proxy_er,R2 M3 + DP money cost q=0.75,DP,15,13,3,10,1,5,,2,9,9,1,0
+A,2024,proxy_er,R3 M3 + money marginal q=0.75,marginal,15,12,3,9,1,5,,3,9,9,1,0
+A,2024,proxy_er,R2 M3 + DP money cost q=0.5,DP,15,13,3,10,1,5,,2,9,9,1,0
+A,2024,proxy_er,R3 M3 + money marginal q=0.5,marginal,15,13,3,10,1,5,,2,9,9,1,0
+A,2024,proxy_er,R2 M3 + DP money cost q=0.9,DP,15,12,2,10,2,5,,3,6,6,0,0
+A,2024,proxy_er,R3 M3 + money marginal q=0.9,marginal,15,12,3,9,1,5,,3,9,9,1,0
+A,2024,proxy_er,R0 existing rule,FCFS,30,28,4,24,0,16,,2,11,11,1,1
+A,2024,proxy_er,R1 M3 + DP c=0.03,DP,30,17,4,13,0,5,,13,11,11,1,1
+A,2024,proxy_er,ref M3 + DP c=0 (spend all),DP,30,30,4,26,0,6,2025-03-14,0,11,11,1,1
+A,2024,proxy_er,R2 M3 + DP money cost q=0.75,DP,30,17,4,13,0,5,,13,11,11,1,1
+A,2024,proxy_er,R3 M3 + money marginal q=0.75,marginal,30,16,4,12,0,5,,14,11,11,1,1
+A,2024,proxy_er,R2 M3 + DP money cost q=0.5,DP,30,17,4,13,0,5,,13,11,11,1,1
+A,2024,proxy_er,R3 M3 + money marginal q=0.5,marginal,30,16,4,12,0,5,,14,11,11,1,1
+A,2024,proxy_er,R2 M3 + DP money cost q=0.9,DP,30,17,4,13,0,5,,13,11,11,1,1
+A,2024,proxy_er,R3 M3 + money marginal q=0.9,marginal,30,15,4,11,0,5,,15,11,11,1,1
+A,2024,proxy_er,R0 existing rule,FCFS,45,28,4,24,0,16,,17,11,11,1,1
+A,2024,proxy_er,R1 M3 + DP c=0.03,DP,45,17,4,13,0,5,,28,11,11,1,1
+A,2024,proxy_er,ref M3 + DP c=0 (spend all),DP,45,45,4,41,0,6,2025-03-14,0,11,11,1,1
+A,2024,proxy_er,R2 M3 + DP money cost q=0.75,DP,45,17,4,13,0,5,,28,11,11,1,1
+A,2024,proxy_er,R3 M3 + money marginal q=0.75,marginal,45,16,4,12,0,5,,29,11,11,1,1
+A,2024,proxy_er,R2 M3 + DP money cost q=0.5,DP,45,17,4,13,0,5,,28,11,11,1,1
+A,2024,proxy_er,R3 M3 + money marginal q=0.5,marginal,45,16,4,12,0,5,,29,11,11,1,1
+A,2024,proxy_er,R2 M3 + DP money cost q=0.9,DP,45,17,4,13,0,5,,28,11,11,1,1
+A,2024,proxy_er,R3 M3 + money marginal q=0.9,marginal,45,15,4,11,0,5,,30,11,11,1,1
+B,2025,official,R0 existing rule,FCFS,15,15,0,15,4,15,2025-12-15,0,0,0,0,0
+B,2025,official,R1 M3 + DP c=0.03,DP,15,14,4,10,0,2,,1,11,12,1,1
+B,2025,official,ref M3 + DP c=0 (spend all),DP,15,15,4,11,0,2,2026-03-18,0,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.75,DP,15,15,4,11,0,2,2026-03-18,0,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.75,marginal,15,12,4,8,0,2,,3,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.5,DP,15,15,4,11,0,2,2026-03-18,0,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.5,marginal,15,13,4,9,0,2,,2,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.9,DP,15,14,4,10,0,2,,1,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.9,marginal,15,12,4,8,0,2,,3,11,12,1,1
+B,2025,official,R0 existing rule,FCFS,30,27,4,23,0,18,,3,11,12,1,1
+B,2025,official,R1 M3 + DP c=0.03,DP,30,17,4,13,0,3,,13,11,12,1,1
+B,2025,official,ref M3 + DP c=0 (spend all),DP,30,30,4,26,0,8,2026-03-31,0,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.75,DP,30,19,4,15,0,4,,11,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.75,marginal,30,15,4,11,0,4,,15,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.5,DP,30,19,4,15,0,4,,11,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.5,marginal,30,15,4,11,0,4,,15,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.9,DP,30,17,4,13,0,3,,13,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.9,marginal,30,13,4,9,0,3,,17,11,12,1,1
+B,2025,official,R0 existing rule,FCFS,45,27,4,23,0,18,,18,11,12,1,1
+B,2025,official,R1 M3 + DP c=0.03,DP,45,17,4,13,0,3,,28,11,12,1,1
+B,2025,official,ref M3 + DP c=0 (spend all),DP,45,45,4,41,0,8,2026-03-31,0,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.75,DP,45,19,4,15,0,4,,26,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.75,marginal,45,15,4,11,0,4,,30,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.5,DP,45,19,4,15,0,4,,26,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.5,marginal,45,15,4,11,0,4,,30,11,12,1,1
+B,2025,official,R2 M3 + DP money cost q=0.9,DP,45,17,4,13,0,3,,28,11,12,1,1
+B,2025,official,R3 M3 + money marginal q=0.9,marginal,45,13,4,9,0,3,,32,11,12,1,1

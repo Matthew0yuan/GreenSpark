@@ -81,6 +81,10 @@ class Strategy:
     # what stored energy is worth at the end of the plan: "buyback" (stored_energy_value) or "table" (run_day's
     # terminal curve, vpp.storage_value). offer_rule "table": layered offers from run_day's bids (DayBids)
     terminal: str = "buyback"
+    # 0: a Scheduled facility - the standing offers (and bids, and a plan's curve) are in before each 5-min price and
+    # clear on it. k >= 1: a facility AEMO does not dispatch (Non-Scheduled, ESM 7.4.8, 7.6.12) - it can only act
+    # on the price published k steps back, so every step beyond the plan is decided on that price
+    act_lag: int = 0
 
 
 def decision_wear(asset: Asset, prefs: RiskPrefs) -> float:
@@ -824,6 +828,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     P, E, eta, tau = bat.power_mw, bat.energy_mwh, bat.eta, asset.limits.fcess_sustain_h
     fcess = fc_f is not None
     load_margin = prefs.load_margin
+    offer_lag = max(offer_lag, strat.act_lag)  # not dispatched: the offers are priced no later than it may act
     lf = None if site is None else np.asarray(load_fc, float) * (1 + load_margin)  # what plans assume the site draws
     lfe = None if site is None else np.asarray(load_fc, float)  # what it is expected to draw: economic caps are priced on this
     la = np.zeros(N) if site is None else np.asarray(load_act, float)
@@ -1092,7 +1097,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                 first_plan = (t, float(np.mean(cur["moneys"])) if "moneys" in cur else cur["money"], tv)
         if planner != "point" and t and t % strat.every == 0 and not replanned[t]:
             # scheduled re-plan from the actual state of charge, the prices nudged towards the latest 5-min prices
-            last = t * STEPS - 1
+            last = t * STEPS - max(1, strat.act_lag)  # the latest published (act_lag)
             f_now = None if p5_f is None or not fcess else {k: p5_f[k][last] for k in FCESS}
             cur = replan(t, nowcast(fc_e, t - 1, p5[last]), nowcast_fcess(fc_f, t - 1, f_now), s, budget, "full",
                          (t - 1, p5[last], f_now))
@@ -1140,6 +1145,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             sellable = max(0.0, min(P, exp_room[t], (s - keep_e) * eta / DT5, budget / DT5))
             pw = min(cur["net"][i], sellable)
             price = p5[t * STEPS + j]
+            if strat.act_lag:
+                # not dispatched on an offer: what departs from the plan is decided on the latest price published
+                i5 = t * STEPS + j
+                price = p5[i5 - strat.act_lag] if i5 >= strat.act_lag else float(np.asarray(fc_e, float)[t])
             row = None  # the curve's point this step runs (v2 round 6); None: the plan's interval
             if points is not None:
                 # the point nearest the step's price (the curve is in before the price exists), ties to the plan
@@ -1291,7 +1300,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                     tests[a.name].append((ok, event, min(max(got, 0.0), a.mw) * DT if event else 0.0, got / a.mw if event else np.nan))
         if (triggered[t] or moved[t]) and t < N - 1:
             cur_t0 = t + 1
-            last = t * STEPS + STEPS - 1
+            last = t * STEPS + STEPS - max(1, strat.act_lag)  # the latest price published when the next interval starts
             f_now = None if p5_f is None or not fcess else {k: p5_f[k][last] for k in FCESS}
             cur = replan(cur_t0, nowcast(fc_e, t, p5[last]), nowcast_fcess(fc_f, t, f_now), s, budget, "full" if full else "trigger",
                          (t, p5[last], f_now))

@@ -85,7 +85,8 @@ var red = $$("#sch-chart svg:first-child rect").filter(function(r){ return /stro
 ok("blocked: red outline on the chart", red.length === 1 && /Export above 3 MW/.test($("#sch-chart svg").textContent), red.length);
 var bad = $$("#sch-checks .ck.b");
 ok("blocked: one failing tile", bad.length === 1 && /Connection export ≤ 3 MW/.test(bad[0].textContent), bad.map(function(c){ return c.textContent; }).join());
-ok("stale: results dimmed", document.body.classList.contains("stale") && getComputedStyle($("#plan-detail")).opacity === "0.5");
+ok("stale: results dimmed", document.body.classList.contains("stale") && getComputedStyle($("#plan-vbar").parentElement).opacity === "0.5");
+ok("stale + blocked: limit marks and half-hour detail stay readable", getComputedStyle($("#plan-detail")).opacity === "1" && getComputedStyle($("#sch-rail")).opacity === "1");
 ok("stale + blocked: decision stays readable", getComputedStyle($("#plan-head").parentElement).opacity === "1");
 click($("#plan-status [data-inspect]"));
 ok("Inspect jumps to the first bad half-hour", /17:30–18:00/.test(txt("#sch-rail")), txt("#sch-rail").slice(0, 30));
