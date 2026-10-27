@@ -1299,7 +1299,7 @@ function railHTML(k){
     say = "No trade beats keeping the energy at the A$" + nf(pr) + "/MWh forecast. The battery stays on standby for grid services (FCESS), which pay for availability.";
     facts = [["Battery", nf(SOC[k], 1) + " MWh"], ["Price forecast", price], ["Grid-service standby", nf(RAISE[k], 1) + " MW"]];
   }
-  if (offerAt(k)) facts.push(["Sell more", "+" + nf(offerAt(k).mw, 1) + " MW if ≥ A$" + nf(offerAt(k).price) + (offerAt(k).max - offerAt(k).price >= 1 ? "–" + nf(offerAt(k).max) : "")]);
+  if (offerAt(k)) facts.push(["Extra offer", "+" + nf(offerAt(k).mw, 1) + " MW if price ≥ A$" + nf(offerAt(k).price) + (offerAt(k).max - offerAt(k).price >= 1 ? "–" + nf(offerAt(k).max) : "")]);
   var col = {dis:"var(--phs-dis)", chg:"var(--phs-chg)", shave:"var(--phs-shave)", hold:"var(--text-2)", pre:"var(--text-2)"}[m];
   var h = '<div class="ri-head"><div class="t">' + hhmm(k) + "–" + (k + 1 === N ? "08:00" : hhmm(k + 1)) + '<span class="tag plan">' + kind.toUpperCase() + '</span></div><div class="act" style="color:' + col + '">' + act + "</div></div>";
   h += '<p class="ri-say">' + say + "</p>";
@@ -1389,7 +1389,7 @@ function laneSVG(sel){
   var om = function(v){ return yO + hO - (hO - 1) * Math.min(1, v / BAT.power_mw); };
   s.push(svgOpen(W, H, "day", "Plan for " + PDATE + " (model output, backtest replay): scheduled actions, the energy offered beyond the plan in each half-hour with its trigger price (the lowest tranche of the 09:00 submission, aggregated from 5-minute intervals to half-hours), grid-service standby and the forecast price") + "<defs>" + HATCH("hDy") + "</defs>");
   /* lane tracks named in the left margin, a light grid every four hours, and no forecast before 09:00 */
-  [[yA, hA, "Plan", "Scheduled battery actions, decided at 09:00 from the forecast."], [yO, hO, "Sell more if", glNote("EXTRAOFFER")], [yF, hF, "Grid services", glNote("FCESS")]].forEach(function(l){ s.push(rc(X0, l[0], XR - X0, l[1], 'rx="3" style="fill:var(--surface-2)"') + '<text x="' + (X0 - 8) + '" y="' + (l[0] + l[1] / 2 + 3.5).toFixed(1) + '" class="lnm" text-anchor="end"><title>' + l[3] + "</title>" + l[2] + "</text>"); });
+  [[yA, hA, "Plan", "Scheduled battery actions, decided at 09:00 from the forecast."], [yO, hO, "Extra offer", glNote("EXTRAOFFER")], [yF, hF, "Grid services", glNote("FCESS")]].forEach(function(l){ s.push(rc(X0, l[0], XR - X0, l[1], 'rx="3" style="fill:var(--surface-2)"') + '<text x="' + (X0 - 8) + '" y="' + (l[0] + l[1] / 2 + 3.5).toFixed(1) + '" class="lnm" text-anchor="end"><title>' + l[3] + "</title>" + l[2] + "</text>"); });
   [8, 16, 24, 32, 40].forEach(function(q){ s.push(ln(X(q), yA, X(q), y1, 'class="gl"')); });
   s.push(rc(X(0), yA, X(2) - X(0), y1 - yA, 'fill="url(#hDy)"'));
   /* the price panel: forecast with its P10–P90 band, the offer price, and the actual price once revealed */
@@ -1435,11 +1435,17 @@ function laneSVG(sel){
     OFFER_OUT.forEach(function(v, q){ if (v > 0.005) { sold.push(q); var top = Math.min(om(v), yO + hO - 4); s.push(rc(X(q), top, IW, yO + hO - top, 'class="osold" style="fill:var(--cond)"')); } });
     if (sold.length) { soldX = X(sold[sold.length - 1] + 1) + 6; s.push('<text x="' + soldX.toFixed(1) + '" y="' + oy.toFixed(1) + '" class="ol halo"><title>Derived: MW cleared × 0.5 h × the half-hour\'s settled price; inside the outcome\'s energy money.</title>sold ' + aud(MONEY.out.offer) + "</text>"); }
   }
-  /* one size label per run of similar offers: the run's largest offer, at its start (not where the sold label sits) */
+  /* one label per run of similar offers, saying the condition: how much more, and the price it needs
+     ("+10 MW if price ≥ A$155–166"); shorter where the run is narrow; never where the sold label sits */
   segsOf(F0, function(q){ return OFFERS[q] ? (OFFERS[q].mw >= 7 ? 2 : 1) : 0; }).filter(function(g){ return g.m && g.b - g.a >= 4; }).forEach(function(g){
-    var mx = Math.max.apply(null, OFFERS.slice(g.a, g.b).map(function(x){ return x.mw; })), x = X(g.a) + 6, t = "+" + nf(mx, Math.abs(mx - Math.round(mx)) < 0.05 ? 0 : 1) + " MW";
-    if (soldX >= 0 && x < soldX + 110 && x + t.length * 6 > soldX) x = soldX + 110;
-    if (x + t.length * 6 < X(g.b)) s.push(tx(x, oy, t, "ol halo")); });
+    var run = OFFERS.slice(g.a, g.b), mx = Math.max.apply(null, run.map(function(x){ return x.mw; }));
+    var lo = Math.min.apply(null, run.map(function(x){ return x.price; })), hi = Math.max.apply(null, run.map(function(x){ return x.price; }));
+    var mw = "+" + nf(mx, Math.abs(mx - Math.round(mx)) < 0.05 ? 0 : 1) + " MW", x = X(g.a) + 6;
+    var opts = [mw + " if price ≥ A$" + nf(lo) + (hi - lo >= 1 ? "–" + nf(hi) : ""), mw + " ≥ A$" + nf(lo), mw];
+    var wd = function(t){ return t.length * 6; };
+    if (soldX >= 0 && x < soldX + 110 && x + wd(opts[2]) > soldX) x = soldX + 110;
+    var t = opts.filter(function(o){ return x + wd(o) < X(g.b) - 4; })[0];
+    if (t) s.push(tx(x, oy, t, "ol halo")); });
   var fr = segsOf(2, function(q){ return standby(q) > 0; }).filter(function(g){ return g.m; }), best = null;
   fr.forEach(function(g){ s.push(rc(X(g.a) + 0.5, yF, X(g.b) - X(g.a) - 1, hF, 'rx="3" style="fill:color-mix(in srgb,var(--cr) 45%,var(--surface))"')); if (!best || g.b - g.a > best.b - best.a) best = g; });
   if (best) s.push(tx(X(2) + 8, yF + hF / 2 + 3.5, "earns " + aud(MONEY.plan.fcess), "fl"));
@@ -1662,7 +1668,7 @@ var TIPS = {
   day:function(k){
     var v = P.dis[k] - P.chg[k], r = [["sq", "var(--" + (v < 0 ? "chg" : "dis") + ")", "Power", (v > 0 ? "+" : (v < 0 ? "−" : "")) + nf(Math.abs(v), 1) + " MW"]];
     if (offerAt(k)) {
-      r.push(["off", "", "Sell more", "+" + nf(offerAt(k).mw, 1) + " MW ≥ A$" + nf(offerAt(k).price)]);
+      r.push(["off", "", "Extra offer", "+" + nf(offerAt(k).mw, 1) + " MW ≥ A$" + nf(offerAt(k).price)]);
       if (S.revealed) r.push(["", "", "Sold", OFFER_OUT[k] > 0.005 ? nf(OFFER_OUT[k], 1) + " MW" : "no"]);
     }
     r.push(["dsh", "var(--price)", "Forecast", P.price[k] == null ? "–" : "A$" + nf(P.price[k])]);

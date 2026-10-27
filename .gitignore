@@ -5,3 +5,8 @@ data/processed/v2_f5x_records.parquet
 # agents/launch.py: raw event logs of agent runs, and the tools' own bytecode
 agents/logs/
 agents/__pycache__/
+# app/: the operator decisions database, bytecode, frontend test output
+var/
+app/**/__pycache__/
+app/frontend/test-results/
+app/frontend/playwright-report/

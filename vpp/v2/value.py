@@ -36,6 +36,7 @@ the battery and site the dispatcher sees and refuses one solved for others (chec
 
 Run:  python -m vpp.v2.value [--stat mean] [--energy 36] [--hurdle 0] [--state] [--regime]   builds the per-day arrays
           [--power 8] [--round-trip 0.88] [--wear 40] [--cmd 10] [--import-limit 12] [--load-scale 10] [--rebuild]
+          [--standalone]   (no site: standalone_params of the battery given)
       python -m vpp.v2.value --b1                                         round 4, B1: builds and checks the tables
 """
 
@@ -129,6 +130,14 @@ class TableParams:
 
 DEFAULT_PARAMS = TableParams()
 _D = DEFAULT_PARAMS
+
+
+def standalone_params(asset) -> TableParams:
+    """A battery on its own connection, no site behind it (2026-10-27, analysis/2026-10-27/standalone_v2): solved as
+    one behind a site with no load whose CMD and import limit are the battery's power, so the charging room is the
+    battery's power and there is nothing to shave. Exact, not an approximation."""
+    bat = asset.battery
+    return TableParams(bat.power_mw, bat.energy_mwh, bat.round_trip, asset.wear_per_mwh, bat.power_mw, bat.power_mw, 0.0)
 CLI = {"--power": "power_mw", "--energy": "energy_mwh", "--round-trip": "round_trip", "--wear": "wear_per_mwh",
        "--cmd": "cmd_mw", "--import-limit": "import_limit_mw", "--load-scale": "load_scale"}
 
@@ -583,6 +592,8 @@ def main(argv: list[str] | None = None) -> None:
     stat = argv[argv.index("--stat") + 1] if "--stat" in argv else "median"
     hurdle = float(argv[argv.index("--hurdle") + 1]) if "--hurdle" in argv else bt.HURDLE
     params = TableParams(**{name: float(argv[argv.index(flag) + 1]) for flag, name in CLI.items() if flag in argv})
+    if "--standalone" in argv:  # no site: the battery's own power is the charging room (standalone_params)
+        params = standalone_params(params.asset())
     p = build(stat, params.energy_mwh, "--rebuild" in argv, hurdle, state="--state" in argv or "--regime" in argv,
               regime="--regime" in argv, **{k: v for k, v in params.kwargs().items() if k != "energy_mwh"})
     z = load(p)

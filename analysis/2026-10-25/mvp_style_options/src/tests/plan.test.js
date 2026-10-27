@@ -14,8 +14,8 @@ ok("two charts on one axis", svgs.length === 2 && svgs[0].getAttribute("data-tip
 ok("48 hit columns per chart", svgs.every(function(s){ return s.querySelectorAll(".hit").length === 48; }));
 ok("same x scale in both charts", svgs[0].getAttribute("data-iw") === svgs[1].getAttribute("data-iw") && svgs[0].getAttribute("viewBox").split(" ")[2] === svgs[1].getAttribute("viewBox").split(" ")[2]);
 var lanesTxt = Array.prototype.map.call(svgs[0].querySelectorAll("text"), function(t){ return t.textContent; }).join(" | ");
-["Plan", "Sell more if", "Grid services", "sold A$ 5,720", "+10 MW", "+5.8 MW", "earns A$ 1,430", "Cut import 0.2 MW", "Discharge 9.2 MW", "Hold", "peak A$143", "low A$78", "trigger A$159", "A$900", "Price, A$/MWh", "PLAN MADE 09:00"].forEach(function(w){ ok("lane label: " + w, lanesTxt.indexOf(w) >= 0); });
-ok("no captions on the day chart: only lane names, axis, actions, mark", (function(){ var t = Array.prototype.map.call(svgs[0].querySelectorAll("text"), function(e){ return e.lastChild.textContent; }).filter(function(x){ return !/^(\d+|\d\d:\d\d|Plan|Sell more if|Grid services|Price, A\$\/MWh|PLAN MADE 09:00|Hold|Cut import [\d.]+ MW|Discharge [\d.]+ MW|Charge [\d.]+ MW|[\d.]+ MW|peak A\$\d+|low A\$\d+|trigger A\$\d+|\+[\d.]+ MW|A\$[\d,]+|sold A\$ [\d,]+|earns A\$ [\d,]+)$/.test(x); }); return t.length === 0; })(), Array.prototype.map.call(svgs[0].querySelectorAll("text"), function(e){ return e.lastChild.textContent; }).join(" | "));
+["Plan", "Extra offer", "Grid services", "sold A$ 5,720", "+10 MW if price ≥ A$157–165", "+5.8 MW ≥ A$155", "+10 MW if price ≥ A$174–188", "earns A$ 1,430", "Cut import 0.2 MW", "Discharge 9.2 MW", "Hold", "peak A$143", "low A$78", "trigger A$159", "A$900", "Price, A$/MWh", "PLAN MADE 09:00"].forEach(function(w){ ok("lane label: " + w, lanesTxt.indexOf(w) >= 0); });
+ok("no captions on the day chart: only lane names, axis, actions, mark", (function(){ var t = Array.prototype.map.call(svgs[0].querySelectorAll("text"), function(e){ return e.lastChild.textContent; }).filter(function(x){ return !/^(\d+|\d\d:\d\d|Plan|Extra offer|Grid services|Price, A\$\/MWh|PLAN MADE 09:00|Hold|Cut import [\d.]+ MW|Discharge [\d.]+ MW|Charge [\d.]+ MW|[\d.]+ MW|peak A\$\d+|low A\$\d+|trigger A\$\d+|\+[\d.]+ MW( if price ≥ A\$\d+(–\d+)?| ≥ A\$\d+)?|A\$[\d,]+|sold A\$ [\d,]+|earns A\$ [\d,]+)$/.test(x); }); return t.length === 0; })(), Array.prototype.map.call(svgs[0].querySelectorAll("text"), function(e){ return e.lastChild.textContent; }).join(" | "));
 ok("sold half-hours filled solid in the offer lane", svgs[0].querySelectorAll("rect.osold").length >= 1);
 ok("trigger: one amber stepped line from 09:00 to the end of the day", (function(){ var p = $$("#sch-chart svg path.othr"), h2 = svgs[0].querySelector('.hit[data-i="2"]'), h47 = svgs[0].querySelector('.hit[data-i="47"]'); if (p.length !== 1) return false; var b = p[0].getBBox(); return /--cond/.test(p[0].getAttribute("style")) && Math.abs(b.x - +h2.getAttribute("x")) < 1 && Math.abs(b.x + b.width - (+h47.getAttribute("x") + +h47.getAttribute("width"))) < 1; })(), $$("#sch-chart svg path.othr").length);
 function soldAt(i){ return !!svgs[0].querySelector('rect.osold[x="' + svgs[0].querySelector('.hit[data-i="' + i + '"]').getAttribute("x") + '"]'); }
@@ -69,22 +69,22 @@ ok("acronyms carry their long form", /contract maximum demand/i.test($$("#sch-ch
   ok("tooltip labels on one line each", labels.length >= 3 && labels.every(function(l){ return l.getBoundingClientRect().height <= 24; }), labels.map(function(l){ return l.textContent + ":" + Math.round(l.getBoundingClientRect().height); }).join(", "));
   ok("tooltip rows each ≤ 2 lines", rows.every(function(l){ return l.getBoundingClientRect().height < 40; }));
   ok("tooltip width fixed at 230", Math.round(tip.getBoundingClientRect().width) === 230, tip.getBoundingClientRect().width);
-  ok("tooltip offer row: size and trigger from the 09:00 submission", /Sell more\+3\.5 MW ≥ A\$162/.test(tip.textContent) && /ForecastA\$128/.test(tip.textContent) && !/Sold/.test(tip.textContent), tip.textContent);
+  ok("tooltip offer row: size and trigger from the 09:00 submission", /Extra offer\+3\.5 MW ≥ A\$162/.test(tip.textContent) && /ForecastA\$128/.test(tip.textContent) && !/Sold/.test(tip.textContent), tip.textContent);
   ok("tooltip: one word per label, no sentence", $$(".ctip td:nth-child(2)").every(function(l){ return l.textContent.trim().split(/\s+/).length <= 2; }) && !$(".ctip .ct-h span"), $$(".ctip td:nth-child(2)").map(function(l){ return l.textContent; }).join(","));
   document.dispatchEvent(new MouseEvent("mousemove", {bubbles:true, clientX:2, clientY:2}));
 })();
 /* click a half-hour */
 click(svgs[0].querySelector('.hit[data-i="2"]'));
-ok("click 09:00 → charging detail", /09:00–09:30/.test(txt("#sch-rail")) && /Charging 1\.0 MW/.test(txt("#sch-rail")) && /Sell more\+10\.0 MW if ≥ A\$159–162/.test(txt("#sch-rail")), txt("#sch-rail").slice(0, 400));
+ok("click 09:00 → charging detail", /09:00–09:30/.test(txt("#sch-rail")) && /Charging 1\.0 MW/.test(txt("#sch-rail")) && /Extra offer\+10\.0 MW if price ≥ A\$159–162/.test(txt("#sch-rail")), txt("#sch-rail").slice(0, 400));
 click($('[data-po="outcome"]'));
 (function(){ var hit = $("#sch-chart svg").querySelector('.hit[data-i="20"]'), b = hit.getBoundingClientRect();
   hit.dispatchEvent(new MouseEvent("mousemove", {bubbles:true, clientX:b.left + 2, clientY:b.top + 10}));
   ok("tooltip after reveal: Sold and Actual rows", /Sold1\.8 MW/.test($(".ctip").textContent) && /ActualA\$869/.test($(".ctip").textContent), $(".ctip").textContent);
   document.dispatchEvent(new MouseEvent("mousemove", {bubbles:true, clientX:2, clientY:2})); })();
 click($("#sch-chart svg").querySelector('.hit[data-i="21"]'));
-ok("rail 18:30: offer, what the replay sold and its money", /Sell more\+4\.3 MW if ≥ A\$165–168/.test(txt("#sch-rail")) && /3\.5 MW sold → A\$ 1,594/.test(txt("#sch-rail")) && /A\$900\/MWh/.test(txt("#sch-rail")), txt("#sch-rail"));
+ok("rail 18:30: offer, what the replay sold and its money", /Extra offer\+4\.3 MW if price ≥ A\$165–168/.test(txt("#sch-rail")) && /3\.5 MW sold → A\$ 1,594/.test(txt("#sch-rail")) && /A\$900\/MWh/.test(txt("#sch-rail")), txt("#sch-rail"));
 click($("#sch-chart svg").querySelector('.hit[data-i="36"]'));
-ok("rail 02:00: holding overnight, still offering 10 MW at a higher trigger, not sold", /Holding 16\.3 MWh/.test(txt("#sch-rail")) && /Sell more\+10\.0 MW if ≥ A\$185–188/.test(txt("#sch-rail")) && /not sold/.test(txt("#sch-rail")), txt("#sch-rail"));
+ok("rail 02:00: holding overnight, still offering 10 MW at a higher trigger, not sold", /Holding 16\.3 MWh/.test(txt("#sch-rail")) && /Extra offer\+10\.0 MW if price ≥ A\$185–188/.test(txt("#sch-rail")) && /not sold/.test(txt("#sch-rail")), txt("#sch-rail"));
 click($('[data-po="plan"]')); click($("#sch-chart svg").querySelector('.hit[data-i="34"]'));
 var s0 = $("#sch-chart svg"), mk = s0.querySelector("rect.selm"), hit = s0.querySelector('.hit[data-i="34"]');
 ok("selection mark moves", mk && Math.abs(+mk.getAttribute("x") - +hit.getAttribute("x")) < 0.01);

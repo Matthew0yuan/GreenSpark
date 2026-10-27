@@ -1,0 +1,15 @@
+570 days x 2 dispatchers in 323 s
+check 3 - energy balance: largest error 6.39e-14 MWh -> PASS
+check 5 - half-hour mean output within 10 MW: 0 of 54720 -> PASS; stored energy within 0-40 MWh: 0 outside -> PASS
+                            period              strategy  days  energy  fcess  wear  total  discharged_mwh
+  in-sample 2025-04-01..2026-06-30 forecast+offer(value)   456   459.2 3692.8 119.5 4032.5             3.9
+  in-sample 2025-04-01..2026-06-30    rw50+state t5+roll   456   456.8 3731.8 113.8 4074.7             3.7
+  test seen 2026-07-01..2026-10-15 forecast+offer(value)   107   754.9   72.7 201.7  625.9             6.7
+  test seen 2026-07-01..2026-10-15    rw50+state t5+roll   107   633.2   76.5 157.3  552.4             5.2
+test unseen 2026-10-16..2026-10-22 forecast+offer(value)     7   266.2   73.7 111.6  228.3             3.7
+test unseen 2026-10-16..2026-10-22    rw50+state t5+roll     7   370.5  146.6 101.8  415.4             3.4
+                            period  days  e5_minus_v1  lo95_month  hi95_month  days_e5_better
+  in-sample 2025-04-01..2026-06-30   456         42.2       -60.4       141.8             279
+  test seen 2026-07-01..2026-10-15   107        -73.5      -279.7        78.0              56
+test unseen 2026-10-16..2026-10-22     7        187.1         NaN         NaN               5
+pass rule (in-sample month-block 95% lower bound > 0): -60.4 -> adopt forecast+offer(value)

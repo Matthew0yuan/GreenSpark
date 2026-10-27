@@ -41,10 +41,13 @@ def charge_floors(cmd_mw: float, load_scale: float, margin: float) -> pd.Series:
 
 def table_params(asset, site, cmd_mw: float | None) -> vl.TableParams:
     """The battery (power, energy, round trip, wear), site (import limit, load scale) and CMD the dispatcher sees, as
-    a value table is solved for them. The tables are solved for a battery behind a site with a CMD only."""
-    if site is None or cmd_mw is None:
-        raise ValueError(f"no value table for a battery {'without a site' if site is None else 'on a route without a CMD'}: "
-                         "the tables are solved for a battery behind a site with a CMD (vpp.v2.value)")
+    a value table is solved for them. A battery without a site (standalone) has its own table
+    (vpp.v2.value.standalone_params); a site without a CMD has none."""
+    if site is None:
+        return vl.standalone_params(asset)
+    if cmd_mw is None:
+        raise ValueError("no value table for a battery on a route without a CMD: the tables are solved for a battery "
+                         "behind a site with a CMD, or with no site (vpp.v2.value)")
     bat = asset.battery
     return vl.TableParams(bat.power_mw, bat.energy_mwh, bat.round_trip, asset.wear_per_mwh, cmd_mw, site.import_limit_mw,
                           site.load_scale)

@@ -1,0 +1,74 @@
+"""Shared helpers of the engine adapter: paths, evaluation periods, JSON-safe numbers, clock labels.
+
+Conventions (analysis/2026-10-25/mvp_architecture/API_CONTRACT.md sections 1-2): a value the model does not give is
+None with a reason in `gaps`, never 0; units are in field names; every aggregate carries its period; half-hour arrays
+have 48 entries (index 0 = 08:00-08:30 of the trading day), stored-energy arrays 49 (start of each half-hour, then the
+end of the day); battery + is discharge."""
+
+import math
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[2]
+STANDALONE = ROOT / "analysis" / "2026-10-27" / "standalone_v2"  # the adopted dispatcher's backtest (PLAN.md there)
+N = 48
+FIRST = 2  # the 09:00 plan's first half-hour
+
+FIRST_DAY, CUTOFF, UNSEEN, LAST_DAY = (pd.Timestamp(x) for x in ("2025-04-01", "2026-07-01", "2026-10-16", "2026-10-22"))
+PERIODS = {
+    "in_sample": {"kind": "in_sample", "label": "Training period", "start": "2025-04-01", "end": "2026-06-30",
+                  "used_for_selection": True},
+    "test_seen": {"kind": "test_seen", "label": "Test · reviewed", "start": "2026-07-01", "end": "2026-10-15",
+                  "used_for_selection": False},
+    "test_unseen": {"kind": "test_unseen", "label": "Test · blind", "start": "2026-10-16", "end": "2026-10-22",
+                    "used_for_selection": False},
+}
+
+
+def period_key(day) -> str:
+    d = pd.Timestamp(day)
+    return "in_sample" if d < CUTOFF else "test_seen" if d < UNSEEN else "test_unseen"
+
+
+def period(key: str, days: int) -> dict:
+    return {**PERIODS[key], "days": int(days)}
+
+
+def num(x, nd: int = 6):
+    """A JSON number, or None for None / NaN / inf."""
+    if x is None:
+        return None
+    if isinstance(x, (bool, np.bool_)):
+        return bool(x)
+    x = float(x)
+    return None if not math.isfinite(x) else round(x, nd) + 0.0
+
+
+def arr(x, nd: int = 6) -> list:
+    return [num(v, nd) for v in x]
+
+
+def pad(values, first: int = FIRST, n: int = N) -> list:
+    """A plan array from `first` on, as an n-entry list with None before."""
+    v = list(values)
+    return [None] * first + v + [None] * (n - first - len(v))
+
+
+def clock(slot: int) -> str:
+    return (pd.Timestamp("2000-01-01 08:00") + pd.Timedelta(minutes=30 * slot)).strftime("%H:%M")
+
+
+def weekday_label(day) -> str:
+    d = pd.Timestamp(day)
+    return f"{d:%a} {d.day} {d:%b %Y}"
+
+
+def hot_season(day) -> str | None:
+    d = pd.Timestamp(day)
+    if d.month == 12:
+        return f"{d.year}-{(d.year + 1) % 100:02d}"
+    if d.month in (1, 2, 3):
+        return f"{d.year - 1}-{d.year % 100:02d}"
+    return None

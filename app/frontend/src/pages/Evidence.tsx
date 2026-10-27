@@ -1,0 +1,206 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api, type Evidence as Ev } from "../api";
+import { Chip, Failed, Gl, Loading, Note, useWidth, Who } from "../components/ui";
+import { aud, isNum, nf, signed } from "../lib/format";
+import { glNote } from "../lib/gloss";
+
+const KEYS = ["TRAIN", "TREV", "TBLIND"];
+const NAME = ["Training period", "Test · reviewed", "Test · blind"];
+const RANGE = ["1 Apr 2025 – 30 Jun 2026", "1 Jul – 15 Oct 2026", "16–22 Oct 2026"];
+
+export default function Evidence() {
+  const q = useQuery({ queryKey: ["evidence"], queryFn: api.evidence, staleTime: Infinity });
+  const [per, setPer] = useState(1);
+  return (
+    <section aria-label="Evidence">
+      <header className="ph">
+        <div className="ph-line"><h1>Evidence · storage network</h1><span className="chips"><Chip cls="step">2 · Prove</Chip></span></div>
+        <div className="ctx">1 Apr 2025 – 22 Oct 2026 · 570 days replayed · <Gl k="DECISION">decided 09:00</Gl></div>
+        <Who items={[["ZENITH", "Zenith · runs the network"], ["NETWORK", "storage network · 10 MW / 40 MWh"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]]} />
+      </header>
+      {q.isLoading && <Loading what="the evidence" />}
+      {q.error && <Failed error={q.error} />}
+      {q.data && <Body e={q.data} per={per} setPer={setPer} />}
+    </section>
+  );
+}
+
+function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => void }) {
+  const P = e.periods[per];
+  const u = P.uplift_vs_plan_only;
+  const broken = e.limits.reduce((t, l) => t + l.over_power + l.soc_outside, 0);
+  const halfhours = e.limits.reduce((t, l) => t + l.halfhours, 0);
+  const cand = e.periods[0].candidate_minus_adopted;
+  const zero = u && isNum(u.lo95) && isNum(u.hi95) && u.lo95 <= 0 && u.hi95 >= 0;
+  return (
+    <>
+      <div className="dec">
+        <div className="dec-l">
+          <div className="title">
+            <span className={"big " + (zero ? "dim" : "pos")} data-note={glNote("PLANONLY") + " Same days, same prices, same battery; energy + grid services − wear."}>{u ? signed(u.mean) : "–"}</span>
+            {" "}/day vs <Gl k="PLANONLY">09:00 plan alone</Gl>
+          </div>
+          <div className="chips dec-chips">
+            <Chip note={glNote(KEYS[per])}>{NAME[per]} · {P.period.days} d</Chip>
+            <Chip cls="hyp" note={`${glNote("E5")} Training period e5 − v1: ${signed(cand.mean)}/day, 95% range ${signed(cand.lo95)} to ${signed(cand.hi95)}.`}>e5 tested, not adopted</Chip>
+          </div>
+        </div>
+        <div className="dec-r">
+          <div className="lbl"><Note note="Half-hours in the backtest where the battery's mean power went above 10 MW or its stored energy left 0–40 MWh.">Limits broken</Note></div>
+          <div className="big pos">{broken} <span className="sub">of {nf(halfhours)} half-hours</span></div>
+        </div>
+      </div>
+
+      <div className="blk">
+        <div className="blk-h"><h2><Note note="Mean extra profit per day over the 09:00 plan alone, with the 95% range from resampling whole months. Click a period to see it below.">Extra profit per day</Note></h2></div>
+        <DotPlot e={e} per={per} setPer={setPer} />
+      </div>
+
+      <div className="blk">
+        <div className="blk-h"><h2>{NAME[per]}</h2></div>
+        <Bars rows={[
+          ["PLANONLY", "09:00 plan alone", P.per_day_aud["plan only"], "var(--base)"],
+          ["DISPATCHER", "This dispatcher (v1)", P.per_day_aud[e.adopted], "var(--zen)"],
+          ["E5", "e5 · not adopted", P.per_day_aud[e.candidate], "var(--bar)"],
+          ["PERFECT", "Prices known ahead", P.per_day_aud["prices known"], "hatch"],
+        ]} parts={P.adopted_parts_aud} />
+      </div>
+
+      <div className="two">
+        <div className="blk rule">
+          <div className="blk-h"><h2>Price forecast</h2><span className="sub">{NAME[per]} · {e.forecast[per].period.days} d</span></div>
+          <Forecast f={e.forecast[per]} />
+        </div>
+        <div className="blk rule">
+          <div className="blk-h"><h2>Limits held</h2></div>
+          <table className="t" aria-label="Limits held, by period">
+            <thead><tr><th></th>{NAME.map((n, i) => <th key={n} className="r" style={i === per ? { background: "var(--surface-2)" } : undefined}>{n}</th>)}</tr></thead>
+            <tbody>
+              <tr><td><Note note="Half-hour mean power within 10 MW, every half-hour of the backtest.">Within 10 MW</Note></td>
+                {e.limits.map((l, i) => <td key={i} className="r">{l.over_power === 0 ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--bad)" }}>{l.over_power}</b>}</td>)}</tr>
+              <tr><td><Note note="Stored energy stayed between 0 and 40 MWh.">Stored 0–40 MWh</Note></td>
+                {e.limits.map((l, i) => <td key={i} className="r">{l.soc_outside === 0 ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--bad)" }}>{l.soc_outside}</b>}</td>)}</tr>
+              <tr><td><Note note="Each day's end energy equals start + charged × efficiency − discharged ÷ efficiency; largest error 6.4e-14 MWh over all 570 days.">Energy adds up</Note></td>
+                {e.limits.map((_, i) => <td key={i} className="r" style={{ color: "var(--ok)" }}>✓</td>)}</tr>
+              <tr><td><Note note="Replayed with every actual price after 09:00 multiplied by 3: the 09:00 plan did not change (3 days, both dispatchers). Every day on the Plan page repeats this check.">Only 09:00 data</Note></td>
+                {e.limits.map((_, i) => <td key={i} className="r" style={{ color: "var(--ok)" }}>✓</td>)}</tr>
+            </tbody>
+          </table>
+          <div className="chips" style={{ marginTop: 10 }}>
+            <Chip note={`Training period: grid services ${aud(e.periods[0].adopted_parts_aud.fcess)} of ${aud(e.periods[0].per_day_aud[e.adopted])} a day. FCESS prices fell from April 2026.`}>mostly grid services</Chip>
+            <Chip note="Network charges on the connection are not modelled.">no network charges</Chip>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DotPlot({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => void }) {
+  const [ref, W] = useWidth<HTMLDivElement>(560);
+  const L = 214, R = 40, rowH = 64, top = 26;
+  const vals = e.periods.flatMap((p) => [p.uplift_vs_plan_only?.lo95, p.uplift_vs_plan_only?.hi95, p.uplift_vs_plan_only?.mean]).filter(isNum);
+  const lo = Math.min(-100, ...vals), hi = Math.max(...vals) * 1.08;
+  const step = hi - lo > 800 ? 200 : 100;
+  const x = (v: number) => L + ((v - lo) / (hi - lo)) * (W - L - R);
+  const H = top + rowH * 3 + 30;
+  const ticks: number[] = [];
+  for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
+  return (
+    <div className="chart" ref={ref}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label="Extra profit per day over the 09:00 plan alone, mean and 95% range, by period">
+        <text x={L} y={12} className="ann">Extra profit, A$/day</text>
+        {ticks.map((t) => <g key={t}><line className="gl" x1={x(t)} x2={x(t)} y1={top} y2={top + rowH * 3} />
+          <text x={x(t)} y={top + rowH * 3 + 16} textAnchor="middle">{t > 0 ? "+" : t < 0 ? "−" : ""}{nf(Math.abs(t))}</text></g>)}
+        <line x1={x(0)} x2={x(0)} y1={top} y2={top + rowH * 3} style={{ stroke: "var(--axis)" }} />
+        {e.periods.map((p, i) => {
+          const u = p.uplift_vs_plan_only;
+          const y = top + rowH * i + rowH / 2;
+          const zero = u && isNum(u.lo95) && u.lo95 <= 0;
+          const col = i === 2 || zero ? "var(--text-4)" : "var(--zen)";
+          return (
+            <g key={i} style={{ cursor: "pointer" }} onClick={() => setPer(i)} role="button" tabIndex={0} aria-pressed={i === per}
+              onKeyDown={(ev) => (ev.key === "Enter" || ev.key === " ") && setPer(i)}>
+              <rect x={0} y={y - rowH / 2} width={W} height={rowH} style={{ fill: i === per ? "var(--surface-2)" : "transparent" }} />
+              {i === per && <rect x={0} y={y - rowH / 2} width={3} height={rowH} style={{ fill: "var(--text)" }} />}
+              <text className="lt" x={14} y={y - 2}>{NAME[i]}</text>
+              <text x={14} y={y + 13}>{RANGE[i]} · {p.period.days} d</text>
+              {u && isNum(u.mean) && (
+                <>
+                  {isNum(u.lo95) && isNum(u.hi95) && <>
+                    <line x1={x(u.lo95)} x2={x(u.hi95)} y1={y} y2={y} style={{ stroke: col, strokeWidth: 1.6 }} />
+                    <line x1={x(u.lo95)} x2={x(u.lo95)} y1={y - 6} y2={y + 6} style={{ stroke: col }} />
+                    <line x1={x(u.hi95)} x2={x(u.hi95)} y1={y - 6} y2={y + 6} style={{ stroke: col }} />
+                    <text x={x(u.lo95) - 5} y={y + 4} textAnchor="end">{signed(u.lo95)}</text>
+                    <text x={x(u.hi95) + 5} y={y + 4}>{signed(u.hi95)}</text>
+                  </>}
+                  <circle cx={x(u.mean)} cy={y} r={6} style={{ fill: i === 0 ? "var(--surface)" : col, stroke: col, strokeWidth: 2 }} />
+                  <text className="ann" x={x(u.mean)} y={y - 12} textAnchor="middle" style={{ fill: col }}>{signed(u.mean)}</text>
+                  {!isNum(u.lo95) && <text className="ann" x={x(u.mean) + 12} y={y + 4}>too few days</text>}
+                </>
+              )}
+              <title>{`${NAME[i]}: ${u ? signed(u.mean) : "–"} a day; 95% range ${u && isNum(u.lo95) ? `${signed(u.lo95)} to ${signed(u.hi95)}` : "not computable (one month)"}; better on ${u?.days_better ?? "–"} of ${p.period.days} days`}</title>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function Bars({ rows, parts }: { rows: [string, string, number | null | undefined, string][]; parts: { energy: number | null; fcess: number | null; wear: number | null } }) {
+  const [ref, W] = useWidth<HTMLDivElement>(480);
+  const L = 214, rh = 26;
+  const max = Math.max(1, ...rows.map((r) => r[2] ?? 0));
+  const w = (v: number) => (Math.max(0, v) / max) * (W - L - 110);
+  return (
+    <div className="chart" ref={ref}>
+      <svg viewBox={`0 0 ${W} ${rows.length * rh + 18}`} role="img" aria-label={rows.map((r) => `${r[1]} ${aud(r[2])}`).join(", ")}>
+        <text className="ann" x={L} y={10}>Profit per day, A$</text>
+        {rows.map(([k, name, v, col], i) => {
+          const y = 18 + i * rh;
+          return (
+            <g key={name}>
+              <text className="lt" x={14} y={y + 13}><title>{glNote(k)}</title>{name}</text>
+              <rect x={L} y={y + 2} width={w(v ?? 0)} height={15} style={{ fill: col === "hatch" ? "url(#bh)" : col, stroke: col === "hatch" ? "var(--hatch-ln)" : "none" }}>
+                {k === "DISPATCHER" && <title>{`Energy ${aud(parts.energy)} + grid services ${aud(parts.fcess)} − wear ${aud(parts.wear)} a day`}</title>}
+              </rect>
+              <text className="ann" x={L + w(v ?? 0) + 8} y={y + 14} style={{ fontWeight: 600 }}>{aud(v)}</text>
+            </g>
+          );
+        })}
+        <defs><pattern id="bh" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="5" height="5" style={{ fill: "var(--hatch-bg)" }} /><line x1="0" y1="0" x2="0" y2="5" style={{ stroke: "var(--hatch-ln)" }} strokeWidth="2" /></pattern></defs>
+      </svg>
+    </div>
+  );
+}
+
+function Forecast({ f }: { f: Ev["forecast"][number] }) {
+  const [ref, W] = useWidth<HTMLDivElement>(420);
+  const rows: [string, number | null, number | null][] = [["Price, all day", f.mae_all_day, f.mae_all_day_yesterday], ["Price, 17:00–21:00", f.mae_17_21, f.mae_17_21_yesterday]];
+  const max = Math.max(1, ...rows.flatMap((r) => [r[1] ?? 0, r[2] ?? 0]));
+  const L = 150, R = 130;
+  const w = (v: number | null) => ((v ?? 0) / max) * (W - L - R - 70);
+  return (
+    <div className="chart" ref={ref}>
+      <svg viewBox={`0 0 ${W} 120`} role="img" aria-label="Average forecast error against yesterday's prices">
+        {rows.map(([name, m, y], i) => {
+          const y0 = 8 + i * 56;
+          return (
+            <g key={name}>
+              <text className="lt" x={0} y={y0 + 12}>{name}</text>
+              <text x={0} y={y0 + 27}><title>{glNote("MAE")}</title>error, A$/MWh</text>
+              <rect x={L} y={y0 + 2} width={w(y)} height={11} style={{ fill: "var(--bar)" }} />
+              <text x={L + w(y) + 6} y={y0 + 11}>{isNum(y) ? nf(y) : "–"} · yesterday</text>
+              <rect x={L} y={y0 + 18} width={w(m)} height={11} style={{ fill: "var(--zen)" }} />
+              <text x={L + w(m) + 6} y={y0 + 27}>{isNum(m) ? nf(m) : "–"} · model</text>
+              {isNum(m) && isNum(y) && <text className="ann" x={W} y={y0 + 20} textAnchor="end" style={{ fill: "var(--zen)", fontWeight: 600 }}>{nf((100 * (y - m)) / y, 1)}% lower error</text>}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
