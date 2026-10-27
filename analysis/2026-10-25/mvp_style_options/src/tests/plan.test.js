@@ -106,5 +106,5 @@ click($('[data-po="plan"]'));
 click($('#s-plan [data-go="evidence"]'));
 ok("Value header link opens Evidence", $("#s-evidence").classList.contains("on"));
 goTo("plan");
-ok("who is who line under the header", $$("#who-line .tipc").length === 6 && /Zenith/.test(txt("#who-line")) && /AEMO/.test(txt("#who-line")));
+ok("who is who line under the header: five parties, Synergy not among them", $$("#who-line .tipc").length === 5 && /Zenith/.test(txt("#who-line")) && /AEMO/.test(txt("#who-line")) && !/Synergy/.test(txt("#who-line")));
 done();

@@ -92,16 +92,16 @@ function fcPeak(d){ var r = run4(d); return FLAG_C.indexOf(d) >= 0 ? r - 35 : (F
 var OFF = {
   custom: {name:"Custom offer", short:"Custom 85 c/kWh, 45 calls", rate:0.85, cap:45, q:"0.75", tol:85, enrolled:3000, flags:FLAG_C, kwh:9.0,
     ircr:[-1.7,-1.6,-1.5,-1.6,-1.5,-1.4,-1.7,-1.6,-1.5,0,-1.6,-1.5], sb:3200, retail:32000, debs:16000, energy:24000,
-    seasons:{S3:[40000,350000,327184], S2b:[670000,1366000,1287528]}, cust:[196.67,150.00,140.45], calls:[41,26,24], peaks:[4,4,4],
+    seasons:{S2b:[670000,1366000,1287528]}, cust:[196.67,150.00,140.45], calls:[41,26,24], peaks:[4,4,4],
     src:"The terms this tool suggests. Not a contract; the payment level must come from a pilot."},
   ref: {name:"Reference terms", short:"Reference 70 c/kWh, 30 calls", rate:0.70, cap:30, q:"0.9", tol:140, enrolled:2000, flags:FLAG_R, kwh:9.0,
     ircr:[-1.5,-1.4,-1.6,-1.4,-1.3,-1.5,-1.4,-1.5,-1.3,0,0,0], sb:2400, retail:24000, debs:12000, energy:18000,
-    seasons:{S3:[-406000,260000,149251], S2b:[-372000,1032000,735802]}, cust:[145.00,140.00,139.65], calls:[30,30,30], peaks:[0,4,3],
+    seasons:{S2b:[-372000,1032000,735802]}, cust:[145.00,140.00,139.65], calls:[30,30,30], peaks:[0,4,3],
     src:"Public Synergy Battery Rewards terms used for comparison. Not a Zenith tariff or contract."}
 };
 function callsOf(o){ return o.flags.slice(0, o.cap); }
 var SEASONS = ["2023-24","2024-25","2025-26"], CHRON = [false,false,true];
-var RUN = {scen:"S3", share:0.5};   /* inputs of the saved run R‑0142 */
+var RUN = {scen:"S2b"};   /* inputs of the saved run R‑0142 */
 var CAPPRICE = 216091.78, RESP = 0.9;
 
 function evalOffer(k, sc){
@@ -112,24 +112,24 @@ function evalOffer(k, sc){
       ["Capacity charge (IRCR) saving, per season", 0, 0, 0, false, sc === "S1" ? "S1 has no capacity value." : "Current rule: net export counts 0, and normal self-use already zeroes peak import."],
       ["Wholesale value of changed net export", 0, 0, 0, false, "No call has a positive expected margin at 09:00, so the rule makes no calls."],
       ["Compensation for event net export", 0, 0, 0, true, "No calls, so no compensation."],
-      ["Operating cost", -9500, 0, 0, false, "380 homes enrol even at zero expected benefit (assumed sign-up curve); A$25 a year each."]];
+      ["Operating cost", -9500, 0, 0, false, "380 customers enrol even at zero expected benefit (assumed sign-up curve); A$25 a year each."]];
     r.seasonZ = [-9500,-9500,-9500]; r.custHome = [0,0,0]; r.seasonCalls = [0,0,0]; r.peaks = [0,0,0];
   } else {
     var calls = Math.min(o.flags.length, o.cap), en = o.enrolled, rsp = en * RESP;
     var dmed = median(o.ircr), capv = Math.floor(2 * Math.abs(dmed) * rsp / 1000 * CAPPRICE);
     var comp = o.rate * o.kwh * rsp * calls, wear = 0.05 * o.kwh * rsp * calls, hassle = 0.5 * rsp * calls, ops = 25 * en + 0.05 * rsp * calls;
-    var zc = sc === "S3" ? Math.round(capv * RUN.share) : capv;
+    var zc = capv;
     r.enrolled = en; r.calls = calls; r.resp = rsp; r.dmed = dmed; r.capv = capv; r.zc = zc;
     r.rows = [
-      ["Capacity charge (IRCR) saving, per season", zc, 0, capv - zc, false, sc === "S3" ? "Zenith keeps " + Math.round(RUN.share * 100) + "% of the capacity value (assumption); the rest stays with Synergy." : "Assumed future rule: net export counts negative; Zenith as retailer keeps the whole change."],
-      ["Wholesale value of changed net export", sc === "S3" ? 0 : o.energy, 0, sc === "S3" ? o.energy : 0, false, sc === "S3" ? "In S3 the energy value goes to Synergy." : "Zenith settles the change in the meters' net position at actual prices."],
-      ["Compensation for event net export", -comp, comp, 0, true, nf(o.rate * 100) + " c/kWh × " + nf(o.kwh, 1) + " kWh × " + nf(rsp) + " responding homes × " + calls + " calls. Paid on billed event net export."],
+      ["Capacity charge (IRCR) saving, per season", zc, 0, 0, false, "Assumed future rule: net export counts negative; Zenith as retailer keeps the whole change."],
+      ["Wholesale value of changed net export", o.energy, 0, 0, false, "Zenith settles the change in the meters' net position at actual prices."],
+      ["Compensation for event net export", -comp, comp, 0, true, nf(o.rate * 100) + " c/kWh × " + nf(o.kwh, 1) + " kWh × " + nf(rsp) + " responding customers × " + calls + " calls. Paid on billed event net export."],
       ["Hold-charge offset credits", -o.sb, o.sb, 0, true, "Extra import while the battery holds charge before a call, credited to the customer."],
-      ["Retail bill change after calls", sc === "S3" ? 0 : o.retail, -o.retail, sc === "S3" ? o.retail : 0, true, "Customers import more after a call; the retailer earns the margin on that extra energy."],
+      ["Retail bill change after calls", o.retail, -o.retail, 0, true, "Customers import more after a call; the retailer earns the margin on that extra energy."],
       ["Feed-in credit (DEBS) change", 0, o.debs, -o.debs, true, "Feed-in credits on extra exports, paid by the scheme's payer."],
       ["Customer battery wear", 0, -wear, 0, false, "A$0.05 per kWh of extra throughput (assumption)."],
-      ["Customer disutility", 0, -hassle, 0, false, "A$0.50 per responding home per event (assumption)."],
-      ["Operating cost", -ops, 0, 0, false, "A$25 per enrolled home a year + A$0.05 per responding home per event (assumptions)."],
+      ["Customer disutility", 0, -hassle, 0, false, "A$0.50 per responding customer per event (assumption)."],
+      ["Operating cost", -ops, 0, 0, false, "A$25 per enrolled customer a year + A$0.05 per responding customer per event (assumptions)."],
       ["Programme fixed cost", 0, 0, 0, false, "Default 0 (assumption)."]];
     r.seasonZ = o.seasons[sc]; r.custHome = o.cust; r.seasonCalls = o.calls; r.peaks = o.peaks;
   }
@@ -139,15 +139,15 @@ function evalOffer(k, sc){
   r.expZ = sum(r.seasonZ) / 3; r.expC = sum(r.custHome) / 3;
   if (r.calls === 0) r.verdict = {k:"bad", t:"No business case", p: sc === "S1" ? "S1, energy only: no call pays for itself at 09:00, so only the operating cost remains." : "S2a, today's capacity rule: the fleet's export counts 0 against the peak, and normal self-use already removes peak import, so calls add almost no capacity value."};
   else if (r.worst < 0) r.verdict = {k:"bad", t:"No business case", p:"Fails the downside test: Zenith loses " + aud(-r.worst) + " in Hot Season " + SEASONS[r.worstIdx] + " (" + r.peaks[r.worstIdx] + " of 4 official peak days covered, known only afterwards). The expected value alone is not enough."};
-  else r.verdict = {k:"ok", t:"Positive in this scenario", p:(sc === "S2b" ? "Depends on an assumed future rule for the capacity charge (IRCR) from 2027; not current revenue. " : "Depends on a hypothetical Synergy share of " + Math.round(RUN.share * 100) + "%. ") + "Customers are better off than normal self-use, no customer limit is broken (yearly call cap, max control time, customer floor) and no Hot Season (Dec–Mar) loses money. The capacity value has not yet been tested blind; the first chance is the 2026-27 Hot Season. Enrolment follows an assumed curve."};
+  else r.verdict = {k:"ok", t:"Positive in this scenario", p:"Depends on an assumed future rule for the capacity charge (IRCR) from 2027; not current revenue. Customers are better off than normal self-use, no customer limit is broken (yearly call cap, max control time, customer floor) and no Hot Season (Dec–Mar) loses money. The capacity value has not yet been tested blind; the first chance is the 2026-27 Hot Season. Enrolment follows an assumed curve."};
   return r;
 }
 
 /* ---------- state ---------- */
-var S = {screen:"plan", sel:20, revealed:false, view:"decision", offer:"custom", day:TODAY, vscen:"S3", per:"ins", cper:"tseen", nc:false};
+var S = {screen:"plan", sel:20, revealed:false, view:"decision", offer:"custom", day:TODAY, vscen:"S2b", per:"ins", cper:"tseen", nc:false};
 /* page registry: each page file sets PAGES.<name> = its render function and SCREENS.<name> = {t, chips, ctx} */
 var PAGES = {};
-var DEF = {start:"model", pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, win:"17:30–19:30", share:50, elig:10000, curve:"Central", resp:90, ops:25, fix:0, exp:"10", fcess:"RR, RL, CR, CL", scen:"S3"};
+var DEF = {start:"model", pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, win:"17:30–19:30", elig:10000, curve:"Central", resp:90, ops:25, fix:0, exp:"10", fcess:"RR, RL, CR, CL", scen:"S2b"};
 var IN = JSON.parse(JSON.stringify(DEF));
 
 /* ---------- svg helpers ---------- */
@@ -321,9 +321,9 @@ function railHTML(k){
 /* ---------- glossary: one plain sentence (what it is) and one on why it matters; every page's hover notes come from here ----------
    gl(key, label) renders a hover chip; glNote(key) returns the note text for other elements; glName(key) the plain name. */
 var GLOSS = {
-  ZENITH:   ["Zenith", "Zenith is the electricity retailer this tool is built for. It owns a 10 MW / 40 MWh battery at a factory site and can also call its customers' home batteries.", "Every A$ on these pages is Zenith's gain or loss unless a party is named."],
+  ZENITH:   ["Zenith", "Zenith is the electricity retailer this tool is built for. It owns a 10 MW / 40 MWh battery at a factory site and can also call the batteries of its business customers.", "Every A$ on these pages is Zenith's gain or loss unless a party is named."],
   FACTORY:  ["the factory site", "The factory whose grid connection the site battery sits behind. Its load is synthetic (simulated), not metered.", "The battery earns part of its value by keeping the factory's grid import under its contract."],
-  SYNERGY:  ["Synergy", "Synergy is Western Australia's incumbent retailer. In scenario S3 Zenith sells the customer batteries' capacity value through Synergy.", "Which party receives the capacity value decides whether the customer offer pays."],
+  SYNERGY:  ["Synergy", "Synergy is Western Australia's incumbent retailer. Its public Battery Rewards terms (70 c/kWh, 30 calls a year) are the reference terms the custom offer is compared against.", "Synergy is not a party to Zenith's offer, and its customers are not in the fleet."],
   AEMO:     ["market operator (AEMO)", "The Australian Energy Market Operator runs the wholesale market and publishes the demand forecasts and prices used here.", "Only AEMO data published before 09:00 may be used for the 09:00 decision."],
   WEM:      ["WA wholesale market (WEM)", "The Wholesale Electricity Market: Western Australia's electricity market, separate from the east-coast market.", "Its rules set the prices, the Hot Season and the capacity charge used here."],
   TRADINGDAY: ["trading day", "A market day runs from 08:00 to 08:00 the next morning, following the WA market's clock.", "Every plan, price and result on a page covers one such day."],
@@ -336,7 +336,7 @@ var GLOSS = {
   FCESS:    ["grid services (FCESS)", "Frequency control services: the battery is paid to stand ready to inject or absorb power at short notice to keep the grid frequency steady.", "It earns money without moving much energy, but the capacity it holds ready cannot be sold as energy at the same time."],
   GRIDRESERVE: ["grid-service reserve", "Energy the battery must keep so it can deliver the grid services it has promised.", "It is never offered to the energy market at any price."],
   BACKUP:   ["factory backup", "Energy kept so the factory can ride through a grid outage.", "The plan never discharges below it."],
-  CUSTFLOOR:["customer floor", "The 20% of each home battery that is never discharged during a call.", "It protects the customer's own evening use."],
+  CUSTFLOOR:["customer floor", "The 20% of each customer battery that is never discharged during a call.", "It protects the customer's own evening use."],
   SOC:      ["energy stored (state of charge)", "How much energy the battery holds at a moment, in MWh, out of 40 MWh when full.", "The plan must stay between the grid-service reserve plus factory backup, and full."],
   EXTRAOFFER: ["extra offer", "Spare energy offered to the market at a threshold price; it sells only in the half-hours where the market price reaches it, and is then paid that market price, not the threshold. The threshold falls through the evening: while high-price half-hours are still ahead, holding the energy is worth more, so the price must beat that; once only the cheap night is ahead it drops to wear plus the round-trip loss. Still simplified: shown half-hourly with one quantity, while a real dispatcher re-submits a price–quantity curve of several steps every 5 minutes.", "It is not counted in the expected value because it may never sell."],
   SHAVE:    ["cut import", "Discharging just enough to keep the factory's grid import under its contract.", "It saves the demand charge rather than earning market revenue."],
@@ -348,32 +348,30 @@ var GLOSS = {
   TBLIND:   ["test · blind", "16–22 Oct 2026, 7 days: never looked at before the method was locked.", "The only fully blind test so far; too short to prove anything on its own."],
   CONTRACTYEAR: ["contract year 2025-26", "1 Jul 2025 – 30 Jun 2026: the year the customer offer's call cap and payments are counted over.", "It lies inside the training period, so its results are not a blind test."],
   HOTSEASON:["Hot Season (Dec–Mar)", "1 Dec – 31 Mar in the WA market: when system demand peaks.", "The capacity charge for the following year is set by the 12 peak half-hours of this season."],
-  IRCR:     ["capacity charge (IRCR)", "Each retailer's share of the cost of keeping enough generation available, set by its customers' demand in the 12 peak half-hours of the Hot Season.", "Lowering demand in those 12 half-hours lowers the charge for a whole year; that is the main value of calling home batteries."],
+  IRCR:     ["capacity charge (IRCR)", "Each retailer's share of the cost of keeping enough generation available, set by its customers' demand in the 12 peak half-hours of the Hot Season.", "Lowering demand in those 12 half-hours lowers the charge for a whole year; that is the main value of calling customer batteries."],
   PEAKDAY:  ["official peak day", "One of the 4 Hot Season days that contain the 12 peak half-hours. They are known only after the season.", "A call on a peak day lowers the capacity charge; a call on any other day only costs the payment."],
-  CALL:     ["call", "Asking customers' home batteries to discharge together for a set evening window, for a payment.", "Each call uses one of a limited number per contract year."],
+  CALL:     ["call", "Asking customers' batteries to discharge together for a set evening window, for a payment.", "Each call uses one of a limited number per contract year."],
   FLAGGED:  ["flagged by the call rule", "A day the rule marks as a likely peak day at 09:00: the forecast peak is within 85 MW of the 4th-highest peak seen so far this season.", "Flagged days are called while calls remain; the 85 MW margin is set from past seasons."],
-  HOLDCHARGE:["hold charge", "Before a call, home batteries stop discharging and keep their energy for the event window.", "Without it the batteries would be empty by the evening peak."],
+  HOLDCHARGE:["hold charge", "Before a call, customer batteries stop discharging and keep their energy for the event window.", "Without it the batteries would be empty by the evening peak."],
   TRANSFER: ["transfer payment", "Money moved from Zenith to customers for responding to a call.", "It changes who gains, not the total value created, so it sums to zero across parties."],
-  RESPONSE: ["homes expected to respond", "On average 90% of enrolled homes respond to a call. 3,000 enrolled homes is an assumption.", "No home is obliged to respond, so this is an average, not guaranteed capacity."],
-  TPA:      ["access through Synergy (TPA)", "A third-party access arrangement: Zenith's customers stay on Synergy's network and Synergy passes a share of the capacity value to Zenith.", "The 50% share is an assumption, not a contract."],
-  DEBS:     ["feed-in credit (DEBS)", "The Distributed Energy Buyback Scheme: the credit homes receive for electricity they export to the grid, paid by the scheme.", "A call changes how much homes export, so it changes this credit."],
-  VPP:      ["home batteries (VPP)", "Customers' own home batteries, called together as one virtual power plant.", "Zenith pays for each call and has a yearly cap on calls."],
+  RESPONSE: ["customers expected to respond", "On average 90% of enrolled customers respond to a call. 3,000 enrolled customers is an assumption.", "No customer is obliged to respond, so this is an average, not guaranteed capacity."],
+  DEBS:     ["feed-in credit (DEBS)", "The Distributed Energy Buyback Scheme: the credit customers receive for electricity they export to the grid, paid by the scheme.", "A call changes how much customers export, so it changes this credit."],
+  VPP:      ["customer batteries (VPP)", "The batteries at Zenith's business customers' sites, called together as one virtual power plant.", "Zenith pays for each call and has a yearly cap on calls."],
   HINDSIGHT:["hindsight", "Known only after the fact.", "It was not available at 09:00 when the decision was made, so it can judge a decision but never inform it."],
   EARLIERSEASON: ["tested on an earlier season", "The rule was tuned on later seasons and then tested on this earlier one.", "That is not how it would be used in practice, so it is weaker evidence than a forward test."],
   FORWARD:  ["forward test", "The rule was tuned on earlier seasons only and then tested on the next one, as it would be used.", "The strongest kind of evidence available before a blind season."],
   S1:  ["S1 · energy only", "Zenith only sells the fleet's extra export at the wholesale price; no capacity value.", "No call pays for itself at 09:00, so there is no business case."],
-  S2a: ["S2a · today's capacity rule", "Zenith as retailer; under today's rule a home's export counts as zero demand, not negative.", "Normal self-use already removes the peak import, so calls add almost nothing."],
+  S2a: ["S2a · today's capacity rule", "Zenith as retailer; under today's rule a customer's export counts as zero demand, not negative.", "Normal self-use already removes the peak import, so calls add almost nothing."],
   S2b: ["S2b · assumed 2027 capacity rule", "Zenith as retailer; an assumed future rule in which export counts against the peak.", "Not current revenue: the rule text is not yet confirmed."],
-  S3:  ["S3 · via Synergy (hypothetical)", "Zenith sells the fleet's capacity value through Synergy and keeps an assumed 50% share; the energy value stays with Synergy.", "Hypothetical: no such arrangement exists today."],
   REFTERMS: ["reference terms", "The public Synergy Battery Rewards terms (70 c/kWh, 30 calls a year), used only for comparison.", "Not a Zenith tariff and not a contract."],
   CUSTOMOFFER: ["custom offer", "The terms this tool suggests (85 c/kWh, 45 calls a year), found by searching the training period.", "A suggestion to test in a pilot, not a contract."],
-  ENROLLED: ["enrolled homes", "Homes that signed up to the offer (3,000 assumed). Offered: homes the offer was shown to. Responding: enrolled homes that actually respond to a call (90% on average).", "Payments are per responding home; fixed costs are per enrolled home."]
+  ENROLLED: ["enrolled customers", "Customers that signed up to the offer (3,000 assumed). Offered: customers the offer was shown to. Responding: enrolled customers that actually respond to a call (90% on average).", "Payments are per responding customer; fixed costs are per enrolled customer."]
 };
 function glName(k){ return GLOSS[k][0]; }
 function glNote(k){ return GLOSS[k][1] + " " + GLOSS[k][2]; }
 function gl(k, label, cls){ return '<span class="tipc ' + (cls || "") + '"' + noteAttr(glNote(k)) + ">" + (label || GLOSS[k][0]) + "</span>"; }
 /* one line under every page header: who the parties are */
-function whoHTML(){ return [["ZENITH", "Zenith · the retailer, owns the site battery"], ["FACTORY", "factory site"], ["VPP", "customers' home batteries"], ["SYNERGY", "Synergy · incumbent retailer"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]].map(function(x){ return gl(x[0], x[1]); }).join(""); }
+function whoHTML(){ return [["ZENITH", "Zenith · the retailer, owns the site battery"], ["FACTORY", "factory site"], ["VPP", "customers' batteries"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]].map(function(x){ return gl(x[0], x[1]); }).join(""); }
 function noteAttr(t){ return ' tabindex="0" data-note="' + String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;") + '"'; }
 function segsOf(from, f){ var g = [], k = from; while (k < N) { var m = f(k), e = k; while (e + 1 < N && f(e + 1) === m) e++; g.push({m:m, a:k, b:e + 1}); k = e + 1; } return g; }
 var SEGC = {shave:["color-mix(in srgb,var(--dis) 20%,var(--surface))", "var(--dis)"], dis:["var(--dis)", "var(--surface)"], chg:["var(--chg)", "var(--text)"], hold:["var(--surface-3)", "var(--text-3)"]};
@@ -490,8 +488,7 @@ function dayName(d, yr){ var dt = new Date(Date.UTC(2025, 11, 1 + d)); return dt
 var SCN = {
   S1:{label:"S1 · energy only", tag:"Hypothetical arrangement", cls:"hyp"},
   S2a:{label:"S2a · today's capacity rule", tag:"Current rule", cls:""},
-  S2b:{label:"S2b · assumed 2027 capacity rule", tag:"Assumed future rule · not current revenue", cls:"fut"},
-  S3:{label:"S3 · via Synergy, 50% share (hypothetical)", tag:"Hypothetical share", cls:"hyp"}
+  S2b:{label:"S2b · assumed 2027 capacity rule", tag:"Assumed future rule · not current revenue", cls:"fut"}
 };
 /* ---------- Validation ---------- */
 var VAL = {

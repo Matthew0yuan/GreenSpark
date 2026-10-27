@@ -4,11 +4,14 @@
 /* the headline: the number carries the verdict colour, grey when the 95% interval includes 0 */
 /* claim and period sit on one line when they fit; otherwise the period wraps under the claim, never inside it */
 #ev-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:14px;row-gap:2px}
-#ev-head small{font-size:15px;font-weight:500;letter-spacing:0;color:var(--text-3);white-space:nowrap}
+#ev-head .ev-sub{font-size:15px;font-weight:500;letter-spacing:0;color:var(--text-3);white-space:nowrap}
+#ev-head .ev-sub .ev-per{margin-left:6px}
 .ev-num{color:var(--ok)}
 .ev-num.zero{color:var(--text-4)}
-/* the baseline's definition opens on hover, like a chip; the dotted underline says it can */
-.ev-def{white-space:nowrap;text-decoration:underline dotted var(--text-4);text-decoration-thickness:2px;text-underline-offset:7px;cursor:help}
+/* the baseline's definition opens on hover, like a chip; the dotted underline says it can. Round 6: the number opens
+   what it is made of (energy + grid services + network bill saving − wear), with the same cue */
+.ev-def,.ev-num[data-note]{white-space:nowrap;text-decoration:underline dotted var(--text-4);text-decoration-thickness:2px;text-underline-offset:7px;cursor:help}
+.ev-num[data-note]:hover::after,.ev-num[data-note]:focus-visible::after{font-weight:400;letter-spacing:0;color:var(--text-2)}
 .ev-chips{display:flex;margin-top:12px}
 .tipc.ev-cav{border-style:dashed;border-color:var(--text-4);color:var(--text-2);font-weight:600}
 
@@ -38,12 +41,8 @@
 .ev-mx .on{background:var(--sel)}
 .ev-mx [data-note]{cursor:help}
 .ev-mx tbody th .sub{margin-left:4px}
-/* the period's days under its name; the import contract's "a cost, not a hard limit" under its name, so the name
-   column stays narrow */
-.ev-mx thead .ev-d{display:block;margin-top:1px;font-size:11px;font-weight:400}
-.ev-mx tbody th .ev-why{display:block;margin:1px 0 0;font-size:11.5px}
+/* cells are icons only (round 6), a count sits beside a ✕ */
 .ev-mx td .ci{display:inline-grid;vertical-align:middle;margin-top:0}
-.ev-mx .ev-pr{font-size:11.5px;color:var(--warn-text);margin-left:6px;vertical-align:middle}
 .ev-mx .ev-n{margin-left:6px;color:var(--bad);vertical-align:middle}
 
 /* the previous dispatcher is a glossary chip (gl) inside the headline: drawn as words with the dotted cue, not a pill */
