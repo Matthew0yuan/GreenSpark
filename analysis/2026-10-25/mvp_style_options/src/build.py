@@ -66,6 +66,18 @@ def expand(s):
 base = (HERE / "base.css").read_text(encoding="utf-8")
 page_css = "".join("\n/* ===== page: " + p.stem + " ===== */\n" + p.read_text(encoding="utf-8") for p in sorted(PAGES.glob("*.css")))
 engine = (HERE / "engine.js").read_text(encoding="utf-8").rstrip("\n")
+# round 7: the plan page reads one real trading day of the model (backtest replay), exported for the redesign
+# (analysis/2026-10-26/ui_redesign/data/site_days.json, DATA_CONTRACT.md section 1). Read only; nothing is recomputed.
+import json  # noqa: E402
+
+SITE_DAYS = HERE.parents[2] / "2026-10-26" / "ui_redesign" / "data" / "site_days.json"
+SITE_DAY = "2026-02-02"
+_day = [d for d in json.loads(SITE_DAYS.read_text(encoding="utf-8")) if d["day"] == SITE_DAY]
+if len(_day) != 1:
+    sys.exit(f"{SITE_DAYS}: trading day {SITE_DAY} not found")
+if "/*@SITE_DAY@*/null" not in engine:
+    sys.exit("engine.js: placeholder /*@SITE_DAY@*/null missing")
+engine = engine.replace("/*@SITE_DAY@*/null", json.dumps(_day[0], ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/"))
 page_js = "".join("\n\n/* ===== page: " + p.stem + " ===== */\n" + p.read_text(encoding="utf-8").rstrip("\n") for p in sorted(PAGES.glob("*.js")))
 init = (HERE / "init.js").read_text(encoding="utf-8").rstrip("\n")
 for key in keys:
@@ -82,7 +94,7 @@ for key in keys:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GreenSpark Dispatch Desk · {label} (design prototype, illustrative data)</title>
+<title>GreenSpark Dispatch Desk · {label} (design prototype)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?{FONTS[key]}&display=swap">

@@ -137,7 +137,7 @@ function demSVG(sel){
   s.push(svgOpen(W, H, "dem", "System demand for " + dayName(d, true) + " against the customer call threshold: forecast peak " + nf(fpk) + " MW, " + (fpk >= c.thr ? "above" : "below") + " the threshold. " + clThrNote(c) + (c.called ? " Customer call " + CL_EV + ": " + CL_NOTE.win : "") + " (illustrative)"));
   [2000, 2500, 3000, 3500, 4000].forEach(function(v){ s.push(ln(X0, yd(v), XR, yd(v), v > 2000 ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yd(v) + 3.5, nf(v), "", ' text-anchor="end"')); });
   /* the unit sits at the top left of the plot, right of the decision line, as the price panel's does on the plan page */
-  s.push(tx(X(2) + 6, y0 - 8, "Demand, MW", "lnm halo"));
+  s.push(tx(X(2) + 6, y0 + 4, "Demand, MW", "lnm halo"));
   /* the customer call and the hold-charge period before it, when there is one; native SVG titles carry the notes */
   if (c.called) s.push("<g><title>" + glNote("HOLDCHARGE") + " " + glNote("CUSTFLOOR") + "</title>" + rc(X(15), y0, X(19) - X(15), y1 - y0, 'style="fill:var(--cust)" opacity="0.05"') + tx(mid(15, 19), y1 - 8, "Hold charge", "vl", ' text-anchor="middle" style="fill:var(--cust-text)" opacity="0.8"') + "</g>" +
     "<g><title>" + CL_NOTE.win + "</title>" + rc(X(19), y0, X(23) - X(19), y1 - y0, 'style="fill:var(--cust)" opacity="0.14"') + tx(mid(19, 23), y1 - 8, "Call " + CL_EV, "vl", ' text-anchor="middle" style="fill:var(--cust-text)"') + "</g>");

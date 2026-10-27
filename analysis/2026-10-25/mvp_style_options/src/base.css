@@ -17,6 +17,7 @@ html{
   --fut-text:#4C3A94; --fut-line:#A99BDD; --fut-soft:#F3F0FB;
   --proto-bg:#FFF8E1; --proto-text:#6B4A00; --proto-line:#F0E2B6;
   --dis:#2F5FD0; --chg:#A9C0F0; --chg-text:#4C6FBF; --rr:#8E90B4; --rl:#D4D5E5; --cr:#8AAEAE; --cl:#D3E2E1;
+  --cond:#C98A12; --cond-soft:#FBF1DC; --cond-text:#7A5208;
   --soc:#0F6B4F; --mand:#C0262D; --mand-soft:#FCEDED; --mand-hatch:#EBAAAA; --econ:#EEDFAE;
   --load:#59626D; --meter:#E4E8EC; --price:#16202A; --base:#AAB1B9; --actual:#E0533D; --range:#F0B64A; --range-text:#8A5310;
   --peak:#8E3B73; --peak-soft:#F5EAF1; --cust:#C27C2C; --cust-soft:#F5E6D2; --cust-text:#8A5310; --on-cust:#FFFFFF;
@@ -443,10 +444,10 @@ body.stale.plan-blocked #plan-detail,body.stale.plan-blocked #sch-rail{opacity:1
 [data-note]:hover::after,[data-note]:focus-visible::after{content:attr(data-note);position:absolute;left:0;top:calc(100% + 6px);z-index:60;width:max-content;max-width:300px;white-space:normal;text-align:left;padding:8px 10px;background:var(--surface);color:var(--text-2);border:1px solid var(--rule);border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,.14);font:400 12px/1.45 var(--font);letter-spacing:0;text-transform:none}
 [data-note].r:hover::after,[data-note].r:focus-visible::after,.ck[data-note]:hover::after,.ck[data-note]:focus-visible::after{left:auto;right:0}
 .lanes .lnm{font-size:11px;font-weight:500;fill:var(--text-3)}
-.lanes .ol{font-size:10.5px;font-weight:600;fill:var(--dis)}
+.lanes .ol{font-size:10.5px;font-weight:600;fill:var(--cond-text)}
 .lanes .fl{font-size:10.5px;font-weight:500;fill:var(--text-2)}
 .lanes .selm{fill:var(--text);pointer-events:none}
-.sw2.off{width:10px;height:12px;border:1px dashed var(--dis);background:color-mix(in srgb,var(--dis) 8%,transparent)}
+.sw2.off{width:10px;height:12px;border:1px dashed var(--cond);background:var(--cond-soft)}
 /* value as a waterfall */
 .vb + .vb{margin-top:16px}
 .vb-h{font-size:12.5px;color:var(--text-3);margin-bottom:6px}
@@ -459,10 +460,12 @@ body.stale.plan-blocked #plan-detail,body.stale.plan-blocked #sch-rail{opacity:1
 .vb.off .vb-row i{filter:saturate(0);opacity:.55}
 /* checks as tiles: icon and a short name; the full check opens on hover */
 .ckgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px}
+#sch-checks{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
 .ck{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-sm);background:var(--surface-2);font-size:12.5px;color:var(--text-2);cursor:help;white-space:nowrap}
 .ck .ci{margin-top:0}
 .ck.b{background:var(--bad-soft);color:var(--bad);font-weight:600}
 .ck.w{background:var(--warn-soft);color:var(--warn-text)}
+.ck.n{color:var(--text-3)}.ci.n{background:transparent;color:var(--text-3);box-shadow:inset 0 0 0 1.5px var(--rule)}
 .fold.sm{margin-top:14px}
 .fold.sm > summary{font-size:12.5px;font-weight:600;color:var(--info)}
 @media (max-width:900px){ .dec-row{grid-template-columns:minmax(0,1fr)} .dec-val{text-align:left} .dec-val .chips{justify-content:flex-start} }
