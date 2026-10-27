@@ -316,7 +316,8 @@ function railHTML(k){
 /* ---------- Today's plan, scheme A (round 5): decide in one line, the day as lanes, reasons on the chart ----------
    A layout with a #plan-dec slot gets this page; the other schemes keep the round-4 page in renderPlan below.
    Scheduled actions are solid blocks; the conditional offer is a dashed outline, because it runs only if the price
-   reaches it; hatching means "not known at 09:00" and nothing else. Full wording sits in hover notes (data-note). */
+   reaches it; hatching marks 08:00–09:00, still on the earlier plan with no 09:00 forecast, and nothing else.
+   Full wording sits in hover notes (data-note). */
 /* ---------- glossary: one plain sentence (what it is) and one on why it matters; every page's hover notes come from here ----------
    gl(key, label) renders a hover chip; glNote(key) returns the note text for other elements; glName(key) the plain name. */
 var GLOSS = {
@@ -393,7 +394,7 @@ function laneSVG(sel){
   s.push(rc(X(0), yA, X(2) - X(0), y1 - yA, 'fill="url(#hDy)"'));
   /* the price panel: forecast with its P10–P90 band, the offer price, and the actual price once revealed */
   [0, 250, 500].forEach(function(v){ s.push(ln(X0, yp(v), XR, yp(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yp(v) + 3.5, nf(v), "", ' text-anchor="end"')); });
-  s.push(tx(X0, y0 - 10, "Price, A$/MWh", "lnm halo") + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
+  s.push(tx(X(2) + 6, y0 - 10, "Price, A$/MWh", "lnm halo") + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
   {
     s.push('<path d="' + bandPath(P.lo, P.hi, yp, 2, N) + '" class="band" style="fill:var(--range)" opacity="0.32"/><path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" style="stroke:var(--price)" stroke-width="1.8" stroke-dasharray="5 3"/>');
     var pk = 2, lo = -1, k;

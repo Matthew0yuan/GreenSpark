@@ -201,6 +201,7 @@ def _route_days(sc: Scenario, name: str, decide=None):
     fixed = route.retail == "fixed"
     if fixed:
         strat = replace(strat, offer=False)
+    strat = ct.market_strategy(route, strat)  # not Scheduled: acts on prices already published
     events = {c.name: ct.call_days(c, _AUX["demand"]) for c in route.contracts}
     peaks = _AUX["ircr_peaks"] if route.ircr_hindsight else {}
     same_day, day_before = set(), set(peaks)  # possible peak days flagged at 09:00 on the day / the day before
@@ -286,6 +287,7 @@ def explain_route_day(sc: Scenario, name: str, day: pd.Timestamp, days: list[dic
     money: ledger_* items settled outside the dispatcher (capacity, contracts, bill) for that day."""
     _init_worker(days, aux)
     _, strat, prefs = strategy(name, sc.prefs)
+    strat = ct.market_strategy(sc.route, strat)
     for d, terms, summary, log in _route_days(sc, name):
         if d == day:
             return dp.explain(log, {**summary, **(money or {})}, sc.asset, strat, prefs, None, sc.site, terms)
