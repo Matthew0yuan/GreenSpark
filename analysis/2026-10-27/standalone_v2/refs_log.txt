@@ -1,0 +1,8 @@
+                                             count    mean
+period                             strategy               
+in-sample 2025-04-01..2026-06-30   forecast    456  3877.1
+                                   perfect     456  4802.2
+test seen 2026-07-01..2026-10-15   forecast    107    70.2
+                                   perfect     107  1352.0
+test unseen 2026-10-16..2026-10-22 forecast      7    92.1
+                                   perfect       7   786.5

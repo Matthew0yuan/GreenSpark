@@ -263,6 +263,12 @@ def m1() -> bt.Scenario:
     return bt._sc("m1", ct.Route("m1", cmd_mw=CMD, ircr="dynamic"), (bt.VALUE,))
 
 
+def sa() -> bt.Scenario:
+    """Zenith's storage network on its own connection, Scheduled, all FCESS, no site (2026-10-27,
+    analysis/2026-10-27/standalone_v2)."""
+    return bt._sc("sa", ct.Route("sa", metering="standalone"), (bt.VALUE,))
+
+
 def _run(task: tuple) -> tuple:
     """One configuration (or, for a v1 strategy name, v1's own loop) through every day."""
     sc, cfg, keep_logs = task
