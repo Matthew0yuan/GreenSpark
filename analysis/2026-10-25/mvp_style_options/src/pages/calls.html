@@ -1,0 +1,22 @@
+<!-- Customer fleet · Decide (round 5): one line says whether to call the customer batteries tonight and what it pays,
+     one bar says how many calls are left, the call rule is drawn on the demand forecast, the season sits underneath -->
+<section class="screen" id="s-calls" aria-label="Tonight's call">
+  <div class="toolbar cl-tools">
+    <span class="daystep" role="group" aria-label="Day"><button class="btn sm" id="day-prev" aria-label="Previous day"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg></button><span id="day-label"></span><button class="btn sm" id="day-next" aria-label="Next day"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button></span>
+    <span class="sp"></span>
+    <div class="seg" role="group" aria-label="View"><button data-view="decision" class="on">As known at 09:00</button><button data-view="review">Whole season · with hindsight</button></div>
+  </div>
+  <div class="dec-row cl-dec" id="call-dec" aria-live="polite">
+    <div class="res"><div class="dec-h" id="call-head"></div><div class="chips" id="call-chips"></div></div>
+    <div class="dec-val res" id="call-val"></div>
+  </div>
+  <div class="cl-budget res" id="call-budget"></div>
+  <section class="blk res">
+    <div class="blk-h"><h2 id="act-dem-h">System demand forecast</h2><span class="sub" id="act-dem-sub"></span></div>
+    <div id="act-dem" class="chartbox"></div>
+  </section>
+  <section class="blk res">
+    <div class="blk-h"><h2 id="act-h">Hot Season 2025-26 (Dec–Mar)</h2><span id="act-tag"></span><span class="sub">click a day</span><span class="sp"></span><span class="legend" id="act-legend"></span><span class="ctools" data-csv="act"></span></div>
+    <div id="act-chart" class="chartbox"></div>
+  </section>
+</section>

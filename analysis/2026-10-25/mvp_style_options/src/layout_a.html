@@ -4,10 +4,10 @@
   <div class="tb-in">
     <div class="tb-brand"><span class="mk" aria-hidden="true">GS</span><b>GreenSpark</b></div>
     {{ASSET_SW}}
-    <nav class="tb-nav pages" data-grp="plan compare svalid" aria-label="Site battery pages">{{PAGES_SITE}}</nav>
-    <nav class="tb-nav pages" data-grp="calls value fvalid" aria-label="Customer fleet pages">{{PAGES_FLEET}}</nav>
+    <nav class="tb-nav pages" data-grp="plan evidence" aria-label="Site battery pages">{{PAGES_SITE}}</nav>
+    <nav class="tb-nav pages" data-grp="calls value" aria-label="Customer fleet pages">{{PAGES_FLEET}}</nav>
     <span class="sp"></span>
-    <div class="tb-run">{{RUN}}{{PRI}}{{GEAR}}</div>
+    <div class="tb-run">{{GEAR}}</div>
   </div>
 </header>
 
@@ -15,90 +15,14 @@
   <header class="ph">
     <div class="ph-line"><h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span></div>
     <div class="ctx" id="ph-ctx"></div>
+    {{WHO}}
   </header>
   {{STRIPS}}
 
-  <!-- Site battery · Decide: one line says whether the plan can run, what to do and what it is worth; the day is drawn
-       underneath as lanes on one time axis; the reasons sit on the chart and in the half-hour you click -->
-  <section class="screen" id="s-plan" aria-label="Today's plan">
-    <div class="dec-row" id="plan-dec">
-      <div class="res">
-        <div class="pst" id="plan-status" role="status"></div>
-        <div class="dec-h" id="plan-head"></div>
-      </div>
-      <div class="dec-val res" id="plan-val"></div>
-    </div>
-    <section class="blk res day-blk" id="plan-detail">
-      <div class="blk-h"><h2>Trading day</h2><span class="sub">hover for values · click a half-hour for detail</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
-      <div id="sch-chart" class="chartbox"></div>
-    </section>
-    <section class="blk res strip-detail" id="sch-rail" aria-live="polite"></section>
-    <div class="cols2">
-      <section class="blk res"><div class="blk-h"><h2>Value</h2><span class="sub">trading day, A$</span><span class="sp"></span><button class="lnk" data-go="compare">Against the baseline →</button></div>
-        <div id="plan-vbar"></div>
-        <details class="fold sm"><summary>Breakdown</summary><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}</details>
-      </section>
-      <section class="blk res"><div class="blk-h"><h2>Checks</h2><span class="sub">hover for each check</span><span class="sp"></span><button class="lnk" data-go="svalid">Backtest record →</button></div>
-        <div class="ckgrid" id="sch-checks"></div>
-      </section>
-    </div>
-  </section>
-
-  <!-- Site battery · Improve: the adopted dispatch against the frozen baseline -->
-  <section class="screen" id="s-compare" aria-label="Compare with the baseline">
-    <div class="toolbar">{{CPER_TOOLS}}</div>
-    <section class="blk res" id="cmp-hero"></section>
-    <section class="blk res"><h2>Price forecast against yesterday's prices</h2><div id="cmp-q2a"></div></section>
-  </section>
-
-  <!-- Site battery · Prove: hard limits with their scope, and how much test evidence there is -->
-  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
-    <div class="toolbar">{{PER_TOOLS}}</div>
-    <div class="vt-tiles res" id="sv-tiles"></div>
-    <div class="note v-note" id="val-note"></div>
-    <section class="blk res"><div class="blk-h"><h2>Physical and contract checks</h2><span class="sub">site battery · click a row to open it</span></div><table class="tbl" id="val-checks"></table></section>
-  </section>
-
-  <!-- Customer fleet · Decide: the call, the demand forecast behind it, the season it was made in -->
-  <section class="screen" id="s-calls" aria-label="Tonight's call">
-    <div class="toolbar">{{ACT_TOOLS}}</div>
-    <section class="blk res strip-decision" id="act-card" aria-live="polite"></section>
-    <section class="blk res">
-      <div class="blk-h"><h2>System demand forecast</h2><span class="sub" id="act-dem-sub"></span></div>
-      <div id="act-dem" class="chartbox"></div>
-    </section>
-    <section class="blk res">
-      <div class="blk-h"><h2 id="act-title"></h2><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span><span class="ctools" data-csv="act"></span></div>
-      <div class="legend legend-top" id="act-legend"></div>
-      <div id="act-chart" class="chartbox"></div>
-      <div class="budget" id="act-budget"></div>
-      <p class="foot">{{ACT_FOOT}}</p>
-    </section>
-  </section>
-
-  <!-- Customer fleet · Improve: the offer's gain over reference terms first, then who gains what -->
-  <section class="screen" id="s-value" aria-label="Value by party">
-    <div class="toolbar">{{VAL_TOOLS}}</div>
-    <section class="blk res" id="v-hero"></section>
-    <div class="scenline" id="v-scen"></div>
-    <div class="res v-verdict" id="v-verdict"></div>
-    <div class="parties res" id="v-parties"></div>
-    <section class="blk res"><div class="blk-h"><h2>The offer against the alternatives</h2><span class="sub" id="v-cmp-sub"></span></div><table class="tbl" id="v-cmp"></table><p class="foot" id="v-cmp-foot"></p></section>
-    <section class="blk res">{{V_LEDGER}}</section>
-    <div class="cols2">
-      <section class="blk res" id="v-ircr"></section>
-      <section class="blk res" id="v-own"></section>
-    </div>
-  </section>
-
-  <!-- Customer fleet · Prove -->
-  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
-    <div class="vt-tiles res" id="fv-tiles"></div>
-    <div class="cols2">
-      <section class="blk res"><h2>Hot Season holdouts</h2><div id="fv-hold"></div></section>
-      <section class="blk res"><h2>Customer constraints</h2><table class="tbl" id="fv-checks"></table></section>
-    </div>
-  </section>
+  {{PAGE_PLAN}}
+  {{PAGE_EVIDENCE}}
+  {{PAGE_CALLS}}
+  {{PAGE_VALUE}}
 
   <!-- Settings: one reading column, the input check stays in view -->
   <section class="screen" id="s-config" aria-label="Settings">

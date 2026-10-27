@@ -2,7 +2,7 @@
    Nothing is computed from user inputs: changing an input only marks results stale. */
 (function(){
 "use strict";
-var N = 48, X0 = 64, IW = 16, EFF = 0.922;
+var N = 48, X0 = 104, IW = 16, EFF = 0.922;
 function X(i){ return X0 + i * IW; }
 function p2(n){ return (n < 10 ? "0" : "") + n; }
 function hhmm(i){ var m = (480 + 30 * i) % 1440; return p2(Math.floor(m / 60)) + ":" + p2(m % 60); }
@@ -63,11 +63,15 @@ var MONEY = (function(){
 /* the conditional layer: spare energy offered 17:30–20:00 in layers from A$150/MWh. It is sized so that, if it all
    sells, the battery still stays above its reserve floor (plan margin +1.3 MWh, less the replay's own 0.3 MWh drift).
    In the replay it sells wherever the actual price reached the offer; the plan's expected value leaves it out. */
-var OFFERS = [{a:19, b:24, mw:0.3, price:150}];
-function offerAt(k){ return k >= OFFERS[0].a && k < OFFERS[0].b ? OFFERS[0] : null; }
-var OFFER_OUT = P.actual.map(function(v, k){ return offerAt(k) && v >= OFFERS[0].price ? OFFERS[0].mw : 0; });
+/* the threshold falls through the window: at 17:30 two more hours of forecast A$230 are still ahead, so holding the
+   energy is worth that plus wear and the price must beat it; by 19:30 only the A$75 night is ahead and the threshold
+   drops to wear plus the round-trip loss. Half-hourly and one quantity: a simplification of the price-quantity curve
+   a real dispatcher re-submits every 5 minutes. */
+var OFFERS = [{a:19, b:24, mw:0.3, price:[300, 280, 260, 240, 150], why:["two more hours of forecast A$230 still ahead", "90 minutes of forecast A$230 still ahead", "one more hour of forecast A$230 still ahead", "one more half-hour of forecast A$230 ahead", "only the A$75 night ahead: wear plus the round-trip loss sets it"]}];
+function offerAt(k){ var o = OFFERS[0]; return k >= o.a && k < o.b ? {a:o.a, b:o.b, mw:o.mw, price:o.price[k - o.a], why:o.why[k - o.a]} : null; }
+var OFFER_OUT = P.actual.map(function(v, k){ return offerAt(k) && v >= offerAt(k).price ? offerAt(k).mw : 0; });
 (function(){ var cum = 0; for (var b = 0; b <= N; b++) { if (b) cum += OFFER_OUT[b - 1] * 0.5 / EFF; SOCOUT[b] -= cum; } })();
-MONEY.out.offer = sum(OFFER_OUT.map(function(v, k){ return v * 0.5 * P.actual[k]; })); MONEY.out.net += MONEY.out.offer; MONEY.plan.offer = 0;
+MONEY.out.offer = sum(OFFER_OUT.map(function(v, k){ return v * 0.5 * P.actual[k]; })); MONEY.out.offerHH = OFFER_OUT.filter(function(v){ return v > 0; }).length; MONEY.out.net += MONEY.out.offer; MONEY.plan.offer = 0;
 var MARGIN = (function(){
   var m = 1e9, from = -1, to = -1;
   for (var k = 0; k < N; k++) { var v = SOC[k + 1] - MAND[k] - ECON[k]; if (v < m - 0.005) { m = v; from = k; to = k; } else if (Math.abs(v - m) < 0.005) to = k; }
@@ -89,7 +93,7 @@ var OFF = {
   custom: {name:"Custom offer", short:"Custom 85 c/kWh, 45 calls", rate:0.85, cap:45, q:"0.75", tol:85, enrolled:3000, flags:FLAG_C, kwh:9.0,
     ircr:[-1.7,-1.6,-1.5,-1.6,-1.5,-1.4,-1.7,-1.6,-1.5,0,-1.6,-1.5], sb:3200, retail:32000, debs:16000, energy:24000,
     seasons:{S3:[40000,350000,327184], S2b:[670000,1366000,1287528]}, cust:[196.67,150.00,140.45], calls:[41,26,24], peaks:[4,4,4],
-    src:"Started from the model suggestion (research policy C). Not a contract; the payment level must come from a pilot."},
+    src:"The terms this tool suggests. Not a contract; the payment level must come from a pilot."},
   ref: {name:"Reference terms", short:"Reference 70 c/kWh, 30 calls", rate:0.70, cap:30, q:"0.9", tol:140, enrolled:2000, flags:FLAG_R, kwh:9.0,
     ircr:[-1.5,-1.4,-1.6,-1.4,-1.3,-1.5,-1.4,-1.5,-1.3,0,0,0], sb:2400, retail:24000, debs:12000, energy:18000,
     seasons:{S3:[-406000,260000,149251], S2b:[-372000,1032000,735802]}, cust:[145.00,140.00,139.65], calls:[30,30,30], peaks:[0,4,3],
@@ -105,10 +109,10 @@ function evalOffer(k, sc){
   if (sc === "S1" || sc === "S2a") {
     r.enrolled = 380; r.calls = 0; r.resp = 342;
     r.rows = [
-      ["Capacity value (IRCR, seasonal)", 0, 0, 0, false, sc === "S1" ? "S1 has no capacity value." : "Current rule: net export counts 0, and normal self-use already zeroes peak import."],
+      ["Capacity charge (IRCR) saving, per season", 0, 0, 0, false, sc === "S1" ? "S1 has no capacity value." : "Current rule: net export counts 0, and normal self-use already zeroes peak import."],
       ["Wholesale value of changed net export", 0, 0, 0, false, "No call has a positive expected margin at 09:00, so the rule makes no calls."],
       ["Compensation for event net export", 0, 0, 0, true, "No calls, so no compensation."],
-      ["Operating cost", -9500, 0, 0, false, "A$25 a year for each of 380 homes that enrol at zero expected benefit (assumed central curve)."]];
+      ["Operating cost", -9500, 0, 0, false, "380 homes enrol even at zero expected benefit (assumed sign-up curve); A$25 a year each."]];
     r.seasonZ = [-9500,-9500,-9500]; r.custHome = [0,0,0]; r.seasonCalls = [0,0,0]; r.peaks = [0,0,0];
   } else {
     var calls = Math.min(o.flags.length, o.cap), en = o.enrolled, rsp = en * RESP;
@@ -117,12 +121,12 @@ function evalOffer(k, sc){
     var zc = sc === "S3" ? Math.round(capv * RUN.share) : capv;
     r.enrolled = en; r.calls = calls; r.resp = rsp; r.dmed = dmed; r.capv = capv; r.zc = zc;
     r.rows = [
-      ["Capacity value (IRCR, seasonal)", zc, 0, capv - zc, false, sc === "S3" ? "Zenith receives share s = " + Math.round(RUN.share * 100) + "% (assumption); the rest stays with Synergy. See the IRCR card." : "Assumed future rule: net export counts negative; Zenith as retailer keeps the whole change."],
+      ["Capacity charge (IRCR) saving, per season", zc, 0, capv - zc, false, sc === "S3" ? "Zenith keeps " + Math.round(RUN.share * 100) + "% of the capacity value (assumption); the rest stays with Synergy." : "Assumed future rule: net export counts negative; Zenith as retailer keeps the whole change."],
       ["Wholesale value of changed net export", sc === "S3" ? 0 : o.energy, 0, sc === "S3" ? o.energy : 0, false, sc === "S3" ? "In S3 the energy value goes to Synergy." : "Zenith settles the change in the meters' net position at actual prices."],
       ["Compensation for event net export", -comp, comp, 0, true, nf(o.rate * 100) + " c/kWh × " + nf(o.kwh, 1) + " kWh × " + nf(rsp) + " responding homes × " + calls + " calls. Paid on billed event net export."],
-      ["Standby offset credits", -o.sb, o.sb, 0, true, "Extra import during standby, credited to the customer."],
-      ["Retail bill change after events", sc === "S3" ? 0 : o.retail, -o.retail, sc === "S3" ? o.retail : 0, true, "Customers import more after events; the retailer earns it."],
-      ["Feed-in (DEBS) change", 0, o.debs, -o.debs, true, "Feed-in credits on extra exports, paid by the scheme's payer."],
+      ["Hold-charge offset credits", -o.sb, o.sb, 0, true, "Extra import while the battery holds charge before a call, credited to the customer."],
+      ["Retail bill change after calls", sc === "S3" ? 0 : o.retail, -o.retail, sc === "S3" ? o.retail : 0, true, "Customers import more after a call; the retailer earns the margin on that extra energy."],
+      ["Feed-in credit (DEBS) change", 0, o.debs, -o.debs, true, "Feed-in credits on extra exports, paid by the scheme's payer."],
       ["Customer battery wear", 0, -wear, 0, false, "A$0.05 per kWh of extra throughput (assumption)."],
       ["Customer disutility", 0, -hassle, 0, false, "A$0.50 per responding home per event (assumption)."],
       ["Operating cost", -ops, 0, 0, false, "A$25 per enrolled home a year + A$0.05 per responding home per event (assumptions)."],
@@ -133,14 +137,16 @@ function evalOffer(k, sc){
   r.sys = r.z + r.c + r.oth;
   r.worst = Math.min.apply(null, r.seasonZ); r.worstIdx = r.seasonZ.indexOf(r.worst);
   r.expZ = sum(r.seasonZ) / 3; r.expC = sum(r.custHome) / 3;
-  if (r.calls === 0) r.verdict = {k:"bad", t:"No business case", p: sc === "S1" ? "S1 energy only: no call has a positive expected margin at 09:00, so only the operating cost remains." : "S2a current IRCR rule: net export counts 0, and normal self-use already zeroes peak import, so calls add almost no capacity value."};
-  else if (r.worst < 0) r.verdict = {k:"bad", t:"No business case", p:"Fails the downside test: Zenith loses " + aud(-r.worst) + " in Hot Season " + SEASONS[r.worstIdx] + " (" + r.peaks[r.worstIdx] + " of 4 peak days covered). The expected value alone is not enough."};
-  else r.verdict = {k:"ok", t:"Positive in this scenario", p:(sc === "S2b" ? "Depends on an assumed future rule (2027 Peak IRCR); not current revenue. " : "Depends on a hypothetical Synergy share of " + Math.round(RUN.share * 100) + "%. ") + "Customers are better off than normal self-use, no customer constraint is broken (activation cap, control time, customer reserve) and no Hot Season loses money. The capacity value has no forward test until the 2026-27 Hot Season; enrolment follows an assumed curve."};
+  if (r.calls === 0) r.verdict = {k:"bad", t:"No business case", p: sc === "S1" ? "S1, energy only: no call pays for itself at 09:00, so only the operating cost remains." : "S2a, today's capacity rule: the fleet's export counts 0 against the peak, and normal self-use already removes peak import, so calls add almost no capacity value."};
+  else if (r.worst < 0) r.verdict = {k:"bad", t:"No business case", p:"Fails the downside test: Zenith loses " + aud(-r.worst) + " in Hot Season " + SEASONS[r.worstIdx] + " (" + r.peaks[r.worstIdx] + " of 4 official peak days covered, known only afterwards). The expected value alone is not enough."};
+  else r.verdict = {k:"ok", t:"Positive in this scenario", p:(sc === "S2b" ? "Depends on an assumed future rule for the capacity charge (IRCR) from 2027; not current revenue. " : "Depends on a hypothetical Synergy share of " + Math.round(RUN.share * 100) + "%. ") + "Customers are better off than normal self-use, no customer limit is broken (yearly call cap, max control time, customer floor) and no Hot Season (Dec–Mar) loses money. The capacity value has not yet been tested blind; the first chance is the 2026-27 Hot Season. Enrolment follows an assumed curve."};
   return r;
 }
 
 /* ---------- state ---------- */
 var S = {screen:"plan", sel:20, revealed:false, view:"decision", offer:"custom", day:TODAY, vscen:"S3", per:"ins", cper:"tseen", nc:false};
+/* page registry: each page file sets PAGES.<name> = its render function and SCREENS.<name> = {t, chips, ctx} */
+var PAGES = {};
 var DEF = {start:"model", pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, win:"17:30–19:30", share:50, elig:10000, curve:"Central", resp:90, ops:25, fix:0, exp:"10", fcess:"RR, RL, CR, CL", scen:"S3"};
 var IN = JSON.parse(JSON.stringify(DEF));
 
@@ -205,7 +211,7 @@ function dayAxis(y1, d){
   return s.join("") + tx(X(0), y1 + 30, dayName(d), "lu") + tx(X(32), y1 + 30, dayName(d + 1), "lu", ' text-anchor="middle"');
 }
 /* the 09:00 decision, drawn like the "latest" marker of a market tool */
-function planMark(y0, y1, label){ return ln(X(2), y0 - (label ? 8 : 0), X(2), y1, 'style="stroke:var(--mark)" stroke-width="1"') + (label ? tx(X(2), y0 - 12, "09:00 PLAN", "mk9", ' text-anchor="middle"') : ""); }
+function planMark(y0, y1, label){ return ln(X(2), y0 - (label ? 8 : 0), X(2), y1, 'style="stroke:var(--mark)" stroke-width="1"') + (label ? tx(X(2), y0 - 12, "PLAN MADE 09:00", "mk9", ' text-anchor="middle"') : ""); }
 /* invisible columns that drive hover and click, and the crosshair they move */
 function hitCols(y0, y1){
   var s = ['<line class="xh" x1="0" x2="0" y1="' + y0 + '" y2="' + y1 + '"/>'];
@@ -219,59 +225,16 @@ var FLOOR = MAND.map(function(m, k){ return m + ECON[k]; });
 function modeOf(k){ return k < 2 ? "pre" : (P.chg[k] > 0 ? "chg" : (P.dis[k] > 1 ? "dis" : (P.dis[k] > 0 ? "shave" : "hold"))); }
 function doing(k){
   var m = modeOf(k);
-  if (m === "dis") return "Discharging " + nf(P.dis[k], 1) + " MW, scheduled; " + nf(OFFERS[0].mw, 1) + " MW more offered from A$" + OFFERS[0].price;
-  if (m === "chg") return "Charging " + nf(P.chg[k], 1) + " MW";
-  if (m === "shave") return "Shaving " + nf(P.dis[k], 1) + " MW to stay under CMD 9 MW";
-  if (m === "pre") return "Earlier plan, before the 09:00 forecast";
-  return k >= 24 && k < 34 ? "Holding energy for tomorrow" : "Standing by";
+  if (m === "dis") return "Discharge " + nf(P.dis[k], 1) + " MW";
+  if (m === "chg") return "Recharge " + nf(P.chg[k], 1) + " MW";
+  if (m === "shave") return "Cut import " + nf(P.dis[k], 1) + " MW";
+  if (m === "pre") return "Before the 09:00 plan";
+  return "Hold";
 }
 /* what is firm and what depends on the market. As in the model: the plan (shave, discharge, hold, recharge) is scheduled
    and re-solved every 30 minutes with the latest price; only spare energy above the plan is offered, in layers from a
    A$150/MWh floor, and sells only if the price reaches each layer. The offer itself is defined with the data above. */
 
-function powerSVG(sel, h){
-  var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], k, rev = S.revealed, pc = planCheck();
-  var H = h || 280, y0 = 30, y1 = H - 40;
-  /* one grid for both axes, so zero lines up: price −250…500 A$/MWh on the left, power −5…10 MW on the right */
-  var yv = function(mw){ return y1 - (mw + 5) * (y1 - y0) / 15; }, yp = function(p){ return yv(Math.max(-250, Math.min(p, 500)) / 50); };
-  s.push(svgOpen(W, H, "pw", "Plan for 14 Jan 2026: scheduled battery power, conditional offers and the forecast energy price (illustrative)") + "<defs>" + HATCH("hPw") +
-    '<pattern id="cdP" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--surface)"/><rect width="2.6" height="6" style="fill:var(--dis)"/></pattern></defs>');
-  [-5, 0, 5, 10].forEach(function(v){
-    s.push(ln(X0, yv(v), XR, yv(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yv(v) + 3.5, (v < 0 ? "−" : "") + nf(Math.abs(v) * 50), "", ' text-anchor="end"') + tx(XR + 8, yv(v) + 3.5, (v < 0 ? "−" : "") + Math.abs(v)));
-  });
-  s.push(yTitle(14, (y0 + y1) / 2, "Price, A$/MWh") + yTitle(W - 10, (y0 + y1) / 2, "Battery power, MW"));
-  /* no forecast exists before 09:00 */
-  s.push(rc(X(0), y0, X(2) - X(0), y1 - y0, 'fill="url(#hPw)"') + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
-  /* bars: one block per run of equal power; conditional offers are hatched */
-  for (k = 0; k < N; k++) {
-    var v = P.dis[k] - P.chg[k], e = k; if (!v) continue;
-    while (e + 1 < N && P.dis[e + 1] - P.chg[e + 1] === v) e++;
-    if (shown("pw", "sch")) s.push(rc(X(k) + 0.5, Math.min(yv(v), yv(0)), X(e + 1) - X(k) - 1, Math.abs(yv(v) - yv(0)), 'style="fill:var(--' + (v > 0 ? "dis" : "chg") + ')" opacity="0.88"'));
-    k = e;
-  }
-  var o = OFFERS[0];
-  if (shown("pw", "cond")) s.push(rc(X(o.a) + 0.5, yv(P.dis[o.a] + o.mw), X(o.b) - X(o.a) - 1, yv(P.dis[o.a]) - yv(P.dis[o.a] + o.mw), 'style="fill:url(#cdP);stroke:var(--dis)" stroke-width="1.2"'));
-  if (shown("pw", "p50")) s.push('<path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" style="stroke:var(--price)" stroke-width="1.8" stroke-dasharray="5 3"/>');
-  /* the lowest offer layer: spare energy sells only if the price reaches it */
-  if (shown("pw", "cond")) s.push(ln(X(o.a), yp(o.price), X(o.b), yp(o.price), 'style="stroke:var(--dis)" stroke-width="1.6" stroke-dasharray="1.5 2.5"') +
-    tx(X(o.b) + 5, yp(o.price) + 4, "offers from A$" + o.price, "halo vl", ' style="fill:var(--dis)"'));
-  if (rev && shown("pw", "act")) {
-    s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" fill="none" style="stroke:var(--price)" stroke-width="2"/>');
-    var am = P.actual.indexOf(Math.max.apply(null, P.actual));
-    if (P.actual[am] > 500) s.push(tx(X(am) + IW / 2, yp(500) - 5, "A$" + nf(P.actual[am]) + " ↑", "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
-  }
-  /* what the battery does, in words, next to the bars; the shave sits under the zero line, clear of the price */
-  if (shown("pw", "sch")) {
-    var sh = "Shave " + nf(P.dis[4], 1) + " MW to stay under CMD 9 MW";
-    s.push(tx(mid(4, 18), yv(0) + 15, fits(sh, 11, X(18) - X(4)) ? sh : "Shave " + nf(P.dis[4], 1) + " MW", "halo vl", ' text-anchor="middle" style="fill:var(--dis)"'));
-    s.push(tx(mid(34, 46), (yv(0) + yv(-P.chg[34])) / 2 + 4, "Recharge " + nf(P.chg[34], 1) + " MW", "vl", ' text-anchor="middle" style="fill:var(--text)"'));
-  }
-  if (shown("pw", "sch") || shown("pw", "cond")) s.push(tx(mid(19, 24), yv(P.dis[19] + (shown("pw", "cond") ? o.mw : 0)) - 7, "Discharge " + nf(P.dis[19], 1) + " MW" + (shown("pw", "cond") ? " + " + nf(o.mw, 1) + " offered" : ""), "halo vl", ' text-anchor="middle" style="fill:var(--dis)"'));
-  /* intervals where the shown plan breaks a limit under the current inputs */
-  pc.bad.forEach(function(q){ s.push(rc(X(q) + 0.5, y0 - 6, IW - 1, 5, 'style="fill:var(--bad)"')); });
-  if (pc.bad.length) s.push(tx(X(pc.bad[0]), y0 - 10, pc.badShort, "vl", ' style="fill:var(--bad)"'));
-  return s.join("") + planMark(y0, y1, true) + dayAxis(y1, TODAY) + hitCols(y0, y1) + "</svg>";
-}
 /* direct: the lines are named on the chart, with no legend (scheme A's plan page) */
 function socSVG(sel, h, direct){
   var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], rev = S.revealed, CAP = 40;
@@ -279,38 +242,23 @@ function socSVG(sel, h, direct){
   var ys = function(v){ return y1 - v * (y1 - y0) / CAP; };
   s.push(svgOpen(W, H, "soc", "Plan for 14 Jan 2026: energy held in the battery (illustrative)"));
   [0, 10, 20, 30, 40].forEach(function(v){ s.push(ln(X0, ys(v), XR, ys(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, ys(v) + 3.5, String(v), "", ' text-anchor="end"')); });
-  s.push((direct ? tx(X0, y0 - 6, "State of charge, MWh", "lnm") : yTitle(14, (y0 + y1) / 2, "State of charge, MWh")) + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
-  if (direct) {
-    s.push(tx(X(2) + 6, ys(SOC[2]) - 7, "Planned", "halo pt"));
-    if (rev) s.push(tx(XR - 2, ys(SOCOUT[N]) + 15, "Actual", "halo pt", ' text-anchor="end"'));
-  }
-  s.push(limLine(ys(CAP), "Max") + '<path d="' + stepPath(FLOOR, ys, 0, N) + '" fill="none" class="lmt"/>' + tx(XR - 2, ys(FLOOR[N - 1]) - 5, "Reserve floor", "lim halo", ' text-anchor="end"'));
+  s.push((direct ? tx(X0, y0 - 6, "Energy stored, MWh", "lnm") : yTitle(14, (y0 + y1) / 2, "Energy stored, MWh")) + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
+  s.push(limLine(ys(CAP), "Full · 40 MWh") + '<path d="' + stepPath(FLOOR, ys, 0, N) + '" fill="none" class="lmt"/>' + tx(XR - 2, ys(FLOOR[N - 1]) - 5, "Minimum", "lim halo", ' text-anchor="end"'));
   /* what happened: 08:00–09:00 is already known; the whole day once the outcome is revealed */
   var to = rev ? N : 2;
   if (shown("soc", "act")) {
     var a = linePath(SOCOUT, ys, 0, to);
-    s.push('<path d="' + a + "L" + X(to).toFixed(2) + "," + y1 + "L" + X(0) + "," + y1 + 'Z" style="fill:var(--soc)" opacity="0.15"/><path d="' + a + '" fill="none" style="stroke:var(--soc)" stroke-width="2" stroke-linejoin="round"/>');
+    s.push('<path d="' + a + "L" + X(to).toFixed(2) + "," + y1 + "L" + X(0) + "," + y1 + 'Z" style="fill:var(--actual)" opacity="0.08"/><path d="' + a + '" class="actual" fill="none" style="stroke:var(--actual)" stroke-width="2" stroke-linejoin="round"/>');
   }
   if (shown("soc", "plan")) {
     s.push('<path d="' + linePath(SOC, ys, 2, N) + '" fill="none" style="stroke:var(--soc)" stroke-width="2" stroke-dasharray="5 3" stroke-linejoin="round"/>');
-    s.push('<circle cx="' + X(24).toFixed(1) + '" cy="' + ys(SOC[24]).toFixed(1) + '" r="3" style="fill:var(--soc)"/>' + tx(X(24) + 7, ys(SOC[24]) - 7, "Lowest " + nf(SOC[24], 1) + " MWh", "halo pt"));
+    s.push('<circle cx="' + X(24).toFixed(1) + '" cy="' + ys(SOC[24]).toFixed(1) + '" r="3" style="fill:var(--soc)"/>' + tx(X(24) + 7, ys(SOC[24]) - 7, nf(SOC[24], 1) + " MWh", "halo pt"));
     s.push(tx(XR - 2, ys(SOC[N]) - 8, nf(SOC[N], 1) + " MWh", "halo pt", ' text-anchor="end"'));
     var sx = X(S.sel) + IW / 2, sy = (ys(SOC[S.sel]) + ys(SOC[S.sel + 1])) / 2;
     s.push('<circle cx="' + sx.toFixed(1) + '" cy="' + sy.toFixed(1) + '" r="4" style="fill:var(--surface);stroke:var(--soc)" stroke-width="2"/>');
   }
   return s.join("") + planMark(y0, y1, false) + dayAxis(y1, TODAY) + hitCols(y0, y1) + "</svg>";
 }
-/* the two charts share one box and one time axis; in a filling box they split its height */
-var CHD_H = 76;
-function schedHTML(){
-  var f = fitH("#sch-chart"), hp = 0, hs = 0;
-  if (f) { var room = f - CHD_H; hp = Math.round(room * 0.58); hs = room - hp; if (hp < 180 || hs < 130) { hp = 0; hs = 0; } }
-  var pw = [["sch", "bar-s", "", "Scheduled"], ["cond", "bar-c", "", "Conditional offer"], ["p50", "dsh", "var(--price)", "Price forecast"]];
-  if (S.revealed) pw.push(["act", "ln", "var(--price)", "Actual price"]);
-  return '<div class="chd"><span class="chd-t">Battery power and price</span>' + lgdHTML("pw", pw) + "</div>" + powerSVG("#sch-chart", hp) +
-    '<div class="chd chd-2"><span class="chd-t">State of charge</span>' + lgdHTML("soc", [["act", "area", "var(--soc)", "Actual"], ["plan", "dsh", "var(--soc)", "Planned"]]) + "</div>" + socSVG("#sch-chart", hs);
-}
-
 /* is the plan on screen executable under the current inputs? This is not the run status: a run can be up to date and
    its plan still break a limit, for example after the export limit is lowered */
 function planCheck(){
@@ -318,13 +266,13 @@ function planCheck(){
   for (k = 0; k < N; k++) { maxImp = Math.max(maxImp, METER[k]); maxExp = Math.max(maxExp, -METER[k]); if (-METER[k] > exp + 1e-9) bad.push(k); }
   /* [passes, full text, "warn" for an economic limit, short label] */
   var list = [
-    [true, "Power: energy + raise services ≤ 10 MW in every interval (highest 9.5 MW)", "", "Power ≤ 10 MW"],
-    [MARGIN.v >= 0, "SOC stays above mandatory + site backup reserve (lowest margin +" + nf(MARGIN.v, 1) + " MWh)", "", "SoC ≥ reserve"],
-    [maxImp <= 12, "Meter import ≤ import limit 12 MW (highest " + nf(maxImp, 1) + " MW)", "", "Import ≤ 12 MW"],
-    [maxImp <= 9, "Site import ≤ CMD 9 MW, an economic limit priced in the network bill (highest " + nf(maxImp, 1) + " MW)", "warn", "CMD 9 MW"],
-    [!bad.length, "Meter export ≤ " + exp + " MW (highest " + nf(maxExp, 1) + " MW" + (bad.length ? ", above the limit in " + bad.length + " half-hours, " + hhmm(bad[0]) + "–" + hhmm(bad[bad.length - 1] + 1) : "") + ")", "", "Export ≤ " + exp + " MW"],
-    [true, "No MW or MWh allocated twice", "", "No double count"],
-    [true, "Every input published by 09:00 (08:00–09:00 runs on the transition plan)", "", "Inputs by 09:00"]];
+    [true, "Energy plus the power held ready for grid services never exceeds the battery's 10 MW rating (highest 9.5 MW)", "", "Power ≤ 10 MW"],
+    [MARGIN.v >= 0, "Energy stored stays above the grid-service reserve plus the factory backup (lowest margin +" + nf(MARGIN.v, 1) + " MWh). " + glNote("GRIDRESERVE") + " " + glNote("BACKUP"), "", "Grid reserve + backup kept"],
+    [maxImp <= 12, "Grid import ≤ the 12 MW connection limit (highest " + nf(maxImp, 1) + " MW)", "", "Connection import ≤ 12 MW"],
+    [maxImp <= 9, "Factory grid import stays under the 9 MW import contract (highest " + nf(maxImp, 1) + " MW). " + glNote("CMD"), "warn", "Import contract 9 MW · a cost"],
+    [!bad.length, "Grid export ≤ the " + exp + " MW connection limit (highest " + nf(maxExp, 1) + " MW" + (bad.length ? ", above the limit in " + bad.length + " half-hours, " + hhmm(bad[0]) + "–" + hhmm(bad[bad.length - 1] + 1) : "") + ")", "", "Connection export ≤ " + exp + " MW"],
+    [true, "The same MW or MWh is never promised to both the energy market and grid services. " + glNote("FCESS"), "", "Nothing sold twice"],
+    [true, glNote("DECISION"), "", "Only data known at 09:00"]];
   var fails = list.filter(function(c){ return !c[0] && !c[2]; }), warns = list.filter(function(c){ return !c[0] && c[2]; });
   return {list:list, fails:fails, warns:warns, bad:bad, exp:exp, badShort:bad.length ? "Export above " + exp + " MW" : "",
     why:bad.length ? bad.length + " half-hours above the " + exp + " MW export limit (" + hhmm(bad[0]) + "–" + hhmm(bad[bad.length - 1] + 1) + ")" : ""};
@@ -338,9 +286,9 @@ function railHTML(k){
   if (m === "dis") {
     act = "Discharging " + nf(P.dis[k], 1) + " MW";
     say = "The evening price is forecast at A$" + nf(pr) + "/MWh, worth more than keeping the energy. The plan is re-solved every 30 minutes with the latest price.";
-    facts = [["Battery", lvl], ["Sent to the grid", '<span class="' + (over ? "neg" : "") + '">' + nf(-METER[k], 1) + " of " + exp + " MW allowed</span>"], ["Conditional offer", "+" + nf(OFFERS[0].mw, 1) + " MW from A$" + OFFERS[0].price + "/MWh"]];
+    facts = [["Battery", lvl], ["Sent to the grid", '<span class="' + (over ? "neg" : "") + '">' + nf(-METER[k], 1) + " of " + exp + " MW export limit</span>"], ["Extra offer this half-hour", "+" + nf(OFFERS[0].mw, 1) + " MW if price ≥ A$" + offerAt(k).price + "/MWh"], ["Why this threshold", offerAt(k).why]];
   } else if (m === "shave") {
-    act = "Shaving " + nf(P.dis[k], 1) + " MW";
+    act = "Cutting import " + nf(P.dis[k], 1) + " MW";
     say = "Without the battery the factory would draw " + nf(P.load[k], 1) + " MW, above its 9 MW contract limit (CMD).";
     facts = [["Battery", lvl], ["Factory import", nf(METER[k], 1) + " of 9 MW allowed"], ["Price forecast", price]];
   } else if (m === "chg") {
@@ -353,42 +301,84 @@ function railHTML(k){
     facts = [["Battery", nf(SOC[k], 1) + " MWh"], ["Price forecast", price]];
   } else {
     act = k >= 24 && k < 34 ? "Holding " + nf(SOC[k], 1) + " MWh" : "Standing by";
-    say = "No trade beats keeping the energy at A$" + nf(pr) + "/MWh. Part of the battery stays on standby for grid services (FCESS).";
-    facts = [["Battery", nf(SOC[k], 1) + " MWh"], ["Price forecast", price], ["Grid-service standby", nf(P.rr[k] + P.cr[k], 1) + " MW"]];
+    say = "No trade beats keeping the energy at A$" + nf(pr) + "/MWh. Part of the battery is held ready for grid services (FCESS), which pays for availability.";
+    facts = [["Battery", nf(SOC[k], 1) + " MWh"], ["Price forecast", price], ["Held ready for grid services (FCESS)", nf(P.rr[k] + P.cr[k], 1) + " MW"]];
   }
   var col = {dis:"var(--phs-dis)", chg:"var(--phs-chg)", shave:"var(--phs-shave)", hold:"var(--text-2)", pre:"var(--text-2)"}[m];
   var h = '<div class="ri-head"><div class="t">' + hhmm(k) + "–" + hhmm(k + 1) + '<span class="tag plan">' + kind.toUpperCase() + '</span></div><div class="act" style="color:' + col + '">' + act + "</div></div>";
   h += '<p class="ri-say">' + say + "</p>";
   h += '<div class="ri-facts">' + facts.map(function(f){ return "<div><span>" + f[0] + "</span><b>" + f[1] + "</b></div>"; }).join("") + "</div>";
-  if (S.revealed) h += '<div class="ri-out"><div class="cap">Outcome<span class="tag out">REPLAYED</span></div><table class="kvt"><tr><td>Actual price</td><td class="n">A$' + nf(P.actual[k]) + '/MWh</td></tr><tr><td>Energy settled</td><td class="n">' + aud(P.actual[k] * (P.dis[k] - P.chg[k]) * 0.5) + "</td></tr></table></div>";
-  else h += '<div class="locked ri-out">Outcome hidden until you reveal it. <button class="lnk" data-reveal>Reveal outcome →</button></div>';
+  if (S.revealed) h += '<div class="ri-out"><div class="cap">Outcome<span class="tag out">REPLAYED</span></div><table class="kvt"><tr><td>Actual price</td><td class="n">A$' + nf(P.actual[k]) + '/MWh</td></tr><tr><td>Energy settled</td><td class="n">' + aud(P.actual[k] * (P.dis[k] - P.chg[k]) * 0.5) + "</td></tr>" + (offerAt(k) ? "<tr><td>Extra offer</td><td class=\"n\">" + (OFFER_OUT[k] > 0 ? "sold at A$" + nf(P.actual[k]) + " → " + aud(OFFER_OUT[k] * 0.5 * P.actual[k]) : "not sold, price below A$" + offerAt(k).price) + "</td></tr>" : "") + "</table></div>";
+  else h += '<div class="locked ri-out">What happened is hidden in "Plan only". <button class="lnk" data-reveal>Show what happened →</button></div>';
   return h;
-}
-
-/* the day as action blocks, in proportion to time: scheduled solid, conditional hatched */
-function timelineHTML(){
-  var segs = [], k = 0;
-  while (k < N) { var m = modeOf(k), e = k; while (e + 1 < N && modeOf(e + 1) === m) e++; segs.push({m:m, a:k, b:e + 1}); k = e + 1; }
-  var lab = {shave:"Shave " + nf(P.dis[4], 1) + " MW", dis:"Discharge " + nf(P.dis[19], 1) + " MW", chg:"Recharge " + nf(P.chg[34], 1) + " MW", hold:"Hold", pre:""};
-  var h = '<div class="tl" role="img" aria-label="Today\'s actions from 08:00 to 08:00: shave 10:00–17:00, discharge 17:30–20:00 with a conditional offer on top, hold overnight, recharge 01:00–07:00">';
-  segs.forEach(function(g){
-    var n = g.b - g.a, t = g.m === "hold" && g.a === 24 ? "Hold " + nf(SOC[24], 1) + " MWh" : lab[g.m];
-    h += '<div class="tl-b tl-' + g.m + '" style="flex-grow:' + n + '" title="' + hhmm(g.a) + "–" + hhmm(g.b) + " · " + (g.m === "pre" ? "earlier plan" : "scheduled") + (g.m === "dis" ? ", plus a conditional offer" : "") + '">' + (g.m === "dis" ? '<i class="tl-offer" title="Conditional: ' + nf(OFFERS[0].mw, 1) + " MW more offered from A$" + OFFERS[0].price + '/MWh"></i>' : "") + "<span>" + (n >= 4 ? t : "") + "</span></div>";
-  });
-  h += '</div><div class="tl-x">' + [0, 8, 16, 24, 32, 40, 48].map(function(q){ return '<span style="left:' + (q / N * 100) + '%">' + (q < N ? hhmm(q) : "08:00") + "</span>"; }).join("") + "</div>";
-  return h + '<div class="tl-key"><span><i class="sw2 bar-s"></i>Scheduled, re-planned every 30 minutes</span><span><i class="sw2 bar-c"></i>Conditional offer: sells only if the price reaches it</span></div>';
 }
 
 /* ---------- Today's plan, scheme A (round 5): decide in one line, the day as lanes, reasons on the chart ----------
    A layout with a #plan-dec slot gets this page; the other schemes keep the round-4 page in renderPlan below.
    Scheduled actions are solid blocks; the conditional offer is a dashed outline, because it runs only if the price
    reaches it; hatching means "not known at 09:00" and nothing else. Full wording sits in hover notes (data-note). */
+/* ---------- glossary: one plain sentence (what it is) and one on why it matters; every page's hover notes come from here ----------
+   gl(key, label) renders a hover chip; glNote(key) returns the note text for other elements; glName(key) the plain name. */
+var GLOSS = {
+  ZENITH:   ["Zenith", "Zenith is the electricity retailer this tool is built for. It owns a 10 MW / 40 MWh battery at a factory site and can also call its customers' home batteries.", "Every A$ on these pages is Zenith's gain or loss unless a party is named."],
+  FACTORY:  ["the factory site", "The factory whose grid connection the site battery sits behind. Its load is synthetic (simulated), not metered.", "The battery earns part of its value by keeping the factory's grid import under its contract."],
+  SYNERGY:  ["Synergy", "Synergy is Western Australia's incumbent retailer. In scenario S3 Zenith sells the customer batteries' capacity value through Synergy.", "Which party receives the capacity value decides whether the customer offer pays."],
+  AEMO:     ["market operator (AEMO)", "The Australian Energy Market Operator runs the wholesale market and publishes the demand forecasts and prices used here.", "Only AEMO data published before 09:00 may be used for the 09:00 decision."],
+  WEM:      ["WA wholesale market (WEM)", "The Wholesale Electricity Market: Western Australia's electricity market, separate from the east-coast market.", "Its rules set the prices, the Hot Season and the capacity charge used here."],
+  TRADINGDAY: ["trading day", "A market day runs from 08:00 to 08:00 the next morning, following the WA market's clock.", "Every plan, price and result on a page covers one such day."],
+  DECISION: ["09:00 decision", "The plan is made at 09:00 each trading day with the forecasts available by then; 08:00–09:00 runs on the plan carried over from yesterday.", "Nothing published after 09:00 is used, so the replay never peeks at the future."],
+  DISPATCHER: ["the dispatcher", "The dispatcher is this tool's scheduling software: it decides each half-hour whether the battery charges, holds, discharges or offers energy.", "The previous version (v1) is kept unchanged as the baseline to beat."],
+  RUN:      ["saved run R‑0142", "A saved replay of past days with one fixed set of inputs. Its numbers on these pages are placeholders from the design prototype.", "Change an input and the saved results no longer apply until the engine runs again."],
+  SETTLE:   ["settlement", "The actual money that changes hands after the day, at the prices that really occurred.", "A 09:00 expected value is a forecast, not settlement."],
+  CMD:      ["import contract (CMD)", "Contract maximum demand: the grid import the factory has contracted for, 9 MW here.", "Going above it costs a demand charge in the network bill; it is a cost, not a physical limit."],
+  NETBILL:  ["network bill", "The charge the network operator bills the factory for its peak grid import.", "Keeping import under the contract is part of the battery's value."],
+  FCESS:    ["grid services (FCESS)", "Frequency control services: the battery is paid to stand ready to inject or absorb power at short notice to keep the grid frequency steady.", "It earns money without moving much energy, but the capacity it holds ready cannot be sold as energy at the same time."],
+  GRIDRESERVE: ["grid-service reserve", "Energy the battery must keep so it can deliver the grid services it has promised.", "It is never offered to the energy market at any price."],
+  BACKUP:   ["factory backup", "Energy kept so the factory can ride through a grid outage.", "The plan never discharges below it."],
+  CUSTFLOOR:["customer floor", "The 20% of each home battery that is never discharged during a call.", "It protects the customer's own evening use."],
+  SOC:      ["energy stored (state of charge)", "How much energy the battery holds at a moment, in MWh, out of 40 MWh when full.", "The plan must stay between the grid-service reserve plus factory backup, and full."],
+  EXTRAOFFER: ["extra offer", "Spare energy offered to the market at a threshold price; it sells only in the half-hours where the market price reaches it, and is then paid that market price, not the threshold. The threshold falls through the evening: while high-price half-hours are still ahead, holding the energy is worth more, so the price must beat that; once only the cheap night is ahead it drops to wear plus the round-trip loss. Still simplified: shown half-hourly with one quantity, while a real dispatcher re-submits a price–quantity curve of several steps every 5 minutes.", "It is not counted in the expected value because it may never sell."],
+  SHAVE:    ["cut import", "Discharging just enough to keep the factory's grid import under its contract.", "It saves the demand charge rather than earning market revenue."],
+  RANGE:    ["likely price range", "The band the forecast expects the price to fall inside 8 times in 10 (10th to 90th percentile).", "A wide band means an uncertain forecast."],
+  MAE:      ["average error (MAE)", "Mean absolute error: the average gap between the forecast and the actual price, in A$/MWh.", "Lower is better; it is not an accuracy percentage."],
+  BRIER:    ["spike forecast error (Brier score)", "How wrong the model's probability of a price spike (A$200/MWh or more) was, from 0 (perfect) to 1.", "Lower is better; the baseline is how often spikes happened in the last 28 days."],
+  TRAIN:    ["training period", "1 Apr 2025 – 30 Jun 2026, 456 days: the data used to build and choose the method.", "Results here cannot show how the method does on new data."],
+  TREV:     ["test · reviewed", "1 Jul – 15 Oct 2026, 107 days: not used to build the method, but looked at repeatedly while refining it.", "Weaker evidence than a blind test."],
+  TBLIND:   ["test · blind", "16–22 Oct 2026, 7 days: never looked at before the method was locked.", "The only fully blind test so far; too short to prove anything on its own."],
+  CONTRACTYEAR: ["contract year 2025-26", "1 Jul 2025 – 30 Jun 2026: the year the customer offer's call cap and payments are counted over.", "It lies inside the training period, so its results are not a blind test."],
+  HOTSEASON:["Hot Season (Dec–Mar)", "1 Dec – 31 Mar in the WA market: when system demand peaks.", "The capacity charge for the following year is set by the 12 peak half-hours of this season."],
+  IRCR:     ["capacity charge (IRCR)", "Each retailer's share of the cost of keeping enough generation available, set by its customers' demand in the 12 peak half-hours of the Hot Season.", "Lowering demand in those 12 half-hours lowers the charge for a whole year; that is the main value of calling home batteries."],
+  PEAKDAY:  ["official peak day", "One of the 4 Hot Season days that contain the 12 peak half-hours. They are known only after the season.", "A call on a peak day lowers the capacity charge; a call on any other day only costs the payment."],
+  CALL:     ["call", "Asking customers' home batteries to discharge together for a set evening window, for a payment.", "Each call uses one of a limited number per contract year."],
+  FLAGGED:  ["flagged by the call rule", "A day the rule marks as a likely peak day at 09:00: the forecast peak is within 85 MW of the 4th-highest peak seen so far this season.", "Flagged days are called while calls remain; the 85 MW margin is set from past seasons."],
+  HOLDCHARGE:["hold charge", "Before a call, home batteries stop discharging and keep their energy for the event window.", "Without it the batteries would be empty by the evening peak."],
+  TRANSFER: ["transfer payment", "Money moved from Zenith to customers for responding to a call.", "It changes who gains, not the total value created, so it sums to zero across parties."],
+  RESPONSE: ["homes expected to respond", "On average 90% of enrolled homes respond to a call. 3,000 enrolled homes is an assumption.", "No home is obliged to respond, so this is an average, not guaranteed capacity."],
+  TPA:      ["access through Synergy (TPA)", "A third-party access arrangement: Zenith's customers stay on Synergy's network and Synergy passes a share of the capacity value to Zenith.", "The 50% share is an assumption, not a contract."],
+  DEBS:     ["feed-in credit (DEBS)", "The Distributed Energy Buyback Scheme: the credit homes receive for electricity they export to the grid, paid by the scheme.", "A call changes how much homes export, so it changes this credit."],
+  VPP:      ["home batteries (VPP)", "Customers' own home batteries, called together as one virtual power plant.", "Zenith pays for each call and has a yearly cap on calls."],
+  HINDSIGHT:["hindsight", "Known only after the fact.", "It was not available at 09:00 when the decision was made, so it can judge a decision but never inform it."],
+  EARLIERSEASON: ["tested on an earlier season", "The rule was tuned on later seasons and then tested on this earlier one.", "That is not how it would be used in practice, so it is weaker evidence than a forward test."],
+  FORWARD:  ["forward test", "The rule was tuned on earlier seasons only and then tested on the next one, as it would be used.", "The strongest kind of evidence available before a blind season."],
+  S1:  ["S1 · energy only", "Zenith only sells the fleet's extra export at the wholesale price; no capacity value.", "No call pays for itself at 09:00, so there is no business case."],
+  S2a: ["S2a · today's capacity rule", "Zenith as retailer; under today's rule a home's export counts as zero demand, not negative.", "Normal self-use already removes the peak import, so calls add almost nothing."],
+  S2b: ["S2b · assumed 2027 capacity rule", "Zenith as retailer; an assumed future rule in which export counts against the peak.", "Not current revenue: the rule text is not yet confirmed."],
+  S3:  ["S3 · via Synergy (hypothetical)", "Zenith sells the fleet's capacity value through Synergy and keeps an assumed 50% share; the energy value stays with Synergy.", "Hypothetical: no such arrangement exists today."],
+  REFTERMS: ["reference terms", "The public Synergy Battery Rewards terms (70 c/kWh, 30 calls a year), used only for comparison.", "Not a Zenith tariff and not a contract."],
+  CUSTOMOFFER: ["custom offer", "The terms this tool suggests (85 c/kWh, 45 calls a year), found by searching the training period.", "A suggestion to test in a pilot, not a contract."],
+  ENROLLED: ["enrolled homes", "Homes that signed up to the offer (3,000 assumed). Offered: homes the offer was shown to. Responding: enrolled homes that actually respond to a call (90% on average).", "Payments are per responding home; fixed costs are per enrolled home."]
+};
+function glName(k){ return GLOSS[k][0]; }
+function glNote(k){ return GLOSS[k][1] + " " + GLOSS[k][2]; }
+function gl(k, label, cls){ return '<span class="tipc ' + (cls || "") + '"' + noteAttr(glNote(k)) + ">" + (label || GLOSS[k][0]) + "</span>"; }
+/* one line under every page header: who the parties are */
+function whoHTML(){ return [["ZENITH", "Zenith · the retailer, owns the site battery"], ["FACTORY", "factory site"], ["VPP", "customers' home batteries"], ["SYNERGY", "Synergy · incumbent retailer"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]].map(function(x){ return gl(x[0], x[1]); }).join(""); }
 function noteAttr(t){ return ' tabindex="0" data-note="' + String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;") + '"'; }
 function segsOf(from, f){ var g = [], k = from; while (k < N) { var m = f(k), e = k; while (e + 1 < N && f(e + 1) === m) e++; g.push({m:m, a:k, b:e + 1}); k = e + 1; } return g; }
 var SEGC = {shave:["color-mix(in srgb,var(--dis) 20%,var(--surface))", "var(--dis)"], dis:["var(--dis)", "var(--surface)"], chg:["var(--chg)", "var(--text)"], hold:["var(--surface-3)", "var(--text-3)"]};
 function segLabel(g, w){
-  var full = {shave:"Shave " + nf(P.dis[g.a], 1) + " MW · under CMD 9 MW", dis:"Discharge " + nf(P.dis[g.a], 1) + " MW", chg:"Recharge " + nf(P.chg[g.a], 1) + " MW", hold:g.b - g.a >= 4 ? "Hold " + nf(SOC[g.a], 1) + " MWh" : ""}[g.m];
-  var short = {shave:"Shave " + nf(P.dis[g.a], 1) + " MW", dis:nf(P.dis[g.a], 1) + " MW", chg:nf(P.chg[g.a], 1) + " MW", hold:"Hold"}[g.m];
+  var full = {shave:"Cut import " + nf(P.dis[g.a], 1) + " MW", dis:"Discharge " + nf(P.dis[g.a], 1) + " MW", chg:"Recharge " + nf(P.chg[g.a], 1) + " MW", hold:"Hold"}[g.m];
+  var short = {shave:"Cut import " + nf(P.dis[g.a], 1) + " MW", dis:nf(P.dis[g.a], 1) + " MW", chg:nf(P.chg[g.a], 1) + " MW", hold:"Hold"}[g.m];
   return full && fits(full, 11, w) ? full : (fits(short, 11, w) ? short : "");
 }
 function standby(k){ return P.rr[k] + P.rl[k] + P.cr[k] + P.cl[k]; }
@@ -396,29 +386,29 @@ function laneSVG(sel){
   var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], rev = S.revealed, pc = planCheck(), o = OFFERS[0];
   var yA = 22, hA = 30, yO = yA + hA + 5, hO = 16, yF = yO + hO + 5, hF = 14, y0 = yF + hF + 28, y1 = y0 + 150, H = y1 + 22;
   var yp = function(p){ return y1 - Math.max(0, Math.min(p, 500)) * (y1 - y0) / 500; };
-  s.push(svgOpen(W, H, "day", "Plan for 14 Jan 2026: scheduled actions, the conditional offer, FCESS standby and the forecast price (illustrative)") + "<defs>" + HATCH("hDy") + "</defs>");
+  s.push(svgOpen(W, H, "day", "Plan for 14 Jan 2026: scheduled actions, the extra offer with its falling threshold (half-hourly and one quantity, a simplification of the 5-minute price-quantity curves a real dispatcher submits), grid-service reserve and the forecast price (illustrative)") + "<defs>" + HATCH("hDy") + "</defs>");
   /* lane tracks named in the left margin, a light grid every four hours, and no forecast before 09:00 */
-  [[yA, hA, "Plan"], [yO, hO, "Offer"], [yF, hF, "FCESS"]].forEach(function(l){ s.push(rc(X0, l[0], XR - X0, l[1], 'rx="3" style="fill:var(--surface-2)"') + tx(X0 - 8, l[0] + l[1] / 2 + 3.5, l[2], "lnm", ' text-anchor="end"')); });
+  [[yA, hA, "Plan", "Scheduled battery actions, decided at 09:00 from the forecast."], [yO, hO, "Sell more if", glNote("EXTRAOFFER")], [yF, hF, "Grid services", glNote("FCESS")]].forEach(function(l){ s.push(rc(X0, l[0], XR - X0, l[1], 'rx="3" style="fill:var(--surface-2)"') + '<text x="' + (X0 - 8) + '" y="' + (l[0] + l[1] / 2 + 3.5).toFixed(1) + '" class="lnm" text-anchor="end"><title>' + l[3] + "</title>" + l[2] + "</text>"); });
   [8, 16, 24, 32, 40].forEach(function(q){ s.push(ln(X(q), yA, X(q), y1, 'class="gl"')); });
   s.push(rc(X(0), yA, X(2) - X(0), y1 - yA, 'fill="url(#hDy)"'));
   /* the price panel: forecast with its P10–P90 band, the offer price, and the actual price once revealed */
   [0, 250, 500].forEach(function(v){ s.push(ln(X0, yp(v), XR, yp(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yp(v) + 3.5, nf(v), "", ' text-anchor="end"')); });
-  s.push(tx(X0, y0 - 10, "Price forecast, A$/MWh", "lnm halo") + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
-  if (shown("pw", "p50")) {
-    s.push('<path d="' + bandPath(P.lo, P.hi, yp, 2, N) + '" style="fill:var(--price)" opacity="0.045"/><path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" style="stroke:var(--price)" stroke-width="1.8" stroke-dasharray="5 3"/>');
+  s.push(tx(X0, y0 - 10, "Price, A$/MWh", "lnm halo") + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
+  {
+    s.push('<path d="' + bandPath(P.lo, P.hi, yp, 2, N) + '" class="band" style="fill:var(--range)" opacity="0.32"/><path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" style="stroke:var(--price)" stroke-width="1.8" stroke-dasharray="5 3"/>');
     var pk = 2, lo = -1, k;
     for (k = 2; k < N; k++) { if (P.price[k] > P.price[pk]) pk = k; if (P.chg[k] > 0 && (lo < 0 || P.price[k] < P.price[lo])) lo = k; }
     [pk, lo].forEach(function(q){ if (q < 0) return; var a = q, b = q + 1; while (a > 2 && P.price[a - 1] === P.price[q]) a--; while (b < N && P.price[b] === P.price[q]) b++;
-      s.push(tx(mid(a, b), yp(P.price[q]) - 7, "A$" + nf(P.price[q]), "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
-      /* the shaded band is named once, just right of the evening peak, clear of the actual price once revealed */
-      if (q === pk) s.push(tx(X(b) + 5, yp(P.hi[q]) + 4, "P10–P90", "halo"));
+      s.push(q === pk ? tx(X(a) - 4, yp(P.price[q]) - 4, "peak A$" + nf(P.price[q]), "halo vl", ' text-anchor="end" style="fill:var(--price)"')
+        : tx(mid(a, b), yp(P.price[q]) + 13, "low A$" + nf(P.price[q]), "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
     });
   }
-  s.push(ln(X(o.a), yp(o.price), X(o.b), yp(o.price), 'style="stroke:var(--dis)" stroke-width="1.6" stroke-dasharray="3 2"') + tx(X(o.b) + 5, yp(o.price) + 4, "offer A$" + o.price, "halo vl", ' style="fill:var(--dis)"'));
+  s.push(tx(X(o.b) + 5, yp(o.price[o.price.length - 1]) - 5, "threshold A$" + o.price[0] + "→" + o.price[o.price.length - 1], "halo vl", ' style="fill:var(--dis)"'));
+  for (k = o.a; k < o.b; k++) s.push(ln(X(k), yp(offerAt(k).price), X(k + 1), yp(offerAt(k).price), 'class="othr" style="stroke:var(--dis)" stroke-width="1.6" stroke-dasharray="3 2"') + (k > o.a ? ln(X(k), yp(offerAt(k - 1).price), X(k), yp(offerAt(k).price), 'style="stroke:var(--dis)" stroke-width="1" stroke-dasharray="3 2"') : ""));
   if (rev) {
-    s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" fill="none" style="stroke:var(--price)" stroke-width="2"/>');
-    var am = P.actual.indexOf(Math.max.apply(null, P.actual));
-    if (P.actual[am] > 500) s.push(tx(X(am) + IW / 2, yp(500) - 5, "A$" + nf(P.actual[am]) + " ↑", "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
+    s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" class="actual" fill="none" style="stroke:var(--actual)" stroke-width="2"/>');
+    /* a price above the axis top is clipped; a short tick marks where it went off the scale (value in the hover table) */
+    P.actual.forEach(function(v, q){ if (v > 500) s.push(ln(X(q) + IW / 2, yp(500) - 2, X(q) + IW / 2, yp(500) - 8, 'style="stroke:var(--actual)" stroke-width="2"') + tx(X(q) + IW / 2 + 5, yp(500) - 3, "A$" + nf(v), "halo vl", ' style="fill:var(--actual)"')); });
   }
   /* what the battery is scheduled to do, labelled where it happens */
   segsOf(2, modeOf).forEach(function(g){
@@ -426,13 +416,17 @@ function laneSVG(sel){
     s.push(rc(x, yA, w, hA, 'rx="3" style="fill:' + c[0] + '"') + (t ? tx(x + w / 2, yA + hA / 2 + 4, t, "vl", ' text-anchor="middle" style="fill:' + c[1] + '"') : ""));
   });
   /* the conditional offer: an outline, it sells only if the price reaches it */
-  var ox = X(o.a) + 0.5, ow = X(o.b) - X(o.a) - 1, ot = "+" + nf(o.mw, 1) + " MW if ≥ A$" + o.price;
-  s.push(rc(ox, yO, ow, hO, 'rx="3" style="fill:color-mix(in srgb,var(--dis) 8%,var(--surface));stroke:var(--dis)" stroke-width="1.2" stroke-dasharray="3 2"'));
-  s.push(fits(ot, 10.5, ow) ? tx(ox + ow / 2, yO + hO / 2 + 3.5, ot, "ol", ' text-anchor="middle"') : tx(ox + ow + 6, yO + hO / 2 + 3.5, ot, "ol"));
-  /* grid-service standby (FCESS), labelled in its longest run */
+  var ox = X(o.a) + 0.5, ow = X(o.b) - X(o.a) - 1, ot = "+" + nf(o.mw, 1) + " MW if price ≥ A$" + o.price[0] + "→" + o.price[o.price.length - 1], oy = yO + hO / 2 + 3.5;
   var fr = segsOf(2, function(q){ return standby(q) > 0; }).filter(function(g){ return g.m; }), best = null;
   fr.forEach(function(g){ s.push(rc(X(g.a) + 0.5, yF, X(g.b) - X(g.a) - 1, hF, 'rx="3" style="fill:color-mix(in srgb,var(--cr) 45%,var(--surface))"')); if (!best || g.b - g.a > best.b - best.a) best = g; });
-  if (best) { var ft = (best.a === 2 && best.b === N ? "Standby all day · " : "Standby · ") + aud(MONEY.plan.fcess); if (fits(ft, 10.5, X(best.b) - X(best.a) - 12)) s.push(tx(X(best.a) + 8, yF + hF / 2 + 3.5, ft, "fl")); }
+  /* the window is a square dashed outline (not a pill, which reads as a switch); the row's label sits at the start of the
+     track like the grid-services row, so the outline is only the time window */
+  s.push(rc(ox, yO, ow, hO, 'style="fill:color-mix(in srgb,var(--dis) 8%,var(--surface));stroke:var(--dis)" stroke-width="1.2" stroke-dasharray="3 2"'));
+  if (rev) segsOf(2, function(q){ return OFFER_OUT[q] > 0; }).filter(function(g){ return g.m; }).forEach(function(g){ s.push(rc(X(g.a), yO, X(g.b) - X(g.a), hO, 'class="osold" style="fill:var(--dis)"')); });
+  if (rev) s.push(tx(ox + ow + 6, oy, "sold " + MONEY.out.offerHH + " of " + (o.b - o.a) + " · " + aud(MONEY.out.offer), "ol"));
+  if (best) s.push(tx(X(2) + 8, yF + hF / 2 + 3.5, "earns " + aud(MONEY.plan.fcess), "fl"));
+
+  /* grid-service standby (FCESS), labelled in its longest run */
   /* half-hours where the plan breaks a limit under the current inputs */
   segsOf(0, function(q){ return pc.bad.indexOf(q) >= 0; }).filter(function(g){ return g.m; }).forEach(function(g){
     s.push(rc(X(g.a) - 1, yA - 3, X(g.b) - X(g.a) + 2, hA + 6, 'rx="4" style="fill:none;stroke:var(--bad)" stroke-width="2"'));
@@ -446,7 +440,7 @@ function laneSVG(sel){
 /* the day's value as a small waterfall: what earns stacks to the right, wear comes off the end, the net is the third bar */
 function vbarHTML(blocked){
   var parts = [["energy", "Energy", "var(--dis)", "var(--surface)"], ["offer", "Offer cleared", "color-mix(in srgb,var(--dis) 14%,var(--surface))", "var(--dis)"],
-    ["fcess", "FCESS", "color-mix(in srgb,var(--cr) 45%,var(--surface))", "var(--text)"], ["network", "Network saving", "var(--econ)", "var(--text)"],
+    ["fcess", "Grid services", "color-mix(in srgb,var(--cr) 45%,var(--surface))", "var(--text)"], ["network", "Network bill saving", "var(--econ)", "var(--text)"],
     ["wear", "Wear", "color-mix(in srgb,var(--bad) 14%,var(--surface))", "var(--bad)"]];
   var rows = [["Plan at 09:00", MONEY.plan]].concat(S.revealed ? [["Outcome, replayed", MONEY.out]] : []);
   var gain = function(m){ return sum(parts.map(function(p){ return Math.max(0, m[p[0]] || 0); })); };
@@ -462,13 +456,13 @@ function vbarHTML(blocked){
   }).join("");
 }
 function moneyTable(){
-  var m = MONEY, rows = [["Energy", "energy"], ["Conditional offer, cleared", "offer"], ["FCESS", "fcess"], ["Network bill saving (CMD)", "network"], ["Battery wear", "wear"]];
+  var m = MONEY, rows = [["Energy", "energy"], ["Conditional offer, cleared", "offer"], ["Grid services (FCESS), paid for availability", "fcess"], ["Network bill saving (import contract)", "network"], ["Battery wear", "wear"]];
   var t = '<tr><th>Item</th><th class="n">Plan at 09:00</th><th class="n">Outcome, replayed</th></tr>';
   var dim = function(x){ return '<span style="color:var(--text-3);font-weight:400">' + x + "</span>"; };
   rows.forEach(function(r){ t += "<tr><td>" + r[0] + '</td><td class="n">' + (r[1] === "offer" ? dim("not counted") : aud(m.plan[r[1]])) + '</td><td class="n">' + (S.revealed ? aud(m.out[r[1]]) : dim("hidden")) + "</td></tr>"; });
   return t + '<tr class="tot"><td>Net for the trading day</td><td class="n">' + aud(m.plan.net) + '</td><td class="n">' + (S.revealed ? aud(m.out.net) : "—") + "</td></tr>";
 }
-function renderPlanA(){
+function renderPlan(){
   var pc = planCheck(), blocked = pc.fails.length > 0;
   document.body.classList.toggle("plan-blocked", blocked);
   $("#plan-status").className = "pst " + (blocked ? "bad" : "ok");
@@ -476,9 +470,9 @@ function renderPlanA(){
     ? "<b>Plan blocked</b><span>" + pc.why + " · do not execute</span><button class=\"btn sm\" data-inspect>Inspect</button>"
     : "<b>Plan executable</b><span>" + pc.list.length + " checks pass</span>";
   $("#plan-head").textContent = blocked ? "Resolve the export limit before execution" : "Discharge " + nf(P.dis[19], 1) + " MW · " + hhmm(19) + "–" + hhmm(24);
-  $("#plan-val").innerHTML = '<div class="cap">Expected net value</div><div class="dv' + (blocked ? " off" : "") + '">' + aud(MONEY.plan.net) + '</div><div class="chips">' + (blocked
+  $("#plan-val").innerHTML = '<div class="cap">Expected profit today</div><div class="dv' + (blocked ? " off" : "") + '">' + aud(MONEY.plan.net) + '</div><div class="chips">' + (blocked
     ? '<span class="tipc bad r"' + noteAttr("The plan breaks a hard limit under the current inputs, so this value is a simulation and must not be executed.") + ">Simulation only · not executable</span>"
-    : '<span class="tipc r"' + noteAttr("Expected at 09:00 from forecasts. Not settlement.") + '>forecast 09:00</span><span class="tipc r"' + noteAttr("Counts the scheduled plan only. The conditional offer is left out, and the model assumes the battery does not move the price.") + ">scheduled only</span>") + "</div>";
+    : '<span class="tipc r"' + noteAttr("Energy sales + grid services + network bill saving − battery wear, expected at 09:00 from forecasts. " + glNote("SETTLE")) + '>forecast made at 09:00</span><span class="tipc r"' + noteAttr("Counts the scheduled actions only. " + glNote("EXTRAOFFER") + " The model also assumes the battery does not move the market price.") + ">scheduled actions only</span>") + "</div>";
   $("#sch-chart").innerHTML = laneSVG("#sch-chart") + socSVG("#sch-chart", 190, true);
   $$("#sch-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.sel = +r.getAttribute("data-i"); renderPlan(); }); });
   $("#sch-rail").innerHTML = railHTML(S.sel);
@@ -489,285 +483,25 @@ function renderPlanA(){
     return '<div class="ck ' + k + '"' + noteAttr(c[1]) + '><span class="ci ' + k + '">' + (c[0] ? "&#10003;" : "!") + "</span>" + c[3] + "</div>"; }).join("");
 }
 
-function renderPlan(){
-  if (document.getElementById("plan-dec")) { renderPlanA(); return; }
-  var pc = planCheck(), blocked = pc.fails.length > 0;
-  document.body.classList.toggle("plan-blocked", blocked);
-  /* plan status, kept apart from the run status in the header */
-  $("#plan-status").className = "plan-st " + (blocked ? "bad" : "ok");
-  $("#plan-status").innerHTML = blocked
-    ? '<b>Plan blocked</b><span>' + pc.why + ' under the current inputs. Do not execute.</span><button class="btn sm" data-inspect>Inspect</button>'
-    : "<b>Plan executable</b><span>All " + pc.list.length + " checks pass for today's plan.</span>";
-  /* the decision: what is scheduled, what depends on the price */
-  $("#plan-head").innerHTML = '<div class="cap">' + (blocked ? "Planned, not executable" : "Recommended action") + " · Wed 14 Jan · plan 09:00</div>" +
-    '<div class="instr-h">' + (blocked ? "Resolve the export limit before execution" : "Discharge " + nf(P.dis[19], 1) + " MW into the 17:30–20:00 evening peak") + "</div>" +
-    '<ul class="acts"><li><span class="tg sch">Scheduled</span>Shave ' + nf(P.dis[4], 1) + " MW 10:00–17:00 (CMD 9 MW) · discharge " + nf(P.dis[19], 1) + " MW 17:30–20:00 · recharge " + nf(P.chg[34], 1) + " MW 01:00–07:00. Re-planned every 30 minutes with the latest price.</li>" +
-    '<li><span class="tg cond">Conditional</span>Up to ' + nf(OFFERS[0].mw, 1) + " MW more in the evening, offered in layers from A$" + OFFERS[0].price + "/MWh upward. It sells only if the price reaches an offer and is not counted in the expected value.</li></ul>";
-  $("#k-net").textContent = aud(MONEY.plan.net);
-  $("#k-net-s").innerHTML = blocked ? '<span class="neg">Simulation only · not executable</span>' : "scheduled plan, forecast at 09:00 · not settlement";
-  $("#k-dis").textContent = nf(P.dis[19], 1) + " MW";
-  $("#k-dis-s").textContent = "scheduled 17:30–20:00 · +" + nf(OFFERS[0].mw, 1) + " MW offered from A$" + OFFERS[0].price;
-  $("#k-con").innerHTML = blocked ? '<span class="neg">' + pc.fails.length + " fail</span>" : pc.list.length + " of " + pc.list.length + " pass";
-  $("#k-con-s").innerHTML = "today's plan · backtest run R‑0142, 1 Apr 2025 – 22 Oct 2026 (570 days): 0 hard-limit violations <button class=\"lnk\" data-go=\"svalid\">Validation →</button>";
-  $("#plan-timeline").innerHTML = timelineHTML();
-  $("#plan-why").innerHTML = "<li>Factory load of " + nf(P.load[4], 1) + " MW would pass its 9 MW contract limit (CMD) 10:00–17:00, so the battery shaves " + nf(P.dis[4], 1) + " MW.</li>" +
-    "<li>The evening price is forecast at A$" + nf(P.price[19]) + "/MWh, with a " + nf(P.pspike[19] * 100) + "% chance of A$200 or more, so " + nf(P.dis[19], 1) + " MW is scheduled for 17:30–20:00. The spare " + nf(OFFERS[0].mw, 1) + " MW is offered in layers from A$" + OFFERS[0].price + "/MWh upward and is not counted in the expected value.</li>" +
-    "<li>Night energy is forecast at A$" + nf(P.price[34]) + "/MWh, so the battery refills to " + nf(SOC[46], 1) + " MWh by 07:00 for tomorrow.</li>" +
-    "<li>Standby for grid frequency services (FCESS) all day, worth " + aud(MONEY.plan.fcess) + " in the plan.</li>" +
-    "<li>The expected value counts the scheduled plan only. Offers are simulated in the replay, and the model assumes the battery does not move the price.</li>";
-  /* detail */
-  $("#sch-chart").innerHTML = schedHTML();
-  $$("#sch-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.sel = +r.getAttribute("data-i"); renderPlan(); }); });
-  $("#sch-rail").innerHTML = railHTML(S.sel);
-  bindReveal($("#sch-rail"));
-  $("#sch-note").textContent = "Hover the charts for values; click a time to see why.";
-  $("#sch-money").innerHTML = moneyTable();
-  $("#sch-checks").innerHTML = (blocked
-    ? pc.fails.map(function(c){ return '<li><span class="ci b">!</span><span>' + c[1] + "</span></li>"; }).join("")
-    : '<li><span class="ci ok">&#10003;</span><span>All ' + pc.list.length + " checks pass. Lowest reserve margin +" + nf(MARGIN.v, 1) + " MWh, " + hhmm(MARGIN.from) + "–" + hhmm(MARGIN.to + 1) + ".</span></li>") +
-    '<li class="chk-more"><details' + (blocked ? " open" : "") + '><summary>Show each check</summary><ul class="chk">' +
-    pc.list.map(function(c){ return '<li><span class="ci ' + (c[0] ? "ok" : (c[2] ? "w" : "b")) + '">' + (c[0] ? "&#10003;" : "!") + "</span><span>" + c[1] + "</span></li>"; }).join("") + "</ul></details></li>";
-}
-
 /* ---------- Customer calls ---------- */
 function dayName(d, yr){ var dt = new Date(Date.UTC(2025, 11, 1 + d)); return dt.toLocaleDateString("en-AU", {weekday:"short", day:"numeric", month:"short", timeZone:"UTC"}).replace(",", "") + (yr ? " " + dt.getUTCFullYear() : ""); }
-function actSVG(){
-  var o = OFF[S.offer], dec = S.view === "decision", d0 = S.day, calls = callsOf(o), s = [], d;
-  var L = 62, W = fitW("#act-chart", 560, 792), XE = W - 20, DW = (XE - L) / DAYS, BW = Math.max(2, DW - 2), xa = function(d){ return L + DW * d; };
-  var ya = function(v){ return 156 - (v - 2600) * 0.08; };
-  s.push('<svg viewBox="0 0 ' + W + ' 206" class="lanes chart" data-tip="act" data-xg="season" data-x0="' + L + '" data-iw="' + DW.toFixed(3) + '" role="img" aria-label="Hot Season 2025-26 daily peak demand, flags and calls (illustrative)">' + "<defs>" + HATCH("aF") + "</defs>");
-  [[3000,"3,000"],[3500,"3,500"],[4000,"4,000"]].forEach(function(g){ s.push(ln(L, ya(g[0]), XE, ya(g[0]), 'class="gl"') + tx(L - 8, ya(g[0]) + 3.5, g[1], "", ' text-anchor="end"')); });
-  s.push(yTitle(14, 92, "Daily peak, MW"));
-  for (d = 0; d < DAYS; d++) {
-    if (dec && d > d0) break;
-    var fl = o.flags.indexOf(d) >= 0;
-    if (dec && d === d0) { var f = fcPeak(d); s.push(rc(xa(d) + 1, ya(f), BW, 156 - ya(f), 'style="fill:var(--surface);stroke:var(--peak)" stroke-width="1.2" stroke-dasharray="2 1.5"')); continue; }
-    s.push(rc(xa(d) + 1, ya(ACT[d]), BW, 156 - ya(ACT[d]), fl ? 'style="fill:var(--peak)" opacity="0.8"' : 'style="fill:var(--bar)"'));
-    if (!dec && PEAK.indexOf(d) >= 0) s.push(tx(xa(d) + DW / 2, ya(ACT[d]) - 4, "★", "", ' text-anchor="middle" style="font-size:12px;fill:var(--peak)"'));
-  }
-  if (dec && d0 < DAYS - 1) {
-    s.push(rc(xa(d0 + 1), 20, xa(DAYS) - xa(d0 + 1), 136, 'fill="url(#aF)"'));
-    var cx = (xa(d0 + 1) + xa(DAYS)) / 2;
-    if (xa(DAYS) - xa(d0 + 1) > 240) s.push(tx(cx, 84, "Not yet known at the decision time", "", ' text-anchor="middle" style="font-size:12.5px;font-weight:600;fill:var(--text-3)"') + tx(cx, 101, "Switch to Season review to see the whole season, labelled hindsight", "", ' text-anchor="middle" style="font-size:11px;fill:var(--text-3)"'));
-  }
-  if (dec) {
-    var r4 = run4(d0), thr = r4 - o.tol, xe = xa(d0) + 10;
-    s.push(tx(xa(d0) + DW / 2, ya(fcPeak(d0)) - 6, "Today", "halo", ' text-anchor="middle" style="font-size:10.5px;font-weight:600;fill:var(--peak)"'));
-    s.push(ln(L, ya(thr), xe, ya(thr), 'style="stroke:var(--peak)" stroke-width="1.2" stroke-dasharray="2 2"') + tx(xe + 4, ya(thr) + 3.5, "← threshold today " + nf(thr) + " MW", "halo", ' style="font-size:10.5px;font-weight:600;fill:var(--peak)"'));
-  } else {
-    s.push(rc(xa(d0), 20, DW, 136, 'style="fill:var(--sel)"'));
-  }
-  s.push(ln(L, 156, XE, 156, 'style="stroke:var(--axis)"') + tx(L - 8, 173.5, "Calls", "", ' text-anchor="end" style="font-size:11px;fill:var(--text-3)"'));
-  calls.forEach(function(c){ if (dec && c > d0) return; var today = dec && c === d0;
-    s.push('<circle cx="' + (xa(c) + DW / 2).toFixed(1) + '" cy="170" r="' + (today ? 3.5 : 3) + '" style="fill:' + (today ? "var(--surface);stroke:var(--cust)" : "var(--cust)") + '"' + (today ? ' stroke-width="1.6"' : "") + "/>"); });
-  [["Dec 2025",0],["Jan 2026",31],["Feb",62],["Mar",90]].forEach(function(m){ s.push(ln(xa(m[1]), 156, xa(m[1]), 161, 'style="stroke:var(--axis)"') + tx(xa(m[1]), 194, m[0], "", m[1] ? "" : "")); });
-  s.push('<line class="xh" x1="0" x2="0" y1="20" y2="176"/>');
-  for (d = 0; d < DAYS; d++) s.push('<rect class="hit" data-d="' + d + '" x="' + xa(d).toFixed(2) + '" y="20" width="' + DW.toFixed(2) + '" height="156"/>');
-  s.push("</svg>");
-  return s.join("");
-}
-function actCard(){
-  var o = OFF[S.offer], d = S.day, calls = callsOf(o), fl = o.flags.indexOf(d) >= 0, called = calls.indexOf(d) >= 0;
-  var used = calls.filter(function(c){ return c < d; }).length, r4 = run4(d), thr = r4 - o.tol, f = fcPeak(d), left = 121 - d;
-  var spikeHi = d % 4 === 0;
-  var h = '<div class="ac-head"><div class="cap">' + (S.view === "decision" ? "Tonight · " : "Decided at 09:00 · ") + dayName(d) + "</div>";
-  h += '<div class="dec"><span class="dec-pill' + (called ? "" : " no") + '">' + (called ? "CALL" : "NO CALL") + "</span><div>" +
-    (called ? "<b>Event 17:30–19:30</b><small>Standby 15:30–17:30 · 20% reserve kept</small>" : "<b>Normal self-use</b><small>No compensation, no call used</small>") + "</div></div></div>";
-  h += '<div class="ac-why"><div class="cap">Why</div><ul class="wl">';
-  h += '<li><span class="g" style="color:var(--peak)">&#9650;</span><span>' + (fl ? "Customer call rule flags today: forecast peak " + nf(f) + " MW ≥ threshold " + nf(thr) + " MW" : "Not flagged: forecast peak " + nf(f) + " MW is below the threshold " + nf(thr) + " MW") + " (4th-highest daily peak so far, " + nf(r4) + " MW, minus " + o.tol + " MW)." + "</span></li>";
-  h += '<li><span class="g" style="color:var(--cust)">&#9679;</span><span>' + (called ? ordinal(used + 1) + " call of " + o.cap + " in contract year 2025-26 · " + (o.cap - used - 1) + " left · " + left + " Hot Season days remain." : (fl && used >= o.cap ? "Flagged, but all " + o.cap + " calls this contract year are used." : used + " of " + o.cap + " calls used this contract year · " + (o.cap - used) + " left · " + left + " Hot Season days remain.")) + "</span></li>";
-  h += '<li><span class="g" style="color:var(--spike)">&#8623;</span><span>Price spike risk is ' + (spikeHi ? "high" : "low") + " today; it never triggers a customer call.</span></li></ul></div>";
-  if (called) {
-    var rsp = o.enrolled * RESP, ex = rsp * o.kwh;
-    h += '<div class="rsec ac-exp"><div class="cap">Expected tonight · plan</div><table class="kvt">' +
-      "<tr><td>Responding homes (90% of " + nf(o.enrolled) + ')</td><td class="n">' + nf(rsp) + "</td></tr>" +
-      "<tr><td>Event net export (" + nf(o.kwh, 1) + " kWh × " + nf(rsp) + ')</td><td class="n">' + nf(ex) + " kWh</td></tr>" +
-      "<tr><td>Compensation · transfer (" + nf(o.rate * 100) + ' c/kWh)</td><td class="n">' + aud(ex * o.rate) + "</td></tr></table>" +
-      '<p class="foot" style="margin-top:4px">Average response, not firm capacity.</p></div>';
-  }
-  if (S.view === "review") {
-    var pk = PEAK.indexOf(d) >= 0;
-    h += '<div class="rsec ac-out"><div class="cap">Outcome<span class="tag out">HINDSIGHT</span></div><p class="ac-outp">' +
-      (pk ? "<b>Official peak day.</b> " + (called ? "Covered by this call." : '<span class="neg">Missed: no call.</span>') : "Not a peak day." + (called ? " The call cost compensation without capacity value." : "")) + "</p></div>";
-  }
-  return h;
-}
-function ordinal(n){ var s = ["th","st","nd","rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
-/* intraday system demand: the 14 Jan profile scaled to each day's peak (illustrative) */
-function demDay(d, actual){ var pk = actual ? ACT[d] : fcPeak(d); return DEMFC.map(function(v){ return 2350 + (v - 2350) * (pk - 2350) / 1520; }); }
-function callWin(d){ return callsOf(OFF[S.offer]).indexOf(d) >= 0; }
-function demSVG(sel){
-  var d = S.day, dec = S.view === "decision", o = OFF[S.offer], thr = run4(d) - o.tol, fc = demDay(d, false);
-  var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], H = 210, y0 = 18, y1 = H - 40, k;
-  var top = Math.max(4100, Math.ceil((Math.max(fcPeak(d), S.view === "decision" ? 0 : ACT[d], thr) + 60) / 100) * 100);
-  var yd = function(v){ return y1 - (v - 2000) * (y1 - y0) / (top - 2000); };
-  var smooth = function(vals){ var p = ""; for (k = 0; k < N; k++) p += (k ? "L" : "M") + (X(k) + IW / 2).toFixed(2) + "," + yd(vals[k]).toFixed(2); return p; };
-  s.push(svgOpen(W, H, "dem", "System demand forecast for " + dayName(d, true) + " against the customer call threshold (illustrative)"));
-  [2000, 2500, 3000, 3500, 4000].forEach(function(v){ s.push(ln(X0, yd(v), XR, yd(v), v > 2000 ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yd(v) + 3.5, nf(v), "", ' text-anchor="end"')); });
-  s.push(yTitle(14, (y0 + y1) / 2, "Demand, MW"));
-  /* the customer event, when there is one */
-  if (callWin(d)) s.push(rc(X(19), y0, X(23) - X(19), y1 - y0, 'style="fill:var(--cust)" opacity="0.12"') + tx(mid(19, 23), y1 - 8, "Call 17:30–19:30", "vl", ' text-anchor="middle" style="fill:var(--cust-text)"'));
-  s.push(ln(X0, yd(thr), XR, yd(thr), 'style="stroke:var(--peak)" stroke-width="1.3" stroke-dasharray="1.5 3"') + tx(XR - 2, yd(thr) - 6, "Call threshold " + nf(thr) + " MW", "lim halo", ' text-anchor="end" style="fill:var(--peak)"'));
-  if (shown("dem", "fc")) s.push('<path d="' + smooth(fc) + '" fill="none" style="stroke:var(--peak)" stroke-width="1.8" stroke-dasharray="5 3"/>' +
-    tx(X(20) + IW / 2, yd(Math.max.apply(null, fc)) - 8, "Peak " + nf(Math.max.apply(null, fc)) + " MW", "halo vl", ' text-anchor="end" style="fill:var(--peak)"'));
-  if (!dec && shown("dem", "act")) s.push('<path d="' + smooth(demDay(d, true)) + '" fill="none" style="stroke:var(--peak)" stroke-width="2"/>');
-  return s.join("") + planMark(y0, y1, false) + dayAxis(y1, d) + hitCols(y0, y1) + "</svg>";
-}
-function renderActivation(){
-  var o = OFF[S.offer], dec = S.view === "decision", calls = callsOf(o), used = calls.filter(function(c){ return c < S.day; }).length, tonight = calls.indexOf(S.day) >= 0 ? 1 : 0;
-  $("#day-label").textContent = dayName(S.day, true);
-  var card = $("#act-card"); card.classList.toggle("no", calls.indexOf(S.day) < 0); card.innerHTML = actCard();
-  $("#act-dem-sub").textContent = (dec ? "AEMO forecast issued before 09:00 · " : "forecast and actual, hindsight · ") + dayName(S.day, true);
-  var it = [["fc", "dsh", "var(--peak)", "Forecast"]]; if (!dec) it.push(["act", "ln", "var(--peak)", "Actual"]);
-  $("#act-dem").innerHTML = '<div class="chd">' + lgdHTML("dem", it) + "</div>" + demSVG("#act-dem");
-  $("#act-title").textContent = "Hot Season 2025-26 · " + (dec ? "decision view" : "season review");
-  $("#act-tag").innerHTML = dec ? "" : '<span class="hind">Hindsight</span>';
-  $("#act-sub").textContent = dec ? "Shows only what was known at 09:00 on " + dayName(S.day).replace(/^\w+ /, "") : "Not available at the decision time";
-  $("#act-legend").innerHTML = '<span><i class="sw" style="background:var(--bar)"></i>Daily peak demand</span><span><i class="sw" style="background:var(--peak);opacity:.8"></i>Flagged by the call rule</span><span><i class="sw" style="background:var(--cust);border-radius:50%;width:8px"></i>Called</span>' +
-    (dec ? "" : '<span style="color:var(--peak)">&#9733; <span style="color:var(--text-2)">Official peak day</span></span>');
-  $("#act-chart").innerHTML = actSVG();
-  $$("#act-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.day = +r.getAttribute("data-d"); renderActivation(); }); });
-  var solid = dec ? used : calls.length, hatch = dec ? tonight : 0;
-  $("#act-budget").innerHTML = '<div class="bl"><span><b>Activation budget</b> <span class="sub">contract year 2025-26 · 1 Jul – 30 Jun</span></span><span>' +
-    (dec ? "<b>" + used + "</b> used · <b>" + tonight + "</b> tonight · <b>" + (o.cap - used - tonight) + "</b> left of " + o.cap : "<b>" + calls.length + "</b> of " + o.cap + " used in Hot Season 2025-26") + "</span></div>" +
-    '<div class="bar"><i style="width:' + (solid / o.cap * 100) + '%;background:var(--cust)"></i><i style="width:' + (hatch / o.cap * 100) + '%;background:repeating-linear-gradient(45deg,var(--cust) 0 1.5px,var(--cust-soft) 1.5px 4px)"></i></div>';
-}
-
 /* ---------- Value by party ---------- */
 var SCN = {
-  S1:{label:"S1 · Energy only", tag:"Hypothetical arrangement", cls:"hyp"},
-  S2a:{label:"S2a · Retailer, current IRCR", tag:"Current rule", cls:""},
-  S2b:{label:"S2b · Retailer, 2027 Peak IRCR", tag:"Assumed future rule · not current revenue", cls:"fut"},
-  S3:{label:"S3 · Synergy TPA, 50% share", tag:"Hypothetical share", cls:"hyp"}
+  S1:{label:"S1 · energy only", tag:"Hypothetical arrangement", cls:"hyp"},
+  S2a:{label:"S2a · today's capacity rule", tag:"Current rule", cls:""},
+  S2b:{label:"S2b · assumed 2027 capacity rule", tag:"Assumed future rule · not current revenue", cls:"fut"},
+  S3:{label:"S3 · via Synergy, 50% share (hypothetical)", tag:"Hypothetical share", cls:"hyp"}
 };
-function renderValue(){
-  var sc = S.vscen, r = evalOffer("custom", sc), a = evalOffer("ref", sc), oname = sc === "S3" ? "Synergy" : "Other parties";
-  $("#v-scen").innerHTML = "<b>" + r.o.name + "</b> · " + SCN[sc].label + ' <span class="chip ' + SCN[sc].cls + '">' + SCN[sc].tag + '</span><span class="sub">' + r.o.src + "</span>";
-  var gain = r.z - a.z;
-  $("#v-hero").innerHTML = '<div class="cap">Extra Zenith profit from the custom offer, against reference terms</div><div class="hero-n' + (gain < 0 ? " neg" : "") + '">' + (gain >= 0 ? "+" : "−") + aud(Math.abs(gain)).replace("A$ ", "A$") + '</div>' +
-    '<div class="hero-bars"><div><span>Reference terms</span><b>' + aud(a.z) + '</b></div><div class="on"><span>Custom offer</span><b>' + aud(r.z) + "</b></div></div>" +
-    '<p class="scope"><b>Scope</b> Historical simulation · contract year 2025-26 replay · in-sample · ' + SCN[sc].label + " (" + SCN[sc].tag.toLowerCase() + ") · run R‑0142 · values illustrative. Not tested out of sample: the first forward test is the 2026-27 Hot Season.</p>";
-  $("#v-verdict").innerHTML = '<div class="verdict ' + r.verdict.k + '"><span class="vt">' + r.verdict.t.toUpperCase() + "</span><div><b>" + r.o.name + " under " + SCN[sc].label + "</b><p>" + r.verdict.p + "</p></div></div>";
-  $("#v-parties").innerHTML = [["z", "Zenith · vs Zenith only", r.z], ["c", "Customers · vs normal self-use", r.c], ["o", oname, r.oth]].map(function(t){
-    return '<div class="panel party ' + t[0] + '"><div class="cap">' + t[1] + '</div><div class="big' + (t[2] < -0.0005 ? " neg" : "") + '">' + aud(t[2]) + '</div><div class="sub">fleet · ' + aud(t[2] / r.enrolled, 2) + " per enrolled home · contract year 2025-26</div></div>"; }).join("");
-  /* the offer against the alternatives */
-  $("#v-cmp-sub").textContent = "Contract year 2025-26 replay · 1 Jul 2025 – 30 Jun 2026 · 365 days · in-sample";
-  function vcell(x){ return x.verdict.k === "ok" ? '<span class="pill ok">Positive in ' + sc + "</span>" : '<span class="pill bad">No business case</span>'; }
-  var t = '<tr><th></th><th class="n">No calls</th><th class="n">Reference terms<div class="sub" style="font-weight:400">70 c/kWh · 30 calls</div></th><th class="n hl">Custom offer<div class="sub" style="font-weight:400">85 c/kWh · 45 calls</div></th></tr>';
-  [["Calls used", "0", a.calls + (a.calls >= OFF.ref.cap ? " · cap hit " + dayName(callsOf(OFF.ref)[29]).replace(/^\w+ /, "") : ""), String(r.calls)],
-   ["Peak days covered · hindsight", "—", a.peaks[2] + " of 4", r.peaks[2] + " of 4"],
-   ["Zenith incremental profit", aud(0), aud(a.z), aud(r.z)],
-   ["Customer net vs normal self-use, per home", aud(0), aud(a.c / a.enrolled, 2), aud(r.c / r.enrolled, 2)],
-   ["Worst Hot Season for Zenith · holdouts 2023-24 to 2025-26, 2 of 3 not chronological", aud(0), aud(a.worst), aud(r.worst)]].forEach(function(x){
-    t += "<tr><td>" + x[0] + '</td><td class="n">' + x[1] + '</td><td class="n' + (x[2].indexOf("−") === 0 ? " neg" : "") + '">' + x[2] + '</td><td class="n hl' + (x[3].indexOf("−") === 0 ? " neg" : "") + '">' + x[3] + "</td></tr>"; });
-  t += '<tr class="tot"><td>Verdict</td><td class="n"><span class="pill mu">Baseline</span></td><td class="n">' + vcell(a) + '</td><td class="n hl">' + vcell(r) + "</td></tr>";
-  $("#v-cmp").innerHTML = t;
-  $("#v-cmp-foot").textContent = "Reference terms are the public Synergy Battery Rewards terms, used for comparison; not a Zenith tariff or contract. A positive verdict needs customers no worse off, no hard-constraint violations and no Hot Season losing money.";
-  /* the ledger: who gains what, fleet, contract year */
-  $("#v-ledger-sub").textContent = "Custom offer · contract year 2025-26 replay · in-sample · A$, fleet";
-  var u = '<tr><th>Item</th><th class="n" style="color:var(--zen)">Zenith</th><th class="n" style="color:var(--cust)">Customers</th><th class="n">' + oname + '</th><th class="n">System</th></tr>';
-  var c = function(v){ return '<td class="n' + (v < -0.0005 ? " neg" : "") + '">' + (Math.abs(v) < 0.0005 ? "0" : aud(v)) + "</td>"; };
-  r.rows.forEach(function(row, k){
-    u += '<tr class="x" data-row="' + k + '"><td>' + row[0] + (row[4] ? '<span class="trt">TRANSFER</span>' : "") + "</td>" + c(row[1]) + c(row[2]) + c(row[3]) + c(row[1] + row[2] + row[3]) + "</tr>";
-    u += '<tr class="dt" data-dt="' + k + '"><td colspan="5">' + row[5] + "</td></tr>";
-  });
-  u += '<tr class="tot"><td>Net</td>' + c(r.z) + c(r.c) + c(r.oth) + c(r.sys) + "</tr>";
-  $("#v-ledger").innerHTML = u;
-  $$("#v-ledger tr.x").forEach(function(tr){ tr.addEventListener("click", function(){ tr.classList.toggle("open"); $('#v-ledger tr[data-dt="' + tr.getAttribute("data-row") + '"]').classList.toggle("show"); }); });
-  $("#v-ledger-foot").textContent = "Each row sums across parties to the System column; transfer rows sum to 0. Click a row for its basis. Values illustrative.";
-  /* capacity value: the result, with the 12 peak intervals folded away */
-  var ir = '<div class="cap">Seasonal IRCR effect · not a daily reward</div>';
-  if (r.calls === 0) ir += '<p class="foot">No calls, so no capacity value.</p>';
-  else {
-    ir += '<table class="kvt" style="margin-top:8px"><tr><td>Median change in net import per responding home, per half-hour</td><td class="n">' + nf(r.dmed, 2) + " kWh</td></tr>" +
-      "<tr><td>× 2 (kWh per half-hour to kW) × " + nf(r.resp) + ' responding homes</td><td class="n">' + nf(-2 * Math.abs(r.dmed) * r.resp / 1000, 2) + " MW</td></tr>" +
-      '<tr><td>× AEMO ratio 1.0 (assumption) × A$216,091.78/MW-yr</td><td class="n">' + aud(r.capv) + "</td></tr>" +
-      "<tr><td>Zenith's part" + (sc === "S3" ? " (share 50%, assumption)" : "") + '</td><td class="n">' + aud(r.zc) + "</td></tr></table>";
-    ir += '<details class="ri-more"><summary>The 12 peak intervals, 2025-26</summary><table class="tbl" style="margin-top:6px"><tr><th>Peak interval</th><th class="n">Change in net import, kWh per half-hour per home</th></tr>';
-    r.o.ircr.forEach(function(v, k){ var day = Math.floor(k / 3) + 1, times = day === 4 ? ["17:00","17:30","18:00"] : ["17:30","18:00","18:30"];
-      ir += "<tr><td>Day " + day + " · " + times[k % 3] + (v === 0 ? " · before the event window" : "") + '</td><td class="n">' + nf(v, 1) + "</td></tr>"; });
-    ir += "</table></details>";
-    ir += '<p class="foot">Season 2025-26 sets capacity year 2026-27 (as-if price). Peak intervals are known only after the season.</p>';
-  }
-  $("#v-ircr").innerHTML = ir;
-  var own = VAL.ins.q2b[0] * 365;   /* the adopted dispatch, A$ a day in-sample, as on Compare */
-  $("#v-own").innerHTML = '<div class="cap">Zenith only · own battery</div><p class="own-line">Contract year 2025-26 · in-sample · run R‑0142: <b>' + aud(own) + "</b> (A$" + nf(VAL.ins.q2b[0]) + " a day × 365, as on Compare). With the customer fleet: <b>" + aud(own + r.z) + "</b>. Separate meters, so the two ledgers add.</p>";
-}
-
 /* ---------- Validation ---------- */
 var VAL = {
-  ins:{note:["", "In-sample · 1 Apr 2025 – 30 Jun 2026 · 456 days. Used for training and selection; not evidence of out-of-sample performance."], q2a:[[41,58],[96,131],[0.081,0.104]], q2b:[3050,2640,[190,620],4900], days:456, hc:0, cmd:1, lab:"In-sample · 1 Apr 2025 – 30 Jun 2026 · 456 days"},
-  tseen:{note:["w", "Test, seen · 1 Jul – 15 Oct 2026 · 107 days. Out of sample in time, but looked at during development. No Hot Season."], q2a:[[33,45],[71,99],[0.064,0.077]], q2b:[2050,1700,[140,560],3300], days:107, hc:0, cmd:1, lab:"Test, seen · 1 Jul – 15 Oct 2026 · 107 days"},
-  tnew:{note:["i", "Test, unseen · 16–22 Oct 2026 · 7 days. Never inspected before freezing; short and calm. Too short to prove the strategy on its own. No Hot Season."], q2a:[[22,27],[40,52],[0.030,0.033]], q2b:[1400,1330,[-20,160],2100], days:7, hc:0, cmd:0, lab:"Test, unseen · 16–22 Oct 2026 · 7 days"}
+  ins:{note:["", "Training period · 1 Apr 2025 – 30 Jun 2026 · 456 days. The data used to build and choose the method; results here cannot show how it does on new data (in-sample)."], q2a:[[41,58],[96,131],[0.081,0.104]], q2b:[3050,2640,[190,620],4900], days:456, hc:0, cmd:1, lab:"Training period · 1 Apr 2025 – 30 Jun 2026 · 456 days"},
+  tseen:{note:["w", "Test, reviewed · 1 Jul – 15 Oct 2026 · 107 days. Not used to build the method, but looked at repeatedly while refining it, so weaker than a blind test (out-of-sample, seen). No Hot Season."], q2a:[[33,45],[71,99],[0.064,0.077]], q2b:[2050,1700,[140,560],3300], days:107, hc:0, cmd:1, lab:"Test, reviewed · 1 Jul – 15 Oct 2026 · 107 days"},
+  tnew:{note:["i", "Test, blind · 16–22 Oct 2026 · 7 days. Never looked at before the method was frozen: the only fully blind test so far (out-of-sample, unseen). Too short to prove anything on its own. No Hot Season."], q2a:[[22,27],[40,52],[0.030,0.033]], q2b:[1400,1330,[-20,160],2100], days:7, hc:0, cmd:0, lab:"Test, blind · 16–22 Oct 2026 · 7 days"}
 };
-var SITE_CHECKS = [
-  ["Energy balance closes in every interval", "SOC(t+1) = SOC(t) + charge × 0.922 − discharge ÷ 0.922 + regulation energy; residual below tolerance."],
-  ["Power within rating (energy + raise services, charge + lower services)", "Discharge + Regulation raise + Contingency raise ≤ 10 MW, and the same on the charge side."],
-  ["SOC at or above mandatory reserve", "Mandatory reserve is never offered at any price."],
-  ["Meter import ≤ import limit, export ≤ export limit", "Connection limits at the meter, checked on the executed 5-minute dispatch."],
-  ["No MW or MWh allocated twice", "Energy and FCESS never share the same MW or MWh."],
-  ["Information timing: nothing published after 09:00 used", "Every input's publication time is checked against the decision time; AEMO's 09:00 pre-dispatch is left out because it is published after 09:00."]];
-var FLEET_CHECKS = [["Activation cap per contract year", "45 calls for the custom offer, 30 for reference terms."], ["Standby + event ≤ maximum control", "2 h + 2 h within 6 h."], ["Customer battery never below customer reserve", "20% is never discharged."], ["Three-party ledger reconciles to system value", "Transfers sum to 0 across parties."]];
-function pct(a, b){ return (a >= b ? "+" : "−") + nf(Math.abs(a - b) / b * 100, 1) + "%"; }
-function tile(cls, cap, big, sub){ return '<div class="vt-tile ' + cls + '"><div class="cap">' + cap + '</div><div class="vt-big">' + big + '</div><div class="sub">' + sub + "</div></div>"; }
-function chkRows(list, failIdx, scope, extra){
-  var t = '<tr><th>Check</th><th class="n">Result</th><th class="n">Failing</th></tr>';
-  list.forEach(function(c, k){ var f = k === failIdx;
-    t += '<tr class="x' + (f ? " open" : "") + '" data-row="' + k + '"><td>' + c[0] + '</td><td class="n">' + (f ? '<span class="pill bad">Fail</span>' : '<span class="passmark">&#10003; Pass</span>') + '</td><td class="n">' + (f ? scope : "0") + "</td></tr>" +
-      '<tr class="dt' + (f ? " show" : "") + '" data-dt="' + k + '"><td colspan="3">' + c[1] + "</td></tr>"; });
-  return t + (extra || "");
-}
 function bindRows(sel){ $$(sel + " tr.x").forEach(function(tr){ tr.addEventListener("click", function(){ tr.classList.toggle("open"); $(sel + ' tr[data-dt="' + tr.getAttribute("data-row") + '"]').classList.toggle("show"); }); }); }
 
-/* Improve: the adopted dispatch against the frozen v1 baseline, and the price forecast against yesterday's prices */
-function renderCompare(){
-  var v = VAL[S.cper], b = v.q2b, up = b[0] - b[1], max = b[3];
-  var sa = function(x){ return (x < 0 ? "−" : "+") + "A$" + nf(Math.abs(x)); }, ci = sa(b[2][0]) + " to " + sa(b[2][1]), sig = b[2][0] > 0;
-  $("#cmp-hero").innerHTML = '<div class="cap">Adopted dispatch against the frozen v1 baseline · A$ per day</div>' +
-    '<div class="hero-n' + (sig ? "" : " muted") + '">+A$' + nf(up) + '<small>/day · ' + pct(b[0], b[1]) + "</small></div>" +
-    '<p class="sub">95% interval ' + ci + " from a daily bootstrap" + (sig ? "" : '; it includes 0, so <b class="neg">no clear uplift yet</b>') + ".</p>" +
-    '<div class="cmp-bars">' + [["Frozen v1 baseline", b[1], "base"], ["Adopted dispatch", b[0], "on"], ["Perfect price foresight · unattainable reference", b[3], "ref"]].map(function(x){
-      return '<div class="cb ' + x[2] + '"><span>' + x[0] + '</span><i style="width:' + (x[1] / max * 100) + '%"></i><b>A$' + nf(x[1]) + "</b></div>"; }).join("") + "</div>" +
-    '<p class="scope"><b>Scope</b> ' + v.lab + " · same days, same prices · includes the network bill saving on a synthetic factory load · run R‑0142 · values illustrative." + (S.cper === "ins" ? " In-sample: used for training and selection, so not evidence of out-of-sample uplift." : "") + "</p>";
-  var a = v.q2a;
-  $("#cmp-q2a").innerHTML = '<table class="tbl"><tr><th>Price forecast · metric</th><th class="n">Model</th><th class="n">Baseline</th><th class="n">Change</th></tr>' +
-    '<tr><td>Energy price · MAE, A$/MWh<div class="sub">baseline: yesterday\'s prices</div></td><td class="n">' + a[0][0] + '</td><td class="n">' + a[0][1] + '</td><td class="n">' + pct(a[0][0], a[0][1]) + "</td></tr>" +
-    '<tr><td>Energy 17:00–21:00 · MAE, A$/MWh</td><td class="n">' + a[1][0] + '</td><td class="n">' + a[1][1] + '</td><td class="n">' + pct(a[1][0], a[1][1]) + "</td></tr>" +
-    '<tr><td>Spike ≥ A$200 · Brier score<div class="sub">baseline: 28-day frequency</div></td><td class="n">' + nf(a[2][0], 3) + '</td><td class="n">' + nf(a[2][1], 3) + '</td><td class="n">' + pct(a[2][0], a[2][1]) + "</td></tr></table>" +
-    '<p class="foot">Lower is better. A lower MAE is not an accuracy percentage. ' + v.lab + ". Values illustrative.</p>";
-}
-
-/* Prove, site battery: hard constraints with their scope, how much test evidence there is */
-function renderSValid(){
-  var v = VAL[S.per], hh = v.days * 48;
-  var nt = $("#val-note"); nt.classList.remove("w", "i", "p"); if (v.note[0]) nt.classList.add(v.note[0]); nt.textContent = v.note[1];
-  $("#sv-tiles").innerHTML =
-    tile(v.hc ? "bad" : "ok", "Hard limits · replayed dispatch", v.hc ? v.hc + " violation" : "0 violations", nf(hh) + " half-hours · " + v.lab + " · run R‑0142" + (v.cmd ? " · CMD exceeded at times (economic limit, priced in the bill)" : "")) +
-    tile("w", "Out-of-sample evidence", "114 test days", "107 seen during development, 7 never inspected · no Hot Season yet") +
-    tile("ok", "Information timing", "All by 09:00", "every input was published before the decision · " + v.lab + " · run R‑0142");
-  /* the CMD is an economic limit: going over it costs money in the network bill, it is not a breach of the connection */
-  $("#val-checks").innerHTML = chkRows(SITE_CHECKS, v.hc ? 3 : -1, v.hc + " of " + nf(hh) + " half-hours",
-    '<tr class="x' + (v.cmd ? " open" : "") + '" data-row="cmd"><td>Site import ≤ CMD 9 MW <span class="sub">economic limit</span></td><td class="n">' + (v.cmd ? '<span class="pill warn">Exceeded</span>' : '<span class="passmark">&#10003; Held</span>') + '</td><td class="n">' + (v.cmd ? "at times" : "0") + "</td></tr>" +
-    '<tr class="dt' + (v.cmd ? " show" : "") + '" data-dt="cmd"><td colspan="3">' + (v.cmd ? "Actual factory load ran above the forecast, and the battery could not always hold import under 9 MW. The extra demand charge is counted in the result." : "Import stayed at or below the contract maximum demand.") + "</td></tr>");
-  bindRows("#val-checks");
-}
-
-/* Prove, customer fleet: customer constraints, Hot Season holdouts, the forward test still to come */
-function renderFValid(){
-  var r = evalOffer("custom", RUN.scen);
-  $("#fv-tiles").innerHTML =
-    tile("ok", "Customer constraints", "0 violations", "activation cap, control time, customer reserve · contract year 2025-26 replay · " + RUN.scen + " · run R‑0142") +
-    tile("w", "Hot Season holdouts", "3 seasons", "only holding out 2025-26 is chronological; the others train on later seasons") +
-    tile("w", "Forward test", "Not yet", "first in the 2026-27 Hot Season, 1 Dec 2026 – 31 Mar 2027");
-  var t = '<table class="tbl"><tr><th>Held out</th><th class="n">Calls</th><th class="n">Peak days</th><th class="n">Zenith</th></tr>';
-  SEASONS.forEach(function(sn, k){ t += "<tr><td>" + sn + '<div class="sub">' + (CHRON[k] ? "chronological" : "not chronological") + '</div></td><td class="n">' + r.seasonCalls[k] + '</td><td class="n">' + r.peaks[k] + ' of 4</td><td class="n' + (r.seasonZ[k] < 0 ? " neg" : "") + '">' + aud(r.seasonZ[k]) + "</td></tr>"; });
-  $("#fv-hold").innerHTML = t + '</table><p class="foot">Custom offer, ' + SCN[RUN.scen].label + " (hypothetical) · run R‑0142 · values illustrative.</p>";
-  $("#fv-checks").innerHTML = chkRows(FLEET_CHECKS, -1, "");
-  bindRows("#fv-checks");
-}
-
 /* ---------- Configuration ---------- */
-var PRESET = {model:{pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, tag:"MODEL SUGGESTION", cls:"src md", note:"Research policy C from the in-sample sweep. The payment level follows an assumed participation curve and must come from a pilot. Not a contract."},
+var PRESET = {model:{pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, tag:"MODEL SUGGESTION", cls:"src md", note:"The terms this tool suggests, found by searching the training period. The payment level follows an assumed sign-up curve and must come from a pilot. Not a contract."},
               ref:{pay:70, evp:0, fee:0, cap:30, ev:"2", sb:"2", mx:6, res:20, tag:"REFERENCE TERMS", cls:"src rf", note:"Public Synergy Battery Rewards terms used for comparison. Not a Zenith tariff and not a contract."}};
 function fillConfig(){
   $$("[data-k]").forEach(function(el){ var k = el.getAttribute("data-k"); if (IN[k] != null) el.value = IN[k]; });
@@ -795,6 +529,7 @@ function renderConfig(){
   $$(".f").forEach(function(f){ f.classList.remove("err"); });
   c.list.forEach(function(x){ if (x[2]) { var el = document.getElementById(x[2]), f = el && el.closest(".f"); if (f) f.classList.add("err"); } });
 }
+PAGES.plan = renderPlan; PAGES.config = renderConfig;
 function refreshRun(){
   var c = checks(), run = $("#run"), pri = $("#pri"), t, sub, cls;
   document.body.classList.toggle("stale", c.changed);
@@ -809,21 +544,17 @@ function refreshRun(){
 
 /* ---------- shell ---------- */
 /* two assets, each read as Decide → Improve → Prove; settings sit apart */
-var HOME = "plan", ALIAS = {schedule:"plan", forecast:"plan", activation:"calls", validation:"svalid"};
+var HOME = "plan", ALIAS = {schedule:"plan", forecast:"plan", activation:"calls", validation:"evidence", compare:"evidence", svalid:"evidence", fvalid:"value"};
 var SCREENS = {
-  plan:{t:"Today's plan", chips:[["step","1 · Decide"],["","In-sample"]], ctx:function(){ return document.getElementById("plan-dec") ? "Wed 14 Jan 2026 · trading day 08:00–08:00 AWST · plan 09:00" : "Site battery · Wed 14 Jan 2026 · trading day 08:00–08:00 AWST · plan issued 09:00 with information available at 09:00"; }},
-  compare:{t:"Compare with the baseline", chips:[["step","2 · Improve"]], ctx:function(){ return "Site battery · the adopted dispatch against the frozen v1 baseline on the same days and prices"; }},
-  svalid:{t:"Validation · site battery", chips:[["step","3 · Prove"]], ctx:function(){ return "Training and selection used in-sample data only (to 30 Jun 2026). Test results are reported, never used to choose."; }},
-  calls:{t:"Tonight's call", chips:[["step","1 · Decide"],["","In-sample"],["","Hot Season 2025-26"]], ctx:function(){ return "Customer fleet · as of " + dayName(S.day, true) + ", 09:00 AWST · " + OFF[S.offer].short + " · Scenario " + SCN[RUN.scen].label + " (hypothetical)"; }},
-  value:{t:"Value by party", chips:[["step","2 · Improve"]], ctx:function(){ return "Customer fleet · incremental profit = Profit(Zenith + customer fleet) − Profit(Zenith only). Customer baseline: the same battery in normal self-use. Compensation is a transfer."; }},
-  fvalid:{t:"Validation · customer fleet", chips:[["step","3 · Prove"]], ctx:function(){ return "Hot Season holdouts and customer constraints. The capacity value has no forward test until the 2026-27 Hot Season."; }},
+  plan:{t:"Today's plan", chips:[["step","1 · Decide"],["","training-period day","14 Jan 2026 lies in the training period. " + glNote("TRAIN")]], ctx:function(){ return document.getElementById("plan-dec") ? "Wed 14 Jan 2026 · trading day 08:00–08:00 AWST · plan 09:00" : "Site battery · Wed 14 Jan 2026 · trading day 08:00–08:00 AWST · plan issued 09:00 with information available at 09:00"; }},
   config:{t:"Settings", chips:[], ctx:function(){ return "Inputs for the next run. Any change marks the results stale until they are recomputed."; }}
 };
 function header(){
   var sc = SCREENS[S.screen];
   $("#ph-title").textContent = sc.t;
-  $("#ph-chips").innerHTML = sc.chips.map(function(c){ return '<span class="chip ' + c[0] + '">' + c[1] + "</span>"; }).join("");
+  $("#ph-chips").innerHTML = sc.chips.map(function(c){ return '<span class="chip ' + c[0] + '"' + (c[2] ? noteAttr(c[2]) : "") + ">" + c[1] + "</span>"; }).join("");
   $("#ph-ctx").textContent = sc.ctx();
+  $("#who-line").innerHTML = whoHTML();
   var dd = S.screen === "calls" ? S.day : TODAY;
   $("#fb-day").textContent = dayName(dd, true);
   $("#mast-day").textContent = new Date(Date.UTC(2025, 11, 1 + dd)).toLocaleDateString("en-AU", {weekday:"long", day:"numeric", month:"long", year:"numeric", timeZone:"UTC"}).replace(",", "");
@@ -832,13 +563,7 @@ function header(){
 function render(){
   if (tipEl) tipHide();
   header();
-  if (S.screen === "plan") renderPlan();
-  if (S.screen === "compare") renderCompare();
-  if (S.screen === "svalid") renderSValid();
-  if (S.screen === "calls") renderActivation();
-  if (S.screen === "value") renderValue();
-  if (S.screen === "fvalid") renderFValid();
-  if (S.screen === "config") renderConfig();
+  if (PAGES[S.screen]) PAGES[S.screen]();
   refreshRun();
 }
 function go(name){
@@ -863,21 +588,12 @@ function segBind(attr, key, after){
 function setReveal(v){ S.revealed = v; $$("[data-po]").forEach(function(o){ o.classList.toggle("on", o.getAttribute("data-po") === (v ? "outcome" : "plan")); }); $$(".po-out").forEach(function(e){ e.hidden = !v; }); $$("[data-po] .lk").forEach(function(e){ e.style.display = v ? "none" : ""; }); }
 $$("[data-po]").forEach(function(b){ b.addEventListener("click", function(){ setReveal(b.getAttribute("data-po") === "outcome"); render(); }); });
 function bindReveal(root){ $$("[data-reveal]").forEach(function(b){ if (root.contains(b)) b.addEventListener("click", function(){ setReveal(true); render(); }); }); }
-segBind("data-view", "view"); segBind("data-vscen", "vscen"); segBind("data-per", "per"); segBind("data-cper", "cper");
-$("#day-prev").addEventListener("click", function(){ S.day = Math.max(0, S.day - 1); render(); });
-$("#day-next").addEventListener("click", function(){ S.day = Math.min(DAYS - 1, S.day + 1); render(); });
 $$("[data-k]").forEach(function(el){ el.addEventListener("change", function(){
   var k = el.getAttribute("data-k"); IN[k] = el.type === "number" ? (el.value === "" ? "" : +el.value) : el.value;
   if (k === "start") { var p = PRESET[el.value]; ["pay","evp","fee","cap","ev","sb","mx","res"].forEach(function(q){ IN[q] = p[q]; }); fillConfig(); }
   S.nc = false; render(); }); });
 $$(".sc").forEach(function(b){ b.addEventListener("click", function(){ IN.scen = b.getAttribute("data-sc"); fillConfig(); S.nc = false; render(); }); });
 $("#revert").addEventListener("click", function(){ IN = JSON.parse(JSON.stringify(DEF)); S.nc = false; fillConfig(); render(); toast("Inputs reverted to run R‑0142. Results are up to date again."); });
-$("#nc-close").addEventListener("click", function(){ S.nc = false; refreshRun(); });
-$("#pri").addEventListener("click", function(){
-  if (checks().changed) { S.nc = true; refreshRun(); return; }
-  toast("Prototype: Save is not implemented. The MVP stores inputs, versions and results under a new run ID.");
-});
-$("#exp-all").addEventListener("click", function(){ toast(checks().changed ? "Export is off while results are stale." : "Prototype: export is not implemented. The MVP writes a readable report and CSV files for the open run, each headed with the run ID, period and HISTORICAL REPLAY."); });
 var toastT;
 function toast(m){ var t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 4500); }
 var rzT;
@@ -893,7 +609,7 @@ if (window.ResizeObserver) {
     });
     if (changed) requestAnimationFrame(render);
   });
-  ["#sch-chart", "#act-chart", "#act-dem"].forEach(function(q){ var el = document.querySelector(q); if (el) ro.observe(el); });
+  $$(".chartbox").forEach(function(el){ if (el.id) ro.observe(el); });
 }
 document.addEventListener("keydown", function(e){
   if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
@@ -903,48 +619,24 @@ document.addEventListener("keydown", function(e){
 });
 
 /* ---------- chart interactions: hover table, legend switches, CSV ---------- */
-function rng(lo, hi){ return lo == null ? "not issued" : "A$" + nf(lo) + "–" + nf(hi); }
+function rng(lo, hi){ return lo == null ? "–" : "A$" + nf(lo) + "–" + nf(hi); }
 var TIPS = {
-  pw:function(k){
-    var v = P.dis[k] - P.chg[k], r = [["dsh", "var(--price)", "Price forecast", P.price[k] == null ? "not issued" : "A$" + nf(P.price[k]) + "/MWh"], ["", "", "P10–P90", rng(P.lo[k], P.hi[k])],
-      ["", "", "Chance of A$200 or more", P.pspike[k] == null ? "not issued" : nf(P.pspike[k] * 100) + "%"]];
-    if (S.revealed) r.push(["ln", "var(--price)", "Actual price", "A$" + nf(P.actual[k]) + "/MWh"]);
-    r.push(["sq", "var(--" + (v < 0 ? "chg" : "dis") + ")", "Scheduled power", (v > 0 ? "+" : (v < 0 ? "−" : "")) + nf(Math.abs(v), 1) + " MW"]);
-    if (offerAt(k)) r.push(["bar-c", "", "Conditional offer", "+" + nf(offerAt(k).mw, 1) + " MW from A$" + offerAt(k).price]);
-    return {h:hhmm(k) + "–" + hhmm(k + 1), s:doing(k), r:r};
-  },
   day:function(k){
-    var v = P.dis[k] - P.chg[k], r = [["sq", "var(--" + (v < 0 ? "chg" : "dis") + ")", "Scheduled power", (v > 0 ? "+" : (v < 0 ? "−" : "")) + nf(Math.abs(v), 1) + " MW"]];
-    if (offerAt(k)) r.push(["off", "", "Conditional offer", "+" + nf(offerAt(k).mw, 1) + " MW if ≥ A$" + offerAt(k).price]);
-    r.push(["sq", "color-mix(in srgb,var(--cr) 45%,var(--surface))", "FCESS standby", "raise " + nf(P.rr[k] + P.cr[k], 1) + " · lower " + nf(P.rl[k] + P.cl[k], 1) + " MW"]);
-    r.push(["dsh", "var(--price)", "Price forecast", P.price[k] == null ? "not issued" : "A$" + nf(P.price[k]) + "/MWh"], ["", "", "P10–P90", rng(P.lo[k], P.hi[k])],
-      ["", "", "Chance of A$200 or more", P.pspike[k] == null ? "not issued" : nf(P.pspike[k] * 100) + "%"]);
-    if (S.revealed) r.push(["ln", "var(--price)", "Actual price", "A$" + nf(P.actual[k]) + "/MWh"]);
-    return {h:hhmm(k) + "–" + hhmm(k + 1), s:doing(k), r:r};
+    var v = P.dis[k] - P.chg[k], r = [["sq", "var(--" + (v < 0 ? "chg" : "dis") + ")", "Power", (v > 0 ? "+" : (v < 0 ? "−" : "")) + nf(Math.abs(v), 1) + " MW"]];
+    if (offerAt(k)) {
+      r.push(["off", "", "Sell more", "≥ A$" + offerAt(k).price]);
+      if (S.revealed) r.push(["", "", "Sold", OFFER_OUT[k] > 0 ? aud(OFFER_OUT[k] * 0.5 * P.actual[k]) : "no"]);
+    }
+    r.push(["dsh", "var(--price)", "Forecast", P.price[k] == null ? "–" : "A$" + nf(P.price[k])]);
+    if (S.revealed) r.push(["ln", "var(--actual)", "Actual", "A$" + nf(P.actual[k])]);
+    return {h:hhmm(k) + "–" + hhmm(k + 1), s:"", r:r};
   },
   soc:function(k){
     var r = [];
     if (k >= 2) r.push(["dsh", "var(--soc)", "Planned", nf(SOC[k], 1) + " → " + nf(SOC[k + 1], 1) + " MWh"]);
-    if (k < 2 || S.revealed) r.push(["area", "var(--soc)", "Actual", nf(SOCOUT[k], 1) + " → " + nf(SOCOUT[k + 1], 1) + " MWh"]);
-    r.push(["", "", "Reserve floor", nf(FLOOR[k], 1) + " MWh"]);
-    return {h:hhmm(k) + "–" + hhmm(k + 1), s:doing(k), r:r};
-  },
-  dem:function(k){
-    var d = S.day, dec = S.view === "decision", r = [["dsh", "var(--peak)", "Forecast", nf(demDay(d, false)[k]) + " MW"]];
-    if (!dec) r.push(["ln", "var(--peak)", "Actual · hindsight", nf(demDay(d, true)[k]) + " MW"]);
-    r.push(["", "", "Call threshold", nf(run4(d) - OFF[S.offer].tol) + " MW"]);
-    if (callWin(d) && k >= 19 && k < 23) r.push(["sq", "var(--cust)", "Customer batteries", "called"]);
-    return {h:hhmm(k) + "–" + hhmm(k + 1), s:dayName(d, true), r:r};
-  },
-  act:function(d){
-    var o = OFF[S.offer], dec = S.view === "decision", calls = callsOf(o), r = [];
-    if (dec && d > S.day) return {h:dayName(d, true), s:"Not yet known at 09:00 on " + dayName(S.day).replace(/^\w+ /, ""), r:[]};
-    if (dec && d === S.day) r.push(["dsh", "var(--peak)", "Forecast daily peak", nf(fcPeak(d)) + " MW"]);
-    else r.push(["sq", o.flags.indexOf(d) >= 0 ? "var(--peak)" : "var(--bar)", "Daily peak demand", nf(ACT[d]) + " MW"]);
-    r.push(["", "", "Flagged by the call rule", o.flags.indexOf(d) >= 0 ? "Yes" : "No"]);
-    r.push(["", "", "Called", calls.indexOf(d) >= 0 ? "Yes" : "No"]);
-    if (!dec) r.push(["", "", "Official peak day · hindsight", PEAK.indexOf(d) >= 0 ? "Yes" : "No"]);
-    return {h:dayName(d, true), s:dec ? (d === S.day ? "Today · decided at 09:00" : "Known by 09:00") : "Season review · hindsight", r:r};
+    if (k < 2 || S.revealed) r.push(["area", "var(--actual)", "Actual", nf(SOCOUT[k], 1) + " → " + nf(SOCOUT[k + 1], 1) + " MWh"]);
+    r.push(["", "", "Minimum", nf(FLOOR[k], 1) + " MWh"]);
+    return {h:hhmm(k) + "–" + hhmm(k + 1), s:"", r:r};
   }
 };
 var tipEl = null, tipKey = "";
@@ -1010,8 +702,3 @@ document.addEventListener("click", function(e){
 
 /* style options: design review only, not part of the product; keeps the open screen */
 $$(".sty a[data-to]").forEach(function(a){ a.addEventListener("click", function(e){ e.preventDefault(); location.href = a.getAttribute("data-to") + location.hash; }); });
-
-fillConfig();
-setReveal(false);
-go((location.hash || "#" + HOME).slice(1));
-})();

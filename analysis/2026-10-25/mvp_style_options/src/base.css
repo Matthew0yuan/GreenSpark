@@ -18,7 +18,7 @@ html{
   --proto-bg:#FFF8E1; --proto-text:#6B4A00; --proto-line:#F0E2B6;
   --dis:#2F5FD0; --chg:#A9C0F0; --chg-text:#4C6FBF; --rr:#8E90B4; --rl:#D4D5E5; --cr:#8AAEAE; --cl:#D3E2E1;
   --soc:#0F6B4F; --mand:#C0262D; --mand-soft:#FCEDED; --mand-hatch:#EBAAAA; --econ:#EEDFAE;
-  --load:#59626D; --meter:#E4E8EC; --price:#16202A; --base:#AAB1B9; --actual:#E0533D;
+  --load:#59626D; --meter:#E4E8EC; --price:#16202A; --base:#AAB1B9; --actual:#E0533D; --range:#F0B64A; --range-text:#8A5310;
   --peak:#8E3B73; --peak-soft:#F5EAF1; --cust:#C27C2C; --cust-soft:#F5E6D2; --cust-text:#8A5310; --on-cust:#FFFFFF;
   --zen:#0F6B4F; --oth:#7A8591; --spike:#59626D; --bar:#D5DBE0;
   --grid:#EFF1F3; --axis:#AAB2BB; --axis-light:#D6DBE0; --axis-strong:#59626D;
@@ -298,14 +298,15 @@ html{ --phs-dis:var(--dis); --phs-chg:var(--chg-text); --phs-shave:var(--warn); 
 .lanes .xh{stroke:var(--text-3);stroke-width:1;stroke-dasharray:3 3;visibility:hidden;pointer-events:none}
 .chart .hit:hover{fill:transparent}
 .chart-note{margin:10px 0 0;font-size:12.5px;color:var(--text-3)}
-.ctip{position:fixed;z-index:120;display:none;pointer-events:none;min-width:210px;max-width:320px;padding:8px 10px;background:var(--surface);color:var(--text);border:1px solid var(--rule);border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,.16);font:12px/1.4 var(--font)}
+.ctip{position:fixed;z-index:120;display:none;pointer-events:none;width:230px;padding:8px 10px;background:var(--surface);color:var(--text);border:1px solid var(--rule);border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,.16);font:12px/1.4 var(--font)}
 .ctip .ct-h{display:flex;flex-direction:column;padding-bottom:6px}
 .ctip .ct-h b{font-weight:600;font-variant-numeric:tabular-nums}
 .ctip .ct-h span{color:var(--text-3)}
 .ctip table{width:100%;border-collapse:collapse;border-top:1px solid var(--divider)}
-.ctip td{padding:4px 0 0;color:var(--text-2);vertical-align:middle}
+.ctip td{padding:4px 0 0;color:var(--text-2);vertical-align:top;white-space:nowrap}
 .ctip td:first-child{width:24px}
-.ctip td.n{text-align:right;color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;padding-left:16px;white-space:nowrap}
+.ctip td.n{text-align:right;color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;padding-left:12px;white-space:normal;width:100%}
+.ctip td.n.why{font-weight:400;color:var(--text-2)}
 .ctools{display:inline-flex;gap:2px}
 .ib{display:inline-grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--text-3);cursor:pointer}
 .ib:hover{background:var(--surface-2);color:var(--text)}
@@ -463,3 +464,10 @@ body.stale.plan-blocked .res:has(#plan-head),body.stale.plan-blocked #plan-head.
 .fold.sm{margin-top:14px}
 .fold.sm > summary{font-size:12.5px;font-weight:600;color:var(--info)}
 @media (max-width:900px){ .dec-row{grid-template-columns:minmax(0,1fr)} .dec-val{text-align:left} .dec-val .chips{justify-content:flex-start} }
+
+/* who is who: one line of party chips under the page header, folded by default */
+.who{margin-top:6px}
+.who > summary{cursor:pointer;font-size:12px;color:var(--info);font-weight:600;list-style:none}
+.who > summary::before{content:"\25B8 ";color:var(--text-4)}
+.who[open] > summary::before{content:"\25BE "}
+.who .chips{margin-top:6px}
