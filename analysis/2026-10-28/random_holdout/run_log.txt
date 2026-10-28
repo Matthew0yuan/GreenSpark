@@ -1,0 +1,4 @@
+570 days x 4 runs in 293 s
+check 4 - energy balance (standalone): largest error 6.75e-14 MWh -> PASS
+check 4 - each day starts where the last ended (both): largest gap 0.00e+00 MWh -> PASS
+check 4 - half-hour mean output within 10 MW: 0 of 109440 -> PASS; stored energy within 0-40 MWh: 0 outside -> PASS

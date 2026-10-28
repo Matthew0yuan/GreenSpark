@@ -24,7 +24,7 @@ def _init_fleet():
 def _call(method: str, kwargs: dict):
     if method == "evidence":
         from app.engine.evidence import evidence
-        return evidence()
+        return evidence(**kwargs)
     return getattr(_ENGINE, method)(**kwargs)
 
 

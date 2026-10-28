@@ -1,0 +1,16 @@
+--- 2026-10-28 12:09 pipeline in /Users/matthew.yuan/Desktop/HGS/.claude/worktrees/holdout-2026-10-28
+forecast: 8 s, 38 monthly refits
+spike_risk: 3 s, 19 monthly refits
+risk history d1: 5 s, 31 monthly refits
+risk history d0: 5 s, 31 monthly refits
+python -m vpp.v2.value --hurdle 50 --state --rebuild: exit 0, 12 s
+v2_value_median_h50_state.npz: 570 days; level $65-128/MWh (median 93); solved for 10 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging room min(import limit, CMD) 9 MW, load x10
+  2025-07-02 (L $88): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 167 / 135 / 112 / 84 / 63 / 0
+  2026-01-07 (L $77): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 115 / 92 / 79 / 62 / 52 / 31
+  2026-08-05 (L $123): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 141 / 131 / 123 / 108 / 97 / 72
+python -m vpp.v2.value --hurdle 50 --state --standalone --rebuild: exit 0, 13 s
+v2_value_median_h50_state_p03c16671.npz: 570 days; level $65-128/MWh (median 93); solved for 10 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 10 MW, charging room min(import limit, CMD) 10 MW, load x0
+  2025-07-02 (L $88): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 47 / 35 / 16 / 0 / 0 / 0
+  2026-01-07 (L $77): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 49 / 40 / 31 / 20 / 10 / 3
+  2026-08-05 (L $123): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 108 / 102 / 93 / 81 / 71 / 65
+pipeline done

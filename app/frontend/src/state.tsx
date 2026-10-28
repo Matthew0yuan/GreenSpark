@@ -1,9 +1,28 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { StorageSettings } from "./api";
+import type { Connection, DispatcherKey, StorageSettings } from "./api";
 
 export type Page = "plan" | "evidence" | "call" | "value" | "settings";
 export const ASSET_OF: Record<Page, "storage" | "fleet" | null> = { plan: "storage", evidence: "storage", call: "fleet", value: "fleet", settings: null };
-export const DEFAULT_SETTINGS: StorageSettings = { fcess: ["reg_raise", "cont_raise", "reg_lower", "cont_lower"], startMwh: null, exportMw: null, importMw: null };
+export const DEFAULT_SETTINGS: StorageSettings = { connection: "factory", dispatcher: "e5", fcess: ["reg_raise", "cont_raise", "reg_lower", "cont_lower"],
+  startMwh: null, exportMw: null, importMw: null };
+/** The dispatcher as the user calls it: e5 is v2's adopted version. */
+export const DISP: Record<DispatcherKey, string> = { e5: "v2", v1: "v1" };
+export const CONN: Record<Connection, string> = { factory: "factory meter", standalone: "own connection" };
+
+/** The parties and the asset named under each storage page's title (Who). */
+export function whoItems(connection: Connection): [string, string][] {
+  return [["ZENITH", "Zenith · runs the network"], ["NETWORK", "storage network · 10 MW / 40 MWh"],
+    ...(connection === "factory" ? [["FACTORY", "factory · CMD 9 MW"] as [string, string]] : []),
+    ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]];
+}
+
+/** Saved settings from before the connection option keep working: missing or unknown fields take the defaults. */
+function settingsFrom(v: Partial<StorageSettings> | null): StorageSettings {
+  const s = { ...DEFAULT_SETTINGS, ...(v ?? {}) };
+  if (!(s.connection in CONN)) s.connection = DEFAULT_SETTINGS.connection;
+  if (!(s.dispatcher in DISP)) s.dispatcher = DEFAULT_SETTINGS.dispatcher;
+  return s;
+}
 export const FIRST_DAY = "2025-04-01";
 export const LAST_DAY = "2026-10-22";
 
@@ -33,7 +52,7 @@ export function AppState({ children }: { children: ReactNode }) {
   const [page, setPage] = useState<Page>(pageFromHash);
   const [lastAsset, setLastAsset] = useState<"storage" | "fleet">(ASSET_OF[pageFromHash()] ?? "storage");
   const [day, setDayS] = useState<string>(() => load("day", LAST_DAY));
-  const [settings, setSettingsS] = useState<StorageSettings>(() => load("settings", DEFAULT_SETTINGS));
+  const [settings, setSettingsS] = useState<StorageSettings>(() => settingsFrom(load<Partial<StorageSettings> | null>("settings", null)));
   const [offer, setOfferS] = useState<"ref" | "custom">(() => load("offer", "custom"));
   const [revealed, setRevealed] = useState(false);
 
@@ -61,5 +80,6 @@ export function useApp() {
   return c;
 }
 
+/** No setting that perturbs the tested runs: each connection x dispatcher has its own saved backtest. */
 export const isDefault = (s: StorageSettings) =>
   s.fcess.length === 4 && s.startMwh == null && s.exportMw == null && s.importMw == null;

@@ -1,0 +1,120 @@
+month,days_ahead,train_days,held_out_days_removed,step
+2025-04,0,540,0,forecast
+2025-06,0,591,10,forecast
+2025-05,0,565,5,forecast
+2025-07,0,616,15,forecast
+2026-01,0,770,45,forecast
+2025-08,0,642,20,forecast
+2025-09,0,668,25,forecast
+2025-10,0,693,30,forecast
+2025-11,0,719,35,forecast
+2025-12,0,744,40,forecast
+2026-02,0,796,50,forecast
+2026-03,0,819,55,forecast
+2026-04,0,845,60,forecast
+2026-05,0,870,65,forecast
+2026-06,0,896,70,forecast
+2026-07,0,921,75,forecast
+2026-08,0,921,75,forecast
+2026-09,0,921,75,forecast
+2026-10,0,921,75,forecast
+2025-05,0,565,5,forecast
+2025-04,0,540,0,forecast
+2025-07,0,616,15,forecast
+2025-08,0,642,20,forecast
+2025-06,0,591,10,forecast
+2025-09,0,668,25,forecast
+2026-01,0,770,45,forecast
+2025-12,0,744,40,forecast
+2025-10,0,693,30,forecast
+2025-11,0,719,35,forecast
+2026-02,0,796,50,forecast
+2026-03,0,819,55,forecast
+2026-04,0,845,60,forecast
+2026-05,0,870,65,forecast
+2026-06,0,896,70,forecast
+2026-07,0,921,75,forecast
+2026-08,0,921,75,forecast
+2026-09,0,921,75,forecast
+2026-10,0,921,75,forecast
+2025-04,0,540,0,spike_risk
+2025-06,0,591,10,spike_risk
+2025-05,0,565,5,spike_risk
+2025-07,0,616,15,spike_risk
+2025-10,0,693,30,spike_risk
+2025-09,0,668,25,spike_risk
+2025-12,0,744,40,spike_risk
+2025-11,0,719,35,spike_risk
+2025-08,0,642,20,spike_risk
+2026-01,0,770,45,spike_risk
+2026-02,0,796,50,spike_risk
+2026-03,0,819,55,spike_risk
+2026-04,0,845,60,spike_risk
+2026-05,0,870,65,spike_risk
+2026-06,0,896,70,spike_risk
+2026-07,0,921,75,spike_risk
+2026-08,0,921,75,spike_risk
+2026-09,0,921,75,spike_risk
+2026-10,0,921,75,spike_risk
+2024-05,1,208,0,risk history d1
+2024-04,1,178,0,risk history d1
+2024-09,1,328,0,risk history d1
+2024-07,1,269,0,risk history d1
+2024-08,1,300,0,risk history d1
+2024-06,1,239,0,risk history d1
+2024-10,1,357,0,risk history d1
+2025-01,1,448,0,risk history d1
+2024-11,1,387,0,risk history d1
+2024-12,1,417,0,risk history d1
+2025-02,1,479,0,risk history d1
+2025-03,1,507,0,risk history d1
+2025-04,1,538,0,risk history d1
+2025-05,1,564,4,risk history d1
+2025-06,1,589,10,risk history d1
+2025-07,1,614,15,risk history d1
+2025-08,1,640,20,risk history d1
+2025-10,1,691,30,risk history d1
+2025-09,1,666,25,risk history d1
+2025-11,1,717,35,risk history d1
+2025-12,1,742,40,risk history d1
+2026-01,1,768,45,risk history d1
+2026-02,1,794,50,risk history d1
+2026-03,1,817,55,risk history d1
+2026-04,1,843,60,risk history d1
+2026-05,1,868,65,risk history d1
+2026-06,1,894,70,risk history d1
+2026-07,1,919,75,risk history d1
+2026-08,1,920,75,risk history d1
+2026-09,1,920,75,risk history d1
+2026-10,1,920,75,risk history d1
+2024-04,0,180,0,risk history d0
+2024-05,0,210,0,risk history d0
+2024-08,0,302,0,risk history d0
+2024-06,0,241,0,risk history d0
+2024-09,0,329,0,risk history d0
+2024-07,0,271,0,risk history d0
+2024-10,0,359,0,risk history d0
+2025-01,0,450,0,risk history d0
+2024-12,0,419,0,risk history d0
+2024-11,0,389,0,risk history d0
+2025-02,0,481,0,risk history d0
+2025-03,0,509,0,risk history d0
+2025-04,0,540,0,risk history d0
+2025-05,0,565,5,risk history d0
+2025-06,0,591,10,risk history d0
+2025-07,0,616,15,risk history d0
+2025-08,0,642,20,risk history d0
+2025-09,0,668,25,risk history d0
+2025-10,0,693,30,risk history d0
+2025-11,0,719,35,risk history d0
+2025-12,0,744,40,risk history d0
+2026-01,0,770,45,risk history d0
+2026-02,0,796,50,risk history d0
+2026-03,0,819,55,risk history d0
+2026-04,0,845,60,risk history d0
+2026-05,0,870,65,risk history d0
+2026-06,0,896,70,risk history d0
+2026-07,0,921,75,risk history d0
+2026-08,0,921,75,risk history d0
+2026-09,0,921,75,risk history d0
+2026-10,0,921,75,risk history d0

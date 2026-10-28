@@ -1,0 +1,16 @@
+check,value,pass,note
+check 2 forecast_dispatch_0900.parquet: largest difference before 2025-05-01,0.0,True,"(1440 rows, 18 columns)"
+check 3 forecast_dispatch_0900.parquet: share of rows from 2025-05-01 that changed,0.9583333333333334,True,
+check 2 spike_risk_0900.parquet: largest difference before 2025-05-01,0.0,True,"(1440 rows, 2 columns)"
+check 3 spike_risk_0900.parquet: share of rows from 2025-05-01 that changed,0.9583333333333334,True,
+check 2 spike_risk_history_0900.parquet: largest difference before 2025-05-01,5.551115123125783e-17,True,"(18720 rows, 2 columns)"
+check 3 spike_risk_history_0900.parquet: share of rows from 2025-05-01 that changed,0.9583333333333334,True,
+check 2 spike_risk_history_0900_d1.parquet: largest difference before 2025-05-01,0.0,True,"(18720 rows, 2 columns)"
+check 3 spike_risk_history_0900_d1.parquet: share of rows from 2025-05-01 that changed,1.0,True,
+check 2 v2_value_median_h50_state.npz: largest difference before 2025-05-01,0.0,True,(30 days)
+check 3 v2_value_median_h50_state.npz: share of days from 2025-05-01 that changed,1.0,True,
+check 2 v2_value_median_h50_state_p03c16671.npz: largest difference before 2025-05-01,0.0,True,(30 days)
+check 3 v2_value_median_h50_state_p03c16671.npz: share of days from 2025-05-01 that changed,1.0,True,
+"check 2 standalone ledger total, soc_end: largest difference before 2025-05-01",0.0,True,(60 day-rows)
+"check 2 factory ledger ledger_total, soc_end: largest difference before 2025-05-01",1.8189894035458565e-12,True,(60 day-rows)
+check 2 factory bill 2025-04 saving,0.0,True,

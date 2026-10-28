@@ -1,6 +1,6 @@
 """The HTTP API end to end, with the real engine workers and a throwaway database.
 
-  .venv/Scripts/python.exe -m pytest app/tests -q
+  .venv/bin/python -m pytest app/tests -q          (Windows: .venv/Scripts/python.exe)
 """
 
 import os
@@ -31,8 +31,9 @@ def client():
 
 
 def test_meta(client):
-    m = client.get("/api/v1/meta").json()
-    assert m["storage"]["dispatcher"]["short"] == "v1" and m["storage"]["days"] == 570
+    m = client.get("/api/v1/meta").json()["storage"]
+    assert m["defaults"] == {"connection": "factory", "dispatcher": "e5"} and m["dispatcher"]["short"] == "e5"
+    assert m["days"] == 570 and m["verdicts"]["factory"]["passed"] and not m["verdicts"]["standalone"]["passed"]
 
 
 def test_plan_then_outcome(client):
@@ -43,9 +44,21 @@ def test_plan_then_outcome(client):
 
 
 def test_blocked_and_bad_input(client):
-    assert client.get(f"/api/v1/storage/days/{DAY}/plan?export_mw=3").json()["state"] == "BLOCKED"
+    assert client.get(f"/api/v1/storage/days/{DAY}/plan?connection=standalone&export_mw=3").json()["state"] == "BLOCKED"
+    assert client.get(f"/api/v1/storage/days/{DAY}/plan?import_mw=6").json()["state"] == "BLOCKED"
     assert client.get("/api/v1/storage/days/2024-01-01/plan").status_code == 404
     assert client.get(f"/api/v1/storage/days/{DAY}/plan?fcess=bogus").status_code == 422
+    assert client.get(f"/api/v1/storage/days/{DAY}/plan?connection=roof").status_code == 422
+    assert client.get("/api/v1/storage/evidence?dispatcher=v9").status_code == 422
+
+
+def test_modes(client):
+    for c, d in (("standalone", "v1"), ("factory", "v1")):
+        p = client.get(f"/api/v1/storage/days/{DAY}/plan?connection={c}&dispatcher={d}").json()
+        assert p["connection"] == c and p["dispatcher"]["short"] == d and not p["unvalidated"]
+        assert (p["site"] is not None) == (c == "factory")
+        e = client.get(f"/api/v1/storage/evidence?connection={c}&dispatcher={d}").json()
+        assert e["adopted"] == d and e["connection"] == c
 
 
 def test_fcess_off_recomputes(client):

@@ -4,20 +4,22 @@ import { api, type Evidence as Ev } from "../api";
 import { Chip, Failed, Gl, Loading, Note, useWidth, Who } from "../components/ui";
 import { aud, isNum, nf, signed } from "../lib/format";
 import { glNote } from "../lib/gloss";
+import { CONN, DISP, useApp, whoItems } from "../state";
 
 const KEYS = ["TRAIN", "TREV", "TBLIND"];
 const NAME = ["Training period", "Test · reviewed", "Test · blind"];
 const RANGE = ["1 Apr 2025 – 30 Jun 2026", "1 Jul – 15 Oct 2026", "16–22 Oct 2026"];
 
 export default function Evidence() {
-  const q = useQuery({ queryKey: ["evidence"], queryFn: api.evidence, staleTime: Infinity });
+  const { settings } = useApp();
+  const q = useQuery({ queryKey: ["evidence", settings.connection, settings.dispatcher], queryFn: () => api.evidence(settings), staleTime: Infinity });
   const [per, setPer] = useState(1);
   return (
     <section aria-label="Evidence">
       <header className="ph">
         <div className="ph-line"><h1>Evidence · storage network</h1><span className="chips"><Chip cls="step">2 · Prove</Chip></span></div>
-        <div className="ctx">1 Apr 2025 – 22 Oct 2026 · 570 days replayed · <Gl k="DECISION">decided 09:00</Gl></div>
-        <Who items={[["ZENITH", "Zenith · runs the network"], ["NETWORK", "storage network · 10 MW / 40 MWh"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]]} />
+        <div className="ctx">1 Apr 2025 – 22 Oct 2026 · 570 days replayed · <Gl k="DECISION">decided 09:00</Gl> · <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl> · <Gl k="DISPATCHER">dispatcher {DISP[settings.dispatcher]}</Gl></div>
+        <Who items={whoItems(settings.connection)} />
       </header>
       {q.isLoading && <Loading what="the evidence" />}
       {q.error && <Failed error={q.error} />}
@@ -31,19 +33,23 @@ function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => v
   const u = P.uplift_vs_plan_only;
   const broken = e.limits.reduce((t, l) => t + l.over_power + l.soc_outside, 0);
   const halfhours = e.limits.reduce((t, l) => t + l.halfhours, 0);
-  const cand = e.periods[0].candidate_minus_adopted;
+  const vd = e.verdict;
+  const key = (d: string) => (d === "e5" ? "E5" : "V1");
+  const factory = e.connection === "factory";
+  const parts = P.adopted_parts_aud;
   const zero = u && isNum(u.lo95) && isNum(u.hi95) && u.lo95 <= 0 && u.hi95 >= 0;
   return (
     <>
       <div className="dec">
         <div className="dec-l">
           <div className="title">
-            <span className={"big " + (zero ? "dim" : "pos")} data-note={glNote("PLANONLY") + " Same days, same prices, same battery; energy + grid services − wear."}>{u ? signed(u.mean) : "–"}</span>
+            <span className={"big " + (zero ? "dim" : "pos")} data-note={glNote("PLANONLY") + ` Same days, same prices, same battery; ${vd.money}.`}>{u ? signed(u.mean) : "–"}</span>
             {" "}/day vs <Gl k="PLANONLY">09:00 plan alone</Gl>
           </div>
           <div className="chips dec-chips">
             <Chip note={glNote(KEYS[per])}>{NAME[per]} · {P.period.days} d</Chip>
-            <Chip cls="hyp" note={`${glNote("E5")} Training period e5 − v1: ${signed(cand.mean)}/day, 95% range ${signed(cand.lo95)} to ${signed(cand.hi95)}.`}>e5 tested, not adopted</Chip>
+            <Chip cls={vd.passed ? undefined : "hyp"} note={`${glNote("E5")} Training period on this connection, v2 − v1: ${signed(vd.e5_minus_v1_aud_per_day)}/day, 95% range ${signed(vd.lo95)} to ${signed(vd.hi95)}. ${vd.rule}.`}>
+              {DISP.e5} {vd.passed ? "passed here" : "not passed here"}</Chip>
           </div>
         </div>
         <div className="dec-r">
@@ -61,10 +67,10 @@ function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => v
         <div className="blk-h"><h2>{NAME[per]}</h2></div>
         <Bars rows={[
           ["PLANONLY", "09:00 plan alone", P.per_day_aud["plan only"], "var(--base)"],
-          ["DISPATCHER", "This dispatcher (v1)", P.per_day_aud[e.adopted], "var(--zen)"],
-          ["E5", "e5 · not adopted", P.per_day_aud[e.candidate], "var(--bar)"],
+          ["DISPATCHER", `This dispatcher (${DISP[e.adopted]})`, P.per_day_aud[e.adopted], "var(--zen)"],
+          [key(e.candidate), `${DISP[e.candidate]} · the other`, P.per_day_aud[e.candidate], "var(--bar)"],
           ["PERFECT", "Prices known ahead", P.per_day_aud["prices known"], "hatch"],
-        ]} parts={P.adopted_parts_aud} />
+        ]} parts={parts} />
       </div>
 
       <div className="two">
@@ -81,15 +87,20 @@ function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => v
                 {e.limits.map((l, i) => <td key={i} className="r">{l.over_power === 0 ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--bad)" }}>{l.over_power}</b>}</td>)}</tr>
               <tr><td><Note note="Stored energy stayed between 0 and 40 MWh.">Stored 0–40 MWh</Note></td>
                 {e.limits.map((l, i) => <td key={i} className="r">{l.soc_outside === 0 ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--bad)" }}>{l.soc_outside}</b>}</td>)}</tr>
-              <tr><td><Note note="Each day's end energy equals start + charged × efficiency − discharged ÷ efficiency; largest error 6.4e-14 MWh over all 570 days.">Energy adds up</Note></td>
+              {factory && <tr><td><Note note={`${glNote("CMD")} Half-hours whose metered import went above the month's cap (an economic limit, priced in the network bill, not blocked).`}>Meter ≤ CMD</Note></td>
+                {e.limits.map((l, i) => <td key={i} className="r">{!l.over_cmd ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--warn)" }}>△ {l.over_cmd}</b>}</td>)}</tr>}
+              <tr><td><Note note="Each day's end energy equals start + charged × efficiency − discharged ÷ efficiency; largest error below 1e-12 MWh over all 570 days, checked for both connections.">Energy adds up</Note></td>
                 {e.limits.map((_, i) => <td key={i} className="r" style={{ color: "var(--ok)" }}>✓</td>)}</tr>
               <tr><td><Note note="Replayed with every actual price after 09:00 multiplied by 3: the 09:00 plan did not change (3 days, both dispatchers). Every day on the Plan page repeats this check.">Only 09:00 data</Note></td>
                 {e.limits.map((_, i) => <td key={i} className="r" style={{ color: "var(--ok)" }}>✓</td>)}</tr>
             </tbody>
           </table>
           <div className="chips" style={{ marginTop: 10 }}>
-            <Chip note={`Training period: grid services ${aud(e.periods[0].adopted_parts_aud.fcess)} of ${aud(e.periods[0].per_day_aud[e.adopted])} a day. FCESS prices fell from April 2026.`}>mostly grid services</Chip>
-            <Chip note="Network charges on the connection are not modelled.">no network charges</Chip>
+            <Chip note={`Training period: grid services ${aud(e.periods[0].adopted_parts_aud.fcess)} of ${aud(e.periods[0].per_day_aud[e.adopted])} a day${factory ? `, network bill saving ${aud(e.periods[0].adopted_parts_aud.network)}` : ""}. FCESS prices fell from April 2026.`}>
+              {factory ? "grid services + bill" : "mostly grid services"}</Chip>
+            {factory && e.site
+              ? <Chip cls="hyp" note={`${glNote("IRCR")} ${e.site.ircr_season}: import in the 12 peak half-hours cut from ${nf(e.site.ircr_mw_no_battery ?? 0, 2)} MW to 0. ${e.site.load}.`}>IRCR {aud(e.site.ircr_saving_aud_per_year[e.adopted])} a year</Chip>
+              : <Chip note="Network charges on the connection are not modelled.">no network charges</Chip>}
           </div>
         </div>
       </div>
@@ -149,7 +160,7 @@ function DotPlot({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) =
   );
 }
 
-function Bars({ rows, parts }: { rows: [string, string, number | null | undefined, string][]; parts: { energy: number | null; fcess: number | null; wear: number | null } }) {
+function Bars({ rows, parts }: { rows: [string, string, number | null | undefined, string][]; parts: { energy: number | null; fcess: number | null; wear: number | null; network?: number | null } }) {
   const [ref, W] = useWidth<HTMLDivElement>(480);
   const L = 214, rh = 26;
   const max = Math.max(1, ...rows.map((r) => r[2] ?? 0));
@@ -164,7 +175,7 @@ function Bars({ rows, parts }: { rows: [string, string, number | null | undefine
             <g key={name}>
               <text className="lt" x={14} y={y + 13}><title>{glNote(k)}</title>{name}</text>
               <rect x={L} y={y + 2} width={w(v ?? 0)} height={15} style={{ fill: col === "hatch" ? "url(#bh)" : col, stroke: col === "hatch" ? "var(--hatch-ln)" : "none" }}>
-                {k === "DISPATCHER" && <title>{`Energy ${aud(parts.energy)} + grid services ${aud(parts.fcess)} − wear ${aud(parts.wear)} a day`}</title>}
+                {k === "DISPATCHER" && <title>{`Energy ${aud(parts.energy)} + grid services ${aud(parts.fcess)} − wear ${aud(parts.wear)}${isNum(parts.network) ? ` + network bill ${aud(parts.network)}` : ""} a day`}</title>}
               </rect>
               <text className="ann" x={L + w(v ?? 0) + 8} y={y + 14} style={{ fontWeight: 600 }}>{aud(v)}</text>
             </g>

@@ -12,7 +12,39 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-STANDALONE = ROOT / "analysis" / "2026-10-27" / "standalone_v2"  # the adopted dispatcher's backtest (PLAN.md there)
+STANDALONE = ROOT / "analysis" / "2026-10-28" / "app_hurdle50"  # the saved backtests the app replays (run.py there)
+FACTORY = ROOT / "analysis" / "2026-10-28" / "app_factory_h50"  # the same behind the factory meter (run.py there)
+# A$/MWh margin for forecast error that the plans and offer prices charge on each MWh discharged (RiskPrefs.hurdle_per_mwh).
+# The user set 50 for the app on 2026-10-28 (after 15, analysis/2026-10-28/app_hurdle15), e5's own offer margin; the
+# research code keeps vpp.backtest.HURDLE (75, chosen in-sample).
+HURDLE = 50.0
+SAVED = STANDALONE.relative_to(ROOT).as_posix()  # as API sources cite it
+# The connection (user, 2026-10-28): behind the factory meter (route m1: CMD 9 MW, IRCR, the synthetic factory load) or
+# on its own connection (route sa); either runs e5 (the default) or v1. The saved backtests name each run by strategy.
+CONNECTIONS = ("factory", "standalone")
+DISPATCHERS = ("e5", "v1")
+DEFAULT_CONNECTION, DEFAULT_DISPATCHER = "factory", "e5"
+SAVED_DIR = {"factory": FACTORY, "standalone": STANDALONE}
+STRATEGY = {("factory", "e5"): "rw50+state t5+roll", ("factory", "v1"): "v1",
+            ("standalone", "e5"): "rw50+state t5+roll", ("standalone", "v1"): "forecast+offer(value)"}
+PLAN_ONLY, PERFECT = "forecast", "perfect"  # the reference runs in each saved folder's refs_daily.csv
+
+
+def saved_rel(connection: str) -> str:
+    return SAVED_DIR[connection].relative_to(ROOT).as_posix()
+
+
+def other(dispatcher: str) -> str:
+    return "v1" if dispatcher == "e5" else "e5"
+
+
+def check_mode(connection: str, dispatcher: str) -> None:
+    if connection not in CONNECTIONS:
+        raise ValueError(f"connection must be one of {CONNECTIONS}")
+    if dispatcher not in DISPATCHERS:
+        raise ValueError(f"dispatcher must be one of {DISPATCHERS}")
+
+
 N = 48
 FIRST = 2  # the 09:00 plan's first half-hour
 

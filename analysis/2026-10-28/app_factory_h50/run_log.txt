@@ -1,0 +1,8 @@
+m1, hurdle 50 A$/MWh: 570 days x 4 runs in 201 s
+against factory_hurdle50 (e5 h50, v1 h50): 1140 day-rows of 1140, largest difference 1.82e-12 -> PASS
+energy balance: largest error 4.86e-13 MWh -> PASS; half-hours over 10 MW: 0 of 54720; stored energy outside 0-40 MWh: 0; meter over the month's CMD cap (half-hours, reported): {'rw50+state t5+roll': 114, 'v1': 174}
+          strategy  ircr_mw  ircr_no_battery_mw  saving_per_year  intervals_covered
+rw50+state t5+roll      0.0                 6.2        2116715.9                 12
+                v1      0.0                 6.2        2116715.9                 12
+          forecast      0.0                 6.2        2116715.9                 12
+           perfect      0.0                 6.2        2116715.9                 11

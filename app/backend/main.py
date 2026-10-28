@@ -19,6 +19,7 @@ from .db import Store
 
 DIST = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 SERVICES = ("reg_raise", "cont_raise", "reg_lower", "cont_lower")
+CONNECTIONS, DISPATCHERS = ("factory", "standalone"), ("e5", "v1")  # = app.engine.common (not imported: no vpp here)
 OFFERS = ("ref", "custom")
 STORE = Store(Path(os.environ["GS_DB"]) if os.environ.get("GS_DB") else None)  # GS_DB: another database (tests)
 
@@ -67,6 +68,14 @@ def _fcess(fcess: str | None) -> tuple:
     return tuple(s for s in SERVICES if s in got)
 
 
+def _mode(connection: str, dispatcher: str) -> dict:
+    if connection not in CONNECTIONS:
+        raise HTTPException(422, f"connection must be one of {CONNECTIONS}")
+    if dispatcher not in DISPATCHERS:
+        raise HTTPException(422, f"dispatcher must be one of {DISPATCHERS}")
+    return {"connection": connection, "dispatcher": dispatcher}
+
+
 def _offer(offer: str) -> str:
     if offer not in OFFERS:
         raise HTTPException(422, f"offer must be one of {OFFERS}")
@@ -86,29 +95,35 @@ async def meta():
 
 # ---------------------------------------------------------------------------------------------------- storage
 @app.get("/api/v1/storage/days/{day}/plan")
-async def storage_plan(day: str, fcess: str | None = None, start_mwh: float | None = Query(None, ge=0, le=40),
-                       export_mw: float | None = Query(None, gt=0, le=20), import_mw: float | None = Query(None, gt=0, le=20)):
-    return await _engine("storage").call("plan", day=day, fcess=_fcess(fcess), start_mwh=start_mwh,
-                                          export_mw=export_mw, import_mw=import_mw)
+async def storage_plan(day: str, connection: str = "factory", dispatcher: str = "e5", fcess: str | None = None,
+                       start_mwh: float | None = Query(None, ge=0, le=40), export_mw: float | None = Query(None, gt=0, le=20),
+                       import_mw: float | None = Query(None, gt=0, le=20)):
+    return await _engine("storage").call("plan", day=day, **_mode(connection, dispatcher), fcess=_fcess(fcess),
+                                          start_mwh=start_mwh, export_mw=export_mw, import_mw=import_mw)
 
 
 @app.get("/api/v1/storage/days/{day}/outcome")
-async def storage_outcome(day: str, fcess: str | None = None, start_mwh: float | None = Query(None, ge=0, le=40)):
-    return await _engine("storage").call("outcome", day=day, fcess=_fcess(fcess), start_mwh=start_mwh)
+async def storage_outcome(day: str, connection: str = "factory", dispatcher: str = "e5", fcess: str | None = None,
+                          start_mwh: float | None = Query(None, ge=0, le=40)):
+    return await _engine("storage").call("outcome", day=day, **_mode(connection, dispatcher), fcess=_fcess(fcess),
+                                          start_mwh=start_mwh)
 
 
 @app.get("/api/v1/storage/evidence")
-async def storage_evidence():
-    return await _engine("storage").call("evidence")
+async def storage_evidence(connection: str = "factory", dispatcher: str = "e5"):
+    return await _engine("storage").call("evidence", **_mode(connection, dispatcher))
 
 
 class BacktestBody(BaseModel):
+    connection: str = "factory"
+    dispatcher: str = "e5"
     fcess: list[str] = Field(default_factory=lambda: list(SERVICES))
 
 
 @app.post("/api/v1/jobs/storage-backtest")
 async def storage_backtest(body: BacktestBody):
-    return {"id": jobs.start(STORE, "storage-backtest", {"fcess": list(_fcess(",".join(body.fcess)))})}
+    return {"id": jobs.start(STORE, "storage-backtest", {**_mode(body.connection, body.dispatcher),
+                                                         "fcess": list(_fcess(",".join(body.fcess)))})}
 
 
 @app.get("/api/v1/jobs/{jid}")
