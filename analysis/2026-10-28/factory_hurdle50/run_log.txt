@@ -1,0 +1,23 @@
+m1, 570 days x 4 runs in 260 s
+e5 h75 ledger against reports/v2_test_daily.csv: 570 days, largest |difference| 5.80e-12 A$
+stored energy against the battery's half-hours: most created 3.22e-14 MWh (must be <= 0), most lost inside a half-hour 0.241 MWh
+energy balance: PASS; half-hours over 10 MW: 0 of 109440; stored energy outside 0-40 MWh: 0
+                            period config   base  days  per_day  base_per_day  gain  lo95_month  hi95_month  market_gain  bill_gain  days_better
+  in-sample 2025-04-01..2026-06-30 e5 h50 e5 h75   456   4663.6        4669.0  -5.4       -22.0         8.4          8.1      -13.5           86
+  in-sample 2025-04-01..2026-06-30 v1 h50 v1 h75   456   4223.7        4262.1 -38.4       -68.1       -11.3        -29.1       -9.3          158
+  in-sample 2025-04-01..2026-06-30 e5 h50 v1 h50   456   4663.6        4223.7 439.8       247.2       625.7        223.0      216.8          300
+  in-sample 2025-04-01..2026-06-30 e5 h75 v1 h75   456   4669.0        4262.1 406.9       204.8       600.2        185.9      221.0          307
+  test seen 2026-07-01..2026-10-15 e5 h50 e5 h75   107   2110.6        2101.4   9.2        -3.2        24.9          9.2       -0.0           35
+  test seen 2026-07-01..2026-10-15 v1 h50 v1 h75   107   1625.0        1703.2 -78.3       -94.3       -41.4        -78.3        0.0           32
+  test seen 2026-07-01..2026-10-15 e5 h50 v1 h50   107   2110.6        1625.0 485.7       212.1       684.2        255.9      229.8           70
+  test seen 2026-07-01..2026-10-15 e5 h75 v1 h75   107   2101.4        1703.2 398.2       148.7       579.2        168.4      229.8           70
+test unseen 2026-10-16..2026-10-22 e5 h50 e5 h75     7   1864.3        1805.4  58.9         NaN         NaN         58.9        0.0            1
+test unseen 2026-10-16..2026-10-22 v1 h50 v1 h75     7   1788.0        1770.1  17.9         NaN         NaN         17.9       -0.0            1
+test unseen 2026-10-16..2026-10-22 e5 h50 v1 h50     7   1864.3        1788.0  76.3         NaN         NaN         76.3        0.0            3
+test unseen 2026-10-16..2026-10-22 e5 h75 v1 h75     7   1805.4        1770.1  35.3         NaN         NaN         35.3        0.0            4
+config  ircr_mw  ircr_no_battery_mw  saving_per_year  peak_days_covered
+e5 h75      0.0                6.24        2116715.9                  4
+v1 h75      0.0                6.24        2116715.9                  4
+e5 h50      0.0                6.24        2116715.9                  4
+v1 h50      0.0                6.24        2116715.9                  4
+PLAN.md rule (in-sample, e5 h50 - e5 h75, month-block 95%): -5.4 [-22.0, 8.4] -> cannot tell

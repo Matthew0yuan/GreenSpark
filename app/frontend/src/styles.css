@@ -12,6 +12,7 @@
   --bad:#C23A2B; --bad-soft:#FDF1F0; --bad-line:#F0BAB5;
   --na:#8A919B; --info:#2F5FD0; --info-soft:#EFF3FC; --info-line:#BCCDEF;
   --dis:#2E62C9; --chg:#9DBCEB; --hold:#D7DBE0; --fcess:#8AAEAE; --fcess-soft:#D9E6E6;
+  --shave:#C9D8F4; --shave-text:#1D3F84; --meter:#5E4B9C; /* behind the factory meter: shave block, site import */
   --cond:#C98A12; --cond-soft:#FBF1DC; --cond-text:#7A5208;
   --soc:#0F5F46; --price:#1B2430; --actual:#E0533D; --range:#F0B64A; --base:#A3A9B2;
   --peak:#8E3B73; --peak-soft:#F5EAF1; --cust:#C27C2C; --cust-soft:#F5E6D2; --cust-text:#8A5310;
@@ -31,6 +32,7 @@
     --bad:#F07060; --bad-soft:#2E1715; --bad-line:#6A2E28;
     --info:#7FA2F0; --info-soft:#17213A; --info-line:#2E4677;
     --dis:#6E95E8; --chg:#3F5F94; --hold:#3A424C; --fcess:#6E9C9C; --fcess-soft:#1F3030;
+    --shave:#34507F; --shave-text:#E3ECFB; --meter:#A995E6;
     --cond:#E0A54A; --cond-soft:#2E2412; --cond-text:#E9C27F;
     --soc:#4CB38E; --price:#E9EDF1; --actual:#F07A62; --base:#6E7782;
     --peak:#D27DB4; --peak-soft:#2C1A26; --cust:#E0A060; --cust-soft:#2E2214; --cust-text:#E9C27F;
@@ -50,6 +52,7 @@
   --bad:#F07060; --bad-soft:#2E1715; --bad-line:#6A2E28;
   --info:#7FA2F0; --info-soft:#17213A; --info-line:#2E4677;
   --dis:#6E95E8; --chg:#3F5F94; --hold:#3A424C; --fcess:#6E9C9C; --fcess-soft:#1F3030;
+  --shave:#34507F; --shave-text:#E3ECFB; --meter:#A995E6;
   --cond:#E0A54A; --cond-soft:#2E2412; --cond-text:#E9C27F;
   --soc:#4CB38E; --price:#E9EDF1; --actual:#F07A62; --base:#6E7782;
   --peak:#D27DB4; --peak-soft:#2C1A26; --cust:#E0A060; --cust-soft:#2E2214; --cust-text:#E9C27F;
@@ -195,6 +198,7 @@ h1,h2,h3{margin:0}
 .wf-row .e{background:var(--dis)}
 .wf-row .f{background:var(--fcess);color:#10221F}
 .wf-row .s{background:var(--surface-3);color:var(--text-2)}
+.wf-row .b{background:var(--meter);color:#fff}
 .wf-row .w{background:var(--bad-soft);color:var(--bad)}
 .wf-row .n{background:var(--text);color:var(--bg)}
 .wf-h{font-size:12.5px;color:var(--text-3);margin-top:4px}
@@ -212,6 +216,8 @@ table.t td.r,table.t th.r{text-align:right}
 .ck.pass i{color:var(--ok)}
 .ck.fail{background:var(--bad-soft);border-color:var(--bad-line)}
 .ck.fail i{color:var(--bad)}
+.ck.warn{background:var(--warn-soft);border-color:var(--warn-line)}
+.ck.warn i{color:var(--warn)}
 .ck.not_checked{color:var(--na);background:transparent;border:1px dashed var(--rule)}
 
 /* blocked banner */

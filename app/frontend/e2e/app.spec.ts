@@ -1,6 +1,7 @@
 /* End-to-end checks against the real backend. The page rules come from ROUND6.md section 1 (the round-6 prototype's
    standard): decision chips <= 4 and <= 4 words each, first-screen text <= 75 words, hover tables <= 5 rows with
-   labels of <= 2 words, chart text only names, axes, actions and "number + word" labels, no overlapping chart text. */
+   labels of <= 2 words, chart text only names, axes, actions and "number + word" labels, no overlapping chart text.
+   The default connection is behind the factory meter with dispatcher v2 (e5); tests that need the other set it. */
 import { expect, test, type Page } from "@playwright/test";
 
 const DAY = "2026-01-20";     // in-sample, Hot Season: a flagged day the model calls
@@ -73,21 +74,24 @@ test("plan: chart text is only names, axes, actions and number + word labels; no
   const texts = await page.locator(".chart svg text").evaluateAll((els) =>
     els.map((t) => Array.from(t.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join("")));
   const allowed = [
-    /^(Plan|Sell extra if|Grid services|Price, A\$\/MWh|Energy stored, MWh|PLAN MADE 09:00|Minimum|Full · \d+ MWh)$/,
+    /^(Plan|Sell extra if|Grid services|Price, A\$\/MWh|Energy stored, MWh|Site import, MW|PLAN MADE 09:00|Minimum|Full · \d+ MWh)$/,
     /^-?[\d,]+$/, /^\d{2}:\d{2}$/, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d+ \w+$/,
-    /^(Discharge|Charge) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/,
+    /^(Discharge|Charge|Shave) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/, /^CMD · \d+ MW$/,
     /^(peak|low|floor) A\$[\d,]+$/, /^earns A\$[\d,]+$/, /^[\d.]+ MWh$/, /^A\$[\d,]+$/,
     /^price ≥ A\$\d+: \+up to \d+ MW( · sold \d+ · A\$[\d,]+)?$/,
   ];
   for (const t of texts) expect(allowed.some((r) => r.test(t.trim())), `chart text "${t}"`).toBe(true);
+  await expect(page.locator('.chart svg[aria-label^="Factory meter"]')).toHaveCount(1);
   const overlaps = await page.evaluate(() => {
-    const svg = document.querySelectorAll(".chart svg")[0];
-    const boxes = Array.from(svg.querySelectorAll("text")).map((t) => ({ t: t.childNodes[0]?.textContent, b: (t as SVGTextElement).getBBox() }))
-      .filter((x) => x.b.width > 0);
+    const svgs = [document.querySelectorAll(".chart svg")[0], document.querySelector('.chart svg[aria-label^="Factory meter"]')!];
     const bad: string[] = [];
-    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i].b, b = boxes[j].b;
-      if (a.x < b.x + b.width - 1 && b.x < a.x + a.width - 1 && a.y < b.y + b.height - 1 && b.y < a.y + a.height - 1) bad.push(`${boxes[i].t} / ${boxes[j].t}`);
+    for (const svg of svgs) {
+      const boxes = Array.from(svg.querySelectorAll("text")).map((t) => ({ t: t.childNodes[0]?.textContent, b: (t as SVGTextElement).getBBox() }))
+        .filter((x) => x.b.width > 0);
+      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i].b, b = boxes[j].b;
+        if (a.x < b.x + b.width - 1 && b.x < a.x + a.width - 1 && a.y < b.y + b.height - 1 && b.y < a.y + a.height - 1) bad.push(`${boxes[i].t} / ${boxes[j].t}`);
+      }
     }
     return bad;
   });
@@ -115,7 +119,8 @@ test("plan: hover table ≤ 5 rows, labels ≤ 2 words; outcome only after askin
 });
 
 test("plan: a 3 MW connection blocks the plan; Inspect jumps to the first breach", async ({ page }) => {
-  await open(page, "plan", "2026-02-02", { fcess: ["reg_raise", "cont_raise", "reg_lower", "cont_lower"], startMwh: null, exportMw: 3, importMw: null });
+  await open(page, "plan", "2026-02-02", { connection: "standalone", dispatcher: "e5", fcess: ["reg_raise", "cont_raise", "reg_lower", "cont_lower"],
+    startMwh: null, exportMw: 3, importMw: null });
   await expect(page.locator(".pill.bad")).toContainText("Blocked");
   await expect(page.locator(".dec .title")).toContainText("Resolve");
   await expect(page.locator(".dec .big")).toHaveClass(/dim/);
@@ -142,7 +147,23 @@ test("evidence: three periods; clicking one changes the headline", async ({ page
   await expect(page.locator(".dec")).toContainText("Test · reviewed");
   await rows.nth(0).click();
   await expect(page.locator(".dec")).toContainText("Training period");
-  await expect(page.locator(".dec")).toContainText("e5 tested, not adopted");
+  await expect(page.locator(".dec")).toContainText("v2 passed here");
+});
+
+test("settings: the connection switch changes the plan; v2 on its own connection is marked not passed", async ({ page }) => {
+  await open(page, "plan");
+  await expect(page.locator(".ph .ctx")).toContainText("factory meter");
+  await expect(page.locator(".ph .ctx")).toContainText("dispatcher v2");
+  await expect(page.locator('.chart svg[aria-label^="Factory meter"]')).toHaveCount(1);
+  await page.goto("/#/settings");
+  await page.getByRole("radio", { name: "Own connection" }).click();
+  await page.getByRole("button", { name: "Apply" }).click();
+  await expect(page.locator("aside")).toContainText("did not pass the comparison");
+  await page.goto("/#/plan");
+  await expect(page.locator(".ph .ctx")).toContainText("own connection", { timeout: 60_000 });
+  await expect(page.locator(".ph .ctx")).toContainText("not passed here");
+  await expect(page.locator('.chart svg[aria-label^="Factory meter"]')).toHaveCount(0);
+  await expect(page.locator(".ph .chip.unv")).toHaveCount(0);  // a tested connection, not a changed setting
 });
 
 test("call: the operator's decision changes the count, survives a reload, and undo returns to the model", async ({ page }) => {
