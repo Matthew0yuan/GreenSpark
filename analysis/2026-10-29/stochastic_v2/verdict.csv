@@ -1,0 +1,6 @@
+candidate,a,b,c,pass
+sp75,False,False,True,False
+sp50,False,False,True,False
+sp25,False,False,True,False
+sp0,False,True,True,False
+cvar0,False,True,True,False

@@ -33,3 +33,18 @@ export function addDays(iso: string, n: number) {
 }
 
 export const periodOf = (iso: string) => (iso < "2026-07-01" ? "TRAIN" : iso < "2026-10-16" ? "TREV" : "TBLIND");
+
+/** Short A$ for axis ticks: A$0, A$500k, A$1.5M. */
+export const audShort = (v: number) => {
+  const a = Math.abs(v), s = v < -0.0005 ? "−A$" : "A$";
+  return a >= 1e6 ? `${s}${nf(a / 1e6, a % 1e6 ? 1 : 0)}M` : a >= 1e3 ? `${s}${nf(a / 1e3)}k` : `${s}${nf(a)}`;
+};
+
+/** Round tick values covering lo..hi, about n of them (steps of 1, 2 or 5 × 10^k). */
+export function niceTicks(lo: number, hi: number, n = 5) {
+  const raw = (hi - lo) / Math.max(1, n), mag = 10 ** Math.floor(Math.log10(raw || 1));
+  const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? 10 * mag;
+  const out: number[] = [];
+  for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) out.push(Math.abs(t) < 1e-9 ? 0 : t);
+  return out;
+}

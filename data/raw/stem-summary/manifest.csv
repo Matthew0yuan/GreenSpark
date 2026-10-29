@@ -1,0 +1,5 @@
+name,url,listed_at,size,fetched_at,status,sha256,rows,first_trading_date,last_trading_date
+stem-summary-2023.csv,https://data.wa.aemo.com.au/public/public-data/datafiles/stem-summary/stem-summary-2023.csv,2023-12-30T11:30:00,1231457,2026-10-28T16:05:33,downloaded,c0b11924699d91201229eecd5cbd5b924260e6b40e2f38a30ee80cf068d4b5a8,17520,2023-01-01,2023-12-31
+stem-summary-2024.csv,https://data.wa.aemo.com.au/public/public-data/datafiles/stem-summary/stem-summary-2024.csv,2024-12-30T11:30:00,1240052,2026-10-28T16:05:34,downloaded,d32b6cac7546b3de1ef140f80ca64840d418b54ad0a5c6337c4feeafa46b9f3f,17568,2024-01-01,2024-12-31
+stem-summary-2025.csv,https://data.wa.aemo.com.au/public/public-data/datafiles/stem-summary/stem-summary-2025.csv,2025-12-30T11:30:00,1240669,2026-10-28T16:05:35,downloaded,b2bb0bec504d5c6ba33eb47df38b388dacc2ed5d3a2956612a18dbc7db5e60c8,17520,2025-01-01,2025-12-31
+stem-summary-2026.csv,https://data.wa.aemo.com.au/public/public-data/datafiles/stem-summary/stem-summary-2026.csv,2026-10-28T11:30:00,1047066,2026-10-28T16:05:36,downloaded,b3e3d11963a9d1c6daf9ee2fe1e6aea3919670c27b5e5c0ff645302517baa427,14496,2026-01-01,2026-10-29

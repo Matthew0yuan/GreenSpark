@@ -1,0 +1,40 @@
+{
+ "placebo": {
+  "comparisons": 60,
+  "passed": 0,
+  "too_loose": false,
+  "G0_d0": {
+   "real_delta": 0.002399252223281682,
+   "placebo_above_real": 0,
+   "placebo_max": 0.0007020605745389886,
+   "distinguishable": true
+  },
+  "G1_d0": {
+   "real_delta": 0.0021313885307321493,
+   "placebo_above_real": 0,
+   "placebo_max": 0.0011155019107163692,
+   "distinguishable": true
+  },
+  "G0_d1": {
+   "real_delta": 0.0034315715016582818,
+   "placebo_above_real": 0,
+   "placebo_max": 0.0019017364262263377,
+   "distinguishable": true
+  }
+ },
+ "split": {
+  "calibration_choice": {
+   "raw": 0.0742105732083531,
+   "platt": 0.07570599321433431,
+   "isotonic": 0.08085314356928733
+  },
+  "calibration": "raw",
+  "passed_d0": [],
+  "verdict_d0": "选择段没有选出任何组",
+  "passed_d1": [
+   "G0"
+  ],
+  "verdict_d1": "能推广"
+ },
+ "seconds": 748
+}

@@ -43,6 +43,15 @@ class V2Config:
     # round 6 (v2_plan.md section 15): the plans' own price-quantity curve for the interval each starts with, at these
     # $/MWh offsets from its price (the plan itself is the 0 point); () off
     curve: tuple = ()
+    # stochastic plans (analysis/2026-10-29/stochastic_v2/PLAN.md), with replan_every: from 09:00 the plans are made on
+    # the day's price scenarios (vpp.scenarios; the backtest attaches them, vpp.stochastic.attach) - "mean" on their
+    # mean, "sp" the two-stage stochastic plan, "dro" at the worst weights, "cvar" expected value and CVaR mixed
+    # (vpp.dispatch.plan_sp); "" on the forecast ("roll")
+    planner: str = ""
+    plan_hurdle: float | None = None  # the plans' $/MWh hurdle in place of the scenario's (75); offers keep `hurdle`
+    # with a stochastic planner: the half-hours whose first adopted plan also gives the expected value of each kind of
+    # action there, side by side (vpp.dispatch.plan_options; vpp.v2.explain.options_line)
+    options_at: tuple = ()
 
 
 V1 = V2Config()

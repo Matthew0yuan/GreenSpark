@@ -1,0 +1,68 @@
+{
+ "calibration": "platt",
+ "signals": {
+  "hr_norm": "low",
+  "hr_daymin_norm": "low",
+  "rsi": "low",
+  "syn_loss_mw": "high",
+  "wrev_evening": "low",
+  "stem_premium": "high",
+  "stem_cover": "low",
+  "fx_rr_jumps7": "high",
+  "fx_cr_jumps7": "high",
+  "pdx_rr_ratio": "high",
+  "pdx_cr_ratio": "high",
+  "st_short_energy_day": "high",
+  "out_loss_mw": "high"
+ },
+ "shares": [
+  0.01,
+  0.025,
+  0.05,
+  0.1,
+  0.15,
+  0.2,
+  0.25
+ ],
+ "reproduction_d0": {
+  "rows": 34592,
+  "max_abs_diff": 0.0,
+  "n_cols": 50
+ },
+ "missing_in_sample_d0": {
+  "sur_28": 0.0,
+  "sur_60": 0.0,
+  "stress": 0.0
+ },
+ "signals_used_d0": {
+  "count": 31.0,
+  "mean": 12.06,
+  "std": 0.44,
+  "min": 11.0,
+  "25%": 12.0,
+  "50%": 12.0,
+  "75%": 12.0,
+  "max": 13.0
+ },
+ "reproduction_d1": {
+  "rows": 36096,
+  "max_abs_diff": 0.0,
+  "n_cols": 46
+ },
+ "missing_in_sample_d1": {
+  "sur_28": 0.0,
+  "sur_60": 0.0,
+  "stress": 0.0
+ },
+ "signals_used_d1": {
+  "count": 31.0,
+  "mean": 11.77,
+  "std": 0.43,
+  "min": 11.0,
+  "25%": 12.0,
+  "50%": 12.0,
+  "75%": 12.0,
+  "max": 12.0
+ },
+ "seconds": 136
+}

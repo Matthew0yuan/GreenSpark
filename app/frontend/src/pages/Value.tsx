@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, type ValueRow, type ValueSummary } from "../api";
-import { Chip, Failed, Gl, Loading, Note, useWidth, Who } from "../components/ui";
-import { aud, isNum, nf, signed } from "../lib/format";
+import { hbar, tw } from "../components/chart";
+import { Chip, Failed, Gl, Loading, Note, PageHead, useWidth } from "../components/ui";
+import { aud, audShort, isNum, nf, niceTicks, signed } from "../lib/format";
 import { glNote } from "../lib/gloss";
 import { useApp } from "../state";
 
@@ -10,11 +11,10 @@ export default function Value() {
   const q = useQuery({ queryKey: ["value"], queryFn: api.value });
   return (
     <section aria-label="Value by party">
-      <header className="ph">
-        <div className="ph-line"><h1>Value by party</h1><span className="chips"><Chip cls="step">2 · Improve</Chip></span></div>
-        <div className="ctx">Customer batteries · <Gl k="CUSTOMOFFER">suggested offer</Gl> vs <Gl k="REFTERMS">reference terms</Gl></div>
-        <Who items={[["ZENITH", "Zenith · the retailer"], ["VPP", "customer batteries (VPP)"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]]} />
-      </header>
+      <PageHead title="Value by party"
+        chips={<><Chip cls="step">2 · Improve</Chip><Chip cls="hyp" note={glNote("S2a")}>today's rule (S2a): no business case</Chip></>}
+        ctx={<>Customer batteries · <Gl k="CUSTOMOFFER">suggested offer</Gl> vs <Gl k="REFTERMS">reference terms</Gl></>}
+        who={[["ZENITH", "Zenith · the retailer"], ["VPP", "customer batteries (VPP)"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]]} />
       {q.isLoading && <Loading what="the accounts" />}
       {q.error && <Failed error={q.error} />}
       {q.data && <Body v={q.data} />}
@@ -32,8 +32,7 @@ function Body({ v }: { v: ValueSummary }) {
   const worst = (o: ValueSummary["offers"]["ref"]) => o.holdouts.length ? Math.min(...o.holdouts.map((h) => h.held_out_profit)) : null;
   return (
     <>
-      <div className="chips" style={{ marginBottom: 8 }}><Chip cls="hyp" note={glNote("S2a")}>today's rule (S2a): no business case</Chip></div>
-      <div className="dec">
+      <div className="dec top">
         <div className="dec-l">
           <div className="statusline">{positive ? <span className="pill ok" data-note={glNote("S2b")} tabIndex={0}>✓ Positive in S2b</span> : <span className="pill bad">No business case</span>}</div>
           <div className="title"><span className={"big " + (diff >= 0 ? "pos" : "neg")} data-note={`Extra Zenith profit of the suggested offer over the reference terms in contract year 2025-26 under S2b, each with the model's own calls.`}>{signed(diff)}</span> vs <Gl k="REFTERMS">reference terms</Gl></div>
@@ -82,37 +81,50 @@ function Body({ v }: { v: ValueSummary }) {
 }
 
 type Alt = { name: string; sub: string; note: string; z: number | null; worst: number | null; lines: string[]; hl?: boolean; mine?: boolean };
+/** Extra Zenith profit of each way of calling (bar) and its worst held-out season (thin bar), on one A$ axis. Rows are as
+ *  tall as their text; every label is placed by its measured width. */
 function Alternatives({ rows }: { rows: Alt[] }) {
   const [ref, W] = useWidth<HTMLDivElement>(600);
-  const L = 330, R = 210, rh = 84;
+  const L = Math.max(300, ...rows.map((r) => Math.max(tw(r.name, "ltB") + 10 + tw(r.sub), ...r.lines.map((l) => tw(l))) + 36));
+  const valTxt = (r: Alt) => (r.name === "No calls" ? "A$0 baseline" : aud(r.z));
+  const worstTxt = (r: Alt) => `${aud(r.worst)} worst season`;
+  const R = Math.max(...rows.map((r) => Math.max(tw(valTxt(r), "annB"), isNum(r.worst) ? tw(worstTxt(r)) : 0))) + 16;
   const all = rows.flatMap((r) => [r.z ?? 0, r.worst ?? 0]);
-  const lo = Math.min(0, ...all), hi = Math.max(1, ...all);
+  const ticks = niceTicks(Math.min(0, ...all), Math.max(1, ...all), 4);
+  const lo = Math.min(ticks[0], ...all), hi = Math.max(ticks[ticks.length - 1], ...all);
   const x = (v: number) => L + ((v - lo) / (hi - lo)) * (W - L - R);
+  const top = 22;
+  const hs = rows.map((r) => Math.max(58, 30 + 14 * r.lines.length + 12));
+  const ys = hs.map((_, i) => top + hs.slice(0, i).reduce((t, h) => t + h, 0));
+  const axY = top + hs.reduce((t, h) => t + h, 0) + 4;
   return (
     <div className="chart" ref={ref}>
-      <svg viewBox={`0 0 ${W} ${rows.length * rh + 30}`} role="group" aria-label="Extra Zenith profit of each way of calling, contract year 2025-26, with the worst season">
-        <text className="ann" x={L - 4} y={12} textAnchor="end">Extra Zenith profit, A$</text>
-        <line x1={x(0)} x2={x(0)} y1={18} y2={rows.length * rh + 18} style={{ stroke: "var(--axis)" }} />
+      <svg viewBox={`0 0 ${W} ${axY + 22}`} role="group" aria-label="Extra Zenith profit of each way of calling, contract year 2025-26, with the worst season">
+        <text className="ttl" x={L} y={12}>Extra Zenith profit, A$</text>
+        {rows.map((r, i) => (r.hl || r.mine) && <rect key={"bg" + r.name} x={0} y={ys[i]} width={W} height={hs[i] - 6} rx={6} style={{ fill: r.mine ? "var(--cust-soft)" : "var(--accent-soft)", opacity: 0.7 }} />)}
+        {ticks.map((t) => <line key={"g" + t} className="gl" x1={x(t)} x2={x(t)} y1={top} y2={axY} />)}
+        <line className="ref" x1={x(0)} x2={x(0)} y1={top} y2={axY} style={{ stroke: "var(--axis)" }} />
         {rows.map((r, i) => {
-          const y = 22 + i * rh;
+          const y = ys[i];
           return (
             <g key={r.name}>
-              {(r.hl || r.mine) && <rect x={0} y={y} width={W} height={rh - 6} rx={6} style={{ fill: r.mine ? "var(--cust-soft)" : "var(--accent-soft)", opacity: 0.7 }} />}
               <text className="lt" x={12} y={y + 18} style={{ fontWeight: 600 }}><title>{r.note}</title>{r.name}</text>
-              <text x={12 + r.name.length * 7.4 + 8} y={y + 18}>{r.sub}</text>
+              <text x={12 + tw(r.name, "ltB") + 10} y={y + 18}>{r.sub}</text>
               {r.lines.map((l, j) => <text key={j} x={12} y={y + 34 + j * 14} style={{ fill: "var(--text-2)" }}>{l}</text>)}
               {isNum(r.z) && <>
-                <rect x={Math.min(x(0), x(r.z))} y={y + 12} width={Math.abs(x(r.z) - x(0))} height={16} style={{ fill: (r.z ?? 0) >= 0 ? "var(--zen)" : "var(--bad)" }} />
-                <text className="ann" x={Math.max(x(0), x(r.z)) + 6} y={y + 24}>{r.name === "No calls" ? "A$0 baseline" : aud(r.z)}</text>
+                {Math.abs(x(r.z) - x(0)) > 0.5 && <path d={hbar(x(0), x(r.z), y + 10, 16)} style={{ fill: (r.z ?? 0) >= 0 ? "var(--zen)" : "var(--bad)" }} />}
+                <text className="ann" x={Math.max(x(0), x(r.z)) + 6} y={y + 22} style={{ fontWeight: 600 }}>{valTxt(r)}</text>
               </>}
               {isNum(r.worst) && <>
-                <rect x={Math.min(x(0), x(r.worst!))} y={y + 34} width={Math.abs(x(r.worst!) - x(0))} height={12} style={{ fill: r.worst! >= 0 ? "var(--zen)" : "var(--bad)", opacity: r.worst! >= 0 ? 0.4 : 0.85 }} />
-                <text x={Math.max(x(0), x(r.worst!)) + 6} y={y + 44}><title>Lowest Zenith profit when one Hot Season (2023-24, 2024-25 or 2025-26) was left out of the choice and then tested; only 2025-26 is in time order.</title>{aud(r.worst)} worst season</text>
+                <path d={hbar(x(0), x(r.worst!), y + 32, 12, 2)} style={{ fill: r.worst! >= 0 ? "var(--zen)" : "var(--bad)", opacity: r.worst! >= 0 ? 0.4 : 0.85 }} />
+                <text x={Math.max(x(0), x(r.worst!)) + 6} y={y + 42}><title>Lowest Zenith profit when one Hot Season (2023-24, 2024-25 or 2025-26) was left out of the choice and then tested; only 2025-26 is in time order.</title>{worstTxt(r)}</text>
               </>}
             </g>
           );
         })}
-        {[lo, 0, hi].filter((v, i, a) => a.indexOf(v) === i).map((t) => <text key={t} x={x(t)} y={rows.length * rh + 28} textAnchor="middle">{t === 0 ? "0" : aud(t)}</text>)}
+        <line className="ax" x1={x(lo)} x2={x(hi)} y1={axY} y2={axY} />
+        {ticks.map((t) => <g key={"t" + t}><line className="ax" x1={x(t)} x2={x(t)} y1={axY} y2={axY + 4} />
+          <text x={x(t)} y={axY + 16} textAnchor="middle">{audShort(t)}</text></g>)}
       </svg>
     </div>
   );
@@ -126,19 +138,21 @@ function Parties({ r }: { r: ValueRow }) {
   ];
   const [ref, W] = useWidth<HTMLDivElement>(480);
   const max = Math.max(1, ...rows.map((x) => Math.abs(x[2] ?? 0)));
-  const L = 180, w = (v: number | null) => Math.max(3, (Math.abs(v ?? 0) / max) * (W - L - 280));
+  const per = (pc: number | null) => (isNum(pc) ? `· ${aud(pc, 2)} /customer/yr` : "");
+  const R = Math.max(...rows.map((x) => tw(aud(x[2]), "annB") + 10 + tw(per(x[3])))) + 16;
+  const L = 180, w = (v: number | null) => Math.max(3, (Math.abs(v ?? 0) / max) * (W - L - R));
   return (
     <div className="chart" ref={ref}>
-      <svg viewBox={`0 0 ${W} ${rows.length * 28 + 4}`} role="img" aria-label={rows.map((x) => `${x[0]} ${aud(x[2])}`).join(", ")}>
+      <svg viewBox={`0 0 ${W} ${rows.length * 30 + 4}`} role="img" aria-label={rows.map((x) => `${x[0]} ${aud(x[2])}`).join(", ")}>
         {rows.map(([n, col, v, pc, note], i) => {
-          const y = 4 + i * 28, neg = (v ?? 0) < 0;
+          const y = 4 + i * 30, neg = (v ?? 0) < 0, end = L + w(v) + 8;
           return (
             <g key={n}>
               <circle cx={6} cy={y + 9} r={4} style={{ fill: col }} />
               <text className="lt" x={16} y={y + 13} style={{ fontWeight: 600 }}><title>{note}</title>{n}</text>
-              <rect x={L} y={y + 2} width={w(v)} height={14} style={{ fill: neg ? "var(--bad)" : col }} />
-              <text className="ann" x={L + w(v) + 8} y={y + 14} style={{ fontWeight: 600, fill: neg ? "var(--bad)" : undefined }}>{aud(v)}</text>
-              {isNum(pc) && <text x={L + w(v) + 96} y={y + 14}>· {aud(pc, 2)} /customer/yr</text>}
+              <path d={hbar(L, L + w(v), y + 1, 16)} style={{ fill: neg ? "var(--bad)" : col }} />
+              <text className="ann" x={end} y={y + 13} style={{ fontWeight: 600, fill: neg ? "var(--bad)" : undefined }}>{aud(v)}</text>
+              {isNum(pc) && <text x={end + tw(aud(v), "annB") + 10} y={y + 13}>{per(pc)}</text>}
             </g>
           );
         })}
@@ -177,11 +191,11 @@ function Terms({ v }: { v: ValueSummary }) {
   const base = v.offers[o].model_calls.parties_aud.zenith;
   return (
     <div style={{ display: "grid", gap: 8, maxWidth: 640 }}>
-      <div className="fld"><span>Offer</span><span><select value={o} onChange={(e) => { const k = e.target.value as "ref" | "custom"; setO(k); const tt = v.offers[k].terms; setF({ pay_c_per_kwh: tt.pay_c_per_kwh ?? 0, pay_aud_per_event: tt.pay_aud_per_event ?? 0, max_calls: tt.max_calls }); }}>
+      <div className="fld"><span>Offer</span><span><select className="sel" value={o} onChange={(e) => { const k = e.target.value as "ref" | "custom"; setO(k); const tt = v.offers[k].terms; setF({ pay_c_per_kwh: tt.pay_c_per_kwh ?? 0, pay_aud_per_event: tt.pay_aud_per_event ?? 0, max_calls: tt.max_calls }); }}>
         <option value="custom">Suggested offer</option><option value="ref">Reference terms</option></select></span></div>
-      <div className="fld"><span>Payment per kWh exported, c</span><input type="number" min={0} max={500} value={f.pay_c_per_kwh} onChange={(e) => setF({ ...f, pay_c_per_kwh: +e.target.value })} /></div>
-      <div className="fld"><span>Payment per call, A$</span><input type="number" min={0} max={500} step={0.5} value={f.pay_aud_per_event} onChange={(e) => setF({ ...f, pay_aud_per_event: +e.target.value })} /></div>
-      <div className="fld"><span>Calls per contract year, cap</span><input type="number" min={1} max={120} value={f.max_calls} onChange={(e) => setF({ ...f, max_calls: +e.target.value })} /></div>
+      <div className="fld"><span>Payment per kWh exported, c</span><input className="inp" type="number" min={0} max={500} value={f.pay_c_per_kwh} onChange={(e) => setF({ ...f, pay_c_per_kwh: +e.target.value })} /></div>
+      <div className="fld"><span>Payment per call, A$</span><input className="inp" type="number" min={0} max={500} step={0.5} value={f.pay_aud_per_event} onChange={(e) => setF({ ...f, pay_aud_per_event: +e.target.value })} /></div>
+      <div className="fld"><span>Calls per contract year, cap</span><input className="inp" type="number" min={1} max={120} value={f.max_calls} onChange={(e) => setF({ ...f, max_calls: +e.target.value })} /></div>
       <div><button className="btn pri" onClick={() => m.mutate()} disabled={m.isPending}>{m.isPending ? "Computing…" : "Evaluate"}</button></div>
       {m.error && <div className="state err">{(m.error as Error).message}</div>}
       {m.data && (

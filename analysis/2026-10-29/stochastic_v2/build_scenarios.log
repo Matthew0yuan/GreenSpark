@@ -1,0 +1,6 @@
+history: 839 days from 2024-07-01; largest difference from the dispatcher's forecast on the overlap: 0.00e+00 $/MWh
+bank: 839 complete days, 2024-07-01 .. 2026-10-22
+saved /Users/matthew.yuan/Desktop/HGS/analysis/2026-10-29/stochastic_v2/scenarios_0900.parquet (570 days x 20 scenarios, method anen365_vol_level)
+old file: 563 days to 2026-10-15; new: 570 days to 2026-10-22
+on the 563 common days: largest |old - new| {'energy': 0.0, 'reg_raise': 0.0, 'cont_raise': 0.0, 'reg_lower': 0.0, 'cont_lower': 0.0}; same analog day 1.0000
+done in 17 s

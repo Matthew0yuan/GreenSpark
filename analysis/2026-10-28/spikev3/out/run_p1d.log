@@ -1,0 +1,41 @@
+days_ahead 0: F reproduction max |diff| 0.0e+00; E vs F to 2026-07 0.0e+00 (9 s)
+  S60: 34,592 rows, 0 of 25 months extended, median spikes in window 51 (1 s)
+  S90: 34,592 rows, 0 of 25 months extended, median spikes in window 77 (1 s)
+  S180: 34,592 rows, 0 of 25 months extended, median spikes in window 181 (1 s)
+  D90: 34,592 rows (4 s)
+days_ahead 1: F reproduction max |diff| 0.0e+00; E vs F to 2026-07 0.0e+00 (9 s)
+  S60: 36,096 rows, 0 of 25 months extended, median spikes in window 51 (1 s)
+  S90: 36,096 rows, 0 of 25 months extended, median spikes in window 78 (1 s)
+  S180: 36,096 rows, 0 of 25 months extended, median spikes in window 187 (2 s)
+  D90: 36,096 rows (5 s)
+{
+ "d0": {
+  "reproduction_F_max_diff": 0.0,
+  "E_equals_F_to_2026-07_max_diff": 0.0,
+  "S60_months_extended": 0,
+  "S60_train_pos_median": 51.0,
+  "S90_months_extended": 0,
+  "S90_train_pos_median": 77.0,
+  "S180_months_extended": 0,
+  "S180_train_pos_median": 181.0,
+  "C60_months_extended": 0,
+  "C60_months_raw": 1,
+  "C90_months_extended": 0,
+  "C90_months_raw": 1
+ },
+ "d1": {
+  "reproduction_F_max_diff": 0.0,
+  "E_equals_F_to_2026-07_max_diff": 0.0,
+  "S60_months_extended": 0,
+  "S60_train_pos_median": 51.0,
+  "S90_months_extended": 0,
+  "S90_train_pos_median": 78.0,
+  "S180_months_extended": 0,
+  "S180_train_pos_median": 187.0,
+  "C60_months_extended": 0,
+  "C60_months_raw": 1,
+  "C90_months_extended": 0,
+  "C90_months_raw": 1
+ },
+ "seconds": 35
+}

@@ -1,0 +1,24 @@
+{
+ "c_spike_price": 249.74,
+ "label_share_in_sample": 0.24342105263157895,
+ "label_days_in_sample": 456,
+ "spike_halfhours_0800_0900_in_sample": 15,
+ "partner_fixed_points": 0,
+ "days": 570,
+ "first_day": "2025-04-01",
+ "last_day": "2026-10-22",
+ "probe_days": [
+  "2025-04-13",
+  "2025-04-22",
+  "2025-05-19",
+  "2025-07-02",
+  "2025-08-20",
+  "2025-08-31",
+  "2026-04-30",
+  "2026-06-14",
+  "2026-08-08",
+  "2026-08-10"
+ ],
+ "hurdle_plan": 50.0,
+ "hurdle_table": 50.0
+}

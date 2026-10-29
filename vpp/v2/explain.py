@@ -9,6 +9,7 @@ import re
 
 import numpy as np
 
+from vpp import dispatch as dp
 from vpp.v2 import outputs as op
 
 KIND = {"morning": "早上的过渡计划（预测公布之前）", "reveal": "预测公布后的重排", "scheduled": "定时重排",
@@ -117,3 +118,72 @@ def explain(s: op.Snapshot, prev: op.Snapshot | None = None) -> tuple[list[str],
         lines.append(f"和上一份计划（{op.clock(prev.t0)}）比：明早计划存电变化 {f('change at 08:00', d_end, '{:+.1f}')} MWh，"
                      f"计划充电变化 {f('change in charging', d_ch, '{:+.1f}')} MWh。")
     return lines, f
+
+
+OPTION_NAMES = {"sell": "卖电", "charge": "充电", "fcess": "只报 FCESS", "hold": "不动"}
+
+
+def _action(f: Facts, net: float, fcess: float, tag: str) -> str:
+    parts = []
+    if net > 0.05:
+        parts.append(f"卖电 {f(tag + ' MW out', net, '{:.1f}')} MW")
+    elif net < -0.05:
+        parts.append(f"充电 {f(tag + ' MW in', -net, '{:.1f}')} MW")
+    if fcess > 0.05:
+        parts.append(f"报 FCESS {f(tag + ' FCESS MW', fcess, '{:.1f}')} MW")
+    return " + ".join(parts) or "不动"
+
+
+def option_kind(net: float, fcess: float, min_mw: float = dp.OPTION_MW) -> str | None:
+    """Which of vpp.dispatch.OPTIONS an action in a half-hour is; None for a mix, or for less than min_mw of a kind."""
+    lo, zero = min_mw - 1e-6, 1e-6
+    if fcess <= zero:
+        return "sell" if net >= lo else "charge" if -net >= lo else "hold" if abs(net) <= zero else None
+    return "fcess" if abs(net) <= zero and fcess >= lo else None
+
+
+def options_line(summary: dict, t0: int, scenarios: int, facts: Facts | None = None,
+                 min_mw: float = dp.OPTION_MW) -> tuple[str, Facts]:
+    """The expected value of each kind of action in half-hour t0, side by side (vpp.dispatch.plan_options; the
+    summary's opt<t0>_* keys), and what the plan chose against the best of the other kinds. What the values hold is
+    options_note."""
+    f = Facts() if facts is None else facts
+    key = lambda name, k: summary[f"opt{t0}_{name}_{k}"]  # noqa: E731
+    ev = {name: key(name, "ev") for name in OPTION_NAMES}
+    shown = []
+    for name, label in OPTION_NAMES.items():
+        if not np.isfinite(ev[name]):
+            shown.append(f"{label}做不到（存电不够或会违反限制）")
+            continue
+        if name == "hold":
+            shown.append(f"{label} ${f(name + ' expected', ev[name])}")
+            continue
+        mw = {"sell": key(name, "net"), "charge": -key(name, "net"), "fcess": key(name, "fcess")}[name]
+        least = "（最少量）" if mw <= min_mw + 0.05 else ""
+        shown.append(f"{label} {f(name + ' MW', mw, '{:.1f}')} MW{least}{'' if least else ' '}${f(name + ' expected', ev[name])}")
+    line = (f"{op.clock(t0)} 各选项的期望值（{f('scenarios', scenarios, '{:.0f}')} 种价格走势的平均）："
+            + "；".join(shown) + "。")
+    chosen, net, fc = key("chosen", "ev"), key("chosen", "net"), key("chosen", "fcess")
+    kind = option_kind(net, fc, min_mw)
+    others = sorted(((v, k) for k, v in ev.items() if np.isfinite(v) and k != kind), reverse=True)
+    line += f"模型选了{_action(f, net, fc, 'chosen')}（${f('chosen expected', chosen)}）"
+    if not others:
+        return line + "，别的选项都做不到。", f
+    gap = chosen - others[0][0]
+    more = f" ${f('chosen over next', gap)}" if gap >= 0.5 else f"不到 ${f('one dollar', 1, '{:.0f}')}"
+    than = "次好的" if kind else "最好的单一"
+    return line + f"，比{than}选项（{OPTION_NAMES[others[0][1]]}）多{more}。", f
+
+
+def options_note(hurdle: float, scenarios: int, facts: Facts | None = None,
+                 min_mw: float = dp.OPTION_MW, power_mw: float = 10.0) -> tuple[str, Facts]:
+    """What options_line's expected values hold, said once for all its lines."""
+    f = Facts() if facts is None else facts
+    n = f("scenarios", scenarios, "{:.0f}")
+    margin = f"、每卖 {f('one MWh', 1, '{:.0f}')} MWh 再扣 ${f('hurdle', hurdle)} 的安全余量" if hurdle > 0 else ""
+    return (f"期望值怎么算：把这半小时的动作固定成一种，之后到次日 08:00 在每种价格走势里各自排最好，再取 {n} 种的平均。"
+            f"包括卖电和 FCESS 的收入 − 买电的钱 − 电池损耗{margin} − 超过 CMD 多交的电费和少给工厂留电的代价，"
+            f"加上次日 08:00 还存着的电按存电价值表折的钱。卖电、充电、只报 FCESS 都至少做 "
+            f"{f('least MW', min_mw, '{:.0f}')} MW（否则就是不动）；标“最少量”的，表示这一种多做期望不会更高。"
+            f"FCESS 的 MW 是 {f('FCESS products', len(dp.FCESS), '{:.0f}')} 种调频和备用加起来的，上调、下调各自最多 {f('power MW', power_mw, '{:.0f}')} MW，"
+            f"所以合计可以超过 {f('power MW', power_mw, '{:.0f}')} MW。"), f

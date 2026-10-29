@@ -1,0 +1,112 @@
+check,run,value,pass,note
+0 tables: null = official,tables,0.0,True,
+0 tables: oracle pooled = null pooled,tables,0.0,True,
+0 tables: oracle states = labels,tables,0.0,True,
+0 tables: oracle marg_state differs from null (positive control),tables,0.0,True,
+1 R0 = app_factory_h50 e5,rw50+state t5+roll,1.8189894035458565e-12,True,570 days
+2a energy balance (MWh),rw50+state t5+roll,4.858335955759685e-13,True,
+2b half-hours over 10 MW,rw50+state t5+roll,0.0,True,
+2c stored energy outside 0-40 MWh,rw50+state t5+roll,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",rw50+state t5+roll,114.0,True,reported only
+2e timing errors,rw50+state t5+roll,0.0,True,
+2f same days in the same order,rw50+state t5+roll,570.0,True,
+"3a plans' forecast = injected, every day",rw50+state t5+roll,0.0,True,days that differ
+2a energy balance (MWh),R5 no-state,4.858335955759685e-13,True,
+2b half-hours over 10 MW,R5 no-state,0.0,True,
+2c stored energy outside 0-40 MWh,R5 no-state,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",R5 no-state,111.0,True,reported only
+2e timing errors,R5 no-state,0.0,True,
+2f same days in the same order,R5 no-state,570.0,True,
+"3a plans' forecast = injected, every day",R5 no-state,0.0,True,days that differ
+2a energy balance (MWh),O-A,4.551914400963142e-13,True,
+2b half-hours over 10 MW,O-A,0.0,True,
+2c stored energy outside 0-40 MWh,O-A,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-A,106.0,True,reported only
+2e timing errors,O-A,0.0,True,
+2f same days in the same order,O-A,570.0,True,
+"3a plans' forecast = injected, every day",O-A,0.0,True,days that differ
+2a energy balance (MWh),O-A ctrl s0,4.5208281562736374e-13,True,
+2b half-hours over 10 MW,O-A ctrl s0,0.0,True,
+2c stored energy outside 0-40 MWh,O-A ctrl s0,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-A ctrl s0,105.0,True,reported only
+2e timing errors,O-A ctrl s0,0.0,True,
+2f same days in the same order,O-A ctrl s0,570.0,True,
+"3a plans' forecast = injected, every day",O-A ctrl s0,0.0,True,days that differ
+2a energy balance (MWh),O-A ctrl s1,4.4986236957811343e-13,True,
+2b half-hours over 10 MW,O-A ctrl s1,0.0,True,
+2c stored energy outside 0-40 MWh,O-A ctrl s1,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-A ctrl s1,97.0,True,reported only
+2e timing errors,O-A ctrl s1,0.0,True,
+2f same days in the same order,O-A ctrl s1,570.0,True,
+"3a plans' forecast = injected, every day",O-A ctrl s1,0.0,True,days that differ
+2a energy balance (MWh),O-A ctrl s2,4.516387264175137e-13,True,
+2b half-hours over 10 MW,O-A ctrl s2,0.0,True,
+2c stored energy outside 0-40 MWh,O-A ctrl s2,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-A ctrl s2,107.0,True,reported only
+2e timing errors,O-A ctrl s2,0.0,True,
+2f same days in the same order,O-A ctrl s2,570.0,True,
+"3a plans' forecast = injected, every day",O-A ctrl s2,0.0,True,days that differ
+2a energy balance (MWh),O-B,4.618527782440651e-13,True,
+2b half-hours over 10 MW,O-B,0.0,True,
+2c stored energy outside 0-40 MWh,O-B,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-B,126.0,True,reported only
+2e timing errors,O-B,0.0,True,
+2f same days in the same order,O-B,570.0,True,
+"3a plans' forecast = injected, every day",O-B,0.0,True,days that differ
+2a energy balance (MWh),O-B ctrl s0,4.858335955759685e-13,True,
+2b half-hours over 10 MW,O-B ctrl s0,0.0,True,
+2c stored energy outside 0-40 MWh,O-B ctrl s0,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-B ctrl s0,108.0,True,reported only
+2e timing errors,O-B ctrl s0,0.0,True,
+2f same days in the same order,O-B ctrl s0,570.0,True,
+"3a plans' forecast = injected, every day",O-B ctrl s0,0.0,True,days that differ
+2a energy balance (MWh),O-B ctrl s1,4.618527782440651e-13,True,
+2b half-hours over 10 MW,O-B ctrl s1,0.0,True,
+2c stored energy outside 0-40 MWh,O-B ctrl s1,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-B ctrl s1,80.0,True,reported only
+2e timing errors,O-B ctrl s1,0.0,True,
+2f same days in the same order,O-B ctrl s1,570.0,True,
+"3a plans' forecast = injected, every day",O-B ctrl s1,0.0,True,days that differ
+2a energy balance (MWh),O-B ctrl s2,4.618527782440651e-13,True,
+2b half-hours over 10 MW,O-B ctrl s2,0.0,True,
+2c stored energy outside 0-40 MWh,O-B ctrl s2,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-B ctrl s2,111.0,True,reported only
+2e timing errors,O-B ctrl s2,0.0,True,
+2f same days in the same order,O-B ctrl s2,570.0,True,
+"3a plans' forecast = injected, every day",O-B ctrl s2,0.0,True,days that differ
+2a energy balance (MWh),O-B2,4.618527782440651e-13,True,
+2b half-hours over 10 MW,O-B2,0.0,True,
+2c stored energy outside 0-40 MWh,O-B2,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-B2,107.0,True,reported only
+2e timing errors,O-B2,0.0,True,
+2f same days in the same order,O-B2,570.0,True,
+"3a plans' forecast = injected, every day",O-B2,0.0,True,days that differ
+2a energy balance (MWh),O-C-e,5.142553050063725e-13,True,
+2b half-hours over 10 MW,O-C-e,0.0,True,
+2c stored energy outside 0-40 MWh,O-C-e,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-C-e,120.0,True,reported only
+2e timing errors,O-C-e,0.0,True,
+2f same days in the same order,O-C-e,570.0,True,
+"3a plans' forecast = injected, every day",O-C-e,0.0,True,days that differ
+2a energy balance (MWh),O-C-ef,5.181500223115979e-13,True,
+2b half-hours over 10 MW,O-C-ef,0.0,True,
+2c stored energy outside 0-40 MWh,O-C-ef,0.0,True,
+"2d meter over the month's CMD cap (half-hours, reported)",O-C-ef,148.0,True,reported only
+2e timing errors,O-C-ef,0.0,True,
+2f same days in the same order,O-C-ef,570.0,True,
+"3a plans' forecast = injected, every day",O-C-ef,0.0,True,days that differ
+3b injection on probe days,O-A,10.0,True,forecast slots changed: 0
+3b injection on probe days,O-A ctrl s0,10.0,True,forecast slots changed: 0
+3b injection on probe days,O-A ctrl s1,10.0,True,forecast slots changed: 0
+3b injection on probe days,O-A ctrl s2,10.0,True,forecast slots changed: 0
+3b injection on probe days,O-B,10.0,True,forecast slots changed: 40
+3b injection on probe days,O-B ctrl s0,10.0,True,forecast slots changed: 34
+3b injection on probe days,O-B ctrl s1,10.0,True,forecast slots changed: 9
+3b injection on probe days,O-B ctrl s2,10.0,True,forecast slots changed: 12
+3b injection on probe days,O-B2,10.0,True,forecast slots changed: 40
+3b injection on probe days,O-C-e,10.0,True,forecast slots changed: 460
+3b injection on probe days,O-C-ef,10.0,True,forecast slots changed: 460
+3b injection on probe days,R5 no-state,10.0,False,forecast slots changed: 0
+3b injection on probe days,rw50+state t5+roll,10.0,True,forecast slots changed: 0
+3c O-A moves on days where label != official call,O-A,153.0,True,of 159 such days
+4 official files unchanged,all,0.0,True,

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Check, type Outcome, type Plan as PlanT } from "../api";
-import { bandPath, DayAxis, geo, Hatch, linePath, N, stepPath, X0, YGrid } from "../components/chart";
-import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Note, Seg, useWidth, Who, type TipData } from "../components/ui";
+import { around, bandPath, DayAxis, geo, Hatch, linePath, linePts, N, Placer, segPts, stepPath, stepPts, tw, X0, YGrid } from "../components/chart";
+import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Note, PageHead, Seg, useWidth, type TipData } from "../components/ui";
 import { addDays, aud, dayLabel, hhmm, isNum, nf, periodOf } from "../lib/format";
 import { glNote } from "../lib/gloss";
 import { CONN, DISP, isDefault, useApp, whoItems } from "../state";
@@ -83,30 +83,21 @@ export default function Plan() {
 
   return (
     <section aria-label="Today's plan">
-      <header className="ph">
-        <div className="ph-line">
-          <h1>Today's plan</h1>
-          <span className="chips">
-            <Chip cls="step">1 · Decide</Chip>
-            <Chip note={glNote(periodOf(day))}>{periodOf(day) === "TRAIN" ? "training-period day" : periodOf(day) === "TREV" ? "test · reviewed" : "test · blind"}</Chip>
-            {!isDefault(settings) && <Chip cls="unv" note={glNote("UNVALIDATED")}>changed settings</Chip>}
-            {p?.site?.ircr_flag_0900 && <Chip cls="hyp" note={glNote("IRCRFLAG")}>IRCR peak flag</Chip>}
-          </span>
-        </div>
-        <div className="ctx">
-          <Gl k="TRADINGDAY">trading day</Gl> 08:00–08:00 AWST · <Gl k="DECISION">plan 09:00</Gl> · <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>
-          {" · "}<DispatcherName p={p} short={settings.dispatcher} />
-        </div>
-        <Who items={whoItems(settings.connection)} />
-      </header>
-
-      <div className="blk-h" style={{ justifyContent: "space-between" }}>
-        <DayPicker day={day} setDay={setDay} />
-        <span className="chips">
+      <PageHead title="Today's plan"
+        chips={<>
+          <Chip cls="step">1 · Decide</Chip>
+          <Chip note={glNote(periodOf(day))}>{periodOf(day) === "TRAIN" ? "training-period day" : periodOf(day) === "TREV" ? "test · reviewed" : "test · blind"}</Chip>
+          {!isDefault(settings) && <Chip cls="unv" note={glNote("UNVALIDATED")}>changed settings</Chip>}
+          {p?.site?.ircr_flag_0900 && <Chip cls="hyp" note={glNote("IRCRFLAG")}>IRCR peak flag</Chip>}
+        </>}
+        ctx={<><Gl k="TRADINGDAY">trading day</Gl> 08:00–08:00 AWST · <Gl k="DECISION">plan 09:00</Gl> · <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>
+          {" · "}<DispatcherName p={p} short={settings.dispatcher} /></>}
+        who={whoItems(settings.connection)}
+        right={<>
+          <DayPicker day={day} setDay={setDay} />
           <Seg label="Show" value={revealed ? "out" : "plan"} onChange={(v) => setRevealed(v === "out")}
             options={[["plan", "Plan only"], ["out", "Plan + what happened"]]} />
-        </span>
-      </div>
+        </>} />
 
       {plan.isLoading && <Loading what="the 09:00 plan" />}
       {plan.error && <Failed error={plan.error} />}
@@ -126,6 +117,7 @@ export function DispatcherName({ p, short, passed }: { p?: PlanT; short: "e5" | 
 function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?: Outcome; outLoading: boolean; sel: number;
   setSel: (k: number) => void; reveal: () => void; go: (pg: "evidence" | "settings") => void }) {
   const segs = useMemo(() => segments(p), [p]);
+  const [hover, setHover] = useState<number | null>(null);
   const blocked = p.state === "BLOCKED";
   const failed = p.checks.filter((c) => c.status === "fail");
   const passed = p.checks.filter((c) => c.status === "pass").length;
@@ -161,11 +153,12 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
         </div>
       </div>
 
-      <DayChart p={p} o={o} segs={segs} sel={sel} setSel={setSel} day={dayLabel(p.day, false)} next={dayLabel(next, false)} />
-      {p.site && <MeterChart p={p} o={o} sel={sel} setSel={setSel} day={dayLabel(p.day, false)} next={dayLabel(next, false)} />}
-      {outLoading && <Loading what="what happened" />}
+      <div className="fig">
+        <DayChart p={p} o={o} segs={segs} sel={sel} setSel={setSel} hover={hover} setHover={setHover} day={dayLabel(p.day, false)} next={dayLabel(next, false)} />
+        {p.site && <MeterChart p={p} o={o} sel={sel} setSel={setSel} hover={hover} setHover={setHover} day={dayLabel(p.day, false)} next={dayLabel(next, false)} />}
+      </div>
 
-      <Detail p={p} o={o} k={sel} segs={segs} />
+      <Detail p={p} o={o} k={sel} segs={segs} outLoading={outLoading} reveal={reveal} />
 
       <div className="two">
         <div className="blk rule">
@@ -229,30 +222,62 @@ function CheckCell({ c }: { c: Check }) {
   return <div className={"ck " + c.status} tabIndex={0} data-note={note}><i>{icon}</i><span>{SHORT[c.id] ?? c.label}</span></div>;
 }
 
+/* ------------------------------------------------------------------------------------------------ money */
+const WF: Record<string, [string, string]> = { e: ["var(--dis)", "var(--on-dis)"], f: ["var(--fcess)", "var(--on-fcess)"],
+  s: ["var(--surface-3)", "var(--text-2)"], b: ["var(--meter)", "var(--on-meter)"] };
+
+/** Gross parts side by side (2 px gaps), wear hanging under the end of the gross, net below. A part whose label does not
+ *  fit inside its bar is named in a line under the bars. */
 function Waterfall({ parts, wear, net, dim }: { parts: [string, string, number][]; wear: number; net: number; dim?: boolean }) {
-  const gross = parts.reduce((t, x) => t + Math.max(0, x[2]), 0);
+  const [ref, W] = useWidth<HTMLDivElement>(240);
+  const shown = parts.filter((x) => x[2] > 0.5);
+  const gross = shown.reduce((t, x) => t + x[2], 0);
   const scale = Math.max(gross, Math.abs(net), 1);
-  const pct = (x: number) => `${(100 * Math.max(0, x)) / scale}%`;
+  const px = (v: number) => (Math.max(0, v) / scale) * W;
+  let x = 0;
+  const bars = shown.map(([c, l, v]) => {
+    const b = { c, l, v, x, w: Math.max(1, px(v) - 2), text: `${l} ${nf(v)}` };
+    x += px(v);
+    return b;
+  });
+  const hidden = bars.filter((b) => tw(b.text, "annB") + 12 > b.w);
+  const wearX = px(gross - wear), wearW = Math.max(2, px(wear));
+  const netW = Math.max(2, px(Math.abs(net))), netText = `Net ${aud(net)}`, netIn = tw(netText, "annB") + 16 < netW;
+  const showWear = wear > 0.5;
+  const yW = 28, yN = showWear ? 52 : 28, keyY = yN + 40;
+  const H = hidden.length ? keyY + 4 : yN + 22;
+  let kx = 0;
   return (
-    <div className="wf" style={dim ? { opacity: 0.45 } : undefined}>
-      <div className="wf-row">
-        {parts.filter((x) => x[2] > 0.5).map(([c, l, x]) => (
-          <span key={l} className={c} style={{ width: pct(x) }} data-note={`${l}: ${aud(x)}`} tabIndex={0}>{l} {nf(x)}</span>
+    <div className="wf chart" ref={ref} style={dim ? { opacity: 0.45 } : undefined}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${shown.map((b) => `${b[1]} ${aud(b[2])}`).join(", ")}${showWear ? `, wear −${aud(wear)}` : ""}, net ${aud(net)}`}>
+        {bars.map((b) => (
+          <g key={b.l} tabIndex={0} data-note={`${b.l}: ${aud(b.v)}`}>
+            <rect x={b.x} y={0} width={b.w} height={22} rx={3} style={{ fill: WF[b.c][0] }} />
+            {!hidden.includes(b) && <text className="ann" x={b.x + 7} y={15} style={{ fill: WF[b.c][1], fontWeight: 600 }}>{b.text}</text>}
+          </g>
         ))}
-      </div>
-      {wear > 0.5 && <div className="wf-row" style={{ paddingLeft: `min(${pct(gross - wear)}, calc(100% - 90px))` }}>
-        {/* a small wear still gets room for its label, as Net does */}
-        <span className="w" style={{ width: pct(wear), minWidth: 90 }} data-note={`Wear: −${aud(wear)}`} tabIndex={0}>Wear −{nf(wear)}</span></div>}
-      <div className="wf-row"><span className="n" style={{ width: pct(Math.abs(net)), minWidth: 90 }}>Net {aud(net)}</span></div>
+        {showWear && <g tabIndex={0} data-note={`Wear: −${aud(wear)}`}>
+          <rect x={wearX} y={yW} width={wearW} height={16} rx={2} style={{ fill: "var(--bad)", opacity: 0.85 }} />
+          <text className="ann" x={wearX - 6} y={yW + 12} textAnchor="end" style={{ fill: "var(--bad)", fontWeight: 600 }}>Wear −{nf(wear)}</text>
+        </g>}
+        <rect x={0} y={yN} width={netW} height={22} rx={3} style={{ fill: net < 0 ? "var(--bad)" : "var(--zen)" }} />
+        <text className="ann" x={netIn ? 8 : netW + 8} y={yN + 15} style={{ fill: netIn ? "var(--on-zen)" : "var(--text)", fontWeight: 600 }}>{netText}</text>
+        {hidden.map((b) => {
+          const at = kx;
+          kx += 14 + tw(b.text, "ann") + 16;
+          return <g key={"k" + b.l}><rect x={at} y={keyY - 9} width={10} height={10} rx={2} style={{ fill: WF[b.c][0] }} /><text className="ann" x={at + 14} y={keyY}>{b.text}</text></g>;
+        })}
+      </svg>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------------------------------------ the day chart */
-function DayChart({ p, o, segs, sel, setSel, day, next }: { p: PlanT; o?: Outcome; segs: Seg_[]; sel: number; setSel: (k: number) => void; day: string; next: string }) {
+type Sync = { sel: number; setSel: (k: number) => void; hover: number | null; setHover: (k: number | null) => void; day: string; next: string };
+
+function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: PlanT; o?: Outcome; segs: Seg_[] } & Sync) {
   const [ref, W] = useWidth<HTMLDivElement>();
   const g = geo(W);
-  const [hover, setHover] = useState<number | null>(null);
   const [tip, setTip] = useState<TipData>(null);
   const P = p.asset.power_mw, E = p.asset.energy_mwh;
   const xo = useMemo(() => extraOffer(p), [p]);
@@ -260,16 +285,19 @@ function DayChart({ p, o, segs, sel, setSel, day, next }: { p: PlanT; o?: Outcom
   const floor = xo.floor;
   const pr = p.price;
 
+  // bands, top to bottom: 09:00 marker, three lanes, price title, price plot, time axis
+  const LN = [{ y: 20, h: 22 }, { y: 48, h: 20 }, { y: 74, h: 20 }];
+  const laneTop = 20, laneBot = 94;
+  const top = 130, bot = 264, H = bot + 22;
   const hi = Math.max(250, floor ?? 0, ...pr.forecast_p50.filter(isNum), ...(pr.forecast_p90 ?? []).filter(isNum),
     ...(o ? o.price_actual.filter(isNum).map((x) => Math.min(x, 500)) : []));
   const lo = Math.min(0, ...pr.forecast_p50.filter(isNum), ...(o ? o.price_actual.filter(isNum) : []).map((x) => Math.max(x, -100)));
-  const top = 108, bot = 248;
   const yP = (v: number) => bot - ((Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)) * (bot - top);
   const step = hi > 600 ? 250 : hi > 300 ? 100 : 50;
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) ticks.push(t);
 
-  const sTop = 22, sBot = 150;
+  const sTop = 26, sBot = 152, SH = sBot + 34;
   const yS = (v: number) => sBot - (v / E) * (sBot - sTop);
   const soc = p.plan.soc_mwh, floorS = p.plan.reserve_floor_mwh;
 
@@ -285,6 +313,38 @@ function DayChart({ p, o, segs, sel, setSel, day, next }: { p: PlanT; o?: Outcom
   const fcessAud = p.plan.value_at_forecast_aud.fcess ?? 0;
   const spare = Math.max(0, ...xo.mw);
   const meter = p.site?.meter_mw;
+
+  /* price labels: reference line first, then peak, low and the largest off-scale actual */
+  const floorPts = floor == null ? [] : ladder ? stepPts(g, xo.lowest, yP, FIRST) : segPts(g.X(FIRST), yP(floor), g.X(N), yP(floor));
+  const pl = new Placer({ x0: g.X(FIRST) + 3, x1: W, y0: top - 6, y1: bot - 2 });
+  pl.line(stepPts(g, p50, yP, FIRST)).line(stepPts(g, pr.actual_before_0900, yP, 0, FIRST)).line(floorPts);
+  if (o) pl.line(stepPts(g, o.price_actual, yP));
+  const kFloor = floor == null ? -1 : ladder ? xo.lowest.findIndex((v) => v === floor) : N - 1;
+  const floorTxt = floor != null ? `floor A$${nf(floor)}` : "";
+  const floorAt = floor == null ? null : pl.place(floorTxt, "ann", ladder
+    ? around(g.X(kFloor) + g.IW / 2, yP(floor), "ann", true)
+    : [[g.X(N) - 4, yP(floor) - 5, "end"], [g.X(N) - 4, yP(floor) + 15, "end"], [g.X(FIRST) + 6, yP(floor) - 5, "start"]]);
+  const peakTxt = isNum(p50[kPeak]) ? `peak A$${nf(p50[kPeak]!)}` : "";
+  const peakAt = peakTxt ? pl.place(peakTxt, "ann", around(g.X(kPeak) + g.IW / 2, yP(p50[kPeak]!))) : null;
+  const lowTxt = isNum(p50[kLow]) && kLow !== kPeak ? `low A$${nf(p50[kLow]!)}` : "";
+  const lowAt = lowTxt ? pl.place(lowTxt, "ann", around(g.X(kLow) + g.IW / 2, yP(p50[kLow]!), "ann", true)) : null;
+  const over = o ? o.price_actual.map((v, k) => (isNum(v) && v > hi ? k : -1)).filter((k) => k >= 0) : [];
+  const kSpike = over.length ? over.reduce((a, b) => ((o!.price_actual[b] ?? 0) > (o!.price_actual[a] ?? 0) ? b : a)) : -1;
+  const spikeTxt = kSpike >= 0 ? `A$${nf(o!.price_actual[kSpike]!)}` : "";
+  const spikeAt = spikeTxt ? pl.place(spikeTxt, "ann", [[g.X(kSpike) + g.IW / 2 + 5, top + 6, "start"], [g.X(kSpike) + g.IW / 2 - 5, top + 6, "end"]]) : null;
+
+  /* stored-energy labels: limits first, then the end, then the lowest point unless the line just stays there */
+  const lastFloor = [...floorS].reverse().find(isNum) ?? 0;
+  const ps = new Placer({ x0: g.X(FIRST) + 3, x1: W, y0: 0, y1: sBot - 2 });
+  ps.line(linePts(g, soc, yS, 0, FIRST)).line(linePts(g, soc, yS, FIRST)).line(stepPts(g, floorS, yS, FIRST)).line(segPts(X0, yS(E), g.X(N), yS(E)));
+  if (o) ps.line(linePts(g, o.soc_mwh, yS));
+  const fullAt = ps.place(`Full · ${nf(E)} MWh`, "tick", [[g.X(N) - 2, yS(E) - 5, "end"]]);
+  const minAt = ps.place("Minimum", "tick", [[g.X(N) - 2, yS(lastFloor) - 5, "end"], [g.X(N) - 2, yS(lastFloor) + 13, "end"]]);
+  const endTxt = isNum(soc[N]) ? `${nf(soc[N]!, 1)} MWh` : "";
+  const endAt = endTxt ? ps.place(endTxt, "ann", [[g.X(N) - 2, yS(soc[N]!) - 6, "end"], [g.X(N) - 2, yS(soc[N]!) + 15, "end"]]) : null;
+  const flatAfter = isNum(soc[kMin]) && soc.slice(kMin).every((v) => !isNum(v) || Math.abs(v - soc[kMin]!) < 0.05);
+  const minTxt = isNum(soc[kMin]) && !flatAfter ? `${nf(soc[kMin]!, 1)} MWh` : "";
+  const minLblAt = minTxt ? ps.place(minTxt, "ann", around(g.X(kMin), yS(soc[kMin]!), "ann", true)) : null;
 
   const tipFor = (k: number, e: React.MouseEvent) => {
     const mw = p.plan.battery_mw[k] ?? 0;
@@ -310,93 +370,96 @@ function DayChart({ p, o, segs, sel, setSel, day, next }: { p: PlanT; o?: Outcom
     if (e.key === "ArrowLeft") { setSel(Math.max(0, sel - 1)); e.preventDefault(); }
   };
 
-  const colours: Record<string, [string, string]> = { discharge: ["var(--dis)", "#fff"], shave: ["var(--shave)", "var(--shave-text)"],
+  const colours: Record<string, [string, string]> = { discharge: ["var(--dis)", "var(--on-dis)"], shave: ["var(--shave)", "var(--shave-text)"],
     charge: ["var(--chg)", "var(--text)"], hold: ["var(--hold)", "var(--text-3)"] };
-  const H = 280;
+  const sellTxt = `${floor ? `price ≥ A$${nf(floor)}: +up to ${nf(spare, 0)} MW` : "no extra offer"}${o ? ` · sold ${soldN} · ${aud(soldAud)}` : ""}`;
+  const earnTxt = fcessAud > 0.5 ? `earns ${aud(fcessAud)}` : "";
+  const tag = (txt: string, lane: { y: number; h: number }, fill: string) => (
+    <g>
+      <rect className="lane-tag" x={g.X(FIRST) + 4} y={lane.y + 3} width={tw(txt, "ann") + 12} height={lane.h - 6} rx={3} />
+      <text className="ann" x={g.X(FIRST) + 10} y={lane.y + lane.h / 2 + 4} style={{ fill }}>{txt}</text>
+    </g>
+  );
+  const laneName = (txt: string, lane: { y: number; h: number }, note: string) => (
+    <text className="lt" x={X0 - 10} y={lane.y + lane.h / 2 + 4} textAnchor="end"><title>{note}</title>{txt}</text>);
 
   return (
     <div className="blk chart" ref={ref} tabIndex={0} onKeyDown={onKey} aria-label="Trading day chart; arrow keys move the selected half-hour">
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Plan for the trading day: ${segs.map(segName).join(", ")}. Price forecast and actions by half-hour.`}>
         <defs><Hatch id="pre" /></defs>
-        <rect x={g.X(sel)} y={20} width={g.IW} height={bot - 20} className="selc" />
-        <rect x={X0} y={20} width={g.X(FIRST) - X0} height={bot - 20} fill="url(#pre)" />
-        <line x1={g.X(FIRST)} x2={g.X(FIRST)} y1={14} y2={bot} style={{ stroke: "var(--mark)" }} />
+        <rect x={g.X(sel)} y={laneTop} width={g.IW} height={laneBot - laneTop} className="selc" />
+        <rect x={g.X(sel)} y={top} width={g.IW} height={bot - top} className="selc" />
+        <rect x={X0} y={laneTop} width={g.X(FIRST) - X0} height={laneBot - laneTop} fill="url(#pre)" />
+        <rect x={X0} y={top} width={g.X(FIRST) - X0} height={bot - top} fill="url(#pre)" />
+        <line className="ref" x1={g.X(FIRST)} x2={g.X(FIRST)} y1={14} y2={bot} style={{ stroke: "var(--mark)" }} />
         <text className="mk9" x={g.X(FIRST)} y={10} textAnchor="middle">PLAN MADE 09:00</text>
 
         {/* plan lane */}
-        <text className="lt" x={X0 - 8} y={37} textAnchor="end"><title>{glNote("DISPATCHER")}</title>Plan</text>
+        {laneName("Plan", LN[0], glNote("DISPATCHER"))}
         {segs.map((s) => {
           const [bg, fg] = colours[s.m] ?? colours.hold;
           const w = g.X(s.b) - g.X(s.a);
-          const label = segName(s);
-          const fits = label.length * 6.2 < w - 6;
-          const short = s.m === "hold" ? "" : nf(s.mw, 1);
+          const label = segName(s), short = s.m === "hold" ? "" : nf(s.mw, 1);
+          const txt = tw(label, "act") + 12 < w ? label : short && tw(short, "act") + 8 < w ? short : "";
           return (
             <g key={s.a}>
-              <rect x={g.X(s.a) + 0.5} y={22} width={w - 1} height={24} rx={2} style={{ fill: bg }} />
-              {(fits || short.length * 6.2 < w - 4) && <text className="act" x={g.X(s.a) + w / 2} y={38} textAnchor="middle" style={{ fill: fg }}>{fits ? label : short}</text>}
+              <rect x={g.X(s.a) + 1} y={LN[0].y} width={w - 2} height={LN[0].h} rx={3} style={{ fill: bg }} />
+              {txt && <text className="act" x={g.X(s.a) + w / 2} y={LN[0].y + 15} textAnchor="middle" style={{ fill: fg }}>{txt}</text>}
             </g>
           );
         })}
-        {p.blocked_halfhours.map((k) => <rect key={"b" + k} className="bad-box" x={g.X(k)} y={21} width={g.IW} height={bot - 21} />)}
+        {p.blocked_halfhours.map((k) => <rect key={"b" + k} className="bad-box" x={g.X(k)} y={laneTop - 1} width={g.IW} height={bot - laneTop + 1} />)}
 
         {/* sell extra lane */}
-        <text className="lt" x={X0 - 8} y={64} textAnchor="end"><title>{glNote(ladder ? "EXTRAE5" : "EXTRA")}</title>Sell extra if</text>
-        <rect x={g.X(FIRST) + 0.5} y={52} width={g.X(N) - g.X(FIRST) - 1} height={16} style={{ fill: "none", stroke: "var(--cond)", strokeDasharray: "3 2" }} />
-        {sold.map((s, k) => s && <rect key={"s" + k} x={g.X(k)} y={52} width={g.IW} height={16} style={{ fill: "var(--cond)" }} />)}
-        <text className="ann halo" x={g.X(FIRST) + 6} y={64} style={{ fill: "var(--cond-text)" }}>
-          {floor ? `price ≥ A$${nf(floor)}: +up to ${nf(spare, 0)} MW` : "no extra offer"}{o ? ` · sold ${soldN} · ${aud(soldAud)}` : ""}
-        </text>
+        {laneName("Sell extra if", LN[1], glNote(ladder ? "EXTRAE5" : "EXTRA"))}
+        <rect x={g.X(FIRST) + 1} y={LN[1].y} width={g.X(N) - g.X(FIRST) - 2} height={LN[1].h} rx={3} style={{ fill: "var(--cond-soft)", fillOpacity: 0.5, stroke: "var(--cond)", strokeDasharray: "3 2" }} />
+        {sold.map((s, k) => s && <rect key={"s" + k} x={g.X(k) + 0.5} y={LN[1].y + 2} width={g.IW - 1} height={LN[1].h - 4} rx={1} style={{ fill: "var(--cond)" }} />)}
+        {tag(sellTxt, LN[1], "var(--cond-text)")}
 
         {/* grid services lane */}
-        <text className="lt" x={X0 - 8} y={86} textAnchor="end"><title>{glNote("FCESS")}</title>Grid services</text>
+        {laneName("Grid services", LN[2], glNote("FCESS"))}
         {Array.from({ length: N - FIRST }, (_, j) => {
           const k = j + FIRST, s = standby(p, k);
-          return s > 0.01 ? <rect key={"f" + k} x={g.X(k)} y={76} width={g.IW} height={14} shapeRendering="crispEdges"
+          return s > 0.01 ? <rect key={"f" + k} x={g.X(k)} y={LN[2].y} width={g.IW} height={LN[2].h} shapeRendering="crispEdges"
             style={{ fill: "color-mix(in srgb, var(--fcess) " + Math.round(35 + 65 * Math.min(1, s / P)) + "%, var(--surface))" }} /> : null;
         })}
-        {fcessAud > 0.5 && <text className="ann halo" x={g.X(FIRST) + 6} y={87}>earns {aud(fcessAud)}</text>}
+        {earnTxt && tag(earnTxt, LN[2], "var(--text-2)")}
 
         {/* price panel */}
+        <text className="ttl" x={0} y={top - 12}>Price, A$/MWh</text>
         <YGrid g={g} ticks={ticks} y={yP} />
-        <text x={X0 + 4} y={top - 4} className="ann">Price, A$/MWh</text>
-        {pr.forecast_p10 && pr.forecast_p90 && <path d={bandPath(g, pr.forecast_p10, pr.forecast_p90, yP, FIRST)} style={{ fill: "var(--range)", opacity: 0.32 }}><title>{glNote("RANGE")}</title></path>}
-        <path d={stepPath(g, p50, yP, FIRST)} style={{ fill: "none", stroke: "var(--price)", strokeWidth: 1.6, strokeDasharray: "5 3" }} />
-        <path d={stepPath(g, pr.actual_before_0900, yP, 0, FIRST)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.6 }} />
-        {floor != null && (
-          <g>
-            {ladder
-              ? <path d={stepPath(g, xo.lowest, yP, FIRST)} style={{ fill: "none", stroke: "var(--cond)", strokeWidth: 1.4, strokeDasharray: "6 3" }}><title>{glNote("EXTRAE5")}</title></path>
-              : <line x1={g.X(FIRST)} x2={g.X(N)} y1={yP(floor)} y2={yP(floor)} style={{ stroke: "var(--cond)", strokeWidth: 1.4, strokeDasharray: "6 3" }} />}
-            <text className="ann halo" x={g.X(N) - 4} y={yP(floor) - 5} textAnchor="end" style={{ fill: "var(--cond-text)" }}>floor A${nf(floor)}</text>
-          </g>
-        )}
-        {o && <path d={stepPath(g, o.price_actual, yP)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.6 }} />}
-        {o && o.price_actual.map((v, k) => isNum(v) && v > hi ? (
-          <g key={"o" + k}><line x1={g.X(k) + g.IW / 2} x2={g.X(k) + g.IW / 2} y1={top - 2} y2={top + 8} style={{ stroke: "var(--actual)", strokeWidth: 2 }} />
-            <text className="ann halo" x={g.X(k) + g.IW / 2 + 4} y={top + 6} style={{ fill: "var(--actual)" }}>A${nf(v)}</text></g>) : null)}
+        {pr.forecast_p10 && pr.forecast_p90 && <path d={bandPath(g, pr.forecast_p10, pr.forecast_p90, yP, FIRST)} style={{ fill: "var(--range)", opacity: "var(--range-op)" }}><title>{glNote("RANGE")}</title></path>}
+        <path className="series" d={stepPath(g, p50, yP, FIRST)} style={{ fill: "none", stroke: "var(--price)", strokeWidth: 1.6, strokeDasharray: "5 3" }} />
+        <path className="series" d={stepPath(g, pr.actual_before_0900, yP, 0, FIRST)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.8 }} />
+        {floor != null && (ladder
+          ? <path className="ref" d={stepPath(g, xo.lowest, yP, FIRST)} style={{ fill: "none", stroke: "var(--cond)", strokeWidth: 1.4, strokeDasharray: "6 3" }}><title>{glNote("EXTRAE5")}</title></path>
+          : <line className="ref" x1={g.X(FIRST)} x2={g.X(N)} y1={yP(floor)} y2={yP(floor)} style={{ stroke: "var(--cond)", strokeWidth: 1.4, strokeDasharray: "6 3" }} />)}
+        {o && <path className="series" d={stepPath(g, o.price_actual, yP)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.8 }} />}
+        {over.map((k) => <line key={"o" + k} x1={g.X(k) + g.IW / 2} x2={g.X(k) + g.IW / 2} y1={top - 2} y2={top + 8} style={{ stroke: "var(--actual)", strokeWidth: 2 }} />)}
         {o && o.offer_price_live.map((v, k) => isNum(v) && v <= hi ? <circle key={"lp" + k} cx={g.X(k) + g.IW / 2} cy={yP(v)} r={2.6} style={{ fill: "var(--cond)" }} /> : null)}
-        {isNum(p50[kPeak]) && <text className="ann halo" x={g.X(kPeak) - 3} y={yP(p50[kPeak]!) - 6} textAnchor="end">peak A${nf(p50[kPeak]!)}</text>}
-        {isNum(p50[kLow]) && kLow !== kPeak && <text className="ann halo" x={g.X(kLow) + g.IW / 2} y={Math.min(bot - 3, yP(p50[kLow]!) + 14)} textAnchor="middle">low A${nf(p50[kLow]!)}</text>}
+        {floorAt && <text className="ann halo" x={floorAt.x} y={floorAt.y} textAnchor={floorAt.a} style={{ fill: "var(--cond-text)" }}>{floorTxt}</text>}
+        {peakAt && <text className="ann halo" x={peakAt.x} y={peakAt.y} textAnchor={peakAt.a}>{peakTxt}</text>}
+        {lowAt && <text className="ann halo" x={lowAt.x} y={lowAt.y} textAnchor={lowAt.a}>{lowTxt}</text>}
+        {spikeAt && <text className="ann halo" x={spikeAt.x} y={spikeAt.y} textAnchor={spikeAt.a} style={{ fill: "var(--actual)" }}>{spikeTxt}</text>}
         <DayAxis g={g} y={bot} />
-        {cross(20, bot)}
-        {hits(20, bot)}
+        {cross(laneTop, bot)}
+        {hits(laneTop, bot)}
       </svg>
 
-      <svg viewBox={`0 0 ${W} 190`} role="img" aria-label="Energy stored through the day, planned at 09:00">
+      <svg viewBox={`0 0 ${W} ${SH}`} role="img" aria-label="Energy stored through the day, planned at 09:00">
         <rect x={g.X(sel)} y={sTop} width={g.IW} height={sBot - sTop} className="selc" />
+        <text className="ttl" x={0} y={14}><title>{glNote("SOC")}</title>Energy stored, MWh</text>
         <YGrid g={g} ticks={[0, 10, 20, 30, 40]} y={yS} />
-        <text x={X0 + 4} y={sTop - 6} className="ann"><title>{glNote("SOC")}</title>Energy stored, MWh</text>
-        <line x1={X0} x2={g.X(N)} y1={yS(E)} y2={yS(E)} style={{ stroke: "var(--axis)", strokeDasharray: "2 3" }} />
-        <text x={g.X(N) - 2} y={yS(E) - 4} textAnchor="end">Full · {nf(E)} MWh</text>
-        <path d={stepPath(g, floorS, yS, FIRST)} style={{ fill: "none", stroke: "var(--text-4)", strokeDasharray: "1 3" }}><title>{glNote("RESERVE")}</title></path>
-        <text x={g.X(N) - 2} y={yS(Math.max(...floorS.filter(isNum), 0)) - 4} textAnchor="end"><title>{glNote("RESERVE")}</title>Minimum</text>
-        <line x1={g.X(FIRST)} x2={g.X(FIRST)} y1={sTop} y2={sBot} style={{ stroke: "var(--mark)" }} />
-        <path d={linePath(g, soc, yS, 0, FIRST)} style={{ fill: "none", stroke: "var(--soc)", strokeWidth: 2 }} />
-        <path d={linePath(g, soc, yS, FIRST)} style={{ fill: "none", stroke: "var(--soc)", strokeWidth: 2, strokeDasharray: "5 3" }} />
-        {o && <path d={linePath(g, o.soc_mwh, yS)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.6 }} />}
-        {isNum(soc[kMin]) && <text className="ann halo" x={g.X(kMin)} y={yS(soc[kMin]!) + 14} textAnchor="middle" style={{ fill: "var(--soc)" }}>{nf(soc[kMin]!, 1)} MWh</text>}
-        {isNum(soc[N]) && <text className="ann halo" x={g.X(N) - 2} y={yS(soc[N]!) - 6} textAnchor="end" style={{ fill: "var(--soc)" }}>{nf(soc[N]!, 1)} MWh</text>}
+        <line className="ref" x1={X0} x2={g.X(N)} y1={yS(E)} y2={yS(E)} style={{ stroke: "var(--axis)", strokeDasharray: "2 3" }} />
+        <path className="ref" d={stepPath(g, floorS, yS, FIRST)} style={{ fill: "none", stroke: "var(--text-4)", strokeDasharray: "1 3" }}><title>{glNote("RESERVE")}</title></path>
+        <line className="ref" x1={g.X(FIRST)} x2={g.X(FIRST)} y1={sTop} y2={sBot} style={{ stroke: "var(--mark)" }} />
+        <path className="series" d={linePath(g, soc, yS, 0, FIRST)} style={{ fill: "none", stroke: "var(--soc)", strokeWidth: 2 }} />
+        <path className="series" d={linePath(g, soc, yS, FIRST)} style={{ fill: "none", stroke: "var(--soc)", strokeWidth: 2, strokeDasharray: "5 3" }} />
+        {o && <path className="series" d={linePath(g, o.soc_mwh, yS)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.8 }} />}
+        {fullAt && <text x={fullAt.x} y={fullAt.y} textAnchor={fullAt.a}>Full · {nf(E)} MWh</text>}
+        {minAt && <text x={minAt.x} y={minAt.y} textAnchor={minAt.a}><title>{glNote("RESERVE")}</title>Minimum</text>}
+        {endAt && <text className="ann halo" x={endAt.x} y={endAt.y} textAnchor={endAt.a} style={{ fill: "var(--soc)" }}>{endTxt}</text>}
+        {minLblAt && <text className="ann halo" x={minLblAt.x} y={minLblAt.y} textAnchor={minLblAt.a} style={{ fill: "var(--soc)" }}>{minTxt}</text>}
         <DayAxis g={g} y={sBot} day={day} next={next} />
         {cross(sTop, sBot)}
         {hits(sTop, sBot)}
@@ -409,21 +472,25 @@ function DayChart({ p, o, segs, sel, setSel, day, next }: { p: PlanT; o?: Outcom
 /* ------------------------------------------------------------------------------------------------ the factory meter */
 /** Behind the factory meter: what the connection draws (the factory's load less the battery), planned at 09:00 and,
  *  after the reveal, metered; the CMD cap (or the month's highest import so far) and, on a flagged day, the IRCR cap. */
-function MeterChart({ p, o, sel, setSel, day, next }: { p: PlanT; o?: Outcome; sel: number; setSel: (k: number) => void; day: string; next: string }) {
+function MeterChart({ p, o, sel, setSel, hover, setHover, day, next }: { p: PlanT; o?: Outcome } & Sync) {
   const [ref, W] = useWidth<HTMLDivElement>();
   const g = geo(W);
-  const [hover, setHover] = useState<number | null>(null);
   const [tip, setTip] = useState<TipData>(null);
   const s = p.site!;
   const cap = s.cmd_cap_mw ?? [];
   const vals = [...s.meter_mw, ...s.load_fc_mw, ...cap, ...(o?.site ? [...o.site.meter_mw, ...o.site.load_mw] : [])].filter(isNum);
   const lo = Math.min(0, ...vals), hi = Math.max(s.import_limit_mw, ...vals);
-  const top = 22, bot = 130;
+  const top = 26, bot = 130, H = bot + 34;
   const y = (v: number) => bot - ((v - lo) / (hi - lo)) * (bot - top);
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / 3) * 3; t <= hi; t += 3) ticks.push(t);
-  const capNow = cap.filter(isNum);
-  const capMw = capNow.length ? Math.max(...capNow) : s.cmd_mw;
+  const capEnd = [...cap].reverse().find(isNum) ?? s.cmd_mw;
+  const pl = new Placer({ x0: g.X(FIRST) + 3, x1: W, y0: 0, y1: bot - 2 });
+  pl.line(stepPts(g, s.meter_mw, y)).line(stepPts(g, s.load_fc_mw, y)).line(stepPts(g, cap, y));
+  if (s.ircr_cap_mw) pl.line(stepPts(g, s.ircr_cap_mw, y));
+  if (o?.site) pl.line(stepPts(g, o.site.meter_mw, y));
+  const cmdTxt = `CMD · ${nf(s.cmd_mw)} MW`;
+  const cmdAt = pl.place(cmdTxt, "ann", [[g.X(N) - 4, y(capEnd) - 5, "end"], [g.X(N) - 4, y(capEnd) + 15, "end"], [g.X(FIRST) + 8, y(capEnd) - 5, "start"]]);
   const tipFor = (k: number, e: React.MouseEvent) => {
     const rows: [string, string][] = [["Import", isNum(s.meter_mw[k]) ? `${nf(s.meter_mw[k]!, 1)} MW` : "–"],
       ["Factory", isNum(s.load_fc_mw[k]) ? `${nf(s.load_fc_mw[k]!, 1)} MW` : "–"], ["Cap", isNum(cap[k]) ? `${nf(cap[k]!, 1)} MW` : "–"]];
@@ -431,19 +498,19 @@ function MeterChart({ p, o, sel, setSel, day, next }: { p: PlanT; o?: Outcome; s
     setTip({ x: e.clientX, y: e.clientY, title: `${hhmm(k)}–${hhmm(k + 1)}`, rows });
   };
   return (
-    <div className="blk chart" ref={ref} style={{ marginTop: 0 }}>
-      <svg viewBox={`0 0 ${W} 170`} role="img" aria-label="Factory meter import through the day, planned at 09:00, with the CMD cap">
+    <div className="chart" ref={ref}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Factory meter import through the day, planned at 09:00, with the CMD cap">
         <rect x={g.X(sel)} y={top} width={g.IW} height={bot - top} className="selc" />
+        <text className="ttl" x={0} y={14}><title>{glNote("METER")}</title>Site import, MW</text>
         <YGrid g={g} ticks={ticks} y={y} />
-        <text x={X0 + 4} y={top - 6} className="ann"><title>{glNote("METER")}</title>Site import, MW</text>
-        <path d={stepPath(g, s.load_fc_mw, y)} style={{ fill: "none", stroke: "var(--base)", strokeWidth: 1, strokeDasharray: "2 2" }}><title>{glNote("FACTORY")}</title></path>
-        {s.ircr_cap_mw && <path d={stepPath(g, s.ircr_cap_mw, y)} style={{ fill: "none", stroke: "var(--warn)", strokeWidth: 2 }}><title>{glNote("IRCR")}</title></path>}
-        <path d={stepPath(g, cap, y)} style={{ fill: "none", stroke: "var(--warn)", strokeWidth: 1.4, strokeDasharray: "6 3" }}><title>{glNote("CMD")}</title></path>
-        <text className="ann halo" x={g.X(N) - 4} y={y(capMw) - 5} textAnchor="end" style={{ fill: "var(--warn)" }}><title>{glNote("CMD")}</title>CMD · {nf(s.cmd_mw)} MW</text>
-        <line x1={g.X(FIRST)} x2={g.X(FIRST)} y1={top} y2={bot} style={{ stroke: "var(--mark)" }} />
-        <path d={stepPath(g, s.meter_mw, y, 0, FIRST)} style={{ fill: "none", stroke: "var(--meter)", strokeWidth: 2 }} />
-        <path d={stepPath(g, s.meter_mw, y, FIRST)} style={{ fill: "none", stroke: "var(--meter)", strokeWidth: 2, strokeDasharray: "5 3" }} />
-        {o?.site && <path d={stepPath(g, o.site.meter_mw, y)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.6 }} />}
+        <path className="series" d={stepPath(g, s.load_fc_mw, y)} style={{ fill: "none", stroke: "var(--base)", strokeWidth: 1, strokeDasharray: "2 2" }}><title>{glNote("FACTORY")}</title></path>
+        {s.ircr_cap_mw && <path className="ref" d={stepPath(g, s.ircr_cap_mw, y)} style={{ fill: "none", stroke: "var(--warn)", strokeWidth: 2 }}><title>{glNote("IRCR")}</title></path>}
+        <path className="ref" d={stepPath(g, cap, y)} style={{ fill: "none", stroke: "var(--warn)", strokeWidth: 1.4, strokeDasharray: "6 3" }}><title>{glNote("CMD")}</title></path>
+        <line className="ref" x1={g.X(FIRST)} x2={g.X(FIRST)} y1={top} y2={bot} style={{ stroke: "var(--mark)" }} />
+        <path className="series" d={stepPath(g, s.meter_mw, y, 0, FIRST)} style={{ fill: "none", stroke: "var(--meter)", strokeWidth: 2 }} />
+        <path className="series" d={stepPath(g, s.meter_mw, y, FIRST)} style={{ fill: "none", stroke: "var(--meter)", strokeWidth: 2, strokeDasharray: "5 3" }} />
+        {o?.site && <path className="series" d={stepPath(g, o.site.meter_mw, y)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.8 }} />}
+        {cmdAt && <text className="ann halo" x={cmdAt.x} y={cmdAt.y} textAnchor={cmdAt.a} style={{ fill: "var(--warn)" }}><title>{glNote("CMD")}</title>{cmdTxt}</text>}
         <DayAxis g={g} y={bot} day={day} next={next} />
         {hover != null && <line x1={g.X(hover) + g.IW / 2} x2={g.X(hover) + g.IW / 2} y1={top} y2={bot} style={{ stroke: "var(--text-4)", pointerEvents: "none" }} />}
         {Array.from({ length: N }, (_, k) => (
@@ -458,7 +525,7 @@ function MeterChart({ p, o, sel, setSel, day, next }: { p: PlanT; o?: Outcome; s
 }
 
 /* ------------------------------------------------------------------------------------------------ selected half-hour */
-function Detail({ p, o, k, segs }: { p: PlanT; o?: Outcome; k: number; segs: Seg_[] }) {
+function Detail({ p, o, k, segs, outLoading, reveal }: { p: PlanT; o?: Outcome; k: number; segs: Seg_[]; outLoading: boolean; reveal: () => void }) {
   const mw = p.plan.battery_mw[k] ?? 0;
   const s = segs.find((x) => k >= x.a && k < x.b);
   const shave = p.plan.action[k] === "shave";
@@ -481,18 +548,20 @@ function Detail({ p, o, k, segs }: { p: PlanT; o?: Outcome; k: number; segs: Seg
         {s && k >= FIRST && <div className="sub">{segName(s)} · {hhmm(s.a)}–{hhmm(s.b)}</div>}
       </div>
       <dl className="kvs">{rows.map(([a, b], i) => <FragmentKV key={i} a={a} b={b} />)}</dl>
-      <dl className="kvs">
+      <div className="det-out">
         {o ? (
-          <>
-            <dt>Outcome <span className="tag out">REPLAYED</span></dt><dd></dd>
+          <dl className="kvs">
+            <dt>Outcome</dt><dd><span className="tag out">REPLAYED</span></dd>
             <dt>Actual price</dt><dd>{isNum(o.price_actual[k]) ? `A$${nf(o.price_actual[k]!)}/MWh` : "–"}</dd>
             <dt>Battery</dt><dd>{nf(o.battery_mw[k] ?? 0, 1)} MW</dd>
             {o.site && <><dt>Site import</dt><dd>{nf(o.site.meter_mw[k] ?? 0, 1)} MW</dd></>}
             <dt>Sold extra</dt><dd>{(o.offer_cleared_mw[k] ?? 0) > 0.01 ? `${nf(o.offer_cleared_mw[k]!, 1)} MW · ${aud(o.offer_sold_aud[k])}` : "none"}</dd>
             <dt>Offer price</dt><dd>{isNum(o.offer_price_live[k]) ? `A$${nf(o.offer_price_live[k]!)}` : "not set"}</dd>
-          </>
-        ) : <><dt className="na">Outcome hidden</dt><dd></dd></>}
-      </dl>
+          </dl>
+        ) : outLoading ? <Loading what="what happened" /> : (
+          <div className="det-hidden"><span className="na">Outcome hidden</span><button className="lnk" onClick={reveal}>Plan + what happened</button></div>
+        )}
+      </div>
     </div>
   );
 }
