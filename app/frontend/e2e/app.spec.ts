@@ -1,6 +1,8 @@
 /* End-to-end checks against the real backend. The page rules come from ROUND6.md section 1 (the round-6 prototype's
    standard): decision chips <= 4 and <= 4 words each, first-screen text <= 75 words, hover tables <= 5 rows with
-   labels of <= 2 words, chart text only names, axes, actions and "number + word" labels, no overlapping chart text.
+   labels of <= 2 words, chart text only names, axes, actions and "number + word" labels. Layout checks on every page,
+   at 1440 and 1024 px: no chart text on another text, on a data or reference line, or outside its chart; no header
+   blocks on top of each other, no clipped text, no sideways scroll.
    The default connection is behind the factory meter with dispatcher v2 (e5); tests that need the other set it. */
 import { expect, test, type Page } from "@playwright/test";
 
@@ -41,6 +43,69 @@ function firstScreenWords(page: Page) {
   });
 }
 
+/** Every chart on the page: texts that overlap, texts a data line (.series) or reference line (.ref) passes through,
+ *  texts outside their SVG. Boxes come from getBBox; a line hits a text when any point along it, every 0.75 px, falls
+ *  inside the text's box. */
+function chartDefects(page: Page) {
+  return page.evaluate(() => {
+    const bad: string[] = [];
+    document.querySelectorAll(".chart svg").forEach((svg) => {
+      const s = svg as SVGSVGElement;
+      const name = s.getAttribute("aria-label")?.slice(0, 30) ?? "chart";
+      const vb = s.viewBox.baseVal;
+      const texts = Array.from(s.querySelectorAll("text")).map((t) => ({
+        t: Array.from(t.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join(""), b: (t as SVGTextElement).getBBox() }))
+        .filter((x) => x.b.width > 0);
+      for (let i = 0; i < texts.length; i++) for (let j = i + 1; j < texts.length; j++) {
+        const a = texts[i].b, b = texts[j].b;
+        if (a.x < b.x + b.width - 1 && b.x < a.x + a.width - 1 && a.y < b.y + b.height - 1 && b.y < a.y + a.height - 1) bad.push(`${name}: "${texts[i].t}" on "${texts[j].t}"`);
+      }
+      for (const { t, b } of texts)
+        if (b.x < vb.x - 1 || b.x + b.width > vb.x + vb.width + 1 || b.y < vb.y - 1 || b.y + b.height > vb.y + vb.height + 1) bad.push(`${name}: "${t}" outside the chart`);
+      // walk every data and reference line in 0.75 px steps; a point inside a text's box (inset 0.5 px) is a hit
+      const hits = new Set<number>();
+      for (const l of Array.from(s.querySelectorAll(".series, .ref")) as SVGGeometryElement[]) {
+        const len = l.getTotalLength();
+        for (let d = 0; d <= len; d += 0.75) {
+          const p = l.getPointAtLength(d);
+          texts.forEach(({ b }, i) => { if (p.x > b.x + 0.5 && p.x < b.x + b.width - 0.5 && p.y > b.y + 0.5 && p.y < b.y + b.height - 0.5) hits.add(i); });
+        }
+      }
+      hits.forEach((i) => bad.push(`${name}: a line crosses "${texts[i].t}"`));
+    });
+    return bad;
+  });
+}
+
+/** Page layout: blocks in the header, decision row, section heads and control strips that overlap; text clipped by its
+ *  box (ellipsis or overflow); a page wider than the window. */
+function layoutDefects(page: Page) {
+  return page.evaluate(() => {
+    const bad: string[] = [];
+    const visible = (e: Element) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+    const label = (e: Element) => `${e.className || e.tagName} "${(e.textContent || "").trim().slice(0, 24)}"`;
+    for (const sel of [".ph", ".ph-line", ".ph-r", ".chips", ".dec", ".statusline", ".blk-h", ".opctl", ".daypick", ".budget", ".cells4"]) {
+      document.querySelectorAll("main " + sel).forEach((box) => {
+        const kids = Array.from(box.children).filter(visible);
+        for (let i = 0; i < kids.length; i++) for (let j = i + 1; j < kids.length; j++) {
+          const a = kids[i].getBoundingClientRect(), b = kids[j].getBoundingClientRect();
+          if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) bad.push(`${sel}: ${label(kids[i])} on ${label(kids[j])}`);
+        }
+      });
+    }
+    document.querySelectorAll("main .title, main .big, main .chip, main .ck span, main .cell, main .pill, main .seg button, main .btn, main .fld > span").forEach((e) => {
+      const el = e as HTMLElement;
+      if (visible(el) && el.scrollWidth > el.clientWidth + 1) bad.push(`clipped: ${label(el)}`);
+    });
+    document.querySelectorAll("main .dec-l, main .dec-r, main .ph-main, main .ph-r").forEach((e) => {
+      const r = e.getBoundingClientRect();
+      e.querySelectorAll("*").forEach((k) => { const q = k.getBoundingClientRect(); if (q.width && (q.right > r.right + 1 || q.left < r.left - 1)) bad.push(`out of its column: ${label(k)}`); });
+    });
+    if (document.documentElement.scrollWidth > window.innerWidth + 1) bad.push(`page scrolls sideways: ${document.documentElement.scrollWidth} > ${window.innerWidth}`);
+    return Array.from(new Set(bad));
+  });
+}
+
 test.beforeAll(async ({ browser }) => { const p = await browser.newPage(); await ready(p); await p.close(); });
 
 test("shell: asset switch, pages, no script errors", async ({ page }) => {
@@ -68,7 +133,7 @@ for (const p of ["plan", "evidence", "call", "value"]) {
   });
 }
 
-test("plan: chart text is only names, axes, actions and number + word labels; nothing overlaps", async ({ page }) => {
+test("plan: chart text is only names, axes, actions and number + word labels; no layout defects", async ({ page }) => {
   await open(page, "plan");
   // the text drawn, without the <title> hover notes some labels carry
   const texts = await page.locator(".chart svg text").evaluateAll((els) =>
@@ -78,25 +143,38 @@ test("plan: chart text is only names, axes, actions and number + word labels; no
     /^-?[\d,]+$/, /^\d{2}:\d{2}$/, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d+ \w+$/,
     /^(Discharge|Charge|Shave) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/, /^CMD · \d+ MW$/,
     /^(peak|low|floor) A\$[\d,]+$/, /^earns A\$[\d,]+$/, /^[\d.]+ MWh$/, /^A\$[\d,]+$/,
-    /^price ≥ A\$\d+: \+up to \d+ MW( · sold \d+ · A\$[\d,]+)?$/,
+    /^price ≥ A\$\d+: \+up to \d+ MW( · sold \d+ · A\$[\d,]+)?$/, /^no extra offer$/,
+    /^(Energy|Grid services|Stored|Network bill) −?[\d,]+$/, /^Wear −[\d,]+$/, /^Net −?A\$[\d,]+$/,
   ];
   for (const t of texts) expect(allowed.some((r) => r.test(t.trim())), `chart text "${t}"`).toBe(true);
   await expect(page.locator('.chart svg[aria-label^="Factory meter"]')).toHaveCount(1);
-  const overlaps = await page.evaluate(() => {
-    const svgs = [document.querySelectorAll(".chart svg")[0], document.querySelector('.chart svg[aria-label^="Factory meter"]')!];
-    const bad: string[] = [];
-    for (const svg of svgs) {
-      const boxes = Array.from(svg.querySelectorAll("text")).map((t) => ({ t: t.childNodes[0]?.textContent, b: (t as SVGTextElement).getBBox() }))
-        .filter((x) => x.b.width > 0);
-      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-        const a = boxes[i].b, b = boxes[j].b;
-        if (a.x < b.x + b.width - 1 && b.x < a.x + a.width - 1 && a.y < b.y + b.height - 1 && b.y < a.y + a.height - 1) bad.push(`${boxes[i].t} / ${boxes[j].t}`);
-      }
-    }
-    return bad;
-  });
-  expect(overlaps).toEqual([]);
+  expect(await chartDefects(page)).toEqual([]);
 });
+
+/* Each page in the states a user sees: plan only and with the outcome, the call at 09:00 and in hindsight, on a day
+   the model calls (labels for the call window and the hold appear). */
+const VIEWS: [string, string, string | null][] = [
+  ["plan", "plan only", null], ["plan", "plan + outcome", "Plan + what happened"], ["evidence", "", null],
+  ["call", "09:00", null], ["call", "hindsight", "Whole season · hindsight"], ["value", "", null], ["settings", "", null],
+];
+for (const width of [1440, 1024]) {
+  for (const [p, label, radio] of VIEWS) {
+    test(`layout ${width}: ${p} ${label}: no text on text or on a line, nothing clipped or overlapping`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await open(page, p);
+      if (radio) {
+        await page.getByRole("radio", { name: radio }).click();
+        await page.waitForFunction(() => !document.querySelector('[aria-busy="true"]'), null, { timeout: 60_000 });
+        if (p === "plan") await expect(page.locator(".wf-h", { hasText: "What happened" })).toBeVisible({ timeout: 30_000 });
+        if (p === "call") await page.waitForTimeout(1500);
+      }
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForTimeout(300);
+      expect(await chartDefects(page)).toEqual([]);
+      expect(await layoutDefects(page)).toEqual([]);
+    });
+  }
+}
 
 test("plan: hover table ≤ 5 rows, labels ≤ 2 words; outcome only after asking", async ({ page }) => {
   const outcome: string[] = [];
@@ -127,7 +205,7 @@ test("plan: a 3 MW connection blocks the plan; Inspect jumps to the first breach
   await expect(page.locator(".bad-box").first()).toBeVisible();
   await page.getByRole("button", { name: "Inspect" }).click();
   const first = await page.locator(".bad-box").first().getAttribute("x");
-  const selx = await page.locator(".chart svg").first().locator("rect.selc").getAttribute("x");
+  const selx = await page.locator(".chart svg").first().locator("rect.selc").first().getAttribute("x");
   expect(Number(selx)).toBeCloseTo(Number(first), 1);
   await expect(page.locator(".ck.fail")).toHaveCount(1);
 });

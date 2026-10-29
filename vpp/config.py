@@ -56,3 +56,6 @@ class RiskPrefs:
     # cutoff the scenarios' monthly spike frequency was 0.59 .. 1.99 x the actual (reports/findings.md, section 18),
     # so the actual was 1 / 1.99 .. 1 / 0.59 x the scenarios'
     ambiguity: tuple = (0.50, 1.70)
+    # the "cvar" planner: (alpha, beta) - plans maximise (1 - beta) x the expected value + beta x the mean value of the
+    # worst alpha share of the scenarios [assumed; set before any run, analysis/2026-10-29/stochastic_v2/PLAN.md]
+    cvar: tuple = (0.20, 0.50)

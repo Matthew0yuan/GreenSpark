@@ -1,0 +1,72 @@
+24 days (2025-08-04 .. 2026-01-23), 0 without scenarios
+  sp0: 24 days in 16.7 min
+  cvar0: 24 days in 18.2 min
+  e5: 24 days in 0.7 min
+  roll0: 24 days in 0.8 min
+
+=== physics, compliance, run time
+        power_over  soc_outside  fallback_days  plans_short  plan_shortfall_mwh  capacity_short_mw_ti  budget_overrun_mwh  timing_errors  balance_max_err_mwh  minutes  s_per_day
+config                                                                                                                                                                           
+sp0              0            0              0          0.0                 0.0                   0.0                 0.0            0.0             141.3414  16.6525    41.6313
+cvar0            0            0              0          0.0                 0.0                   0.0                 0.0            0.0             141.3414  18.1510    45.3774
+e5               0            0              0          0.0                 0.0                   0.0                 0.0            0.0             141.3414   0.7395     1.8488
+roll0            0            0              0          0.0                 0.0                   0.0                 0.0            0.0             141.3414   0.7766     1.9415
+
+=== $/day; gains with month-block 95% intervals (none on the unseen 7 days)
+                  days  per_day  e5_gain  e5_gain_lo  e5_gain_hi  e5_market  e5_bill roll_vs  roll_gain  roll_gain_lo  roll_gain_hi
+period    config                                                                                                                   
+in-sample e5        24   3642.0      NaN         NaN         NaN        NaN      NaN     NaN        NaN           NaN           NaN
+          roll0     24   3685.1     43.1      -217.5       303.7       41.2      1.9     NaN        NaN           NaN           NaN
+          sp0       24   3773.6    131.7       -36.1       299.5      129.8      1.9   roll0       88.6          -4.3         181.4
+          cvar0     24   3750.8    108.9       -37.1       254.8      113.9     -5.0   roll0       65.8         -48.9         180.5
+
+=== tails ($): worst 5% days with stored energy at $90/MWh, worst 10% full weeks
+                  worst5_days_stored  worst10_weeks  full_weeks
+period    config                                               
+in-sample cvar0               2209.4        22223.7           2
+          e5                  2224.2        19770.0           2
+          roll0               2201.6        20236.4           2
+          sp0                 2216.2        22174.0           2
+test seen cvar0                  NaN            NaN           0
+          e5                     NaN            NaN           0
+          roll0                  NaN            NaN           0
+          sp0                    NaN            NaN           0
+
+=== the 09:00 plan's expected money less what followed ($/day)
+                    plan_money  plan_got  optimism
+part      strategy                                
+in-sample cvar0         4876.8    3189.4    1687.4
+          e5            4635.0    3206.7    1428.3
+          roll0         4450.1    3092.8    1357.3
+          sp0           4909.5    3228.0    1681.5
+
+=== stored energy (MWh), buys and sells
+                   soc_mean  soc_0800  soc_1600  night_charge_mwh  offer_mwh  bought_mwh  sold_mwh  buy_price  sell_price
+period     config                                                                                                        
+validation cvar0      18.27     19.35     20.55              6.97       0.50       10.32      8.26      71.15      184.51
+           e5         23.41     23.91     25.15              4.49       1.09        8.02      6.33      65.15      188.25
+           roll0      17.90     19.44     21.49              9.45       0.34       13.98     11.41      69.09      161.12
+           sp0        18.24     19.70     20.60              7.80       0.51       11.03      8.89      70.38      181.80
+
+=== market parts ($/day)
+                    energy   fcess   wear
+part      strategy                       
+in-sample cvar0      788.8  1689.9  247.7
+          e5         668.4  1638.5  189.8
+          roll0      871.8  1628.9  342.4
+          sp0        839.9  1673.6  266.7
+
+=== gain over e5 by month ($/day)
+strategy  cvar0  roll0    sp0
+day                          
+2025-08   255.0  304.0  299.0
+2026-01   -37.0 -218.0  -36.0
+
+=== IRCR 2025-26 Hot Season ($/year)
+strategy  ircr_mw  saving_per_year  peak_days_covered
+     sp0      NaN              NaN                  1
+   cvar0      NaN              NaN                  1
+      e5      NaN              NaN                  1
+   roll0      NaN              NaN                  1
+
+done in 18.2 min

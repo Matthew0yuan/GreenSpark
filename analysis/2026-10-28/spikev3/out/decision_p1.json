@@ -1,0 +1,17 @@
+{
+ "calibration": "platt",
+ "passed": {
+  "0": [
+   "G0",
+   "G1"
+  ],
+  "1": [
+   "G0"
+  ]
+ },
+ "comparisons": 10,
+ "spikev3_confirmed": {
+  "0": true,
+  "1": true
+ }
+}

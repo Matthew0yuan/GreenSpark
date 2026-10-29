@@ -166,7 +166,11 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
     if cfg.ladder:
         strat = replace(strat, name=cfg.name, offer_rule="table")
     if cfg.replan_every:  # e5 (round 5): the plans are also redone on the clock, the forecast nudged to the latest price
-        strat = replace(strat, name=cfg.name, planner="roll", every=cfg.replan_every)
+        strat = replace(strat, name=cfg.name, planner=cfg.planner or "roll", every=cfg.replan_every)
+    elif cfg.planner:
+        raise ValueError("the scenario planners re-plan on the clock: set replan_every")
+    if cfg.plan_hurdle is not None:  # the plans' hurdle only: the table and the offers keep cfg.hurdle
+        prefs = replace(prefs, hurdle_per_mwh=cfg.plan_hurdle)
     # the table of the battery, site and CMD the dispatcher sees; one solved for others is refused
     inputs = value_inputs(cfg, asset, site, route.cmd_mw) if cfg.value == "relative" or cfg.ladder else None
     res_mwh = cfg.spike_reserve_mwh
@@ -316,6 +320,8 @@ def route_days(sc: bt.Scenario, cfg: V2Config, soc0: float = 0.0, mtd0: dict | N
             kw["offer_end"] = True
         if cfg.curve:  # round 6 (v2_plan.md section 15): the plans' own bid curve
             kw["curve"] = cfg.curve
+        if cfg.options_at:  # the expected value of each kind of action in these half-hours (stochastic planners)
+            kw["options_at"] = cfg.options_at
         if decide is not None:
             kw.update(decide(d, kw))
         recorder = rc.Recorder(day, {"config": cfg.name, "carry_mwh": carry, **context}) if cfg.record else None

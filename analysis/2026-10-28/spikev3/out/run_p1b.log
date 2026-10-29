@@ -1,0 +1,11 @@
+days_ahead 0: spikev3 reproduction 34,592 rows, max |diff| 0.00e+00 (15 s)
+  features missing (in-sample issues): {'sur_28': 0.0, 'sur_60': 0.0, 'stress': 0.0}; signals with weight per month: {'count': 31.0, 'mean': 12.06, 'std': 0.44, 'min': 11.0, '25%': 12.0, '50%': 12.0, '75%': 12.0, 'max': 13.0}
+  spikev3+A: 34,592 predictions, 18 s
+  spikev3+B: 34,592 predictions, 16 s
+  spikev3+C: 34,592 predictions, 17 s
+days_ahead 1: spikev3 reproduction 36,096 rows, max |diff| 0.00e+00 (15 s)
+  features missing (in-sample issues): {'sur_28': 0.0, 'sur_60': 0.0, 'stress': 0.0}; signals with weight per month: {'count': 31.0, 'mean': 11.77, 'std': 0.43, 'min': 11.0, '25%': 12.0, '50%': 12.0, '75%': 12.0, 'max': 12.0}
+  spikev3+A: 36,096 predictions, 18 s
+  spikev3+B: 36,096 predictions, 15 s
+  spikev3+C: 36,096 predictions, 19 s
+done in 136 s

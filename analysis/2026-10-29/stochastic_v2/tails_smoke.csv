@@ -1,0 +1,9 @@
+period,config,worst5_days_stored,worst10_weeks,full_weeks
+in-sample,cvar0,2209.4311162098975,22223.73941544053,2
+in-sample,e5,2224.1967979446868,19769.98439376204,2
+in-sample,roll0,2201.581951966364,20236.373480759758,2
+in-sample,sp0,2216.2036372362772,22173.981363563573,2
+test seen,cvar0,,,0
+test seen,e5,,,0
+test seen,roll0,,,0
+test seen,sp0,,,0

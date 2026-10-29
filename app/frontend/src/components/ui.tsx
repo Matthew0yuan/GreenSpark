@@ -42,13 +42,21 @@ export function NotePopover() {
   return <div className="note-pop" style={{ left: Math.max(8, s.x), top: y }} role="tooltip">{s.t}</div>;
 }
 
+/** Previous / next day, and the date itself opens the calendar (the native field stays hidden behind it). */
 export function DayPicker({ day, setDay }: { day: string; setDay: (d: string) => void }) {
+  const inp = useRef<HTMLInputElement>(null);
+  const pick = () => { const el = inp.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); } };
   return (
     <span className="daypick">
       <button className="arr" aria-label="Previous trading day" disabled={day <= FIRST_DAY} onClick={() => setDay(addDays(day, -1))}>‹</button>
-      <span className="d">{dayLabel(day)}</span>
+      <span className="cal">
+        <button className="d" onClick={pick} aria-label={`${dayLabel(day)}, pick a trading day`}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
+          {dayLabel(day)}
+        </button>
+        <input ref={inp} type="date" tabIndex={-1} aria-label="Pick a trading day" min={FIRST_DAY} max={LAST_DAY} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} />
+      </span>
       <button className="arr" aria-label="Next trading day" disabled={day >= LAST_DAY} onClick={() => setDay(addDays(day, 1))}>›</button>
-      <input type="date" aria-label="Pick a trading day" min={FIRST_DAY} max={LAST_DAY} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} />
     </span>
   );
 }
@@ -72,10 +80,12 @@ export function Failed({ error }: { error: unknown }) {
   return <div className="state err" role="alert">Not available · {msg}</div>;
 }
 
-/** Width of a container, for SVG charts drawn in pixel units. */
+/** Width of a container, for SVG charts drawn in pixel units; drawn again once the web font has loaded, because labels
+ *  are placed by their measured width. */
 export function useWidth<T extends HTMLElement>(min = 640): [React.RefObject<T | null>, number] {
   const ref = useRef<T>(null);
   const [w, setW] = useState(1208);
+  const [, setFonts] = useState(0);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -83,6 +93,7 @@ export function useWidth<T extends HTMLElement>(min = 640): [React.RefObject<T |
     ro.observe(el);
     return () => ro.disconnect();
   }, [min]);
+  useEffect(() => { let on = true; document.fonts?.ready.then(() => on && setFonts((n) => n + 1)); return () => { on = false; }; }, []);
   return [ref, w];
 }
 
@@ -99,11 +110,23 @@ export function ChartTip({ tip }: { tip: TipData }) {
   );
 }
 
-export function Who({ items }: { items: [string, string][] }) {
+/** Page header: title and chips, one context line ending in "Who is who" under it; day and view controls on the right
+ *  (under both when the page is narrow). */
+export function PageHead({ title, chips, ctx, who, right }: { title: string; chips?: ReactNode; ctx?: ReactNode; who?: [string, string][]; right?: ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
-    <details className="who">
-      <summary>Who is who</summary>
-      <span className="chips">{items.map(([k, l]) => <Chip key={k} note={glNote(k)}>{l}</Chip>)}</span>
-    </details>
+    <header className="ph">
+      <div className="ph-main">
+        <div className="ph-line"><h1>{title}</h1>{chips && <span className="chips">{chips}</span>}</div>
+        {(ctx || who) && (
+          <div className="ctx">
+            {ctx}
+            {who && <>{ctx ? " · " : null}<button className="who-b" aria-expanded={open} onClick={() => setOpen(!open)}>Who is who</button></>}
+          </div>
+        )}
+        {who && open && <div className="chips who-chips">{who.map(([k, l]) => <Chip key={k} note={glNote(k)}>{l}</Chip>)}</div>}
+      </div>
+      {right && <div className="ph-r">{right}</div>}
+    </header>
   );
 }

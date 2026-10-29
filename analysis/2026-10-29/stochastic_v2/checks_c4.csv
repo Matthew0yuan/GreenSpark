@@ -1,0 +1,3 @@
+check,pass,detail
+C4 future scrambled (sp),True,"largest move before t 0.00e+00 over 15 (day, t); positive controls moved: planted leak 15/15, interval before t 8/15"
+C4 future scrambled (cvar),True,"largest move before t 0.00e+00 over 15 (day, t); positive controls moved: planted leak 14/15, interval before t 9/15"

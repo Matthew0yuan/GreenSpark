@@ -1,0 +1,20 @@
+features: 13 columns in 8 s; missing share (from 2025-04-01): {'stem_price': 0.0, 'stem_premium': 0.0, 'stem_cover': 0.0, 'stem_daymax': 0.0, 'hr_norm': 0.0, 'hr_daymin_norm': 0.0, 'hr_z': 0.0, 'rsi': 0.0, 'rsi_daymin': 0.0, 'syn_loss_mw': 0.0, 'wrev_midwest': 0.138, 'wrev_merredin': 0.138, 'wrev_evening': 0.0}
+  days_ahead 0 C_strict: 34,592 predictions, 3 s
+  days_ahead 1 C_strict: 36,096 predictions, 3 s
+reproduction of C_strict: 70,688 of 70,688 rows, max |diff| 0.00e+00
+  days_ahead 0 C+G0: 34,592 predictions, 4 s
+  days_ahead 0 C+G1: 34,592 predictions, 3 s
+  days_ahead 0 C+G2: 34,592 predictions, 3 s
+  days_ahead 0 C+G4: 34,592 predictions, 3 s
+  days_ahead 0 C+G5: 34,592 predictions, 4 s
+  days_ahead 1 C+G0: 36,096 predictions, 5 s
+  days_ahead 1 C+G1: 36,096 predictions, 4 s
+  days_ahead 1 C+G2: 36,096 predictions, 5 s
+  days_ahead 1 C+G4: 36,096 predictions, 5 s
+  days_ahead 1 C+G5: 36,096 predictions, 4 s
+  method  in_sample_logloss  rows
+   platt           0.083565 42864
+     raw           0.084056 42864
+isotonic           0.088979 42864 
+-> calibration: platt
+saved 424,128 predictions in 56 s

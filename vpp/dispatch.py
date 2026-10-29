@@ -75,7 +75,7 @@ class Strategy:
     # others also re-plan every `every` intervals from the actual state of charge, the prices nudged towards the
     # latest seen: "roll" on the point forecast; from the scenarios' issue (run_day's scen) on, "mean" on the
     # scenarios' mean, "sp" with the two-stage stochastic plan (plan_sp), "dro" the same at the worst weights the
-    # risk preferences' ambiguity allows
+    # risk preferences' ambiguity allows, "cvar" the same with the risk preferences' mix of mean and CVaR
     planner: str = "point"
     every: int = 2
     # what stored energy is worth at the end of the plan: "buyback" (stored_energy_value) or "table" (run_day's
@@ -364,7 +364,8 @@ def worst_weights(values, K, lo: float, hi: float, w_lo: float, w_hi: float) -> 
     return res.x
 
 
-def plan_sp(asset: Asset, prices_e, prices_f, first: int, ambiguity: tuple | None = None, **kw) -> dict:
+def plan_sp(asset: Asset, prices_e, prices_f, first: int, ambiguity: tuple | None = None,
+            cvar: tuple | None = None, restrict: dict | None = None, **kw) -> dict:
     """Two-stage stochastic plan over S price scenarios (rows of prices_e; prices_f: one {product: prices} per
     scenario, or None). The first `first` intervals have one schedule, the same in every scenario, because it is
     carried out before the next re-plan (non-anticipativity); after them each scenario has its own schedule, which
@@ -376,12 +377,16 @@ def plan_sp(asset: Asset, prices_e, prices_f, first: int, ambiguity: tuple | Non
     (K: a count per scenario, such as its intervals at or above a spike price). Writing w = w_lo + u, the worst
     case enters through LP duality - maximise w_lo sum_s value_s + a (1 - S w_lo) + b (lo - w_lo sum K)
     - g (hi - w_lo sum K) - (w_hi - w_lo) sum_s e_s with a + (b - g) K_s - e_s <= value_s and b, g, e >= 0 - so
-    the plan stays one MILP.
+    the plan stays one MILP. Or, with cvar = (alpha, beta), (1 - beta) x the expected value + beta x the CVaR at
+    alpha (the mean value of the worst alpha share of the equally weighted scenarios), CVaR written as the most of
+    eta - sum_s z_s / (alpha S) with z_s >= eta - value_s and z_s >= 0 (Rockafellar-Uryasev), again one MILP.
+    restrict: the first interval held to one kind of action (plan_options): {"bounds": {column block: (lo, hi)}},
+    blocks as in _structure (0 charge, 1 discharge, 4-7 FCESS), and "fcess_min": the least MW of FCESS in all.
 
     Returns plan's keys, the schedule being the first stage and then the scenarios' weighted average, and every
     amount weighted by the weights the objective used ("weights"); "values" / "moneys": each scenario's value less
     penalties / money (plan's "money");
-    "objective": the objective's value (weights @ values)."""
+    "objective": the objective's value (weights @ values; with cvar, the mix); with cvar also "cvar"."""
     pe = np.asarray(prices_e, float)
     S, n = pe.shape
     first = min(first, n)
@@ -391,15 +396,33 @@ def plan_sp(asset: Asset, prices_e, prices_f, first: int, ambiguity: tuple | Non
     m1 = (S - 1) * len(stage1)
     cols = np.ravel([[s * nx + j, j] for s in range(1, S) for j in stage1])
     same = coo_matrix((np.tile([1.0, -1.0], m1), (np.repeat(np.arange(m1), 2), cols)), shape=(m1, S * nx))
-    extra = 0 if ambiguity is None else S + 3  # a, b, g, e_1..e_S
+    if ambiguity is not None and cvar is not None:
+        raise ValueError("ambiguity and cvar are alternatives")
+    extra = S + 3 if ambiguity is not None else S + 1 if cvar is not None else 0  # a, b, g, e_s / eta, z_s
+    restrict = restrict or {}
+    for m in ms:  # the first interval is the same in every scenario: holding each to the option holds the plan to it
+        for k, (a, b) in restrict.get("bounds", {}).items():
+            m.lo[k * n], m.hi[k * n] = max(m.lo[k * n], a), min(m.hi[k * n], b)
+    fmin = restrict.get("fcess_min")
+    rows = [same] if fmin is None else [same, coo_matrix((np.ones(4), (np.zeros(4, int), np.arange(4, 8) * n)),
+                                                         shape=(1, S * nx))]
 
     def solve():
-        A = sp_vstack([block_diag([m.A for m in ms]), same])
-        lb = np.r_[np.concatenate([m.lb for m in ms]), np.zeros(m1)]
-        ub = np.r_[np.concatenate([m.ub for m in ms]), np.zeros(m1)]
+        A = sp_vstack([block_diag([m.A for m in ms]), *rows])
+        lb = np.r_[np.concatenate([m.lb for m in ms]), np.zeros(m1), [] if fmin is None else [fmin]]
+        ub = np.r_[np.concatenate([m.ub for m in ms]), np.zeros(m1), [] if fmin is None else [np.inf]]
         lo, hi = np.concatenate([m.lo for m in ms]), np.concatenate([m.hi for m in ms])
         integrality = np.concatenate([m.integrality for m in ms])
-        if ambiguity is None:
+        if cvar is not None:
+            alpha, beta = cvar
+            # z_s - eta + value_s >= 0, value_s = -cost_s @ x_s
+            tail = sp_hstack([block_diag([-m.cost[None, :] for m in ms]), coo_matrix(np.c_[-np.ones(S), np.eye(S)])])
+            A = sp_vstack([sp_hstack([A, coo_matrix((A.shape[0], extra))]), tail])
+            lb, ub = np.r_[lb, np.zeros(S)], np.r_[ub, np.full(S, np.inf)]
+            lo, hi = np.r_[lo, -np.inf, np.zeros(S)], np.r_[hi, np.full(S + 1, np.inf)]
+            integrality = np.r_[integrality, np.zeros(extra)]
+            cost = np.r_[np.concatenate([(1 - beta) / S * m.cost for m in ms]), -beta, np.full(S, beta / (alpha * S))]
+        elif ambiguity is None:
             cost = np.concatenate([m.cost / S for m in ms])
         else:
             K, k_lo, k_hi, w_lo, w_hi = ambiguity
@@ -435,6 +458,38 @@ def plan_sp(asset: Asset, prices_e, prices_f, first: int, ambiguity: tuple | Non
     out.update(shortfall=shortfall, shortfall_mwh=max(o["shortfall_mwh"] for o in outs), weights=w, values=values,
                moneys=np.array([o["money"] for o in outs]),
                objective=-float(res.fun))
+    if cvar is not None:  # the CVaR the plan's scenarios give (the objective mixes it with the mean)
+        out["cvar"] = float(np.sort(values)[:max(1, int(round(cvar[0] * S)))].mean())
+    return out
+
+
+OPTIONS = {  # what the battery does in the decision's half-hour: the column blocks' bounds there (plan_sp's restrict)
+    "sell": lambda P, lo: {"bounds": {0: (0.0, 0.0), 1: (lo, P), **{k: (0.0, 0.0) for k in range(4, 8)}}},
+    "charge": lambda P, lo: {"bounds": {0: (lo, P), 1: (0.0, 0.0), **{k: (0.0, 0.0) for k in range(4, 8)}}},
+    "fcess": lambda P, lo: {"bounds": {0: (0.0, 0.0), 1: (0.0, 0.0)}, "fcess_min": lo},
+    "hold": lambda P, lo: {"bounds": {k: (0.0, 0.0) for k in (0, 1, 4, 5, 6, 7)}},
+}
+OPTION_MW = 1.0  # MW: the least a "sell", "charge" or "fcess" option does in its half-hour [assumed]
+
+
+def plan_options(asset: Asset, prices_e, prices_f, first: int, chosen: dict, ambiguity: tuple | None = None,
+                 cvar: tuple | None = None, min_mw: float = OPTION_MW, **kw) -> dict:
+    """The expected value of each kind of action in the plan's first half-hour, side by side: plan_sp again with that
+    half-hour held to only selling (at least min_mw), only charging, only FCESS (at least min_mw in all) or nothing,
+    the rest of the day free in every scenario. chosen: the plan adopted on the same inputs. Returns {option: {"ev":
+    the objective (NaN if the option cannot be done without a compliance shortfall the chosen plan does not have),
+    "net": MW out in the half-hour (charging negative), "fcess": MW of FCESS}} with "chosen" alongside."""
+    P = asset.battery.power_mw
+    first_of = lambda o: {"ev": float(o["objective"]), "net": float(o["net"][0]),  # noqa: E731
+                          "fcess": float(sum(o[k][0] for k in FCESS)) if prices_f is not None else 0.0}
+    out = {"chosen": first_of(chosen)}
+    for name, rule in OPTIONS.items():
+        try:
+            o = plan_sp(asset, prices_e, prices_f, first, ambiguity, cvar, restrict=rule(P, min_mw), **kw)
+            ok = o["shortfall"] <= chosen["shortfall"] + 1e-6
+        except (RuntimeError, ValueError):
+            o, ok = None, False
+        out[name] = first_of(o) if ok else {"ev": np.nan, "net": np.nan, "fcess": np.nan}
     return out
 
 
@@ -765,7 +820,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             s_start=0.0, p5_f=None, site: Site | None = None, load_fc=None, load_act=None, terms: DayTerms | None = None,
             export_energy: bool = True, reg_util: tuple = (0.0, 0.0), scen: dict | None = None,
             reserve: Reserve | None = None, terminal: np.ndarray | None = None, bids=None, on_plan=None,
-            offer_lag: int = 1, extend=None, offer_end: bool = False, curve=(), on_step=None):
+            offer_lag: int = 1, extend=None, offer_end: bool = False, curve=(), on_step=None, options_at: tuple = ()):
     """Plan at 08:15 on the forecast, execute in 5-min steps with the standing offer, settle at actuals.
 
     asset: the battery, its operating limits and wear; strat: how it decides; prefs: the risk
@@ -789,7 +844,7 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     and availability tests are scored. With terms the summary and log also report the meter, the caps
     and the tests. terms=None is the plain dispatcher of the 1 MW study, unchanged.
 
-    scen: the day's price scenarios for the planners "mean", "sp" and "dro" (see Strategy; they need terms):
+    scen: the day's price scenarios for the planners "mean", "sp", "dro" and "cvar" (see Strategy; they need terms):
     {"slot": the interval they are issued at, "energy": (S, 48) $/MWh, "fcess": {product: (S, 48)} planning
     prices, "spike": the $/MWh whose count per scenario the ambiguity bounds}; plans from "slot" on use them.
     Without them those planners plan on the forecast ("roll"). With terms the summary also compares the first
@@ -819,6 +874,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
     in place of the plan; charging beyond the plan's only within the room the caps at the day's start leave over the
     planned (or actual) load and the point's regulation lower use, and a step that departs from the plan is followed
     by a re-plan at the end of its interval, as after a sale. The log then has the curves and bid_mwh.
+    options_at: intervals (with planner "sp", "dro" or "cvar") at whose first adopted plan on the scenarios the
+    expected value of each kind of action in that half-hour is also computed (plan_options); the summary then has
+    opt<t>_<option>_ev / _net / _fcess for the options and "chosen".
     on_step(step): called at the end of every 5-min step with a dict of what the step decided from (stored energy and
     budget at its start, the plan's MW, sellable MW, the price seen, keep_e, the rooms, the plan in force and its first
     interval, the bids) and what it did (the offers' target, the MW after the offer and at the end, FCESS enabled), for
@@ -842,6 +900,9 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
         raise ValueError(f"planner {planner!r} needs the day's terms")
     if offer_end and not full:
         raise ValueError("offer_end needs the day's terms")
+    if options_at and strat.planner not in ("sp", "dro", "cvar"):
+        raise ValueError("the options' expected values need a stochastic planner (sp, dro or cvar)")
+    options: dict = {}  # interval -> plan_options
     obls, layers = list(obligations or []) + list(terms.obligations), list(terms.layers)
     budget = asset.limits.cycles_per_day * E
     reveals = sorted(terms.reveals, key=lambda r: r.slot)
@@ -939,9 +1000,10 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             labels.append("spike reserve")
         return (hard, soft, labels) if names else (hard, soft)
 
-    def scen_plan(t0, seen, kw):
-        """Plan intervals t0.. on the scenarios (planner "mean", "sp" or "dro"). seen: (interval, energy price, FCESS
-        prices) of the latest 5-min prices, which every scenario is nudged towards as the forecast is; None: none."""
+    def scen_plan(t0, seen, kw, opts=False):
+        """Plan intervals t0.. on the scenarios (planner "mean", "sp", "dro" or "cvar"). seen: (interval, energy price, FCESS
+        prices) of the latest 5-min prices, which every scenario is nudged towards as the forecast is; None: none.
+        opts: also the expected value of each kind of action in interval t0 (plan_options), as (plan, options)."""
         e, f = scen["energy"], scen["fcess"] if fcess else None
         n_s = len(e)
         if seen is None:
@@ -957,7 +1019,11 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             K = (pe >= scen["spike"]).sum(axis=1).astype(float)
             lo, hi = prefs.ambiguity
             amb = (K, lo * K.mean(), hi * K.mean(), lo / n_s, hi / n_s)
-        return plan_sp(asset, pe, pf, strat.every - t0 % strat.every, amb, **kw)
+        risk_mix = prefs.cvar if planner == "cvar" else None
+        out = plan_sp(asset, pe, pf, strat.every - t0 % strat.every, amb, risk_mix, **kw)
+        if not opts:
+            return out
+        return out, plan_options(asset, pe, pf, strat.every - t0 % strat.every, out, amb, risk_mix, **kw)
 
     def replan(t0, fe, ff, s0, b0, ladder, seen=None):
         """Plan intervals t0.. from s0 stored and budget b0. With terms: compliance first (see plan), on the
@@ -986,8 +1052,11 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
                             "terminal": np.array(kw["terminal_value"], float)}
             if extend is not None:
                 fe, ff, kw = extend(t0, np.asarray(fe, float), ff, kw, [x.name for x in layers])
-            if ladder != "offer" and planner in ("mean", "sp", "dro") and t0 >= scen["slot"]:
-                out = scen_plan(t0, seen, kw)
+            if ladder != "offer" and planner in ("mean", "sp", "dro", "cvar") and t0 >= scen["slot"]:
+                if ladder == "full" and t0 in options_at and t0 not in options and extend is None:
+                    out, options[t0] = scen_plan(t0, seen, kw, opts=True)
+                else:
+                    out = scen_plan(t0, seen, kw)
             else:
                 out = plan(asset, fe, ff, **kw)
             if extend is not None:
@@ -1337,6 +1406,8 @@ def run_day(asset: Asset, strat: Strategy, prefs: RiskPrefs, fc_e, fc_f, rtp, ac
             if fcess:
                 got += sum((np.asarray(act_f[k])[t0:] * mw_h[k][t0:]).sum() for k in FCESS)
             summary.update({"plan_slot": t0, "plan_money": money, "plan_got": float(got)})
+        for t_opt, opt in sorted(options.items()):
+            summary.update({f"opt{t_opt}_{name}_{k}": v for name, o in opt.items() for k, v in o.items()})
         for name, (mwh, mw) in excess.items():
             summary[f"excess_{name}_mwh"], summary[f"excess_{name}_mw"] = mwh, mw
         for a in terms.availability:

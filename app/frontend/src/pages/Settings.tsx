@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import { Chip, Gl, Note, Seg } from "../components/ui";
+import { Chip, Gl, Note, PageHead, Seg } from "../components/ui";
 import { aud, signed } from "../lib/format";
 import { glNote } from "../lib/gloss";
 import { DEFAULT_SETTINGS, DISP, isDefault, useApp } from "../state";
@@ -31,10 +31,8 @@ export default function Settings() {
 
   return (
     <section aria-label="Settings">
-      <header className="ph">
-        <div className="ph-line"><h1>Settings</h1>{!isDefault(settings) && <Chip cls="unv" note={glNote("UNVALIDATED")}>unvalidated scenario</Chip>}</div>
-        <div className="ctx">Changes apply to every page. Live settings recompute; locked ones would need a new value table.</div>
-      </header>
+      <PageHead title="Settings" chips={!isDefault(settings) ? <Chip cls="unv" note={glNote("UNVALIDATED")}>unvalidated scenario</Chip> : undefined}
+        ctx="Changes apply to every page. Live settings recompute; locked ones would need a new value table." />
       <div className="form">
         <div>
           <fieldset className="fs">
@@ -49,17 +47,18 @@ export default function Settings() {
               <span className="boxes">{SERV.map(([k, l]) => (
                 <label key={k}><input type="checkbox" checked={s.fcess.includes(k)} onChange={(e) =>
                   setS({ ...s, fcess: e.target.checked ? [...s.fcess, k] : s.fcess.filter((x) => x !== k) })} /> {l}</label>))}</span></div>
-            <div className="fld"><span>Energy stored at 08:00, MWh <span className="lock">blank = from the backtest</span></span>
-              <input type="number" min={0} max={40} step={1} value={s.startMwh ?? ""} onChange={(e) => setS({ ...s, startMwh: num(e.target.value) })} /></div>
-            <div className="fld"><span>{where} export limit, MW <span className="lock">check only</span></span>
-              <input type="number" min={0.5} max={20} step={0.5} value={s.exportMw ?? ""} placeholder={String(exp0)} onChange={(e) => setS({ ...s, exportMw: num(e.target.value) })} /></div>
-            <div className="fld"><span>{where} import limit, MW <span className="lock">check only</span></span>
-              <input type="number" min={0.5} max={20} step={0.5} value={s.importMw ?? ""} placeholder={String(imp0)} onChange={(e) => setS({ ...s, importMw: num(e.target.value) })} /></div>
+            <div className="fld"><span>Energy stored at 08:00, MWh<span className="hint">blank = from the backtest</span></span>
+              <input className="inp" type="number" min={0} max={40} step={1} value={s.startMwh ?? ""} onChange={(e) => setS({ ...s, startMwh: num(e.target.value) })} /></div>
+            <div className="fld"><span>{where} export limit, MW<span className="hint">check only</span></span>
+              <input className="inp" type="number" min={0.5} max={20} step={0.5} value={s.exportMw ?? ""} placeholder={String(exp0)} onChange={(e) => setS({ ...s, exportMw: num(e.target.value) })} /></div>
+            <div className="fld"><span>{where} import limit, MW<span className="hint">check only</span></span>
+              <input className="inp" type="number" min={0.5} max={20} step={0.5} value={s.importMw ?? ""} placeholder={String(imp0)} onChange={(e) => setS({ ...s, importMw: num(e.target.value) })} /></div>
             {[["Power", "10 MW"], ["Energy", "40 MWh"], ["Round trip", "85%"], ["Wear", "A$30 per MWh discharged"],
               ...(factory ? [["CMD", "9 MW"], ["Factory load", "synthetic × 10"]] : [])].map(([a, b]) => (
-              <div className="fld" key={a}><span>{a}</span><span><input type="text" disabled value={b} style={{ width: 200 }} /> <Note note="The value table and the backtest were solved for this battery; changing it needs a new table (vpp.v2.value) and a new backtest." cls="lock tipc">locked</Note></span></div>
+              <div className="fld" key={a}><span>{a}</span><span className="ro"><b>{b}</b><Note note="The value table and the backtest were solved for this battery; changing it needs a new table (vpp.v2.value) and a new backtest." cls="lock tipc">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>locked</Note></span></div>
             ))}
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <div className="actions">
               <button className="btn pri" disabled={!dirty} onClick={() => setSettings(s)}>Apply</button>
               <button className="btn" disabled={isDefault(s)} onClick={() => {
                 const d = { ...DEFAULT_SETTINGS, connection: s.connection, dispatcher: s.dispatcher }; setS(d); setSettings(d); }}>Reset to tested</button>
@@ -69,13 +68,13 @@ export default function Settings() {
           <fieldset className="fs">
             <h2><Gl k="VPP">Customer batteries</Gl></h2>
             <div className="fld"><span>Offer used on the Call page</span>
-              <select value={offer} onChange={(e) => setOffer(e.target.value as "ref" | "custom")}>
+              <select className="sel" style={{ width: 340, maxWidth: "100%" }} value={offer} onChange={(e) => setOffer(e.target.value as "ref" | "custom")}>
                 <option value="custom">Suggested offer (model, not a contract)</option><option value="ref">Reference terms (Synergy, not a Zenith tariff)</option></select></div>
             <ResetDecisions offer={offer} />
           </fieldset>
         </div>
         <aside>
-          <h2 style={{ fontSize: 15, marginBottom: 10 }}>Input check</h2>
+          <h2>Input check</h2>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }}>
             {issues.map(([t, k]) => <li key={t} className={"ck " + (k === "ok" ? "pass" : k === "bad" ? "fail" : "")} style={{ whiteSpace: "normal" }}>
               <i>{k === "ok" ? "✓" : "!"}</i><span style={{ whiteSpace: "normal" }}>{t}</span></li>)}
@@ -96,7 +95,7 @@ function Rerun() {
   return (
     <fieldset className="fs">
       <h2>Whole backtest with these settings</h2>
-      <p className="sub" style={{ marginTop: 0 }}>Runs the dispatcher through all 570 trading days (a few minutes) and compares with the tested settings, period by period.</p>
+      <p className="sub">Runs the dispatcher through all 570 trading days (a few minutes) and compares with the tested settings, period by period.</p>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button className="btn" onClick={() => start.mutate()} disabled={start.isPending || j?.state === "running"}>Run backtest</button>
         {j?.state === "running" && <button className="btn" onClick={() => api.cancelJob(j.id)}>Cancel</button>}

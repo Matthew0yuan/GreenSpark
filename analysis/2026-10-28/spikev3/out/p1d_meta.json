@@ -1,0 +1,31 @@
+{
+ "d0": {
+  "reproduction_F_max_diff": 0.0,
+  "E_equals_F_to_2026-07_max_diff": 0.0,
+  "S60_months_extended": 0,
+  "S60_train_pos_median": 51.0,
+  "S90_months_extended": 0,
+  "S90_train_pos_median": 77.0,
+  "S180_months_extended": 0,
+  "S180_train_pos_median": 181.0,
+  "C60_months_extended": 0,
+  "C60_months_raw": 1,
+  "C90_months_extended": 0,
+  "C90_months_raw": 1
+ },
+ "d1": {
+  "reproduction_F_max_diff": 0.0,
+  "E_equals_F_to_2026-07_max_diff": 0.0,
+  "S60_months_extended": 0,
+  "S60_train_pos_median": 51.0,
+  "S90_months_extended": 0,
+  "S90_train_pos_median": 78.0,
+  "S180_months_extended": 0,
+  "S180_train_pos_median": 187.0,
+  "C60_months_extended": 0,
+  "C60_months_raw": 1,
+  "C90_months_extended": 0,
+  "C90_months_raw": 1
+ },
+ "seconds": 35
+}

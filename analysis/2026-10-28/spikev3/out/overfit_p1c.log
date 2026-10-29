@@ -1,0 +1,114 @@
+placebo d0 G0 seed 1: delta -0.00108 pass False (15 s)
+placebo d0 G0 seed 2: delta -0.00007 pass False (16 s)
+placebo d0 G0 seed 3: delta -0.00015 pass False (22 s)
+placebo d0 G0 seed 4: delta +0.00067 pass False (44 s)
+placebo d0 G0 seed 5: delta -0.00068 pass False (18 s)
+placebo d0 G0 seed 6: delta +0.00070 pass False (14 s)
+placebo d0 G0 seed 7: delta -0.00070 pass False (27 s)
+placebo d0 G0 seed 8: delta -0.00012 pass False (40 s)
+placebo d0 G0 seed 9: delta +0.00069 pass False (26 s)
+placebo d0 G0 seed 10: delta +0.00037 pass False (18 s)
+placebo d0 G0 seed 11: delta -0.00087 pass False (16 s)
+placebo d0 G0 seed 12: delta +0.00062 pass False (14 s)
+placebo d0 G0 seed 13: delta -0.00090 pass False (17 s)
+placebo d0 G0 seed 14: delta -0.00067 pass False (15 s)
+placebo d0 G0 seed 15: delta -0.00101 pass False (14 s)
+placebo d0 G0 seed 16: delta +0.00034 pass False (18 s)
+placebo d0 G0 seed 17: delta +0.00008 pass False (13 s)
+placebo d0 G0 seed 18: delta +0.00030 pass False (15 s)
+placebo d0 G0 seed 19: delta -0.00013 pass False (15 s)
+placebo d0 G0 seed 20: delta +0.00049 pass False (13 s)
+placebo d0 G1 seed 1: delta -0.00003 pass False (13 s)
+placebo d0 G1 seed 2: delta -0.00011 pass False (13 s)
+placebo d0 G1 seed 3: delta +0.00071 pass False (14 s)
+placebo d0 G1 seed 4: delta +0.00018 pass False (14 s)
+placebo d0 G1 seed 5: delta -0.00199 pass False (14 s)
+placebo d0 G1 seed 6: delta +0.00018 pass False (13 s)
+placebo d0 G1 seed 7: delta +0.00050 pass False (14 s)
+placebo d0 G1 seed 8: delta -0.00017 pass False (14 s)
+placebo d0 G1 seed 9: delta +0.00052 pass False (12 s)
+placebo d0 G1 seed 10: delta +0.00022 pass False (12 s)
+placebo d0 G1 seed 11: delta -0.00009 pass False (13 s)
+placebo d0 G1 seed 12: delta +0.00112 pass False (12 s)
+placebo d0 G1 seed 13: delta +0.00031 pass False (12 s)
+placebo d0 G1 seed 14: delta +0.00056 pass False (12 s)
+placebo d0 G1 seed 15: delta -0.00012 pass False (13 s)
+placebo d0 G1 seed 16: delta +0.00091 pass False (13 s)
+placebo d0 G1 seed 17: delta +0.00049 pass False (12 s)
+placebo d0 G1 seed 18: delta +0.00018 pass False (13 s)
+placebo d0 G1 seed 19: delta -0.00012 pass False (15 s)
+placebo d0 G1 seed 20: delta +0.00061 pass False (12 s)
+placebo d1 G0 seed 1: delta +0.00094 pass False (4 s)
+placebo d1 G0 seed 2: delta -0.00055 pass False (4 s)
+placebo d1 G0 seed 3: delta +0.00081 pass False (4 s)
+placebo d1 G0 seed 4: delta +0.00021 pass False (5 s)
+placebo d1 G0 seed 5: delta -0.00099 pass False (5 s)
+placebo d1 G0 seed 6: delta +0.00136 pass False (5 s)
+placebo d1 G0 seed 7: delta -0.00033 pass False (4 s)
+placebo d1 G0 seed 8: delta +0.00190 pass False (5 s)
+placebo d1 G0 seed 9: delta +0.00033 pass False (5 s)
+placebo d1 G0 seed 10: delta +0.00123 pass False (5 s)
+placebo d1 G0 seed 11: delta -0.00030 pass False (5 s)
+placebo d1 G0 seed 12: delta +0.00113 pass False (6 s)
+placebo d1 G0 seed 13: delta +0.00000 pass False (5 s)
+placebo d1 G0 seed 14: delta +0.00059 pass False (5 s)
+placebo d1 G0 seed 15: delta +0.00068 pass False (5 s)
+placebo d1 G0 seed 16: delta +0.00089 pass False (6 s)
+placebo d1 G0 seed 17: delta +0.00034 pass False (5 s)
+placebo d1 G0 seed 18: delta +0.00074 pass False (6 s)
+placebo d1 G0 seed 19: delta -0.00020 pass False (6 s)
+placebo d1 G0 seed 20: delta +0.00004 pass False (5 s)
+split: calibration on the selection part {'raw': 0.0742105732083531, 'platt': 0.07570599321433431, 'isotonic': 0.08085314356928733} -> raw
+ days_ahead      part      model   versus    delta   day_lo  day_hi  week_lo  week_hi  quarters_positive  quarters  pass  spikes groups
+          0 selection       C+G0 C_strict  0.00164 -0.00036 0.00384 -0.00035  0.00417                2.0       3.0 False     NaN    NaN
+          0 selection       C+G1 C_strict  0.00124 -0.00081 0.00360 -0.00084  0.00353                3.0       3.0 False     NaN    NaN
+          0 selection       C+G2 C_strict  0.00022 -0.00075 0.00115 -0.00054  0.00091                2.0       3.0 False     NaN    NaN
+          0 selection       C+G4 C_strict  0.00111 -0.00010 0.00250 -0.00026  0.00278                1.0       3.0 False     NaN    NaN
+          0 selection       C+G5 C_strict  0.00036 -0.00055 0.00133 -0.00037  0.00117                2.0       3.0 False     NaN    NaN
+          1 selection       C+G0 C_strict  0.00261  0.00025 0.00619  0.00030  0.00561                2.0       3.0  True     NaN    NaN
+          1 selection       C+G1 C_strict -0.00090 -0.00282 0.00064 -0.00339  0.00100                0.0       3.0 False     NaN    NaN
+          1 selection       C+G2 C_strict  0.00114 -0.00002 0.00241 -0.00024  0.00290                2.0       3.0 False     NaN    NaN
+          1 selection       C+G4 C_strict -0.00085 -0.00231 0.00042 -0.00214  0.00025                0.0       3.0 False     NaN    NaN
+          1 selection       C+G5 C_strict -0.00005 -0.00122 0.00089 -0.00139  0.00115                1.0       3.0 False     NaN    NaN
+          1     check spikev3-H1 C_strict  0.00651  0.00062 0.01497      NaN      NaN                NaN       NaN   NaN   206.0     G0
+          1     check spikev3-H1 official  0.00483 -0.00017 0.01103      NaN      NaN                NaN       NaN   NaN   206.0     G0
+{
+ "placebo": {
+  "comparisons": 60,
+  "passed": 0,
+  "too_loose": false,
+  "G0_d0": {
+   "real_delta": 0.002399252223281682,
+   "placebo_above_real": 0,
+   "placebo_max": 0.0007020605745389886,
+   "distinguishable": true
+  },
+  "G1_d0": {
+   "real_delta": 0.0021313885307321493,
+   "placebo_above_real": 0,
+   "placebo_max": 0.0011155019107163692,
+   "distinguishable": true
+  },
+  "G0_d1": {
+   "real_delta": 0.0034315715016582818,
+   "placebo_above_real": 0,
+   "placebo_max": 0.0019017364262263377,
+   "distinguishable": true
+  }
+ },
+ "split": {
+  "calibration_choice": {
+   "raw": 0.0742105732083531,
+   "platt": 0.07570599321433431,
+   "isotonic": 0.08085314356928733
+  },
+  "calibration": "raw",
+  "passed_d0": [],
+  "verdict_d0": "选择段没有选出任何组",
+  "passed_d1": [
+   "G0"
+  ],
+  "verdict_d1": "能推广"
+ },
+ "seconds": 748
+}
