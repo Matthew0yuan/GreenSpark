@@ -1,0 +1,125 @@
+<body data-home="plan">
+{{PROTO}}
+<header class="cbar">
+  <div class="cb-brand"><span class="mk" aria-hidden="true">GS</span><b>Dispatch Desk</b></div>
+  {{ASSET_SW}}
+  <nav class="cb-nav pages" data-grp="plan compare svalid" aria-label="Site battery pages">{{PAGES_SITE}}</nav>
+  <nav class="cb-nav pages" data-grp="calls value fvalid" aria-label="Customer fleet pages">{{PAGES_FLEET}}</nav>
+  <span class="sp"></span>
+  <div class="cb-run">{{RUN}}{{PRI}}{{GEAR}}</div>
+</header>
+
+<main id="main" class="cmain">
+  <header class="ph">
+    <h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span><span class="ctx" id="ph-ctx"></span>
+  </header>
+  {{STRIPS}}
+
+  <!-- Site battery · Decide: status, action and figures across the top, the day as one bar,
+       then reasons and accounts left, the chart centre, the selected half hour right -->
+  <section class="screen" id="s-plan" aria-label="Today's plan">
+    <div class="grid g-plan">
+      <div class="p-side">
+        <div class="tile t-head">
+          <div class="plan-st" id="plan-status" role="status"></div>
+          <div id="plan-head"></div>
+          <div class="kpis">{{PLAN_KPIS}}</div>
+        </div>
+        <div class="tile t-left">
+          <section class="res"><div class="tile-h"><h2>Why this plan</h2></div><ul class="why-list" id="plan-why"></ul>{{PLAN_CTA}}</section>
+          <section class="res t-sep"><div class="tile-h"><h2>Checks on this plan</h2></div><ul class="chk" id="sch-checks"></ul></section>
+        </div>
+      </div>
+      <section class="tile t-tl res" aria-label="The day at a glance">
+        <div class="tl-h"><h2>The day at a glance</h2><span class="sub">08:00 Wed 14 Jan to 08:00 Thu 15 Jan</span></div>
+        <div id="plan-timeline"></div>
+      </section>
+      <section class="tile t-chart res" id="plan-detail">
+        <div class="tile-h"><h2>Dispatch detail</h2><p class="chart-note" id="sch-note"></p><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
+        <div id="sch-chart" class="chartbox" data-fill></div>
+      </section>
+      <aside class="tile t-rail">
+        <div class="res" id="sch-rail" aria-live="polite"></div>
+        <section class="res t-sep"><div class="tile-h"><h2>Plan value</h2><span class="sub">trading day, at 09:00</span></div><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}</section>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Site battery · Improve: the adopted dispatch against the frozen baseline -->
+  <section class="screen" id="s-compare" aria-label="Compare with the baseline">
+    <div class="grid g-cmp">
+      <div class="tile t-tools">{{CPER_TOOLS}}</div>
+      <section class="tile t-chero res" id="cmp-hero"></section>
+      <section class="tile t-q2a res"><div class="tile-h"><h2>Price forecast against yesterday's prices</h2></div><div id="cmp-q2a"></div></section>
+    </div>
+  </section>
+
+  <!-- Site battery · Prove: hard limits with their scope, and how much test evidence there is -->
+  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
+    <div class="grid g-sval">
+      <div class="tile t-tools">{{PER_TOOLS}}<div class="note" id="val-note"></div></div>
+      <div class="vt-tiles res" id="sv-tiles"></div>
+      <section class="tile t-checks res"><div class="tile-h"><h2>Physical and contract checks</h2><span class="sub">site battery · click a row to open it</span></div><table class="tbl" id="val-checks"></table></section>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Decide: the call, the demand forecast behind it, the season it was made in -->
+  <section class="screen" id="s-calls" aria-label="Tonight's call">
+    <div class="grid g-act">
+      <div class="a-side">
+        <div class="tile t-tools">{{ACT_TOOLS}}</div>
+        <div class="tile t-dec res" id="act-card" aria-live="polite"></div>
+      </div>
+      <div class="a-main">
+      <div class="tile t-dem res">
+        <div class="tile-h"><h2>System demand forecast</h2><span class="sp"></span><span class="sub" id="act-dem-sub"></span></div>
+        <div id="act-dem" class="chartbox"></div>
+      </div>
+      <div class="tile t-season res">
+        <div class="tile-h"><h2 id="act-title"></h2><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span><span class="ctools" data-csv="act"></span></div>
+        <div class="legend" id="act-legend"></div>
+        <div id="act-chart" class="chartbox"></div>
+        <div class="budget" id="act-budget"></div>
+        <p class="foot">{{ACT_FOOT}}</p>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Improve: the offer's gain over reference terms first, then who gains what -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="grid g-val">
+      <div class="tile t-tools">{{VAL_TOOLS}}<div class="scenline" id="v-scen"></div></div>
+      <section class="tile t-vhero res" id="v-hero"></section>
+      <div class="t-verdict res" id="v-verdict"></div>
+      <div class="t-parties res" id="v-parties"></div>
+      <section class="tile t-cmp res">
+        <div class="tile-h"><h2>The offer against the alternatives</h2><span class="sub" id="v-cmp-sub"></span></div><table class="tbl" id="v-cmp"></table><p class="foot" id="v-cmp-foot"></p>
+        <div class="t-sep">{{V_LEDGER}}</div>
+      </section>
+      <div class="tile t-side res"><div id="v-ircr"></div><div class="t-sep2" id="v-own"></div></div>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Prove -->
+  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
+    <div class="grid g-fval">
+      <div class="vt-tiles res" id="fv-tiles"></div>
+      <section class="tile t-hold res"><div class="tile-h"><h2>Hot Season holdouts</h2></div><div id="fv-hold"></div></section>
+      <section class="tile t-fchk res"><div class="tile-h"><h2>Customer constraints</h2><span class="sub">click a row to open it</span></div><table class="tbl" id="fv-checks"></table></section>
+    </div>
+  </section>
+
+  <!-- Settings: three columns on one screen; the input check sits under the scenario, always in view -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="grid g-cfg">
+      <div class="tile"><div class="tile-h"><h2>Customer offer</h2><span class="sub">evaluated as the Custom offer</span></div>{{CFG_OFFER}}</div>
+      <div class="tile"><div class="tile-h"><h2>Customer fleet assumptions</h2><span class="sub">every value here is an assumption · baseline is normal self-use</span></div>{{CFG_FLEET}}<div class="tile-h t-sep"><h2>Own battery and site</h2><span class="sub">behind the factory meter</span></div>{{CFG_OWN}}</div>
+      <div class="cfg-side">
+        <div class="tile"><div class="tile-h"><h2>Commercial scenario</h2><span class="sub">who receives energy and capacity value</span></div>{{CFG_SCEN}}</div>
+        <div class="tile t-check"><div class="tile-h"><h2>Input check</h2></div><ul class="chk" id="c-checks"></ul></div>
+      </div>
+    </div>
+  </section>
+</main>
+{{STY}}

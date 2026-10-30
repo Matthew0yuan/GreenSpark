@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>五个风格方案对比</title>
+<style>
+:root{--bg:#F5F6F8;--card:#FFFFFF;--line:#E3E6EA;--text:#15191E;--text2:#4A525C;--text3:#7A828C;--link:#2F5FD0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1A1F25;--line:#2A3139;--text:#E8ECF0;--text2:#B5BEC8;--text3:#8590A0;--link:#7DA6FF}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1A1F25;--line:#2A3139;--text:#E8ECF0;--text2:#B5BEC8;--text3:#8590A0;--link:#7DA6FF}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:36px 24px 80px}
+h1{font-size:26px;margin:0 0 6px}
+.lead{color:var(--text2);margin:0 0 6px;max-width:900px}
+.note{color:var(--text3);font-size:13px;margin:0 0 28px}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-top:20px}
+.opt h2{margin:0;font-size:20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.opt h2 a{font-size:14px;font-weight:600;color:var(--link);text-decoration:none}
+.opt h2 a:hover{text-decoration:underline}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin:16px 0 14px}
+.grid.one{grid-template-columns:minmax(0,.62fr)}
+.grid a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.grid img{display:block;width:100%;height:auto}
+.grid figcaption{font-size:12.5px;color:var(--text3);margin-top:6px}
+figure{margin:0}
+dl{display:grid;grid-template-columns:84px minmax(0,1fr);gap:6px 14px;margin:0}
+dt{color:var(--text3);font-size:13.5px}
+dd{margin:0;color:var(--text2)}
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+.flow div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13.5px;color:var(--text2)}
+.flow b{display:block;color:var(--text);font-size:14.5px}
+@media (max-width:760px){.flow{grid-template-columns:minmax(0,1fr)}}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0 4px}
+th{text-align:left;font-size:12.5px;color:var(--text3);font-weight:600;padding:6px 10px;border-bottom:1px solid var(--line)}
+td{padding:7px 10px;border-bottom:1px solid var(--line);color:var(--text2);vertical-align:top}
+td:first-child{color:var(--text);white-space:nowrap}
+.common{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px}
+.common h2{font-size:17px;margin:0 0 8px}
+.common ul{margin:6px 0 0;padding-left:20px;color:var(--text2)}
+.common li{margin:4px 0}
+@media (max-width:760px){.grid,.grid.one{grid-template-columns:minmax(0,1fr)}dl{grid-template-columns:minmax(0,1fr)}dt{margin-top:6px}td:first-child{white-space:normal}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>五个风格方案对比</h1>
+  <p class="lead">同一套示意数据和交互，五种风格。这一轮按外部评审意见重排了信息架构：先选资产，每种资产按"决定 → 改进 → 证明"三步看；计划能不能执行、哪些操作是排定的、哪些取决于价格、每个结论的范围，都放到第一屏。10-26 又改了一轮，只改方案 A 的今日计划页：先看图、先给决定、少用文字（见下面 A 一节）。点截图或"打开原型"进入；原型底部的黑色切换条可以在五个方案之间切换，并停留在同一页。</p>
+  <p class="note">方案截图都是 1440×900 屏幕的第一屏，其余截图从页面里裁出。所有数字都是示意，原型没有接模型。</p>
+
+  <section class="opt">
+    <h2>第四轮改了什么（B～E 的计划页仍是这样）</h2>
+    <div class="flow">
+      <div><b>决定 · Plan / Tonight's call</b>计划能不能执行；建议操作分"排定"和"条件"两行；预计净值、晚间放电、约束三个数字；一天的时间轴；为什么这样排。</div>
+      <div><b>改进 · Compare / Value</b>比基准每天多赚多少（默认看测试期 +A$350/天），或自定方案比参考条款多给 Zenith 多少；下面一行写明范围。</div>
+      <div><b>证明 · Validation</b>硬限值、样本外证据、信息时点三个结果放在最上面，检查表在下面，每个结果写明时间段和运行编号。</div>
+    </div>
+    <table>
+      <tr><th>评审的问题</th><th>核对结果和做法</th></tr>
+      <tr><td>调度说得太确定</td><td>部分对。正式模型里计划的 7.5 MW 晚间放电是排定的，每 30 分钟按最新价格重排；只有计划之外的富余电量从 A$150/MWh 起分层报价，价格到了才卖。页面按这个分两行写；条件部分不计入预计净值。出处见 README。</td></tr>
+      <tr><td>验证有 Fail，首页却给收益</td><td>那个 Fail 是原型占位数据，真实回测里正式配置没有违反接入上限；改成"0 次违反"，合同最大需量（CMD，按电费计价的经济限值）单独一行，只警告、不拦计划。另外把"结果是否最新"和"计划能否执行"分成两个状态；计划违反限值时首页显示"Plan blocked"，预计净值改标"Simulation only"（见下图，设置里把出口上限改成 3 MW 即可看到）。</td></tr>
+      <tr><td>两种商业模式混在一起</td><td>对。顶栏先选工厂电池或客户电池群，每种只显示自己的三个页面；设置放到齿轮后面。</td></tr>
+      <tr><td>验证对商业结论支持不够</td><td>对。收益页的结论下面写明：历史模拟、样本内、假设情景、运行 R‑0142、还没有样本外检验；7 天的未看过测试期显示"区间包含 0"。</td></tr>
+    </table>
+    <div class="grid one">
+      <figure><a href="shots/plan_blocked.png"><img src="shots/plan_blocked.png" alt="计划被拦时的首页"></a><figcaption>计划被拦（方案 A，第五轮）：出口上限改成 3 MW 后，首页显示违反的时段和 Inspect，图上红框标出超限时段，预计净值标为仅模拟</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="opt">
+    <h2>详细图表（B～E 共用；A 的今日计划页第五轮换成了泳道图）</h2>
+    <div class="grid">
+      <figure><a href="shots/chart_before.png"><img src="shots/chart_before.png" alt="最早的调度图：四条泳道、12 个图例"></a><figcaption>最早的版本：四条泳道，12 个图例</figcaption></figure>
+      <figure><a href="shots/chart_after.png"><img src="shots/chart_after.png" alt="现在的图：上面是电池功率和价格，下面是电量"></a><figcaption>现在：实心柱是排定的功率，斜线是条件报价，点线是最低报价 A$150</figcaption></figure>
+    </div>
+    <dl>
+      <dt>读法</dt><dd>颜色代表一个量。虚线是计划或预测，实线是实际发生的。坐标轴写单位，上下限标在线尾。</dd>
+      <dt>交互</dt><dd>鼠标移到图上，两张图同时出现竖线，并弹出数值表格（见下图）。点图例可以隐藏或显示一条线。右上角可以下载 CSV。点某个时刻，给出一句原因。</dd>
+    </dl>
+    <div class="grid one">
+      <figure><a href="shots/chart_hover.png"><img src="shots/chart_hover.png" alt="鼠标悬停时的数值表格"></a><figcaption>鼠标悬停：排定功率和条件报价分两行列出</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="opt">
+    <h2>A 极简·聚焦 <a href="A_minimal_focus.html">打开原型 →</a></h2>
+    <div class="grid">
+      <figure><a href="A_minimal_focus.html#plan"><img src="shots/A_home.png" alt="A 方案的今日计划页"></a><figcaption>工厂电池 · 今日计划（Plan）</figcaption></figure>
+      <figure><a href="A_minimal_focus.html#calls"><img src="shots/A_calls.png" alt="A 方案的今晚调用页"></a><figcaption>客户电池群 · 今晚是否调用（Tonight's call）</figcaption></figure>
+    </div>
+    <dl>
+      <dt>布局</dt><dd>顶栏放资产切换、该资产的三个页面、结果状态和设置。今日计划页（第五轮）：第一行回答能不能执行、做什么、值多少；下面是一张泳道图（排定动作、条件报价、FCESS 待命、价格），和存电图共用一条时间轴，原因直接标在图上；再往下是所选时段、净值瀑布图和 7 个检查小格。其余页面是一条居中的阅读栏。不加卡片框，只用细分隔线。</dd>
+      <dt>适合</dt><dd>演示时一页一页地讲。投影和打印效果最干净。评审看的就是这一版。</dd>
+      <dt>代价</dt><dd>内容要往下滚，同一屏能看到的东西比 C 少。</dd>
+    </dl>
+  </section>
+
+  <section class="opt">
+    <h2>B 编辑·简报 <a href="B_editorial_briefing.html">打开原型 →</a></h2>
+    <div class="grid">
+      <figure><a href="B_editorial_briefing.html#plan"><img src="shots/B_home.png" alt="B 方案的今日计划页"></a><figcaption>工厂电池 · 今日计划（Plan）</figcaption></figure>
+      <figure><a href="B_editorial_briefing.html#calls"><img src="shots/B_calls.png" alt="B 方案的今晚调用页"></a><figcaption>客户电池群 · 今晚是否调用（Tonight's call）</figcaption></figure>
+    </div>
+    <dl>
+      <dt>布局</dt><dd>报头加栏目条，资产切换和页面放在栏目条里。每页像一篇简报：计划状态是一行通知，建议操作是衬线大标题，三个数字在事实框里，时间轴是图 1，详细图表是图 2，检查放在右侧旁注。改进页和收益页的大数字像标题数字。</dd>
+      <dt>适合</dt><dd>给评委和导师阅读，或截图放进报告。</dd>
+      <dt>代价</dt><dd>大号衬线标题占空间。不像操作软件，日常操作时找控件稍慢。</dd>
+    </dl>
+  </section>
+
+  <section class="opt">
+    <h2>C 深色·控制台 <a href="C_dark_console.html">打开原型 →</a></h2>
+    <div class="grid">
+      <figure><a href="C_dark_console.html#plan"><img src="shots/C_home.png" alt="C 方案的今日计划页"></a><figcaption>工厂电池 · 今日计划（Plan）</figcaption></figure>
+      <figure><a href="C_dark_console.html#calls"><img src="shots/C_calls.png" alt="C 方案的今晚调用页"></a><figcaption>客户电池群 · 今晚是否调用（Tonight's call）</figcaption></figure>
+    </div>
+    <dl>
+      <dt>布局</dt><dd>每页固定在一屏内。计划页顶部一条横跨的格子放计划状态、建议操作和三个数字，下面一条时间轴，再下面三栏：左边为什么这样排和检查，中间两张图，右边所选时段和账目。高度不到 900 像素时左栏改成可滚动，不到 700 像素时整页滚动。</dd>
+      <dt>适合</dt><dd>运营人员一整天开着看。最像电力交易台。</dd>
+      <dt>代价</dt><dd>深色在投影和打印上效果差。信息密度高，第一次看的人需要适应。</dd>
+    </dl>
+  </section>
+
+  <section class="opt">
+    <h2>D 柔和·卡片 <a href="D_soft_bento.html">打开原型 →</a></h2>
+    <div class="grid">
+      <figure><a href="D_soft_bento.html#plan"><img src="shots/D_home.png" alt="D 方案的今日计划页"></a><figcaption>工厂电池 · 今日计划（Plan）</figcaption></figure>
+      <figure><a href="D_soft_bento.html#calls"><img src="shots/D_calls.png" alt="D 方案的今晚调用页"></a><figcaption>客户电池群 · 今晚是否调用（Tonight's call）</figcaption></figure>
+    </div>
+    <dl>
+      <dt>布局</dt><dd>悬浮侧栏：资产切换、该资产的三个页面（标着 Decide / Improve / Prove）、底部设置。计划页是一张宽的决定卡片（计划状态和建议操作），下面三张数字卡片、时间轴卡片、为什么卡片和图表卡片。</dd>
+      <dt>适合</dt><dd>第一次打开的人和非技术读者，最友好。</dd>
+      <dt>代价</dt><dd>卡片之间留白多，页面比 C 长；两张卡片底部各留白约 60 像素。</dd>
+    </dl>
+  </section>
+
+  <section class="opt">
+    <h2>E 行业工具 <a href="E_industry_tool.html">打开原型 →</a></h2>
+    <div class="grid">
+      <figure><a href="E_industry_tool.html#plan"><img src="shots/E_home.png" alt="E 方案的今日计划页"></a><figcaption>工厂电池 · 今日计划（Plan）</figcaption></figure>
+      <figure><a href="E_industry_tool.html#calls"><img src="shots/E_calls.png" alt="E 方案的今晚调用页"></a><figcaption>客户电池群 · 今晚是否调用（Tonight's call）</figcaption></figure>
+    </div>
+    <dl>
+      <dt>布局</dt><dd>照参考截图：产品栏；第一层标签是资产（工厂电池 / 客户电池群），第二层是该资产的页面；灰色筛选栏写市场、交易日和决策时刻，右边是结果状态和按钮。计划页先写资产名和"View inputs ›"，左边决定卡片和时间轴，右边三张数字卡片。</dd>
+      <dt>适合</dt><dd>让熟悉这类交易软件的人一看就知道怎么用。</dd>
+      <dt>代价</dt><dd>个性最弱，看起来像标准的商业软件。筛选栏只显示，不能改（原型只有一个交易日）。</dd>
+    </dl>
+  </section>
+
+  <section class="common">
+    <h2>五个方案都一样的地方</h2>
+    <ul>
+      <li>页面、数字和交互一样，只有视觉和布局不同。上一版原型（mvp_product_design/wireframe.html）没有改动。</li>
+      <li>七个页面：工厂电池的 Plan、Compare、Validation，客户电池群的 Tonight's call、Value、Validation，加上设置。旧链接会打开对应的新页面。</li>
+      <li>顶栏的"Results up to date / stale"只说结果和输入对不对得上；"Plan executable / blocked"只说今日计划能不能执行。</li>
+      <li>改了输入以后结果变灰，保存按钮变成重算，导出和 CSV 下载关闭。</li>
+      <li>B、C、D、E 由四个子任务按 A 并行改写；一个只读子任务核对了模型事实，另一个评审了全部页面，找到的 23 处问题改了 21 处（见 README）。五个方案都通过 39 项点击检查。</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

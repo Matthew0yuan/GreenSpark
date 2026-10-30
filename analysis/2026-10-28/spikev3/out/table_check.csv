@@ -1,0 +1,26 @@
+check,array,same
+null = official,curve,True
+null = official,curve_state,True
+null = official,day,True
+null = official,edges,True
+null = official,grid_curve,True
+null = official,grid_level,True
+null = official,grid_month,True
+null = official,level,True
+null = official,marg,True
+null = official,marg_state,True
+null = official,n_tables,True
+null = official,state_today,True
+null = official,state_tomorrow,True
+null = official,weeks,True
+oracle pooled = null pooled,level,True
+oracle pooled = null pooled,curve,True
+oracle pooled = null pooled,marg,True
+oracle pooled = null pooled,edges,True
+oracle pooled = null pooled,grid_curve,True
+oracle pooled = null pooled,grid_level,True
+oracle pooled = null pooled,grid_month,True
+oracle pooled = null pooled,day,True
+oracle states = labels,state_today,True
+oracle states = labels,state_tomorrow,True
+oracle marg_state differs from null (positive control),marg_state,True

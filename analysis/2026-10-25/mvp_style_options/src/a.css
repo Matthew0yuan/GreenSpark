@@ -1,0 +1,124 @@
+/* A · minimal focus: white page, navigation across the top, one centred reading column,
+   charts at full width, the interval explanation as a strip under the chart, hairline rules instead of boxes. */
+body{background:#FFFFFF}
+.cap{text-transform:none;letter-spacing:0;font-size:12px;font-weight:500}
+
+/* top bar */
+.topbar{position:sticky;top:24px;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.tb-in{max-width:1320px;margin:0 auto;height:56px;padding:0 40px;display:flex;align-items:center;gap:28px}
+.tb-brand{display:flex;align-items:center;gap:9px;white-space:nowrap}
+.tb-brand b{font-size:15px;font-weight:600}
+.tb-nav{display:flex;align-items:center;gap:0;flex:1;min-width:0;height:100%}
+.tb-nav .nav{height:100%;padding:0 9px;font-size:13.5px;color:var(--text-3);gap:6px}
+.tb-nav .nav:hover{color:var(--text)}
+.tb-nav .nav.on{color:var(--text);font-weight:600;box-shadow:inset 0 -2px 0 var(--text)}
+.tb-sep{width:1px;height:16px;background:var(--rule);margin:0 8px;flex:none}
+.tb-run{display:flex;align-items:center;gap:14px;flex:none}
+
+/* page */
+.wrap{max-width:1320px;margin:0 auto;padding:30px 40px 110px}
+.ph{margin-bottom:22px}
+.ph-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ph h1{font-size:22px}
+.ph .ctx{margin-top:6px}
+
+/* today's instruction as the page's opening sentence */
+.hero{padding:4px 0 32px}
+.hero .cap{font-size:13px}
+.hero .instr-h{font-size:34px;margin:8px 0 8px;letter-spacing:-.025em}
+.hero .instr-s{font-size:15px}
+.hero .kpis{display:flex;margin-top:26px}
+.hero .kpi{padding:0 36px;border-left:1px solid var(--rule)}
+.hero .kpi:first-child{padding-left:0;border-left:0}
+.hero .kv{font-size:24px;margin-top:6px}
+
+/* sections are separated by a hairline, never boxed */
+.blk{border-top:1px solid var(--rule);padding-top:18px;margin-top:34px}
+.blk-first,.hero + .blk{margin-top:6px}
+.blk > h2,.blk-h h2{font-size:15px;font-weight:600}
+.blk > h2{margin-bottom:12px}
+.blk > h2 .sub{margin-left:8px}
+.blk-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.blk h3{font-size:14px;font-weight:600;margin-bottom:10px}
+.legend{padding-top:14px}
+.legend-top{padding:0 0 8px}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:56px}
+.cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:48px}
+.toolbar{margin:2px 0 6px}
+.panel{background:transparent;border:0;border-radius:0}
+
+/* the selected half hour, read across instead of down */
+.strip-detail{display:grid;grid-template-columns:minmax(190px,.8fr) minmax(0,1.4fr) minmax(0,1.1fr) minmax(0,.9fr);grid-template-areas:"head say facts out";column-gap:40px;row-gap:4px;align-items:start}
+.strip-detail .ri-head{grid-area:head}
+.strip-detail .ri-say{grid-area:say;margin-top:2px;font-size:15px}
+.strip-detail .ri-facts{grid-area:facts;margin-top:0}
+.strip-detail .ri-out{grid-area:out;margin-top:0}
+.strip-detail .act{font-size:22px}
+
+/* the call decision, read across */
+.strip-decision{display:grid;grid-template-columns:minmax(250px,1fr) minmax(0,1.5fr) minmax(0,1.1fr);grid-template-areas:"head why exp" "head why out";column-gap:44px;row-gap:12px;align-items:start}
+.strip-decision .ac-head{grid-area:head}
+.strip-decision .ac-why{grid-area:why;margin-top:0}
+.strip-decision .ac-exp{grid-area:exp}
+.strip-decision .ac-out{grid-area:out}
+.strip-decision .rsec{margin-top:0;padding-top:0;border-top:0}
+.strip-decision .dec{margin-top:12px}
+.strip-decision .dec b{font-size:20px;letter-spacing:-.01em}
+.strip-decision .dec-pill{font-size:16px;padding:9px 16px}
+.budget{margin-top:10px}
+
+/* value */
+.scenline{margin-top:16px}
+.v-verdict{margin-top:20px}
+.verdict.ok,.verdict.bad{background:transparent;border:0;padding:0}
+.verdict b{font-size:20px;letter-spacing:-.01em;margin-bottom:4px}
+.parties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:56px;margin-top:28px}
+.party{border-top:1px solid var(--rule);padding-top:16px}
+.party .big{font-size:30px}
+
+/* validation */
+.v-note{margin-top:16px}
+
+/* configuration */
+.form-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:64px;align-items:start}
+.form-main{max-width:820px}
+.form-side{position:sticky;top:104px}
+.f{grid-template-columns:minmax(0,1fr) 180px 120px}
+
+.state{border-top:1px solid var(--rule);padding:16px 0 20px}
+
+@media (max-width:1365px){
+  .tb-in{padding:0 24px;gap:18px}
+  .tb-nav .nav{padding:0 8px;font-size:13px}
+  .tb-run .run small{display:none}
+  .tb-sep{margin:0 4px}
+  .wrap{padding:24px 24px 110px}
+  .hero .instr-h{font-size:29px}
+  .hero .kpi{padding:0 26px}
+  .strip-detail{column-gap:28px}
+  .form-grid{gap:40px;grid-template-columns:minmax(0,1fr) 280px}
+}
+@media (max-width:1100px){
+  .cols2,.cols3,.cols-eval,.parties,.states,.form-grid{grid-template-columns:minmax(0,1fr)}
+  .strip-detail{grid-template-columns:1fr 1fr;grid-template-areas:"head say" "facts out"}
+  .strip-decision{grid-template-columns:1fr;grid-template-areas:"head" "why" "exp" "out"}
+  .hero .kpis{flex-wrap:wrap;row-gap:14px}
+}
+
+/* two assets in the top bar: brand, asset switch, the asset's pages, then run state and settings */
+.tb-in{gap:18px}
+.tb-nav{flex:0 1 auto}
+.tb-run .gear{margin-left:-4px}
+.plan-st{margin:0 0 26px}
+.hero .acts li{font-size:15px}
+.hero .kpi .kv{white-space:nowrap}
+#cmp-hero,#v-hero{margin-top:18px}
+.vt-tiles{margin:6px 0 18px}
+@media (max-width:1365px){ .tb-in{gap:12px} .asset-sw button small{display:none} .tb-run .run small{display:none} }
+
+/* round 5: today's plan decides in one line, then the day */
+.dec-h,.dv{font-size:34px}
+.dec-row + .blk{margin-top:22px}
+.day-blk .blk-h{margin-bottom:4px}
+.day-blk .chartbox svg + svg{margin-top:12px}
+@media (max-width:1365px){ .dec-h,.dv{font-size:29px} }

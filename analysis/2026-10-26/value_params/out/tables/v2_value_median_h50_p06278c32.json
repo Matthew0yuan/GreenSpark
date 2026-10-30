@@ -1,0 +1,31 @@
+{
+ "stat": "median",
+ "hurdle": 50.0,
+ "state": false,
+ "regime": false,
+ "params": {
+  "power_mw": 10.0,
+  "energy_mwh": 40.0,
+  "round_trip": 0.85,
+  "wear_per_mwh": 30.0,
+  "cmd_mw": 9.0,
+  "import_limit_mw": 9.0,
+  "load_scale": 100.0
+ },
+ "digest": "06278c32",
+ "file": "v2_value_median_h50_p06278c32.npz",
+ "asked": {
+  "power_mw": 10.0,
+  "energy_mwh": 40.0,
+  "round_trip": 0.85,
+  "wear_per_mwh": 30.0,
+  "cmd_mw": 9.0,
+  "import_limit_mw": 12.0,
+  "load_scale": 100.0
+ },
+ "command": "python -m vpp.v2.value --load-scale 100 --hurdle 50",
+ "days": 570,
+ "first": "2025-04-01",
+ "last": "2026-10-22",
+ "built": "2026-10-26T14:10:30"
+}

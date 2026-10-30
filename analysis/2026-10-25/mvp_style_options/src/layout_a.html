@@ -1,0 +1,40 @@
+<body data-home="plan">
+{{PROTO}}
+<header class="topbar">
+  <div class="tb-in">
+    <div class="tb-brand"><span class="mk" aria-hidden="true">GS</span><b>GreenSpark</b></div>
+    {{ASSET_SW}}
+    <nav class="tb-nav pages" data-grp="plan evidence" aria-label="Site battery pages">{{PAGES_SITE}}</nav>
+    <nav class="tb-nav pages" data-grp="calls value" aria-label="Customer fleet pages">{{PAGES_FLEET}}</nav>
+    <span class="sp"></span>
+    <div class="tb-run">{{GEAR}}</div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <header class="ph">
+    <div class="ph-line"><h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span></div>
+    <div class="ctx" id="ph-ctx"></div>
+    {{WHO}}
+  </header>
+  {{STRIPS}}
+
+  {{PAGE_PLAN}}
+  {{PAGE_EVIDENCE}}
+  {{PAGE_CALLS}}
+  {{PAGE_VALUE}}
+
+  <!-- Settings: one reading column, the input check stays in view -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="form-grid">
+      <div class="form-main">
+        <section class="blk blk-first"><h2>Customer offer <span class="sub">evaluated as the Custom offer</span></h2>{{CFG_OFFER}}</section>
+        <section class="blk"><h2>Commercial scenario <span class="sub">who receives energy and capacity value</span></h2>{{CFG_SCEN}}</section>
+        <section class="blk"><h2>Customer fleet assumptions <span class="sub">every value here is an assumption · baseline is normal self-use</span></h2>{{CFG_FLEET}}</section>
+        <section class="blk"><h2>Own battery and site <span class="sub">behind the factory meter</span></h2>{{CFG_OWN}}</section>
+      </div>
+      <aside class="form-side"><section class="blk blk-first"><h2>Input check</h2><ul class="chk" id="c-checks"></ul></section></aside>
+    </div>
+  </section>
+</main>
+{{STY}}

@@ -1,0 +1,7 @@
+file,result
+inputs_d1.parquet,identical
+inputs_d1_30min.parquet,identical
+lrc_days.csv,identical
+lrc_advisories.csv,identical
+coverage.csv,identical
+leak_audit.csv,identical

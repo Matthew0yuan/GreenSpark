@@ -1,0 +1,63 @@
+{
+ "before (out/pre_silent.json)": {
+  "error": null,
+  "tables_looked_up": [
+   "v2_value_median_h50_state.npz"
+  ],
+  "days": [
+   {
+    "day": "2025-04-01",
+    "total": 6601.6171954784095,
+    "soc_end": 19.467250733975042,
+    "max_grid_mw": 6.0
+   },
+   {
+    "day": "2025-04-02",
+    "total": 8586.002504201515,
+    "soc_end": 32.880550116508964,
+    "max_grid_mw": 6.157625
+   }
+  ]
+ },
+ "after": {
+  "a 8 MW, only the 10 MW tables (out/ref)": {
+   "error": "FileNotFoundError: v2_value_median_h50_state_pddde91fa.npz: build it first (python -m vpp.v2.value --power 8 --hurdle 50 --state)"
+  },
+  "b the 10 MW table checked for 8 MW": {
+   "error": "ValueError: v2_value_median_h50_state.npz has no record of its parameters (v2_value_median_h50_state.json); the dispatcher sees 8 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging room min(import limit, CMD) 9 MW, load x10: rebuild it (python -m vpp.v2.value --power 8 --hurdle 50 --state --rebuild)"
+  },
+  "c planted: the 8 MW table's record says 10 MW": {
+   "error": "ValueError: v2_value_median_h50_state_pddde91fa.npz was solved for 10 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging room min(import limit, CMD) 9 MW, load x10 (median, hurdle 50, state True, regime False); the dispatcher sees 8 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 9 MW, charging room min(import limit, CMD) 9 MW, load x10 (median, hurdle 50, state True, regime False): python -m vpp.v2.value --power 8 --hurdle 50 --state"
+  },
+  "d positive control: 8 MW, its own table": {
+   "error": null,
+   "day": "2025-04-01",
+   "total": 6983.255668463096,
+   "soc_end": 15.467250733975057
+  },
+  "d' positive control: 10 MW, the default table": {
+   "error": null,
+   "day": "2025-04-01",
+   "total": 8507.785883660343,
+   "soc_end": 19.467250733975042
+  },
+  "e import 15 MW (>= CMD)": {
+   "error": null,
+   "day": "2025-04-01",
+   "total": 8507.785883660343,
+   "soc_end": 19.467250733975042
+  },
+  "e' import 8 MW (< CMD)": {
+   "error": "FileNotFoundError: v2_value_median_h50_state_p8e737f14.npz: build it first (python -m vpp.v2.value --import-limit 8 --hurdle 50 --state)"
+  },
+  "f planted: 40 segments at the 36 MWh name": {
+   "error": "ValueError: v2_value_median_36mwh_h50_state.npz has 40 segments of 1 MWh; the dispatcher's battery stores 36 MWh"
+  },
+  "g a route without a CMD": {
+   "error": "ValueError: no value table for a battery on a route without a CMD: the tables are solved for a battery behind a site with a CMD (vpp.v2.value)"
+  },
+  "g' a scenario without a site": {
+   "error": "ValueError: no value table for a battery without a site: the tables are solved for a battery behind a site with a CMD (vpp.v2.value)"
+  }
+ }
+}

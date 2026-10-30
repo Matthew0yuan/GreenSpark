@@ -1,0 +1,71 @@
+{
+ "baseline_for_O-A": "rw50+state t5+roll",
+ "O-A": {
+  "H": 13.264723005848051,
+  "H_month_lo": -1.694800711568225,
+  "H_month_hi": 30.1696530630263,
+  "H_market": -0.5887745644461,
+  "H_bill": 13.85349757029415,
+  "months_above_0": 9,
+  "I": 7.067351430249647,
+  "I_month_lo": -4.179677131010587,
+  "control_vs_base": 6.197371575598405,
+  "control_month_lo": -10.898307153825002,
+  "controls_s1_s2": [
+   -20.55230570037646,
+   -10.847177201015613
+  ],
+  "test_A_H": 73.65494560583026,
+  "outcome": "NO-GO",
+  "notes": [
+   "inconclusive: test-A headroom >= 50, re-test on new unseen days"
+  ]
+ },
+ "O-B": {
+  "H": 33.0819709123681,
+  "H_month_lo": 4.273313703433455,
+  "H_month_hi": 76.71843025423081,
+  "H_market": 33.77683722573447,
+  "H_bill": -0.6948663133663686,
+  "months_above_0": 12,
+  "I": 122.13609656237085,
+  "I_month_lo": 61.89682465799999,
+  "control_vs_base": -89.05412565000275,
+  "control_month_lo": -129.9633301859444,
+  "controls_s1_s2": [
+   -61.68992075941481,
+   -48.8834761420988
+  ],
+  "test_A_H": 168.05771872119047,
+  "outcome": "NO-GO",
+  "notes": [
+   "inconclusive: test-A headroom >= 50, re-test on new unseen days"
+  ]
+ },
+ "consistency": {
+  "H_O-B": 33.0819709123681,
+  "H_O-B2": 44.55911969695198,
+  "H_O-C-e": 72.60883734857346,
+  "consistent": true,
+  "O-B road possible (H O-C-e >= 50)": true
+ },
+ "O-C-ef report": {
+  "H": 123.057364649361,
+  "month_lo": 81.36454075211876,
+  "market": 117.56431499366067,
+  "bill": 5.493049655700332
+ },
+ "B4 now": {
+  "e5_minus_R5": 2.930489509349762,
+  "e5_minus_R5_month_lo": -10.216638538405135,
+  "e5_minus_R5_month_hi": 14.019635675254538,
+  "OA_minus_R5": 16.195212515197813,
+  "capture_share": 0.18094788855655644
+ },
+ "step1": "no step 1 now: better spike information does not pass in-sample",
+ "inconclusive_roads": [
+  "O-A",
+  "O-B"
+ ],
+ "price_forecast_project": true
+}

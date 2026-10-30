@@ -1,0 +1,5 @@
+source,days,min_slack_min,median_slack_min,days_slack_lt_15min,days_slack_lt_30min,days_slack_lt_60min
+predispatch,1014,9.7,24.8,109,1014,1014
+outages,1021,29.0,29.0,0,1015,1021
+stpasa,1020,713.0,1313.0,0,0,0
+weather,991,300.0,300.0,0,0,0

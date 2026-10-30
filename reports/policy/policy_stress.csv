@@ -1,0 +1,105 @@
+scenario,case,stress,period,enrolled,activations,energy_calls,ircr_calls,zenith_profit,customer_benefit,peak_days_covered,fails
+S2b,B reference,base,in-sample,2233.585065763835,27,0,27,1177872.8392004708,78.816503825177,4.0,False
+S2b,B reference,base,test,2233.585065763835,0,0,0,-17440.32174637515,0.0,,True
+S2b,B reference,false-positive spike warnings (p_spike x3),in-sample,2233.585065763835,27,0,27,1177872.8392004708,78.816503825177,4.0,False
+S2b,B reference,false-positive spike warnings (p_spike x3),test,2233.585065763835,0,0,0,-17440.32174637515,0.0,,True
+S2b,B reference,rare spikes (prices capped at $300),in-sample,2233.585065763835,27,0,27,1156972.31520103,78.816503825177,4.0,False
+S2b,B reference,rare spikes (prices capped at $300),test,2233.585065763835,0,0,0,-17440.32174637515,0.0,,True
+S2b,B reference,spike timing 1 h later than forecast,in-sample,2233.585065763835,27,0,27,1153767.3180787307,78.816503825177,4.0,False
+S2b,B reference,spike timing 1 h later than forecast,test,2233.585065763835,0,0,0,-17440.32174637515,0.0,,True
+S2b,B reference,batteries unavailable (50% respond),in-sample,2233.585065763835,27,0,27,629556.1877139967,43.78694656954277,4.0,False
+S2b,B reference,batteries unavailable (50% respond),test,2233.585065763835,0,0,0,-17440.32174637515,0.0,,True
+S2b,B reference,low participation (pessimistic curve),in-sample,703.6160444693351,27,0,27,371049.32366776903,78.816503825177,4.0,False
+S2b,B reference,low participation (pessimistic curve),test,703.6160444693351,0,0,0,-5493.988292431794,0.0,,True
+S2b,B reference,high participation (optimistic curve),in-sample,4199.637768796966,27,0,27,2214663.474504731,78.816503825177,4.0,False
+S2b,B reference,high participation (optimistic curve),test,4199.637768796966,0,0,0,-32791.692167318775,0.0,,True
+S2b,B reference,compensation x1.5 (rule refitted),in-sample,4099.8744197837805,27,0,27,1901076.1307781402,142.47150472943807,4.0,False
+S2b,B reference,compensation x1.5 (rule refitted),test,4099.8744197837805,0,0,0,-32012.718072284315,0.0,,True
+S2b,B reference,only 10 activations (rule refitted),in-sample,836.2595022140454,10,0,10,-61772.806844852916,32.19198078737204,0.0,True
+S2b,B reference,only 10 activations (rule refitted),test,836.2595022140454,0,0,0,-6529.697483041176,0.0,,True
+S2b,B reference,energy calls compete for the cap,in-sample,2233.585065763835,27,0,27,1177872.8392004708,78.816503825177,4.0,False
+S2b,B reference,energy calls compete for the cap,test,2233.585065763835,0,0,0,-17440.32174637515,0.0,,True
+S2b,B reference,"standby charging dear (+$300 13:00-17:00, offset x2)",in-sample,2233.585065763835,27,0,27,1175723.7925184823,79.66803933356472,4.0,False
+S2b,B reference,"standby charging dear (+$300 13:00-17:00, offset x2)",test,2233.585065763835,0,0,0,-17440.32174637515,0.0,,True
+S2b,B reference,programme fixed cost $100k/yr,in-sample,2233.585065763835,27,0,27,1077872.8392004708,78.816503825177,4.0,False
+S2b,B reference,programme fixed cost $100k/yr,test,2233.585065763835,0,0,0,-48673.19845870392,0.0,,True
+S2b,B reference,customer wear $0.15/kWh,in-sample,2105.6744526867246,27,0,27,1110419.6495734684,76.86126590806468,4.0,False
+S2b,B reference,customer wear $0.15/kWh,test,2105.6744526867246,0,0,0,-16441.567644266208,0.0,,True
+S2b,C optimised,base,in-sample,4470.825836022982,24,0,24,2077638.335787157,144.59265456785826,3.0,False
+S2b,C optimised,base,test,4470.825836022982,0,0,0,-34909.1880347,0.0,,True
+S2b,C optimised,false-positive spike warnings (p_spike x3),in-sample,4470.825836022982,24,0,24,2077638.335787157,144.59265456785826,3.0,False
+S2b,C optimised,false-positive spike warnings (p_spike x3),test,4470.825836022982,0,0,0,-34909.1880347,0.0,,True
+S2b,C optimised,rare spikes (prices capped at $300),in-sample,4470.825836022982,24,0,24,2035803.0799397763,144.59265456785826,3.0,False
+S2b,C optimised,rare spikes (prices capped at $300),test,4470.825836022982,0,0,0,-34909.1880347,0.0,,True
+S2b,C optimised,spike timing 1 h later than forecast,in-sample,4470.825836022982,24,0,24,2029759.100217119,144.59265456785826,3.0,False
+S2b,C optimised,spike timing 1 h later than forecast,test,4470.825836022982,0,0,0,-34909.1880347,0.0,,True
+S2b,C optimised,batteries unavailable (50% respond),in-sample,4470.825836022982,24,0,24,1104567.6772592764,80.32925253769903,3.0,False
+S2b,C optimised,batteries unavailable (50% respond),test,4470.825836022982,0,0,0,-34909.1880347,0.0,,True
+S2b,C optimised,low participation (pessimistic curve),in-sample,2196.5131281402264,24,0,24,1020742.0390465069,144.59265456785826,3.0,False
+S2b,C optimised,low participation (pessimistic curve),test,2196.5131281402264,0,0,0,-17150.855932053822,0.0,,True
+S2b,C optimised,high participation (optimistic curve),in-sample,4977.839003199464,24,0,24,2313252.5224072654,144.59265456785826,3.0,False
+S2b,C optimised,high participation (optimistic curve),test,4977.839003199464,0,0,0,-38868.0579701876,0.0,,True
+S2b,C optimised,compensation x1.5 (rule refitted),in-sample,4969.878843307436,24,0,24,1842105.8340983312,238.64877456785825,3.0,False
+S2b,C optimised,compensation x1.5 (rule refitted),test,4969.878843307436,0,0,0,-38805.90329705806,0.0,,True
+S2b,C optimised,only 10 activations (rule refitted),in-sample,1404.3178429150403,10,0,10,-143239.8850089824,60.32361187739437,0.0,True
+S2b,C optimised,only 10 activations (rule refitted),test,1404.3178429150403,0,0,0,-10965.221513172233,0.0,,True
+S2b,C optimised,energy calls compete for the cap,in-sample,4470.825836022982,24,0,24,2077638.335787157,144.59265456785826,3.0,False
+S2b,C optimised,energy calls compete for the cap,test,4470.825836022982,0,0,0,-34909.1880347,0.0,,True
+S2b,C optimised,"standby charging dear (+$300 13:00-17:00, offset x2)",in-sample,4470.825836022982,24,0,24,2073972.9251886753,145.3018897206718,3.0,False
+S2b,C optimised,"standby charging dear (+$300 13:00-17:00, offset x2)",test,4470.825836022982,0,0,0,-34909.1880347,0.0,,True
+S2b,C optimised,programme fixed cost $100k/yr,in-sample,4470.825836022982,24,0,24,1977638.335787157,144.59265456785826,3.0,False
+S2b,C optimised,programme fixed cost $100k/yr,test,4470.825836022982,0,0,0,-66142.06474702877,0.0,,True
+S2b,C optimised,customer wear $0.15/kWh,in-sample,4427.993426833698,24,0,24,2057733.6786589923,142.96274919046039,3.0,False
+S2b,C optimised,customer wear $0.15/kWh,test,4427.993426833698,0,0,0,-34574.74319582477,0.0,,True
+S3,B reference,base,in-sample,1999.3568023295625,24,0,24,383052.56422808167,69.8889685403552,3.0,False
+S3,B reference,base,test,1999.3568023295625,0,0,0,-15611.416127778775,0.0,,True
+S3,B reference,false-positive spike warnings (p_spike x3),in-sample,1999.3568023295625,24,0,24,383052.56422808167,69.8889685403552,3.0,False
+S3,B reference,false-positive spike warnings (p_spike x3),test,1999.3568023295625,0,0,0,-15611.416127778775,0.0,,True
+S3,B reference,rare spikes (prices capped at $300),in-sample,1999.3568023295625,24,0,24,383052.56422808167,69.8889685403552,3.0,False
+S3,B reference,rare spikes (prices capped at $300),test,1999.3568023295625,0,0,0,-15611.416127778775,0.0,,True
+S3,B reference,spike timing 1 h later than forecast,in-sample,1999.3568023295625,24,0,24,383052.56422808167,69.8889685403552,3.0,False
+S3,B reference,spike timing 1 h later than forecast,test,1999.3568023295625,0,0,0,-15611.416127778775,0.0,,True
+S3,B reference,batteries unavailable (50% respond),in-sample,1999.3568023295625,24,0,24,190591.90454527247,38.827204744641776,3.0,False
+S3,B reference,batteries unavailable (50% respond),test,1999.3568023295625,0,0,0,-15611.416127778775,0.0,,True
+S3,B reference,low participation (pessimistic curve),in-sample,629.7051353098695,24,0,24,120643.88232605066,69.8889685403552,3.0,False
+S3,B reference,low participation (pessimistic curve),test,629.7051353098695,0,0,0,-4916.875714063365,0.0,,True
+S3,B reference,high participation (optimistic curve),in-sample,3970.973594046276,24,0,24,760790.4781723395,69.8889685403552,3.0,False
+S3,B reference,high participation (optimistic curve),test,3970.973594046276,0,0,0,-31006.232172690103,0.0,,True
+S3,B reference,compensation x1.5 (rule refitted),in-sample,3841.289992444839,24,0,24,518127.09800730407,126.59324552660365,3.0,False
+S3,B reference,compensation x1.5 (rule refitted),test,3841.289992444839,0,0,0,-29993.63418758299,0.0,,True
+S3,B reference,only 10 activations (rule refitted),in-sample,836.2595022140454,10,0,10,-63310.409479837785,32.19198078737204,0.0,True
+S3,B reference,only 10 activations (rule refitted),test,836.2595022140454,0,0,0,-6529.697483041176,0.0,,True
+S3,B reference,energy calls compete for the cap,in-sample,1999.3568023295625,24,0,24,383052.56422808167,69.8889685403552,3.0,False
+S3,B reference,energy calls compete for the cap,test,1999.3568023295625,0,0,0,-15611.416127778775,0.0,,True
+S3,B reference,"standby charging dear (+$300 13:00-17:00, offset x2)",in-sample,1999.3568023295625,24,0,24,381634.5501008527,70.59820369316876,3.0,False
+S3,B reference,"standby charging dear (+$300 13:00-17:00, offset x2)",test,1999.3568023295625,0,0,0,-15611.416127778775,0.0,,True
+S3,B reference,programme fixed cost $100k/yr,in-sample,1999.3568023295625,24,0,24,283052.56422808167,69.8889685403552,3.0,False
+S3,B reference,programme fixed cost $100k/yr,test,1999.3568023295625,0,0,0,-46844.29284010754,0.0,,True
+S3,B reference,customer wear $0.15/kWh,in-sample,1895.3933681810183,24,0,24,363134.42856057273,68.2590631629573,3.0,False
+S3,B reference,customer wear $0.15/kWh,test,1895.3933681810183,0,0,0,-14799.646847440828,0.0,,True
+S3,C optimised,base,in-sample,3280.255127301128,24,0,24,548740.9677328488,94.1908015344617,3.0,False
+S3,C optimised,base,test,3280.255127301128,0,0,0,-25612.95099399511,0.0,,True
+S3,C optimised,false-positive spike warnings (p_spike x3),in-sample,3280.255127301128,24,0,24,548740.9677328488,94.1908015344617,3.0,False
+S3,C optimised,false-positive spike warnings (p_spike x3),test,3280.255127301128,0,0,0,-25612.95099399511,0.0,,True
+S3,C optimised,rare spikes (prices capped at $300),in-sample,3280.255127301128,24,0,24,548740.9677328488,94.1908015344617,3.0,False
+S3,C optimised,rare spikes (prices capped at $300),test,3280.255127301128,0,0,0,-25612.95099399511,0.0,,True
+S3,C optimised,spike timing 1 h later than forecast,in-sample,3280.255127301128,24,0,24,548740.9677328488,94.1908015344617,3.0,False
+S3,C optimised,spike timing 1 h later than forecast,test,3280.255127301128,0,0,0,-25612.95099399511,0.0,,True
+S3,C optimised,batteries unavailable (50% respond),in-sample,3280.255127301128,24,0,24,268408.8139926813,52.328223074700944,3.0,False
+S3,C optimised,batteries unavailable (50% respond),test,3280.255127301128,0,0,0,-25612.95099399511,0.0,,True
+S3,C optimised,low participation (pessimistic curve),in-sample,1125.516927575175,24,0,24,188283.29628904714,94.1908015344617,3.0,False
+S3,C optimised,low participation (pessimistic curve),test,1125.516927575175,0,0,0,-8788.282859148627,0.0,,True
+S3,C optimised,high participation (optimistic curve),in-sample,4770.256613217351,24,0,24,797997.4510167458,94.1908015344617,3.0,False
+S3,C optimised,high participation (optimistic curve),test,4770.256613217351,0,0,0,-37247.20917169712,0.0,,True
+S3,C optimised,compensation x1.5 (rule refitted),in-sample,4732.610186782365,24,0,24,465834.9384392291,163.04599501776337,3.0,False
+S3,C optimised,compensation x1.5 (rule refitted),test,4732.610186782365,0,0,0,-36953.25762282121,0.0,,True
+S3,C optimised,only 10 activations (rule refitted),in-sample,1047.5785640021372,10,0,10,-90588.50137126427,42.95950983951012,0.0,True
+S3,C optimised,only 10 activations (rule refitted),test,1047.5785640021372,0,0,0,-8179.723033989291,0.0,,True
+S3,C optimised,energy calls compete for the cap,in-sample,3280.255127301128,24,0,24,548740.9677328488,94.1908015344617,3.0,False
+S3,C optimised,energy calls compete for the cap,test,3280.255127301128,0,0,0,-25612.95099399511,0.0,,True
+S3,C optimised,"standby charging dear (+$300 13:00-17:00, offset x2)",in-sample,3280.255127301128,24,0,24,546414.4954863699,94.90003668727523,3.0,False
+S3,C optimised,"standby charging dear (+$300 13:00-17:00, offset x2)",test,3280.255127301128,0,0,0,-25612.95099399511,0.0,,True
+S3,C optimised,programme fixed cost $100k/yr,in-sample,3280.255127301128,24,0,24,448740.96773284883,94.1908015344617,3.0,False
+S3,C optimised,programme fixed cost $100k/yr,test,3280.255127301128,0,0,0,-56845.82770632388,0.0,,True
+S3,C optimised,customer wear $0.15/kWh,in-sample,3180.2790361714888,24,0,24,532016.3609972248,92.5608961570638,3.0,False
+S3,C optimised,customer wear $0.15/kWh,test,3180.2790361714888,0,0,0,-24832.315761886966,0.0,,True

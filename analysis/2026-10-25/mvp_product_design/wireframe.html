@@ -1,0 +1,1271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GreenSpark Dispatch Desk - design prototype (illustrative data)</title>
+<style>
+/* Visual system: see VISUAL_DIRECTION.md and DESIGN.md section 5. Layouts follow DESIGN_SCHEDULE.svg and DESIGN_ACTIVATION.svg. */
+:root{
+  --side-w:216px; --rail-w:300px;
+  --side:#0E1A22; --side2:#16252F; --side3:#1F3340; --sidetx:#C3CED6; --sidemute:#7F8F9A; --lime:#B8E05A;
+  --canvas:#F4F6F8; --panel:#FFFFFF; --line:#E1E6EA; --line2:#EEF1F4;
+  --ink:#111A22; --ink2:#2B3640; --ink3:#3D4853; --ink4:#4A5562; --mute:#6B7682; --mute2:#8A949E;
+  --brand:#0F6B4F;
+  --dis:#2F5FD0; --chg:#9DB7EE; --rr:#6E56C6; --rl:#C4B8EE; --cr:#23928F; --cl:#A3D9D6;
+  --soc:#0F6B4F; --mand:#A32020; --econ:#D9B867; --load:#475569; --meter:#C7D0D9;
+  --price:#1E2A36; --base:#A3ADB7; --actual:#D64545;
+  --peak:#9B3C78; --cust:#C9822B; --zen:#0F6B4F; --oth:#7A8591;
+  --ok:#1E7F4F; --warn:#B7791F; --bad:#B42318; --info:#2F5FD0; --unsup:#6B7682;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:14px;line-height:1.45;color:var(--ink);background:var(--canvas)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.num,.kv{font-variant-numeric:tabular-nums}
+
+/* disclosure + shell */
+.proto{position:fixed;top:0;left:0;right:0;height:24px;z-index:50;background:#FFF3D1;border-bottom:1px solid #EBD9A6;color:#6B4A00;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:14px;white-space:nowrap;overflow:hidden}
+.proto small{font-size:11px;font-weight:400;color:#8A6A1F}
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);padding-top:24px;min-height:100vh}
+.side{position:sticky;top:24px;height:calc(100vh - 24px);overflow-y:auto;background:var(--side);display:flex;flex-direction:column;padding:16px 8px 12px}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 12px 16px}
+.mk{width:26px;height:26px;border-radius:6px;background:var(--lime);color:var(--side);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none}
+.brand b{display:block;color:#fff;font-size:15px;font-weight:600;line-height:1.15}
+.brand small{display:block;color:#8193A0;font-size:12px}
+.proj{margin:0 4px 4px;padding:8px 12px;border-radius:6px;background:var(--side2);color:#E6ECEF;font-size:13px;line-height:1.35}
+.proj small{display:block;color:var(--sidemute);font-size:11px}
+.navsec{padding:16px 16px 6px;font-size:10.5px;font-weight:600;letter-spacing:.11em;color:#6F808B}
+.nav{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px 8px 16px;border:0;border-radius:6px;background:none;color:var(--sidetx);font-size:14px;text-align:left;cursor:pointer}
+.nav svg{width:16px;height:16px;flex:none;fill:none;stroke:#8193A0;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav:hover{background:var(--side2)}
+.nav.on{background:var(--side3);color:#fff;font-weight:600}
+.nav.on svg{stroke:#fff}
+.nav.on::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--lime)}
+.nav .dot{display:none;margin-left:auto;width:7px;height:7px;border-radius:50%;background:#E0A93B}
+body.stale .nav[data-dep] .dot{display:block}
+.sfoot{margin-top:auto;padding:10px 12px;border-radius:6px;background:#142430;font-size:12px;color:var(--sidetx);line-height:1.55}
+.sfoot .k{font-size:10.5px;letter-spacing:.11em;font-weight:600;color:#9FB0BC}
+.sfoot small{display:block;color:var(--sidemute);font-size:12px}
+main{min-width:0;padding:20px 32px 48px}
+
+/* page header */
+.ph{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:16px}
+.ph h1{margin:0;font-size:24px;font-weight:600;letter-spacing:-.2px;display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.chips{display:inline-flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:var(--line2);font-size:11.5px;font-weight:400;color:var(--ink3);letter-spacing:0;white-space:nowrap}
+.chip.rp{background:#fff;border:1px solid #CDD4DB}
+.chip.rp::before{content:"";width:7px;height:7px;border-radius:50%;background:#4B5563}
+.chip.fut{background:#F4F0FB;border:1px dashed #8C76D6;color:#4C3A94}
+.chip.hyp{background:#FBF3E7;border:1px dashed #C9822B;color:#7A4A12}
+.chip.dz{background:#fff;border:1px dashed #9AA5B0}
+.ctx{margin-top:6px;font-size:13px;color:var(--ink4)}
+.ph-r{display:flex;align-items:center;gap:16px;flex:none;padding-top:2px}
+.run{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;white-space:nowrap}
+.run i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.run small{font-weight:400;color:var(--mute);font-size:12px}
+.run.ok{color:var(--ok)}.run.stale{color:var(--warn)}.run.bad{color:var(--bad)}.run.unsup{color:var(--unsup)}.run.ro{color:#3B4BA3}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #CDD4DB;background:#fff;border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#F7F8FA}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;min-width:118px;justify-content:center;padding:8px 16px}
+.btn.pri:hover{background:#0C5A42}
+.btn.pri:disabled{background:#AEB7BF;border-color:#AEB7BF;cursor:not-allowed}
+.btn.sm{padding:4px 10px;font-size:12px}
+.lnk{border:0;background:none;padding:0;color:var(--info);font-weight:600;font-size:12.5px;cursor:pointer}
+.strip{display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px}
+.strip.show{display:flex}
+.strip.st{background:#FFF8E6;border:1px solid #F0D58C;color:#5C4300}
+.strip.nc{background:#EEF3FB;border:1px solid #B9CBEA;color:#1F3A6E}
+.strip.ro{background:#EEF0FA;border:1px solid #BEC5EA;color:#2C377A}
+.strip .sp{flex:1}
+body.stale .res{opacity:.5;filter:saturate(.5)}
+.screen{display:none}
+.screen.on{display:block}
+.mt{margin-top:16px}
+
+/* panels and type */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;min-width:0}
+.pad{padding:16px 20px}
+.pad-x{padding:0 20px}
+.panel-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px 6px}
+.panel-h h2{margin:0;font-size:15px;font-weight:600}
+.panel-h .sp{flex:1}
+.sub{font-size:12px;color:var(--mute)}
+h3{margin:0 0 10px;font-size:14px;font-weight:600}
+.cap{font-size:10.5px;letter-spacing:.09em;font-weight:600;color:var(--mute);text-transform:uppercase}
+.foot{margin:10px 0 0;font-size:11.5px;color:var(--mute);line-height:1.5}
+.g-rail{display:grid;grid-template-columns:minmax(0,1fr) var(--rail-w);gap:16px}
+.g-rail2{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.g-act{display:grid;grid-template-columns:352px minmax(0,1fr);gap:16px}
+.g-eval{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:28px}
+
+/* instruction */
+.instr{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,180px);border-left:4px solid var(--brand)}
+.instr-main{padding:16px 20px}
+.instr-h{font-size:19px;font-weight:600;margin:6px 0 4px;letter-spacing:-.1px}
+.instr-s{font-size:13px;color:var(--ink3)}
+.kpi{padding:16px 20px;border-left:1px solid var(--line2)}
+.kv{font-size:22px;font-weight:600;margin-top:6px;line-height:1.2}
+.ks{font-size:12px;color:var(--mute);margin-top:2px}
+
+/* charts */
+.chartbox{padding:0 12px 0 8px}
+.chartbox svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 20px 16px;font-size:11.5px;color:var(--ink3)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:12px;height:8px;border-radius:1.5px}
+.sw.ln{height:2.5px;border-radius:1px}
+.sw.dsh{height:0;border-top:1.5px dashed}
+.sw.hm{background:repeating-linear-gradient(45deg,#A32020 0 1.5px,#F6DADA 1.5px 4px)}
+.sw.ht{background:repeating-linear-gradient(45deg,#D5DBE1 0 2px,#F4F6F8 2px 5px);outline:1px solid #D5DBE1}
+.lanes text{font-size:10.5px;fill:#7A8591}
+.lanes .lt{font-size:12px;font-weight:600;fill:#2B3640}
+.lanes .lu{font-size:10.5px;fill:#8A949E}
+.lanes .ann{font-size:11px;fill:#3D4853}
+.lanes .gl{stroke:#E8ECEF;stroke-width:1}
+.lanes .hit{fill:transparent;cursor:pointer}
+.lanes .hit:hover{fill:rgba(17,26,34,.045)}
+.lanes .wm{font-size:30px;font-weight:700;letter-spacing:.3em;fill:rgba(107,118,130,.07)}
+.lanes .halo{paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+
+/* rail */
+.rail{padding:18px 20px}
+.rail .t{font-size:18px;font-weight:600}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:1px 7px;border-radius:3px;border:1px solid;vertical-align:2px;margin-left:8px}
+.tag.plan{color:var(--info);border-color:var(--info)}
+.tag.out{color:#fff;background:var(--ink2);border-color:var(--ink2)}
+.act{font-size:22px;font-weight:600;color:var(--dis);margin:10px 0 4px}
+.why{list-style:none;margin:6px 0 0;padding:0}
+.why li{position:relative;padding:0 0 8px 14px;font-size:13px;color:var(--ink3)}
+.why li::before{content:"";position:absolute;left:2px;top:7px;width:4.5px;height:4.5px;border-radius:50%;background:var(--ink3)}
+.kvt{width:100%;border-collapse:collapse;font-size:13px}
+.kvt td{padding:4px 0;color:var(--ink3)}
+.kvt td.n{text-align:right;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.rsec{margin-top:12px;padding-top:12px;border-top:1px solid var(--line2)}
+.bar{display:flex;height:6px;border-radius:3px;background:var(--line2);overflow:hidden;margin-top:6px}
+.locked{margin-top:14px;padding:10px 12px;border:1px dashed #D5DBE1;border-radius:6px;background:#F7F8FA;font-size:12px;color:var(--ink4)}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:11.5px;font-weight:600;color:var(--mute);text-align:left;padding:8px;border-bottom:1px solid #D5DBE1;vertical-align:bottom}
+.tbl td{padding:8px;border-bottom:1px solid var(--line2);color:var(--ink3);vertical-align:top}
+.tbl td.n,.tbl th.n{text-align:right}
+.tbl td.n{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr.tot td{border-top:1px solid var(--ink2);border-bottom:0;font-weight:600;color:var(--ink)}
+.tbl tr.x{cursor:pointer}
+.tbl tr.x td:first-child::before{content:"\25B8";display:inline-block;width:14px;color:var(--mute2)}
+.tbl tr.x.open td:first-child::before{content:"\25BE"}
+.tbl tr.dt{display:none}
+.tbl tr.dt.show{display:table-row}
+.tbl tr.dt td{font-size:12px;color:var(--ink4);background:#FAFBFC}
+.tbl .hl{background:rgba(15,107,79,.045)}
+.trt{margin-left:8px;font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--mute);border:1px solid #D5DBE1;border-radius:3px;padding:0 4px}
+.neg{color:var(--bad)!important}.pos{color:var(--ok)!important}
+
+/* controls */
+.seg{display:inline-flex;padding:3px;border-radius:7px;background:#E7EBEF;gap:2px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:5px;font-size:12.5px;color:var(--ink4);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(17,26,34,.12)}
+.lk{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.2}
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar .lbl{font-size:12px;color:var(--mute);margin-right:-4px}
+.sel{border:1px solid #CDD4DB;border-radius:5px;background:#fff;padding:3px 8px;font-size:12px}
+
+/* signals, decision */
+.sig{padding:12px 0;border-bottom:1px solid var(--line2)}
+.sig .hd{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px}
+.sig .gy{width:20px;height:20px;border-radius:4px;display:grid;place-items:center;color:#fff;font-size:11px;flex:none}
+.sig p{margin:6px 0 0;font-size:12.5px;color:var(--ink4)}
+.st8{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:3px}
+.st8.flag{background:#F6E9F1;color:var(--peak)}
+.st8.no{background:var(--line2);color:var(--ink4)}
+.st8.hi{background:#E9ECEF;color:var(--ink2)}
+.dcard{border-left:4px solid var(--cust)}
+.dcard.no{border-left-color:#AEB7BF}
+.dec{display:flex;align-items:center;gap:14px;margin:12px 0 4px}
+.dec-pill{font-size:16px;font-weight:700;color:#fff;background:var(--cust);border-radius:6px;padding:7px 14px;letter-spacing:.02em;white-space:nowrap}
+.dec-pill.no{background:#8A949E}
+.dec b{display:block;font-size:16px;font-weight:600}
+.dec small{display:block;font-size:12px;color:var(--mute)}
+.wl{list-style:none;margin:6px 0 0;padding:0}
+.wl li{display:flex;gap:10px;font-size:13px;color:var(--ink3);padding:4px 0}
+.wl .g{flex:none;width:14px;text-align:center;font-size:11px;line-height:19px}
+.daystep{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.retro{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#fff;background:var(--ink2);border-radius:3px;padding:2px 8px;text-transform:uppercase}
+.hind{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--peak);border:1px solid var(--peak);border-radius:3px;padding:1px 7px;text-transform:uppercase}
+.budget{padding:6px 20px 0}
+.budget .bl{display:flex;justify-content:space-between;font-size:13px;gap:12px;flex-wrap:wrap}
+.budget .bar{height:10px;border-radius:5px;margin-top:8px}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:11px;white-space:nowrap}
+.pill.bad{background:#FDECEA;color:var(--bad);border:1px solid #E9A39B}
+.pill.ok{background:#E7F3EC;color:var(--ok);border:1px solid #9CCFB2}
+.pill.mu{background:var(--line2);color:var(--ink4)}
+
+/* value */
+.verdict{display:flex;gap:14px;align-items:flex-start;padding:14px 18px;border-radius:8px;border:1px solid}
+.verdict.ok{background:#F0F8F3;border-color:#B5DCC5}
+.verdict.bad{background:#FDF2F1;border-color:#EDB8B1}
+.verdict .vt{flex:none;font-size:11px;font-weight:700;letter-spacing:.06em;color:#fff;border-radius:4px;padding:4px 9px;margin-top:2px}
+.verdict.ok .vt{background:var(--ok)}.verdict.bad .vt{background:var(--bad)}
+.verdict b{display:block;font-size:15px;font-weight:600;margin-bottom:2px}
+.verdict p{margin:0;font-size:13px;color:var(--ink3)}
+.party{padding:16px 20px;border-top:3px solid}
+.party.z{border-top-color:var(--zen)}.party.c{border-top-color:var(--cust)}.party.o{border-top-color:var(--oth)}
+.party .big{font-size:26px;font-weight:600;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.scenline{margin-top:12px;font-size:13px;color:var(--ink3);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.note{padding:10px 14px;border-radius:8px;background:#fff;border:1px solid var(--line);border-left:3px solid #9AA5B0;font-size:13px;color:var(--ink3)}
+.note.w{border-left-color:var(--warn)}.note.i{border-left-color:var(--info)}.note.p{border-left-color:var(--peak)}
+
+/* validation */
+.steps{list-style:none;margin:0 0 12px;padding:0}
+.steps li{display:flex;gap:10px;align-items:center;font-size:13px;padding:5px 0;color:var(--ink4)}
+.steps .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--line2);color:var(--ink4);flex:none}
+.steps li.done .n{background:var(--ok);color:#fff}
+.steps li.now{color:var(--ink);font-weight:600}
+.steps li.now .n{background:var(--info);color:#fff}
+.row-b{display:flex;gap:8px}
+.research{border-left:3px solid var(--peak)}
+.bul{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--ink3)}
+.bul li{margin:3px 0}
+
+/* configuration */
+.cfg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.f{display:grid;grid-template-columns:minmax(0,1fr) 150px 132px;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line2);font-size:13px}
+.f:last-child{border-bottom:0}
+.f label{color:var(--ink3)}
+.f .fc{display:flex;align-items:center;gap:6px}
+.f input,.f select{width:100%;min-width:0;border:1px solid #CDD4DB;border-radius:5px;padding:5px 8px;font-size:13px;background:#fff;text-align:right}
+.f select{text-align:left}
+.f .u{flex:none;font-size:11.5px;color:var(--mute);width:46px}
+.f.lockd input,.f.lockd select{background:#F2F4F6;color:var(--mute);border-color:#E1E6EA}
+.f.err input,.f.err select{border-color:var(--bad);background:#FDF2F1}
+.sup{justify-self:end;display:inline-flex;align-items:center;gap:5px;font-size:11px;white-space:nowrap;color:var(--ink4)}
+.sup::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.sup.ok{color:var(--ok)}.sup.uv{color:#2F6E8F}.sup.lkd{color:var(--unsup)}.sup.b{color:#8A6A1F}
+.sup.lkd::before{border-radius:2px}
+.src{font-size:10px;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:1px}
+.src.as{background:#FBF1DC;color:#7A5410}.src.ru{background:#E4ECF8;color:#24447A}.src.rf{background:#F6E8DA;color:#7A4A12}.src.md{background:#F3E8F0;color:#6E2A55}.src.us{background:#E3F0E8;color:#1D5B3B}
+.scen4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sc{border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff;text-align:left}
+.sc.on{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand);background:#F6FBF8}
+.sc b{font-size:13px}
+.sc p{margin:4px 0 0;font-size:12px;color:var(--ink4)}
+.chk{list-style:none;margin:0;padding:0}
+.chk li{display:flex;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line2);color:var(--ink3)}
+.chk li:last-child{border-bottom:0}
+.ci{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10.5px;font-weight:700;margin-top:1px}
+.ci.ok{background:var(--ok)}.ci.w{background:var(--warn)}.ci.b{background:var(--bad)}.ci.u{background:var(--unsup)}.ci.i{background:var(--info)}
+
+.stg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.toast{position:fixed;right:24px;bottom:24px;z-index:60;max-width:440px;padding:12px 16px;border-radius:8px;background:var(--ink);color:#fff;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none}
+.toast.show{display:block}
+
+@media (max-width:1365px){
+  :root{--side-w:188px;--rail-w:272px}
+  main{padding:16px 20px 40px}
+  .instr{grid-template-columns:minmax(0,1fr) repeat(3,156px)}
+  .instr-h{font-size:17px}
+  .kv{font-size:19px}
+  .kpi{padding:14px 14px}
+  .g-act{grid-template-columns:316px minmax(0,1fr)}
+  .g-rail2{grid-template-columns:minmax(0,1fr) 320px}
+  .nav{font-size:13.5px;padding-left:14px;gap:10px}
+  .f{grid-template-columns:minmax(0,1fr) 128px 118px}
+}
+@media (max-width:1100px){
+  .g-rail,.g-rail2,.g-act,.g-eval,.g2,.g3,.cfg,.stg{grid-template-columns:minmax(0,1fr)}
+  .instr{grid-template-columns:1fr 1fr 1fr}
+  .instr-main{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+
+<div class="proto" role="note">Design prototype - illustrative data; not connected to the model <small>Every value is a placeholder. Buttons show interface states only; nothing is calculated.</small></div>
+
+<div class="app">
+<aside class="side" aria-label="Navigation">
+  <div class="brand"><span class="mk" aria-hidden="true">GS</span><div><b>GreenSpark</b><small>Dispatch Desk</small></div></div>
+  <div class="proj">Zenith · Site A + fleet<small>Demo project · replay</small></div>
+  <div class="navsec">OPERATE</div>
+  <button class="nav" data-go="schedule"><svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="12" rx="2"/><path d="M1.5 6.5h13M5 1v3M11 1v3"/></svg>Today's plan<span class="dot" aria-hidden="true"></span></button>
+  <button class="nav" data-go="forecast" data-dep="1"><svg viewBox="0 0 16 16"><path d="M1 13l4-5 3 3 6-8M1 15.5h14"/></svg>Forecast<span class="dot" aria-hidden="true"></span></button>
+  <button class="nav" data-go="activation" data-dep="1"><svg viewBox="0 0 16 16"><path d="M2 8l6-5 6 5v6.5H2zM6.5 14.5v-4h3v4"/></svg>Customer calls<span class="dot" aria-hidden="true"></span></button>
+  <div class="navsec">EVALUATE</div>
+  <button class="nav" data-go="value" data-dep="1"><svg viewBox="0 0 16 16"><path d="M2 14V9M6 14V5M10 14V7M14 14V2"/></svg>Value by party<span class="dot" aria-hidden="true"></span></button>
+  <button class="nav" data-go="validation" data-dep="1"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M5 8.2l2 2 4-4.2"/></svg>Validation<span class="dot" aria-hidden="true"></span></button>
+  <div class="navsec">MANAGE</div>
+  <button class="nav" data-go="config"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 12h12"/><circle cx="5" cy="4" r="1.8"/><circle cx="11" cy="12" r="1.8"/></svg>Configuration</button>
+  <button class="nav" data-go="runs"><svg viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2 12v2.5h12V12"/></svg>Runs &amp; export</button>
+  <div class="navsec">DESIGN REVIEW</div>
+  <button class="nav" data-go="states"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="2" stroke-dasharray="2 2"/></svg>Interaction states</button>
+  <div class="sfoot"><div class="k">HISTORICAL REPLAY</div>Data to 22 Oct 2026<small>No live control or market offers</small></div>
+</aside>
+
+<main id="main">
+  <header class="ph">
+    <div>
+      <h1><span id="ph-title">Today's plan</span><span class="chips" id="ph-chips"></span></h1>
+      <div class="ctx" id="ph-ctx"></div>
+    </div>
+    <div class="ph-r">
+      <div class="run ok" id="run" role="status" aria-live="polite"><i></i><span id="run-t">Up to date</span><small id="run-s">run R-0142</small></div>
+      <button class="btn pri" id="pri">Save run</button>
+    </div>
+  </header>
+
+  <div class="strip st" id="strip-st" role="status"><span id="st-text">Inputs changed. The results shown are from run R-0142 with the previous inputs.</span><span class="sp"></span><button class="btn sm" id="revert">Revert inputs</button></div>
+  <div class="strip nc" id="strip-nc" role="status"><span><b>Not connected.</b> This design prototype cannot recompute. In the MVP, Recompute runs the engine in named steps (Validate inputs, Own-battery day, Customer offer, Ledger and checks) and opens a new run ID; until then every result keeps the stale label.</span><span class="sp"></span><button class="btn sm" id="nc-close">Close</button></div>
+  <div class="strip ro" id="strip-ro" role="status"><span>Viewing saved run <b>R-0139</b>, read-only. Inputs are locked and nothing is recomputed. Use <b>Duplicate as draft</b> to change inputs.</span></div>
+
+  <!-- ================= TODAY'S PLAN ================= -->
+  <section class="screen" id="s-schedule" aria-label="Today's plan">
+    <div class="instr panel res">
+      <div class="instr-main">
+        <div class="cap">Instruction for Wed 14 Jan · plan 09:00</div>
+        <div class="instr-h">Discharge 7.5 MW into the 17:30–20:00 evening peak</div>
+        <div class="instr-s">Shave 0.4 MW 10:00–17:00 (CMD 9 MW) · hold 6.6 MWh overnight · recharge 4.2 MW 01:00–07:00</div>
+      </div>
+      <div class="kpi"><div class="cap">Expected net value</div><div class="kv" id="k-net"></div><div class="ks">plan, not settlement</div></div>
+      <div class="kpi"><div class="cap">Binding constraint</div><div class="kv" style="color:var(--mand)">CMD 9 MW</div><div class="ks">site import 10:00–17:00</div></div>
+      <div class="kpi"><div class="cap">Lowest reserve margin</div><div class="kv" id="k-margin"></div><div class="ks" id="k-margin-s"></div></div>
+    </div>
+    <div class="g-rail mt">
+      <div class="panel res">
+        <div class="panel-h"><h2>Schedule</h2><span class="sub">48 trading intervals · 10 MW / 40 MWh behind the factory meter</span><span class="sp"></span>
+          <label class="sub" for="planver">Version</label>
+          <select id="planver" class="sel"><option>09:00</option><option disabled>09:30 re-plan (full MVP)</option></select>
+          <div class="seg" role="group" aria-label="Plan or outcome"><button data-po="plan" class="on">Plan</button><button data-po="outcome">Outcome <svg class="lk" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5"/></svg></button></div>
+        </div>
+        <div id="sch-chart" class="chartbox"></div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--dis)"></i>Discharge</span><span><i class="sw" style="background:var(--chg)"></i>Charge</span>
+          <span><i class="sw" style="background:linear-gradient(90deg,var(--rr) 50%,var(--rl) 50%)"></i>Regulation raise / lower</span>
+          <span><i class="sw" style="background:linear-gradient(90deg,var(--cr) 50%,var(--cl) 50%)"></i>Contingency raise / lower</span>
+          <span><i class="sw ln" style="background:var(--soc)"></i>SOC (plan)</span><span><i class="sw hm"></i>Mandatory reserve (never sold)</span>
+          <span><i class="sw" style="background:var(--econ)"></i>Site backup reserve</span><span><i class="sw ln" style="background:var(--price)"></i>Price P50, P10–P90</span>
+          <span><i class="sw dsh" style="border-color:var(--base)"></i>Yesterday's prices</span><span><i class="sw dsh" style="border-color:var(--mand)"></i>CMD</span>
+          <span><i class="sw ht"></i>Before 09:00</span><span class="po-out" hidden><i class="sw ln" style="background:var(--actual)"></i>Actual (revealed)</span>
+        </div>
+      </div>
+      <aside class="panel rail res" id="sch-rail" aria-live="polite"></aside>
+    </div>
+    <div class="g2 mt">
+      <div class="panel pad res"><h3>Plan and outcome for the trading day</h3><table class="tbl" id="sch-money"></table>
+        <p class="foot">Plan: expected at 09:00 from the forecast. Outcome: replayed settlement at actual 30-minute prices; hidden until revealed. Network saving is the day's share of the monthly CMD bill. IRCR is settled per Hot Season, so it is not in a daily figure.</p></div>
+      <div class="panel pad res"><h3>Constraints checked on this plan</h3><ul class="chk" id="sch-checks"></ul></div>
+    </div>
+  </section>
+
+  <!-- ================= FORECAST ================= -->
+  <section class="screen" id="s-forecast" aria-label="Forecast">
+    <div class="g-rail">
+      <div class="panel res">
+        <div class="panel-h"><h2>09:00 forecasts</h2><span class="sub">Energy price, spike probability and system demand on one time axis (Q2A)</span><span class="sp"></span>
+          <div class="seg" role="group" aria-label="Plan or outcome"><button data-po="plan" class="on">Plan</button><button data-po="outcome">Outcome <svg class="lk" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5"/></svg></button></div></div>
+        <div id="fc-chart" class="chartbox"></div>
+        <div class="legend">
+          <span><i class="sw ln" style="background:var(--price)"></i>Energy price P50</span><span><i class="sw" style="background:rgba(30,42,54,.14)"></i>P10–P90</span>
+          <span><i class="sw dsh" style="border-color:var(--base)"></i>Yesterday's prices (baseline)</span><span><i class="sw" style="background:#4A5562"></i>P(price ≥ A$200), model estimate</span>
+          <span><i class="sw ln" style="background:var(--peak)"></i>AEMO demand forecast</span><span><i class="sw dsh" style="border-color:var(--peak)"></i>Customer call threshold</span>
+          <span><i class="sw ht"></i>Not issued before 09:00</span><span class="po-out" hidden><i class="sw ln" style="background:var(--actual)"></i>Actual (revealed)</span>
+        </div>
+      </div>
+      <aside class="panel rail res">
+        <div class="cap">Two different signals</div>
+        <div class="sig"><div class="hd"><span class="gy" style="background:#4A5562">&#8623;</span>Price spike risk · energy</div>
+          <p>Day-ahead high-risk day (issued 09:00, 13 Jan): <span class="st8 hi">YES</span></p>
+          <p>Highest interval probability <b>45%</b> at 17:30–20:00 (model estimate, not a promise). Timing and height of a spike are not predicted.</p>
+          <p>Used by the <b>own battery's offers</b>. It never triggers a customer call.</p></div>
+        <div class="sig"><div class="hd"><span class="gy" style="background:var(--peak)">&#9650;</span>System peak day · IRCR</div>
+          <p>Forecast daily peak <b>3,870 MW</b> at 18:00.</p>
+          <p>Customer call rule (q = 0.75): <span class="st8 flag">FLAGGED</span> threshold 3,820 MW</p>
+          <p>Own-battery site rule (dynamic): <span class="st8 no">NOT FLAGGED</span> The engine has two rules; they can disagree.</p>
+          <p>Official peak days are known only after 31 March.</p></div>
+        <div class="cap" style="margin-top:14px">Inputs at 09:00</div>
+        <table class="tbl" id="fc-inputs" style="margin-top:4px"></table>
+      </aside>
+    </div>
+    <div class="panel res mt">
+      <div class="panel-h"><h2>FCESS price profile</h2><span class="sub">A$/MW/h · 28-day average by interval · used by the plan · not a forecast model</span></div>
+      <div class="g3 pad" id="fc-fcess" style="grid-template-columns:repeat(4,minmax(0,1fr))"></div>
+    </div>
+  </section>
+
+  <!-- ================= CUSTOMER CALLS ================= -->
+  <section class="screen" id="s-activation" aria-label="Customer calls">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="View"><button data-view="decision" class="on">Decision view</button><button data-view="review">Season review · hindsight</button></div>
+      <span class="lbl">Offer</span>
+      <div class="seg" role="group" aria-label="Offer"><button data-offer="custom" class="on">Custom offer</button><button data-offer="ref">Reference terms</button></div>
+      <span class="lbl">Day</span>
+      <span class="daystep"><button class="btn sm" id="day-prev" aria-label="Previous day">&#8249;</button><span id="day-label"></span><button class="btn sm" id="day-next" aria-label="Next day">&#8250;</button></span>
+    </div>
+    <div class="g-act mt">
+      <div class="panel pad dcard res" id="act-card" aria-live="polite"></div>
+      <div class="panel res">
+        <div class="panel-h"><h2 id="act-title"></h2><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span></div>
+        <div class="legend" id="act-legend" style="padding-bottom:4px"></div>
+        <div id="act-chart" class="chartbox"></div>
+        <div class="budget" id="act-budget"></div>
+        <p class="foot pad-x" style="padding-bottom:14px">Bars: daily peak operational demand on past days (assumed published by 09:00 the next day). Today: AEMO forecast issued before 09:00. The capacity value of a call is settled once per season on the 12 peak intervals; it is not known at 09:00. Pattern illustrative.</p>
+      </div>
+    </div>
+    <div class="panel res mt">
+      <div class="panel-h"><h2>Contract-period evaluation</h2><span class="retro">Retrospective</span><span class="sub" id="eval-sub"></span></div>
+      <div class="g-eval pad">
+        <div><table class="tbl" id="act-cmp"></table>
+          <p class="foot">Reference terms: public Synergy Battery Rewards terms used for comparison; not a Zenith tariff or contract. A positive verdict needs customers no worse off, zero hard-constraint violations and no Hot Season losing money. Same dispatch model and call-rule family in every column. Peak days and settlement are known only after the season.</p>
+          <button class="lnk" data-go="value">Open the ledger by party →</button></div>
+        <div><h3>Calls used through the season</h3><div id="act-cum"></div>
+          <div class="legend" style="padding:6px 0 0"><span><i class="sw ln" style="background:var(--cust)"></i>Custom · cap 45</span><span><i class="sw ln" style="background:var(--oth)"></i>Reference · cap 30</span><span style="color:var(--peak)">&#9733; <span style="color:var(--ink3)">Official peak day (hindsight)</span></span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VALUE BY PARTY ================= -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="toolbar">
+      <span class="lbl">Offer</span><div class="seg" role="group" aria-label="Offer"><button data-voffer="custom" class="on">Custom offer</button><button data-voffer="ref">Reference terms</button></div>
+      <span class="lbl">Scenario</span><div class="seg" role="group" aria-label="Commercial scenario"><button data-vscen="S1">S1</button><button data-vscen="S2a">S2a</button><button data-vscen="S2b">S2b</button><button data-vscen="S3" class="on">S3</button></div>
+      <span class="lbl">Statistic</span><div class="seg" role="group" aria-label="Statistic"><button data-stat="cy" class="on">Contract year 2025-26 replay</button><button data-stat="exp">Expected per year</button></div>
+      <span class="lbl">Per</span><div class="seg" role="group" aria-label="Denominator"><button data-den="fleet" class="on">Fleet</button><button data-den="home">Enrolled home</button></div>
+    </div>
+    <div class="scenline" id="v-scen"></div>
+    <div class="mt res" id="v-verdict"></div>
+    <div class="g3 mt res" id="v-parties"></div>
+    <div class="g-rail2 mt">
+      <div class="panel res"><div class="panel-h"><h2 id="v-ledger-h">Ledger</h2><span class="sub" id="v-ledger-sub"></span></div>
+        <div class="pad-x" style="padding-bottom:16px"><table class="tbl" id="v-ledger"></table><p class="foot" id="v-ledger-foot"></p></div></div>
+      <div>
+        <div class="panel pad res" id="v-ircr"></div>
+        <div class="panel pad res mt" id="v-own"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VALIDATION ================= -->
+  <section class="screen" id="s-validation" aria-label="Validation">
+    <div class="toolbar"><span class="lbl">Period</span><div class="seg" role="group" aria-label="Period">
+      <button data-per="ins" class="on">In-sample · 456 d</button><button data-per="tseen">Test, seen · 107 d</button><button data-per="tnew">Test, unseen · 7 d</button><button data-per="hold">Hot Season holdouts</button></div></div>
+    <div class="note mt" id="val-note"></div>
+    <div class="g3 mt">
+      <div class="panel pad res"><h3>Q2A forecast error</h3><div id="val-q2a"></div></div>
+      <div class="panel pad res"><h3>Q2B own battery</h3><div id="val-q2b"></div></div>
+      <div class="panel pad res"><h3>Customer programme</h3><div id="val-cust"></div></div>
+    </div>
+    <div class="g-rail2 mt">
+      <div class="panel res"><div class="panel-h"><h2>Physical and contract checks</h2><span class="sub">click a row for its definition</span></div>
+        <div class="pad-x" style="padding-bottom:16px"><table class="tbl" id="val-checks"></table></div></div>
+      <div>
+        <div class="panel pad"><h3>Replay one day, step by step</h3><ol class="steps" id="val-steps"></ol>
+          <div class="row-b"><button class="btn sm" id="step-next">Next step</button><button class="btn sm" id="step-reset">Reset</button></div></div>
+        <div class="panel pad mt research">
+          <div class="cap" style="color:var(--peak)">Research comparison · not used for decisions</div>
+          <h3 style="margin-top:6px">Peak-day probability model (M3)</h3>
+          <ul class="bul">
+            <li>Passed the pre-set probability-quality test (J1).</li>
+            <li>Failed the pre-set call test (J2): with 30 calls it covered 3 of 4 peak days in 2024-25, against 4 of 4 for the current rule.</li>
+            <li>Over-confident at the top end: of 11 days given 0.3 or more, 4 were peak days.</li>
+            <li>Not in the app. Proposed for shadow mode in the 2026-27 Hot Season.</li>
+          </ul>
+          <p class="foot">From the research report analysis/2026-10-24/peak_day_probability/RESULTS.md (facts, not illustrative). No probability bands are shown anywhere in the product.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONFIGURATION ================= -->
+  <section class="screen" id="s-config" aria-label="Configuration">
+    <div class="cfg">
+      <div>
+        <div class="panel pad">
+          <h3>Customer offer <span class="sub" style="font-weight:400">evaluated as the Custom offer</span></h3>
+          <div class="f"><label for="c-start">Start from</label><div class="fc"><select id="c-start" data-k="start"><option value="model">Model suggestion</option><option value="ref">Reference terms</option></select></div><span class="src md" id="c-start-tag">MODEL SUGGESTION</span></div>
+          <p class="foot" id="c-start-note" style="margin:2px 0 6px"></p>
+          <div class="f"><label for="c-pay">Payment per kWh of event net export</label><div class="fc"><input id="c-pay" type="number" step="1" data-k="pay"><span class="u">c/kWh</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-evp">Payment per responded event</label><div class="fc"><input id="c-evp" type="number" step="0.5" data-k="evp"><span class="u">A$</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-fee">Annual fee to the customer</label><div class="fc"><input id="c-fee" type="number" step="10" data-k="fee"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-cap">Annual activation cap</label><div class="fc"><input id="c-cap" type="number" step="1" data-k="cap"><span class="u">calls</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-ev">Event length</label><div class="fc"><select id="c-ev" data-k="ev"><option>1</option><option>2</option><option>3</option><option>4</option></select><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-sb">Standby before the event</label><div class="fc"><select id="c-sb" data-k="sb"><option>1</option><option>2</option></select><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-mx">Maximum control per event<span class="src rf">REF</span></label><div class="fc"><input id="c-mx" type="number" step="1" data-k="mx"><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-res">Customer reserve, never discharged</label><div class="fc"><input id="c-res" type="number" step="5" data-k="res"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-win">Event window (model window, not a rule)</label><div class="fc"><select id="c-win" data-k="win"><option>17:30–19:30</option><option>17:00–19:00</option><option>18:00–20:00</option></select><span class="u">AWST</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-rule">Call rule</label><div class="fc"><select id="c-rule" data-k="rule"><option value="fit">Fitted in-sample</option><option value="simple">Call every flag (full MVP)</option><option value="perfect">Hindsight (full MVP)</option></select></div><span class="sup ok">Recomputes</span></div>
+        </div>
+        <div class="panel pad mt">
+          <h3>Commercial scenario <span class="sub" style="font-weight:400">who receives energy and capacity value</span></h3>
+          <div class="scen4" role="radiogroup" aria-label="Commercial scenario">
+            <button class="sc" data-sc="S1" role="radio"><b>S1 · Energy only</b> <span class="chip hyp">Hypothetical</span><p>Zenith settles the change in net position at wholesale price. No capacity value.</p></button>
+            <button class="sc" data-sc="S2a" role="radio"><b>S2a · Retailer, current IRCR</b> <span class="chip">Current rule</span><p>Net export counts 0 in the 12 peak intervals.</p></button>
+            <button class="sc" data-sc="S2b" role="radio"><b>S2b · Retailer, 2027 Peak IRCR</b> <span class="chip fut">Assumed future rule</span><p>Net export counts negative. Text not yet checked against the gazetted rules.</p></button>
+            <button class="sc on" data-sc="S3" role="radio"><b>S3 · Synergy TPA</b> <span class="chip hyp">Hypothetical share</span><p>Energy value to Synergy; Zenith receives share s of the capacity value.</p></button>
+          </div>
+          <div class="f" style="margin-top:8px"><label for="c-share">Capacity share s (S3 only)<span class="src as">ASSUMPTION</span></label><div class="fc"><input id="c-share" type="number" step="5" data-k="share"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-rcp">Capacity price for each Hot Season<span class="src ru">RULE</span></label><div class="fc"><select id="c-rcp" data-k="rcp"><option>Year each season sets (as-if)</option><option>2027-28 for every season</option></select></div><span class="sup b">Full MVP</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel pad"><h3>Input check</h3><ul class="chk" id="c-checks"></ul></div>
+        <div class="panel pad mt">
+          <h3>Customer fleet assumptions <span class="sub" style="font-weight:400">one household archetype; baseline is normal self-use</span></h3>
+          <div class="f"><label for="c-elig">Households offered<span class="src as">ASSUMPTION</span></label><div class="fc"><input id="c-elig" type="number" step="500" data-k="elig"><span class="u">homes</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-curve">Participation curve<span class="src as">ASSUMPTION</span></label><div class="fc"><select id="c-curve" data-k="curve"><option>Central</option><option>Pessimistic</option><option>Optimistic</option></select></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-resp">Response rate (average, not firm)<span class="src as">ASSUMPTION</span></label><div class="fc"><input id="c-resp" type="number" step="5" data-k="resp"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-ops">Operating cost per enrolled home<span class="src as">ASSUMPTION</span></label><div class="fc"><input id="c-ops" type="number" step="1" data-k="ops"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-fix">Programme fixed cost<span class="src as">ASSUMPTION</span></label><div class="fc"><input id="c-fix" type="number" step="10000" data-k="fix"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+          <div class="f"><label for="c-hh">Battery, PV and load per home<span class="src as">ASSUMPTION</span></label><div class="fc"><select id="c-hh" data-k="hh"><option>13.5 kWh · 5 kW · 6.6 kWp · 18 kWh/day</option></select></div><span class="sup b">Full MVP</span></div>
+        </div>
+        <div class="panel pad mt">
+          <h3>Own battery and site <span class="sub" style="font-weight:400">behind the factory meter</span></h3>
+          <div class="f lockd"><label>Power rating</label><div class="fc"><input value="10" disabled><span class="u">MW</span></div><span class="sup lkd" title="The stored-energy value table is built for the default battery and site.">Locked · value table</span></div>
+          <div class="f lockd"><label>Usable energy</label><div class="fc"><input value="40" disabled><span class="u">MWh</span></div><span class="sup lkd" title="Needs a storage-value table rebuild.">Locked · value table</span></div>
+          <div class="f lockd"><label>Round-trip efficiency</label><div class="fc"><input value="85" disabled><span class="u">%</span></div><span class="sup lkd">Locked · value table</span></div>
+          <div class="f lockd"><label>Wear cost<span class="src as">ASSUMPTION</span></label><div class="fc"><input value="30" disabled><span class="u">A$/MWh</span></div><span class="sup lkd">Locked · value table</span></div>
+          <div class="f lockd"><label>Contract maximum demand (CMD)</label><div class="fc"><input value="9" disabled><span class="u">MW</span></div><span class="sup lkd">Locked · value table</span></div>
+          <div class="f lockd"><label>Site load<span class="src as">SYNTHETIC</span></label><div class="fc"><select disabled><option>Synthetic factory</option></select></div><span class="sup lkd">Locked · needs meter data</span></div>
+          <div class="f"><label for="c-exp">Export limit at the meter<span class="src as">ASSUMPTION</span></label><div class="fc"><select id="c-exp" data-k="exp"><option>10</option><option>3</option></select><span class="u">MW</span></div><span class="sup uv">Recomputes · unvalidated</span></div>
+          <div class="f"><label for="c-fcess">FCESS services</label><div class="fc"><select id="c-fcess" data-k="fcess"><option>RR, RL, CR, CL</option><option>Contingency only</option><option>None</option></select></div><span class="sup uv">Recomputes · unvalidated</span></div>
+          <div class="f"><label for="c-imp">Import limit at the meter<span class="src as">ASSUMPTION</span></label><div class="fc"><input id="c-imp" type="number" step="1" data-k="imp"><span class="u">MW</span></div><span class="sup b">Full MVP · 9 MW or more</span></div>
+          <div class="f"><label for="c-cyc">Full cycles per day</label><div class="fc"><input id="c-cyc" type="number" step="0.5" data-k="cyc"><span class="u">/day</span></div><span class="sup b">Full MVP</span></div>
+          <div class="f"><label>Obligations (SCM, capacity credits, backup)</label><div class="fc"><select disabled><option>None in 2026-27</option></select></div><span class="sup b">Full MVP</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RUNS ================= -->
+  <section class="screen" id="s-runs" aria-label="Runs and export">
+    <div class="g-rail2">
+      <div class="panel"><div class="panel-h"><h2>Saved runs</h2><span class="sub">IDs, versions and times are placeholders · AWST is UTC+8, the same clock time as Asia/Shanghai</span></div>
+        <div class="pad-x" style="padding-bottom:16px"><table class="tbl" id="runs"></table></div></div>
+      <div class="panel pad"><h3>Export the open run</h3>
+        <ul class="chk">
+          <li><span class="ci i">R</span><span><b>report.html</b> · readable English summary: scenario, assumptions with source tags, periods, plan and outcome in separate sections, checks, limits</span></li>
+          <li><span class="ci i">C</span><span>schedule_30min.csv · power, SOC, reserves, meter (units in column names)</span></li>
+          <li><span class="ci i">C</span><span>allocation_30min.csv · energy and FCESS MW</span></li>
+          <li><span class="ci i">C</span><span>activation_days.csv · flag, call, reason, calls left</span></li>
+          <li><span class="ci i">C</span><span>ledger_by_party.csv · item × party, unit, denominator, statistic</span></li>
+          <li><span class="ci i">C</span><span>checks.csv · every check and failing interval</span></li>
+          <li><span class="ci i">J</span><span>inputs.json · every input, source tag, engine and data versions</span></li>
+        </ul>
+        <button class="btn mt" id="exp-all">Export all</button>
+        <p class="foot">Every file header carries the run ID, period, scenario tag and HISTORICAL REPLAY. Exports are off while results are stale.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= INTERACTION STATES ================= -->
+  <section class="screen" id="s-states" aria-label="Interaction states">
+    <div class="stg">
+      <div class="panel pad"><div class="cap">Up to date</div><div class="run ok" style="margin:10px 0"><i></i>Up to date<small>run R-0142</small></div><p class="foot">Primary action: Save run.</p></div>
+      <div class="panel pad"><div class="cap">Stale</div><div class="run stale" style="margin:10px 0"><i></i>Inputs changed<small>results from R-0142</small></div><p class="foot">Any input change. Results dim, nav items show a dot, save and export turn off. Primary action becomes Recompute; Revert inputs undoes the change. Try it in Configuration.</p></div>
+      <div class="panel pad"><div class="cap">Running (MVP only)</div><ol class="steps" style="margin-top:10px"><li class="done"><span class="n">&#10003;</span>Validate inputs</li><li class="done"><span class="n">&#10003;</span>Own-battery day</li><li class="now"><span class="n">3</span>Customer offer · 4 s</li><li><span class="n">4</span>Ledger and checks</li></ol><p class="foot">Named steps, elapsed time, Cancel. No percentage bar. The prototype never shows this state, because it computes nothing.</p></div>
+      <div class="panel pad"><div class="cap">Blocked · infeasible inputs</div><div class="run bad" style="margin:10px 0"><i></i>Blocked<small>fix inputs</small></div><p class="foot">A hard rule fails before running, for example standby + event longer than the maximum control time. The check names the field; no numbers are produced. Try maximum control 3 h.</p></div>
+      <div class="panel pad"><div class="cap">No business case</div><div class="verdict bad" style="margin-top:10px"><span class="vt">NO BUSINESS CASE</span><p>Computed, constraints hold, but Zenith loses money or a Hot Season fails. A result with reasons, not an error. See Value by party, S1 or S2a.</p></div></div>
+      <div class="panel pad"><div class="cap">Unsupported input</div><div class="run unsup" style="margin:10px 0"><i></i>Unsupported input</div><p class="foot">The engine cannot compute this value (import limit below 9 MW needs a value-table rebuild). Recompute is off and no saved result for another configuration is shown. Try import limit 8.</p></div>
+      <div class="panel pad"><div class="cap">Pending recompute</div><p class="foot" style="margin-top:10px"><b style="color:var(--ink)">Zenith only · own battery</b><br>Pending recompute for export limit 3 MW. The saved result for the default configuration is not shown. Zenith + fleet total: not available.</p></div>
+      <div class="panel pad"><div class="cap">Missing data</div><p class="foot" style="margin-top:10px">Inputs not issued at 09:00 are hatched and listed as Missing. Missing is never drawn or summed as zero; totals that depend on them say incomplete.</p></div>
+      <div class="panel pad"><div class="cap">Read-only saved run</div><div class="run ro" style="margin:10px 0"><i></i>Read-only<small>saved run R-0139</small></div><p class="foot">Banner on every screen, inputs locked. Primary action: Duplicate as draft. Try Runs &amp; export → Open.</p></div>
+    </div>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* All numbers are ILLUSTRATIVE placeholders that are internally consistent (VISUAL_DIRECTION.md section 2.8).
+   Nothing is computed from user inputs: changing an input only marks results stale. */
+(function(){
+"use strict";
+var N = 48, X0 = 72, IW = 16, EFF = 0.922;
+function X(i){ return X0 + i * IW; }
+function p2(n){ return (n < 10 ? "0" : "") + n; }
+function hhmm(i){ var m = (480 + 30 * i) % 1440; return p2(Math.floor(m / 60)) + ":" + p2(m % 60); }
+function nf(v, d){ d = d || 0; return Number(v).toLocaleString("en-AU", {minimumFractionDigits:d, maximumFractionDigits:d}); }
+function aud(v, d){ return (v < -0.0005 ? "−A$ " : "A$ ") + nf(Math.abs(v), d); }
+function $(s){ return document.querySelector(s); }
+function $$(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+function blk(spec){ var a = [], i; for (i = 0; i < N; i++) a.push(null); spec.forEach(function(s){ for (var j = s[0]; j < s[1]; j++) a[j] = s[2]; }); return a; }
+function sum(a){ return a.reduce(function(t, v){ return t + (v || 0); }, 0); }
+function median(a){ var b = a.slice().sort(function(x, y){ return x - y; }); var n = b.length; return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2; }
+
+/* ---------- own battery, 14 Jan 2026 (illustrative) ---------- */
+var P = {
+  price: blk([[2,4,90],[4,14,25],[14,19,70],[19,24,230],[24,30,120],[30,42,75],[42,48,95]]),
+  yday:  blk([[0,2,100],[2,4,110],[4,14,30],[14,19,95],[19,24,180],[24,30,140],[30,42,80],[42,48,100]]),
+  actual:blk([[0,4,95],[4,14,18],[14,19,85],[19,20,260],[20,21,310],[21,22,640],[22,23,280],[23,24,210],[24,30,135],[30,42,70],[42,48,105]]),
+  pspike:blk([[2,14,.03],[14,19,.12],[19,24,.45],[24,30,.15],[30,48,.04]]),
+  dis: blk([[0,4,0],[4,18,.4],[18,19,0],[19,24,7.5],[24,48,0]]),
+  chg: blk([[0,34,0],[34,46,4.2],[46,48,0]]),
+  rr:  blk([[0,4,1],[4,24,0],[24,48,1]]),
+  rl:  blk([[0,24,0],[24,48,1]]),
+  cr:  blk([[0,48,2]]),
+  cl:  blk([[0,48,1.5]]),
+  load:blk([[0,4,8],[4,18,9.2],[18,20,3.45],[20,48,3]]),
+  fRR: blk([[0,4,14],[4,24,19],[24,48,14]]),
+  fRL: blk([[0,24,8],[24,48,6]]),
+  fCR: blk([[0,48,4]]),
+  fCL: blk([[0,48,1.2]])
+};
+P.lo = P.price.map(function(v){ return v == null ? null : v * 0.6; });
+P.hi = P.price.map(function(v, i){ return v == null ? null : v * (i >= 19 && i < 24 ? 1.9 : 1.6); });
+var SOC = [30], MAND = [], ECON = [], METER = [], i;
+for (i = 0; i < N; i++) {
+  SOC.push(SOC[i] + 0.5 * (P.chg[i] * EFF - P.dis[i] / EFF));
+  MAND.push(1 + 0.25 * (P.cr[i] + P.rr[i]) / EFF);
+  ECON.push(i >= 19 ? 3.5 : (i < 4 ? 14 * 0.2 / EFF : (i <= 17 ? (18 - i) * 0.2 / EFF : 0)));
+  METER.push(P.load[i] - P.dis[i] + P.chg[i]);
+}
+var SOCOUT = SOC.map(function(v, b){ return v - (b >= 24 ? 0.3 : 0.3 * b / 24); });
+var DEMFC = [], DEMACT = [];
+for (i = 0; i < N; i++) { var hm = 8 + 0.5 * i + 0.25; DEMFC.push(2350 + 1520 * Math.exp(-Math.pow((hm - 18.25) / 3.3, 2))); }
+DEMACT = DEMFC.map(function(v){ return v * 3840 / 3870; });
+var MONEY = (function(){
+  var e = 0, eo = 0, fc = 0, dm = 0;
+  for (var k = 0; k < N; k++) {
+    e += (P.price[k] || 0) * (P.dis[k] - P.chg[k]) * 0.5;
+    eo += P.actual[k] * (P.dis[k] - P.chg[k]) * 0.5;
+    fc += 0.5 * (P.rr[k] * P.fRR[k] + P.rl[k] * P.fRL[k] + P.cr[k] * P.fCR[k] + P.cl[k] * P.fCL[k]);
+    dm += P.dis[k] * 0.5;
+  }
+  var plan = {energy:e, fcess:fc, network:900, wear:-30 * dm};
+  plan.net = plan.energy + plan.fcess + plan.network + plan.wear;
+  var out = {energy:eo, fcess:fc * 0.9, network:900, wear:-30 * dm};
+  out.net = out.energy + out.fcess + out.network + out.wear;
+  return {plan:plan, out:out, dischargeMWh:dm};
+})();
+var MARGIN = (function(){
+  var m = 1e9, from = -1, to = -1;
+  for (var k = 0; k < N; k++) { var v = SOC[k + 1] - MAND[k] - ECON[k]; if (v < m - 0.005) { m = v; from = k; to = k; } else if (Math.abs(v - m) < 0.005) to = k; }
+  return {v:m, from:from, to:to, req:MAND[from] + ECON[from]};
+})();
+
+/* ---------- customer fleet, Hot Season 2025-26 (illustrative) ---------- */
+var DAYS = 121, TODAY = 44;
+var ACT = [3050,3120,2980,3200,3010,3150,3650,3720,3300,3200,3350,3400,3100,3780,3450,3500,3300,3550,3400,3760,3905,3600,3500,3650,3700,3450,3300,3930,3550,3650,3600,3400,3700,3800,3960,3750,3600,3500,3780,3650,3915,3700,3600,3550,3840,4080];
+for (i = 46; i < DAYS; i++) ACT.push(Math.round(3350 + 220 * Math.sin(i / 5.3) + 130 * Math.cos(i / 2.9)));
+var OVR = {49:3790,52:3880,55:3800,58:3900,59:3930,63:4050,64:4120,67:3780,70:3890,74:3820,78:3870,81:3810,85:3920,92:3860,99:3940,107:3950,108:4010,114:3900};
+Object.keys(OVR).forEach(function(k){ ACT[+k] = OVR[k]; });
+var PEAK = [45,63,64,108];
+var FLAG_C = [6,7,13,19,20,27,33,34,40,44,45,52,58,59,63,64,70,78,85,92,99,107,108,114];
+var FLAG_R = FLAG_C.concat([2,3,10,16,24,30,37,49,55,67,74,81]).sort(function(a, b){ return a - b; });
+function run4(d){ var a = ACT.slice(0, d).sort(function(x, y){ return y - x; }); return a.length >= 4 ? a[3] : 3300; }
+function fcPeak(d){ var r = run4(d); return FLAG_C.indexOf(d) >= 0 ? r - 35 : (FLAG_R.indexOf(d) >= 0 ? r - 110 : Math.min(ACT[d], r - 170)); }
+var OFF = {
+  custom: {name:"Custom offer", short:"Custom 85 c/kWh, 45 calls", rate:0.85, cap:45, q:"0.75", tol:85, enrolled:3000, flags:FLAG_C, kwh:9.0,
+    ircr:[-1.7,-1.6,-1.5,-1.6,-1.5,-1.4,-1.7,-1.6,-1.5,0,-1.6,-1.5], sb:3200, retail:32000, debs:16000, energy:24000,
+    seasons:{S3:[40000,350000,327184], S2b:[670000,1366000,1287528]}, cust:[196.67,150.00,140.45], calls:[41,26,24], peaks:[4,4,4],
+    src:"Started from the model suggestion (research policy C). Not a contract; the payment level must come from a pilot."},
+  ref: {name:"Reference terms", short:"Reference 70 c/kWh, 30 calls", rate:0.70, cap:30, q:"0.9", tol:140, enrolled:2000, flags:FLAG_R, kwh:9.0,
+    ircr:[-1.5,-1.4,-1.6,-1.4,-1.3,-1.5,-1.4,-1.5,-1.3,0,0,0], sb:2400, retail:24000, debs:12000, energy:18000,
+    seasons:{S3:[-406000,260000,149251], S2b:[-372000,1032000,735802]}, cust:[145.00,140.00,139.65], calls:[30,30,30], peaks:[0,4,3],
+    src:"Public Synergy Battery Rewards terms used for comparison. Not a Zenith tariff or contract."}
+};
+function callsOf(o){ return o.flags.slice(0, o.cap); }
+var SEASONS = ["2023-24","2024-25","2025-26"], CHRON = [false,false,true];
+var RUN = {scen:"S3", share:0.5};   /* inputs of the saved run R-0142 */
+var CAPPRICE = 216091.78, RESP = 0.9;
+
+function evalOffer(k, sc){
+  var o = OFF[k], r = {o:o, sc:sc};
+  if (sc === "S1" || sc === "S2a") {
+    r.enrolled = 380; r.calls = 0; r.resp = 342;
+    r.rows = [
+      ["Capacity value (IRCR, seasonal)", 0, 0, 0, false, sc === "S1" ? "S1 has no capacity value." : "Current rule: net export counts 0, and normal self-use already zeroes peak import."],
+      ["Wholesale value of changed net export", 0, 0, 0, false, "No call has a positive expected margin at 09:00, so the rule makes no calls."],
+      ["Compensation for event net export", 0, 0, 0, true, "No calls, so no compensation."],
+      ["Operating cost", -9500, 0, 0, false, "A$25 a year for each of 380 homes that enrol at zero expected benefit (assumed central curve)."]];
+    r.seasonZ = [-9500,-9500,-9500]; r.custHome = [0,0,0]; r.seasonCalls = [0,0,0]; r.peaks = [0,0,0];
+  } else {
+    var calls = Math.min(o.flags.length, o.cap), en = o.enrolled, rsp = en * RESP;
+    var dmed = median(o.ircr), capv = Math.floor(2 * Math.abs(dmed) * rsp / 1000 * CAPPRICE);
+    var comp = o.rate * o.kwh * rsp * calls, wear = 0.05 * o.kwh * rsp * calls, hassle = 0.5 * rsp * calls, ops = 25 * en + 0.05 * rsp * calls;
+    var zc = sc === "S3" ? Math.round(capv * RUN.share) : capv;
+    r.enrolled = en; r.calls = calls; r.resp = rsp; r.dmed = dmed; r.capv = capv; r.zc = zc;
+    r.rows = [
+      ["Capacity value (IRCR, seasonal)", zc, 0, capv - zc, false, sc === "S3" ? "Zenith receives share s = " + Math.round(RUN.share * 100) + "% (assumption); the rest stays with Synergy. See the IRCR card." : "Assumed future rule: net export counts negative; Zenith as retailer keeps the whole change."],
+      ["Wholesale value of changed net export", sc === "S3" ? 0 : o.energy, 0, sc === "S3" ? o.energy : 0, false, sc === "S3" ? "In S3 the energy value goes to Synergy." : "Zenith settles the change in the meters' net position at actual prices."],
+      ["Compensation for event net export", -comp, comp, 0, true, nf(o.rate * 100) + " c/kWh × " + nf(o.kwh, 1) + " kWh × " + nf(rsp) + " responding homes × " + calls + " calls. Paid on billed event net export."],
+      ["Standby offset credits", -o.sb, o.sb, 0, true, "Extra import during standby, credited to the customer."],
+      ["Retail bill change after events", sc === "S3" ? 0 : o.retail, -o.retail, sc === "S3" ? o.retail : 0, true, "Customers import more after events; the retailer earns it."],
+      ["Feed-in (DEBS) change", 0, o.debs, -o.debs, true, "Feed-in credits on extra exports, paid by the scheme's payer."],
+      ["Customer battery wear", 0, -wear, 0, false, "A$0.05 per kWh of extra throughput (assumption)."],
+      ["Customer disutility", 0, -hassle, 0, false, "A$0.50 per responding home per event (assumption)."],
+      ["Operating cost", -ops, 0, 0, false, "A$25 per enrolled home a year + A$0.05 per responding home per event (assumptions)."],
+      ["Programme fixed cost", 0, 0, 0, false, "Default 0 (assumption)."]];
+    r.seasonZ = o.seasons[sc]; r.custHome = o.cust; r.seasonCalls = o.calls; r.peaks = o.peaks;
+  }
+  r.z = sum(r.rows.map(function(x){ return x[1]; })); r.c = sum(r.rows.map(function(x){ return x[2]; })); r.oth = sum(r.rows.map(function(x){ return x[3]; }));
+  r.sys = r.z + r.c + r.oth;
+  r.worst = Math.min.apply(null, r.seasonZ); r.worstIdx = r.seasonZ.indexOf(r.worst);
+  r.expZ = sum(r.seasonZ) / 3; r.expC = sum(r.custHome) / 3;
+  if (r.calls === 0) r.verdict = {k:"bad", t:"No business case", p: sc === "S1" ? "S1 energy only: no call has a positive expected margin at 09:00, so only the operating cost remains." : "S2a current IRCR rule: net export counts 0, and normal self-use already zeroes peak import, so calls add almost no capacity value."};
+  else if (r.worst < 0) r.verdict = {k:"bad", t:"No business case", p:"Fails the downside test: Zenith loses " + aud(-r.worst) + " in Hot Season " + SEASONS[r.worstIdx] + " (" + r.peaks[r.worstIdx] + " of 4 peak days covered). The expected value alone is not enough."};
+  else r.verdict = {k:"ok", t:"Positive in this scenario", p:(sc === "S2b" ? "Depends on an assumed future rule (2027 Peak IRCR); not current revenue. " : "Depends on a hypothetical Synergy share of " + Math.round(RUN.share * 100) + "%. ") + "Customers are better off than normal self-use, there are no hard-constraint violations and no Hot Season loses money. The capacity value has no forward test until the 2026-27 Hot Season; enrolment follows an assumed curve."};
+  return r;
+}
+
+/* ---------- state ---------- */
+var S = {screen:"schedule", sel:20, revealed:false, view:"decision", offer:"custom", day:TODAY, voffer:"custom", vscen:"S3", stat:"cy", den:"fleet", per:"ins", step:0, ro:false, nc:false};
+var DEF = {start:"model", pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, win:"17:30–19:30", rule:"fit", share:50, rcp:"Year each season sets (as-if)", elig:10000, curve:"Central", resp:90, ops:25, fix:0, hh:"13.5 kWh · 5 kW · 6.6 kWp · 18 kWh/day", exp:"10", fcess:"RR, RL, CR, CL", imp:12, cyc:1, scen:"S3"};
+var IN = JSON.parse(JSON.stringify(DEF));
+
+/* ---------- svg helpers ---------- */
+function stepPath(vals, yf, from, to){
+  var d = "", pen = false;
+  for (var k = from; k < to; k++) {
+    var v = vals[k]; if (v == null) { pen = false; continue; }
+    var y = yf(v).toFixed(2);
+    d += (pen ? "V" + y : "M" + X(k) + "," + y) + "H" + X(k + 1); pen = true;
+  }
+  return d;
+}
+function bandPath(lo, hi, yf, from, to){
+  var d = "M" + X(from) + "," + yf(hi[from]).toFixed(2), k;
+  for (k = from; k < to; k++) d += "V" + yf(hi[k]).toFixed(2) + "H" + X(k + 1);
+  for (k = to - 1; k >= from; k--) d += "V" + yf(lo[k]).toFixed(2) + "H" + X(k);
+  return d + "Z";
+}
+function tx(x, y, t, cls, extra){ return '<text x="' + x + '" y="' + y + '"' + (cls ? ' class="' + cls + '"' : "") + (extra || "") + ">" + t + "</text>"; }
+function ln(x1, y1, x2, y2, st){ return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" ' + st + "/>"; }
+function rc(x, y, w, h, st){ return '<rect x="' + x + '" y="' + (+y).toFixed(2) + '" width="' + w + '" height="' + Math.max(0, h).toFixed(2) + '" ' + st + "/>"; }
+/* each chart gets its own pattern id: a pattern inside a hidden screen may not render if another chart refers to it */
+function HATCH(id){ return '<pattern id="' + id + '" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#F4F6F8"/><line x1="0" y1="0" x2="0" y2="6" stroke="#D5DBE1" stroke-width="2"/></pattern>'; }
+function timeAxis(y){ var s = ""; for (var k = 0; k <= N; k += 4) s += tx(X(k), y, k < N ? hhmm(k) : "08:00", "", ' text-anchor="middle"'); return s; }
+function transition(y1, y2, id){ return rc(X(0), y1, 32, y2 - y1, 'fill="url(#' + id + ')"') + '<text transform="translate(91,' + (y2 - 60) + ') rotate(-90)" style="font-size:10px">08:00–09:00 transition plan</text>'; }
+function decisionMark(y1, y2){ return ln(X(2), y1, X(2), y2, 'stroke="#111A22" stroke-width="1.2"') + rc(X(2) + 4, y1 + 8, 84, 17, 'rx="3" fill="#111A22"') + '<text x="' + (X(2) + 10) + '" y="' + (y1 + 20.5) + '" style="fill:#fff;font-weight:600">09:00 decision</text>'; }
+
+/* ---------- Today's plan ---------- */
+function schedSVG(){
+  var s = [], k, rev = S.revealed, sel = S.sel;
+  var yp = function(v){ return 144 - Math.min(v, 500) * 0.2; }, yd = function(v){ return 244 - v * 6; }, ys = function(v){ return 420 - v * 2.5; }, ym = function(v){ return 496 - v * 5; };
+  s.push('<svg viewBox="0 0 852 556" class="lanes" role="img" aria-label="Own-battery schedule for 14 Jan 2026: price, dispatch, state of charge and site meter on one time axis (illustrative)">');
+  s.push('<defs>' + HATCH("pT1") + '<pattern id="pM" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#F6DADA"/><line x1="0" y1="0" x2="0" y2="5" stroke="#A32020" stroke-width="1.6"/></pattern></defs>');
+  s.push(tx(456, 300, "ILLUSTRATIVE", "wm", ' text-anchor="middle"'));
+  [[4,18,"CMD shaving 0.4 MW","#9AA5B0"],[19,24,"Discharge","#2F5FD0"],[24,34,"Hold reserve","#9AA5B0"],[34,46,"Recharge 4.2 MW","#9DB7EE"]].forEach(function(p){
+    s.push(tx(X(p[0]) + 2, 22, p[2], "ann") + '<path d="M' + X(p[0]) + ' 32v-4h' + (X(p[1]) - X(p[0])) + 'v4" fill="none" stroke="' + p[3] + '"/>'); });
+  s.push(transition(40, 530, "pT1"));
+  s.push(rc(X(sel), 38, 16, 494, 'fill="#111A22" opacity="0.055"') + '<path d="M' + (X(sel) + 4) + ' 532l4 6 4-6z" fill="#111A22"/>');
+  /* price lane */
+  s.push(tx(8, 58, "Price", "lt") + tx(8, 72, "A$/MWh", "lu"));
+  [[44,500],[94,250],[144,0]].forEach(function(g){ s.push(ln(X0, g[0], 840, g[0], 'class="gl"') + tx(68, g[0] + 3.5, g[1], "", ' text-anchor="end"')); });
+  s.push('<path d="' + bandPath(P.lo, P.hi, yp, 2, N) + '" fill="#1E2A36" opacity="0.09"/>');
+  s.push('<path d="' + stepPath(P.yday, yp, 0, N) + '" fill="none" stroke="#A3ADB7" stroke-width="1.4" stroke-dasharray="4 3"/>');
+  s.push('<path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" stroke="#1E2A36" stroke-width="2"/>');
+  s.push(tx(X(19) + 4, yp(230) - 6, "A$230", "", ' style="font-size:11px;font-weight:600;fill:#1E2A36"'));
+  if (rev) {
+    s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" fill="none" stroke="#D64545" stroke-width="1.8"/>');
+    for (k = 0; k < N; k++) if (P.actual[k] > 500) s.push(tx(X(k) + 2, 52, "A$" + nf(P.actual[k]) + " ↑", "halo", ' style="font-size:10.5px;font-weight:600;fill:#D64545"'));
+  }
+  s.push(tx(8, 164, "P(≥A$200)", "", ' style="font-size:10px;fill:#6B7682"') + ln(X0, 168, 840, 168, 'stroke="#E1E6EA"'));
+  for (k = 0; k < N; k++) if (P.pspike[k] != null) { var hh = P.pspike[k] / 0.5 * 18; s.push(rc(X(k), 168 - hh, 16, hh, 'fill="#4A5562"')); }
+  s.push(tx(X(24) + 4, 160, "45% in 17:30–20:00 · model estimate", "", ' style="font-size:10.5px;fill:#4A5562"'));
+  /* dispatch lane */
+  s.push(tx(8, 198, "Dispatch", "lt") + tx(8, 212, "MW", "lu"));
+  [[184,"+10",1],[214,"+5",0],[244,"0",0],[274,"−5",0],[304,"−10",1]].forEach(function(g){ s.push(ln(X0, g[0], 840, g[0], g[2] ? 'stroke="#9AA5B0" stroke-dasharray="3 3"' : 'class="gl"') + tx(68, g[0] + 3.5, g[1], "", ' text-anchor="end"')); });
+  for (k = 0; k < N; k++) {
+    var acc = 0;
+    [[P.dis[k],"#2F5FD0"],[P.rr[k],"#6E56C6"],[P.cr[k],"#23928F"]].forEach(function(q){ if (q[0] > 0) { s.push(rc(X(k), yd(acc + q[0]), 16, q[0] * 6, 'fill="' + q[1] + '"')); acc += q[0]; } });
+    acc = 0;
+    [[P.chg[k],"#9DB7EE"],[P.rl[k],"#C4B8EE"],[P.cl[k],"#A3D9D6"]].forEach(function(q){ if (q[0] > 0) { s.push(rc(X(k), yd(-acc), 16, q[0] * 6, 'fill="' + q[1] + '"')); acc += q[0]; } });
+  }
+  s.push(ln(X0, 244, 840, 244, 'stroke="#5B6672"'));
+  s.push(tx(X(24) + 8, 198, "7.5 energy + 2.0 Cont Raise = 9.5 of 10 MW", "ann") + tx(X(34) + 6, 296, "Charge 4.2 + lower services 2.5 MW", "ann"));
+  /* SOC lane */
+  s.push(tx(8, 334, "SOC", "lt") + tx(8, 348, "MWh", "lu"));
+  [[320,40],[370,20],[420,0]].forEach(function(g){ s.push(ln(X0, g[0], 840, g[0], g[1] ? 'class="gl"' : 'stroke="#C9D0D6"') + tx(68, g[0] + 3.5, g[1], "", ' text-anchor="end"')); });
+  for (k = 0; k < N; k++) {
+    s.push(rc(X(k), ys(MAND[k] + ECON[k]), 16, ECON[k] * 2.5, 'fill="#D9B867" opacity="0.55"'));
+    s.push(rc(X(k), ys(MAND[k]), 16, MAND[k] * 2.5, 'fill="url(#pM)"'));
+  }
+  var dp = "M" + X(0) + "," + ys(SOC[0]).toFixed(2); for (k = 1; k <= N; k++) dp += "L" + X(k) + "," + ys(SOC[k]).toFixed(2);
+  s.push('<path d="' + dp + '" fill="none" stroke="#0F6B4F" stroke-width="2.5" stroke-linejoin="round"/>');
+  if (rev) { var dq = "M" + X(0) + "," + ys(SOCOUT[0]).toFixed(2); for (k = 1; k <= N; k++) dq += "L" + X(k) + "," + ys(SOCOUT[k]).toFixed(2); s.push('<path d="' + dq + '" fill="none" stroke="#D64545" stroke-width="1.6" stroke-dasharray="3 2"/>'); }
+  s.push('<circle cx="' + X(24) + '" cy="' + ys(SOC[24]).toFixed(2) + '" r="3" fill="#0F6B4F"/>');
+  s.push(tx(X(24) + 8, ys(SOC[24]) - 8, nf(SOC[24], 1) + " MWh held · margin +" + nf(MARGIN.v, 1) + " above reserve", "", ' style="font-size:11px;font-weight:600;fill:#0F6B4F"'));
+  s.push(tx(X(0) + 6, ys(SOC[0]) - 7, nf(SOC[0], 1) + " MWh", "", ' style="font-size:11px;font-weight:600;fill:#0F6B4F"'));
+  /* meter lane */
+  s.push(tx(8, 450, "Meter", "lt") + tx(8, 464, "MW", "lu"));
+  [[436,"12"],[496,"0"],[526,"−6"]].forEach(function(g){ s.push(ln(X0, g[0], 840, g[0], g[1] === "0" ? 'stroke="#5B6672"' : 'class="gl"') + tx(68, g[0] + 3.5, g[1], "", ' text-anchor="end"')); });
+  var ma = "M" + X(0) + ",496"; for (k = 0; k < N; k++) ma += "V" + ym(METER[k]).toFixed(2) + "H" + X(k + 1); ma += "V496Z";
+  s.push('<path d="' + ma + '" fill="#C7D0D9"/>');
+  s.push('<path d="' + stepPath(P.load, ym, 0, N) + '" fill="none" stroke="#475569" stroke-width="1.4"/>');
+  s.push(ln(X0, ym(9), 840, ym(9), 'stroke="#A32020" stroke-width="1.3" stroke-dasharray="5 3"') + tx(836, ym(9) - 4, "CMD 9 MW", "", ' text-anchor="end" style="font-size:10.5px;font-weight:600;fill:#A32020"'));
+  s.push(tx(X(4) + 8, 446, "Import held at 8.8 MW", "", ' style="font-size:11px;fill:#8B1D1D"') + tx(X(20) + 6, 518, "export 4.5 MW (limit 10)", "ann"));
+  s.push(decisionMark(38, 532));
+  s.push(timeAxis(548));
+  for (k = 0; k < N; k++) s.push('<rect class="hit" data-i="' + k + '" x="' + X(k) + '" y="38" width="16" height="494"><title>' + hhmm(k) + "–" + hhmm(k + 1) + "</title></rect>");
+  s.push("</svg>");
+  return s.join("");
+}
+function railHTML(k){
+  var act, why = [], head = 10 - P.dis[k] - P.rr[k] - P.cr[k], avail = Math.max(0, SOC[k] - MAND[k] - ECON[k]);
+  if (P.dis[k] > 1) { act = "Discharge " + nf(P.dis[k], 1) + " MW";
+    why.push("Forecast A$" + nf(P.price[k]) + "/MWh beats the stored-energy value plus wear for this slice of charge.");
+    why.push("Meter exports " + nf(-METER[k], 1) + " MW; the 10 MW export limit is not binding.");
+    why.push("Discharge stops at " + nf(SOC[24], 1) + " MWh: 3.5 MWh is held for tomorrow's CMD shaving."); }
+  else if (P.dis[k] > 0) { act = "Shave " + nf(P.dis[k], 1) + " MW";
+    why.push("Site load " + nf(P.load[k], 1) + " MW would exceed CMD 9 MW; the battery holds import at " + nf(METER[k], 1) + " MW.");
+    why.push("Charging now would raise the monthly demand charge, so the battery does not charge in daytime."); }
+  else if (P.chg[k] > 0) { act = "Charge " + nf(P.chg[k], 1) + " MW";
+    why.push("Forecast A$" + nf(P.price[k]) + "/MWh is among the cheapest energy of the day.");
+    why.push("Meter import " + nf(METER[k], 1) + " MW stays below CMD 9 MW.");
+    why.push("Refills to " + nf(SOC[46], 1) + " MWh by 07:00 for tomorrow."); }
+  else if (k < 2) { act = "Transition plan";
+    why.push("08:00–09:00 runs on the transition plan: yesterday's prices and the 28-day FCESS average.");
+    why.push("The 09:00 forecast is not issued yet, so this interval has no forecast (not zero)."); }
+  else { act = "Hold";
+    why.push("No energy trade beats the stored-energy value at A$" + nf(P.price[k]) + "/MWh.");
+    why.push("Capacity is offered to FCESS only."); }
+  var h = '<div class="t">' + hhmm(k) + "–" + hhmm(k + 1) + '<span class="tag plan">PLAN</span></div><div class="sub">Selected interval · use ← → to step</div>';
+  h += '<div class="act" style="color:' + (P.chg[k] > 0 ? "#5B7FCB" : (P.dis[k] > 0 ? "var(--dis)" : "var(--ink2)")) + '">' + act + "</div>";
+  h += '<div class="cap" style="margin-top:12px">Why</div><ul class="why">' + why.map(function(w){ return "<li>" + w + "</li>"; }).join("") + "</ul>";
+  h += '<div class="rsec"><div class="cap">Allocation · MW</div><table class="kvt">' +
+    "<tr><td>Energy " + (P.chg[k] > 0 ? "charge" : "discharge") + '</td><td class="n">' + nf(P.chg[k] > 0 ? P.chg[k] : P.dis[k], 1) + "</td></tr>" +
+    '<tr><td>Regulation raise / lower</td><td class="n">' + nf(P.rr[k], 1) + " / " + nf(P.rl[k], 1) + "</td></tr>" +
+    '<tr><td>Contingency raise / lower</td><td class="n">' + nf(P.cr[k], 1) + " / " + nf(P.cl[k], 1) + "</td></tr>" +
+    '<tr><td>Raise side vs rating</td><td class="n">' + nf(10 - head, 1) + " / 10</td></tr></table>" +
+    '<div class="bar"><i style="width:' + P.dis[k] * 10 + '%;background:var(--dis)"></i><i style="width:' + P.rr[k] * 10 + '%;background:var(--rr)"></i><i style="width:' + P.cr[k] * 10 + '%;background:var(--cr)"></i></div></div>';
+  h += '<div class="rsec"><div class="cap">Energy · MWh</div><table class="kvt">' +
+    '<tr><td>SOC start → end</td><td class="n">' + nf(SOC[k], 1) + " → " + nf(SOC[k + 1], 1) + "</td></tr>" +
+    '<tr><td>Mandatory reserve</td><td class="n">' + nf(MAND[k], 1) + "</td></tr>" +
+    '<tr><td>Site backup reserve</td><td class="n">' + nf(ECON[k], 1) + "</td></tr>" +
+    '<tr><td>Available to markets</td><td class="n">' + nf(avail, 1) + "</td></tr></table></div>";
+  var bands = P.dis[k] > 1 ? [["A$150/MWh", nf(P.dis[k], 1) + " MW · planned"], ["A$600/MWh", nf(head, 1) + " MW · headroom"]] : (avail > 0.5 && head > 0 && k >= 2 ? [["A$600/MWh", nf(Math.min(head, 4), 1) + " MW · if price spikes"]] : []);
+  if (bands.length) h += '<div class="rsec"><div class="cap">Energy offer bands</div><table class="kvt">' + bands.map(function(b){ return "<tr><td>" + b[0] + '</td><td class="n">' + b[1] + "</td></tr>"; }).join("") + '</table><p class="foot" style="margin-top:4px">An offer above the clearing price is not dispatched; 5-minute dispatch settles at the 30-minute price.</p></div>';
+  if (S.revealed) h += '<div class="rsec"><div class="cap">Outcome<span class="tag out">REPLAYED</span></div><table class="kvt"><tr><td>Actual 30-min price</td><td class="n">A$' + nf(P.actual[k]) + '/MWh</td></tr><tr><td>Energy settled</td><td class="n">' + aud(P.actual[k] * (P.dis[k] - P.chg[k]) * 0.5) + '</td></tr><tr><td>Hard-constraint shortfall</td><td class="n">0 MWh</td></tr></table></div>';
+  else h += '<div class="locked">Outcome hidden until you reveal it. <button class="lnk" data-reveal>Reveal outcome →</button></div>';
+  return h;
+}
+function renderSchedule(){
+  $("#k-net").textContent = aud(MONEY.plan.net);
+  $("#k-margin").textContent = "+" + nf(MARGIN.v, 1) + " MWh";
+  $("#k-margin-s").textContent = hhmm(MARGIN.from) + "–" + hhmm(MARGIN.to + 1) + ", above " + nf(MARGIN.req, 1) + " MWh";
+  $("#sch-chart").innerHTML = schedSVG();
+  $$("#sch-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.sel = +r.getAttribute("data-i"); renderSchedule(); }); });
+  $("#sch-rail").innerHTML = railHTML(S.sel);
+  bindReveal($("#sch-rail"));
+  var m = MONEY, rows = [["Energy", "energy"], ["FCESS", "fcess"], ["Network bill saving (CMD)", "network"], ["Battery wear", "wear"]];
+  var t = '<tr><th>Item</th><th class="n">Plan · expected at 09:00</th><th class="n">Outcome · replayed</th></tr>';
+  rows.forEach(function(r){ t += "<tr><td>" + r[0] + '</td><td class="n">' + aud(m.plan[r[1]]) + '</td><td class="n">' + (S.revealed ? aud(m.out[r[1]]) : '<span style="color:var(--mute2);font-weight:400">hidden</span>') + "</td></tr>"; });
+  t += '<tr class="tot"><td>Net for the trading day</td><td class="n">' + aud(m.plan.net) + '</td><td class="n">' + (S.revealed ? aud(m.out.net) : "—") + "</td></tr>";
+  $("#sch-money").innerHTML = t;
+  var ck = [["ok","Power: energy + raise services ≤ 10 MW in every interval (highest 9.5 MW)"],["ok","SOC stays above mandatory + site backup reserve (lowest margin +" + nf(MARGIN.v, 1) + " MWh)"],["ok","Meter import ≤ CMD 9 MW (highest 8.8 MW) and ≤ import limit 12 MW"],["ok","Meter export ≤ 10 MW (highest 4.5 MW)"],["ok","No MW or MWh allocated twice"],["ok","Every input published by 09:00 (08:00–09:00 runs on the transition plan)"],["i","Customer batteries are on other meters and are not part of this plan"]];
+  $("#sch-checks").innerHTML = ck.map(function(c){ return '<li><span class="ci ' + c[0] + '">' + (c[0] === "ok" ? "&#10003;" : "i") + "</span><span>" + c[1] + "</span></li>"; }).join("");
+}
+
+/* ---------- Forecast ---------- */
+function fcSVG(){
+  var s = [], k, rev = S.revealed;
+  var yp = function(v){ return 164 - Math.min(v, 700) * 0.2; }, yd = function(v){ return 364 - (v - 2000) * 140 / 2200; };
+  s.push('<svg viewBox="0 0 852 410" class="lanes" role="img" aria-label="09:00 forecasts for 14 Jan 2026: energy price, spike probability and system demand (illustrative)"><defs>' + HATCH("pT2") + "</defs>");
+  s.push(tx(456, 230, "ILLUSTRATIVE", "wm", ' text-anchor="middle"'));
+  s.push(transition(20, 380, "pT2"));
+  s.push(tx(8, 38, "Price", "lt") + tx(8, 52, "A$/MWh", "lu"));
+  [[24,700],[94,350],[164,0]].forEach(function(g){ s.push(ln(X0, g[0], 840, g[0], g[1] ? 'class="gl"' : 'stroke="#C9D0D6"') + tx(68, g[0] + 3.5, g[1], "", ' text-anchor="end"')); });
+  s.push('<path d="' + bandPath(P.lo, P.hi, yp, 2, N) + '" fill="#1E2A36" opacity="0.09"/>');
+  s.push('<path d="' + stepPath(P.yday, yp, 0, N) + '" fill="none" stroke="#A3ADB7" stroke-width="1.4" stroke-dasharray="4 3"/>');
+  s.push('<path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" stroke="#1E2A36" stroke-width="2"/>');
+  if (rev) s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" fill="none" stroke="#D64545" stroke-width="1.8"/>');
+  s.push(tx(8, 188, "P(≥A$200)", "", ' style="font-size:10px;fill:#6B7682"') + ln(X0, 200, 840, 200, 'stroke="#E1E6EA"'));
+  for (k = 0; k < N; k++) if (P.pspike[k] != null) { var hh = P.pspike[k] / 0.5 * 26; s.push(rc(X(k), 200 - hh, 16, hh, 'fill="#4A5562"')); }
+  s.push(tx(8, 238, "Demand", "lt") + tx(8, 252, "MW", "lu"));
+  [[2000,"2,000"],[3000,"3,000"],[4000,"4,000"]].forEach(function(g){ s.push(ln(X0, yd(g[0]), 840, yd(g[0]), 'class="gl"') + tx(68, yd(g[0]) + 3.5, g[1], "", ' text-anchor="end"')); });
+  s.push(rc(X(19), 224, 64, 140, 'fill="#C9822B" opacity="0.08"') + tx(X(19) + 3, 236, "customer event window (model)", "", ' style="font-size:10px;fill:#A8681D"'));
+  s.push(ln(X0, yd(3905), 840, yd(3905), 'stroke="#2B3640" stroke-width="1.1" stroke-dasharray="5 3"') + tx(836, yd(3905) - 4, "4th-highest so far 3,905", "halo", ' text-anchor="end"'));
+  s.push(ln(X0, yd(3820), 840, yd(3820), 'stroke="#9B3C78" stroke-width="1.2" stroke-dasharray="2 2"') + tx(836, yd(3820) + 12, "call threshold 3,820", "halo", ' text-anchor="end" style="font-size:10.5px;fill:#9B3C78;font-weight:600"'));
+  s.push('<path d="' + stepPath(DEMFC, yd, 0, N) + '" fill="none" stroke="#9B3C78" stroke-width="2"/>');
+  if (rev) s.push('<path d="' + stepPath(DEMACT, yd, 0, N) + '" fill="none" stroke="#D64545" stroke-width="1.6"/>');
+  s.push(tx(X(20) - 4, yd(3870) - 8, "peak 3,870", "halo", ' text-anchor="end" style="font-size:11px;font-weight:600;fill:#9B3C78"'));
+  s.push(decisionMark(18, 380));
+  s.push(timeAxis(398) + "</svg>");
+  return s.join("");
+}
+function miniSVG(vals, color, name){
+  var xm = function(k){ return 30 + k * 4.5; }, yf = function(v){ return 70 - v * 2.5; }, d = "", k;
+  for (k = 0; k < N; k++) { var y = yf(vals[k]).toFixed(1); d += (k ? "V" + y : "M" + xm(k) + "," + y) + "H" + xm(k + 1); }
+  var s = '<div class="cap" style="margin-bottom:4px">' + name + '</div><svg viewBox="0 0 252 88" class="lanes" role="img" aria-label="' + name + ' price, 28-day average profile (illustrative)">';
+  s += ln(30, 70, 246, 70, 'stroke="#C9D0D6"') + ln(30, 20, 246, 20, 'class="gl"') + tx(24, 73.5, "0", "", ' text-anchor="end"') + tx(24, 23.5, "20", "", ' text-anchor="end"');
+  s += '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2"/>';
+  s += tx(30, 85, "08:00") + tx(138, 85, "20:00", "", ' text-anchor="middle"') + tx(246, 85, "08:00", "", ' text-anchor="end"');
+  return s + "</svg>";
+}
+function renderForecast(){
+  $("#fc-chart").innerHTML = fcSVG();
+  var rows = [["Energy price forecast","09:00 · model frozen 30 Jun 2026","Used"],["Spike probability","09:00","Used"],["P10–P90 scenario band","09:00","Used"],["AEMO demand forecast","issued 08:15","Used"],["FCESS prices","28-day average profile","Used"],["Yesterday's daily peak","assumed published by 09:00","Assumed"],["Forecast for 08:00–09:00","not issued before 09:00","Missing"],["AEMO 09:00 pre-dispatch","published after 09:00","Excluded"]];
+  var col = {Used:"pill ok", Assumed:"pill mu", Missing:"pill bad", Excluded:"pill mu"};
+  $("#fc-inputs").innerHTML = rows.map(function(r){ return "<tr><td>" + r[0] + '<div class="sub">' + r[1] + '</div></td><td class="n"><span class="' + col[r[2]] + '">' + r[2] + "</span></td></tr>"; }).join("");
+  $("#fc-fcess").innerHTML = [[P.fRR,"#6E56C6","Regulation raise"],[P.fRL,"#8C7BD0","Regulation lower"],[P.fCR,"#23928F","Contingency raise"],[P.fCL,"#5BB8B4","Contingency lower"]].map(function(a){ return "<div>" + miniSVG(a[0], a[1], a[2]) + "</div>"; }).join("");
+}
+
+/* ---------- Customer calls ---------- */
+function dayName(d, yr){ var dt = new Date(Date.UTC(2025, 11, 1 + d)); return dt.toLocaleDateString("en-AU", {weekday:"short", day:"numeric", month:"short", timeZone:"UTC"}).replace(",", "") + (yr ? " " + dt.getUTCFullYear() : ""); }
+function actSVG(){
+  var o = OFF[S.offer], dec = S.view === "decision", d0 = S.day, calls = callsOf(o), s = [], d;
+  var ya = function(v){ return 156 - (v - 2600) * 0.08; }, xa = function(d){ return 40 + 6 * d; };
+  s.push('<svg viewBox="0 0 792 206" class="lanes" role="img" aria-label="Hot Season 2025-26 daily peak demand, flags and calls (illustrative)"><defs><pattern id="aF" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#F7F8FA"/><line x1="0" y1="0" x2="0" y2="6" stroke="#DCE1E6" stroke-width="2"/></pattern></defs>');
+  [[3000,"3,000"],[3500,"3,500"],[4000,"4,000"]].forEach(function(g){ s.push(ln(40, ya(g[0]), 766, ya(g[0]), 'class="gl"') + tx(34, ya(g[0]) + 3.5, g[1], "", ' text-anchor="end"')); });
+  s.push(tx(34, 160, "MW", "", ' text-anchor="end"'));
+  for (d = 0; d < DAYS; d++) {
+    if (dec && d > d0) break;
+    var fl = o.flags.indexOf(d) >= 0;
+    if (dec && d === d0) { var f = fcPeak(d); s.push(rc(xa(d) + 1, ya(f), 4, 156 - ya(f), 'fill="#fff" stroke="#9B3C78" stroke-width="1.2" stroke-dasharray="2 1.5"')); continue; }
+    s.push(rc(xa(d) + 1, ya(ACT[d]), 4, 156 - ya(ACT[d]), fl ? 'fill="#9B3C78" opacity="0.8"' : 'fill="#C3CCD5"'));
+    if (!dec && PEAK.indexOf(d) >= 0) s.push(tx(xa(d) + 3, ya(ACT[d]) - 4, "★", "", ' text-anchor="middle" style="font-size:12px;fill:#9B3C78"'));
+  }
+  if (dec && d0 < DAYS - 1) {
+    s.push(rc(xa(d0 + 1), 20, xa(DAYS) - xa(d0 + 1), 136, 'fill="url(#aF)"'));
+    var cx = (xa(d0 + 1) + xa(DAYS)) / 2;
+    if (xa(DAYS) - xa(d0 + 1) > 240) s.push(tx(cx, 84, "Not yet known at the decision time", "", ' text-anchor="middle" style="font-size:12.5px;font-weight:600;fill:#5B6672"') + tx(cx, 101, "Switch to Season review to see the whole season, labelled hindsight", "", ' text-anchor="middle" style="font-size:11px;fill:#5B6672"'));
+  }
+  if (dec) {
+    var r4 = run4(d0), thr = r4 - o.tol, xe = xa(d0) + 10;
+    s.push(ln(40, ya(r4), xe, ya(r4), 'stroke="#2B3640" stroke-width="1.2" stroke-dasharray="5 3"') + tx(44, ya(r4) - 5, "4th-highest so far · " + nf(r4) + " MW", "halo", ' style="font-size:10.5px;fill:#2B3640"'));
+    s.push(ln(40, ya(thr), xe, ya(thr), 'stroke="#9B3C78" stroke-width="1.2" stroke-dasharray="2 2"') + tx(xe + 4, ya(thr) + 3.5, "← threshold today " + nf(thr) + " MW", "halo", ' style="font-size:10.5px;font-weight:600;fill:#9B3C78"'));
+  } else {
+    s.push(rc(xa(d0), 20, 6, 136, 'fill="#111A22" opacity="0.07"'));
+  }
+  s.push(ln(40, 156, 766, 156, 'stroke="#C9D0D6"') + tx(34, 173.5, "Calls", "", ' text-anchor="end" style="font-size:11px;fill:#5B6672"'));
+  calls.forEach(function(c){ if (dec && c > d0) return; var today = dec && c === d0;
+    s.push('<circle cx="' + (xa(c) + 3) + '" cy="170" r="' + (today ? 3.5 : 3) + '" fill="' + (today ? "#fff" : "#C9822B") + '"' + (today ? ' stroke="#C9822B" stroke-width="1.6"' : "") + "/>"); });
+  [["Dec",0],["Jan",31],["Feb",62],["Mar",90]].forEach(function(m){ s.push(ln(xa(m[1]), 156, xa(m[1]), 161, 'stroke="#C9D0D6"') + tx(xa(m[1]), 194, m[0])); });
+  for (d = 0; d < DAYS; d++) s.push('<rect class="hit" data-d="' + d + '" x="' + xa(d) + '" y="20" width="6" height="156"><title>' + dayName(d) + "</title></rect>");
+  s.push("</svg>");
+  return s.join("");
+}
+function actCard(){
+  var o = OFF[S.offer], d = S.day, calls = callsOf(o), fl = o.flags.indexOf(d) >= 0, called = calls.indexOf(d) >= 0;
+  var used = calls.filter(function(c){ return c < d; }).length, r4 = run4(d), thr = r4 - o.tol, f = fcPeak(d), left = 121 - d;
+  var spikeHi = d % 4 === 0;
+  var h = '<div class="cap">' + (S.view === "decision" ? "Tonight · " : "Decided at 09:00 · ") + dayName(d) + "</div>";
+  h += '<div class="dec"><span class="dec-pill' + (called ? "" : " no") + '">' + (called ? "CALL" : "NO CALL") + "</span><div>" +
+    (called ? "<b>Event 17:30–19:30</b><small>Standby 15:30–17:30 · 20% reserve kept</small>" : "<b>Normal self-use</b><small>No compensation, no call used</small>") + "</div></div>";
+  h += '<div class="cap" style="margin-top:14px">Why</div><ul class="wl">';
+  h += '<li><span class="g" style="color:var(--peak)">&#9650;</span><span>' + (fl ? "Customer call rule (q = " + o.q + ") flags today: forecast peak " + nf(f) + " MW ≥ threshold " + nf(thr) + " MW." : "Not flagged: forecast peak " + nf(f) + " MW is below the threshold " + nf(thr) + " MW.") + "</span></li>";
+  h += '<li><span class="g" style="color:var(--cust)">&#9679;</span><span>' + (called ? ordinal(used + 1) + " call of " + o.cap + " · " + (o.cap - used - 1) + " left for " + left + " days." : (fl && used >= o.cap ? "Flagged, but all " + o.cap + " calls are used." : used + " of " + o.cap + " calls used · " + (o.cap - used) + " left for " + left + " days.")) + "</span></li>";
+  h += '<li><span class="g" style="color:#4A5562">&#8623;</span><span>Price spike risk is ' + (spikeHi ? "high" : "low") + " today; it never triggers a customer call.</span></li></ul>";
+  if (called) {
+    var rsp = o.enrolled * RESP, ex = rsp * o.kwh;
+    h += '<div class="rsec"><div class="cap">Expected tonight · plan</div><table class="kvt">' +
+      "<tr><td>Responding homes (90% of " + nf(o.enrolled) + ')</td><td class="n">' + nf(rsp) + "</td></tr>" +
+      "<tr><td>Event net export (" + nf(o.kwh, 1) + " kWh × " + nf(rsp) + ')</td><td class="n">' + nf(ex) + " kWh</td></tr>" +
+      "<tr><td>Compensation · transfer (" + nf(o.rate * 100) + ' c/kWh)</td><td class="n">' + aud(ex * o.rate) + "</td></tr></table>" +
+      '<p class="foot" style="margin-top:4px">Average response, not firm capacity.</p></div>';
+  }
+  if (S.view === "review") {
+    var pk = PEAK.indexOf(d) >= 0;
+    h += '<div class="rsec"><div class="cap">Outcome<span class="tag out">HINDSIGHT</span></div><p style="margin:6px 0 0;font-size:13px;color:var(--ink3)">' +
+      (pk ? "<b>Official peak day.</b> " + (called ? "Covered by this call." : '<span class="neg">Missed: no call.</span>') : "Not a peak day." + (called ? " The call cost compensation without capacity value." : "")) + "</p></div>";
+  }
+  return h;
+}
+function ordinal(n){ var s = ["th","st","nd","rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function cumSVG(){
+  var xc = function(d){ return 34 + 3.3 * d; }, yc = function(c){ return 230 - c * 4.4; }, s = [];
+  s.push('<svg viewBox="0 0 440 282" class="lanes" role="img" aria-label="Cumulative calls through Hot Season 2025-26, retrospective (illustrative)">');
+  [[0,"0"],[15,"15"],[30,"30"],[45,"45"]].forEach(function(g){ s.push(ln(34, yc(g[0]), 434, yc(g[0]), g[0] === 30 ? 'stroke="#7A8591" stroke-dasharray="4 3"' : (g[0] === 45 ? 'stroke="#C9822B" stroke-dasharray="4 3" opacity="0.8"' : (g[0] ? 'class="gl"' : 'stroke="#C9D0D6"'))) + tx(28, yc(g[0]) + 3.5, g[1], "", ' text-anchor="end"')); });
+  s.push(tx(434, yc(45) - 5, "cap 45", "", ' text-anchor="end" style="fill:#A8681D"') + tx(434, yc(30) - 5, "cap 30", "", ' text-anchor="end"'));
+  [["ref","#7A8591",2],["custom","#C9822B",2.2]].forEach(function(q){
+    var c = callsOf(OFF[q[0]]), d = "M" + xc(0) + "," + yc(0);
+    c.forEach(function(day, j){ d += "H" + xc(day).toFixed(1) + "V" + yc(j + 1).toFixed(1); });
+    d += "H" + xc(DAYS).toFixed(1);
+    s.push('<path d="' + d + '" fill="none" stroke="' + q[1] + '" stroke-width="' + q[2] + '"/>');
+  });
+  var rc30 = callsOf(OFF.ref), last = rc30[rc30.length - 1];
+  s.push('<circle cx="' + xc(last) + '" cy="' + yc(30) + '" r="3" fill="#7A8591"/>' + tx(xc(last) + 4, yc(30) + 16, "Reference cap reached " + dayName(last).replace(/^\w+ /, ""), "", ' style="font-size:10.5px;fill:#5B6672"'));
+  PEAK.forEach(function(p){ s.push(tx(xc(p) + (p === 64 ? 3 : 0), 248, "★", "", ' text-anchor="middle" style="font-size:12px;fill:#9B3C78"')); });
+  PEAK.forEach(function(p){ if (rc30.indexOf(p) < 0) s.push(tx(xc(p), 224, "missed by Reference", "halo", ' text-anchor="middle" style="font-size:10px;font-weight:600;fill:#B42318"')); });
+  [["Dec",0],["Jan",31],["Feb",62],["Mar",90]].forEach(function(m){ s.push(tx(xc(m[1]), 270, m[0])); });
+  s.push("</svg>");
+  return s.join("");
+}
+function renderActivation(){
+  var o = OFF[S.offer], dec = S.view === "decision", calls = callsOf(o), used = calls.filter(function(c){ return c < S.day; }).length, tonight = calls.indexOf(S.day) >= 0 ? 1 : 0;
+  $("#day-label").textContent = dayName(S.day, true);
+  var card = $("#act-card"); card.className = "panel pad dcard res" + (calls.indexOf(S.day) >= 0 ? "" : " no"); card.innerHTML = actCard();
+  $("#act-title").textContent = "Hot Season 2025-26 · " + (dec ? "decision view" : "season review");
+  $("#act-tag").innerHTML = dec ? "" : '<span class="hind">Hindsight</span>';
+  $("#act-sub").textContent = dec ? "Shows only what was known at 09:00 on " + dayName(S.day).replace(/^\w+ /, "") : "Not available at the decision time";
+  $("#act-legend").innerHTML = '<span><i class="sw" style="background:#C3CCD5"></i>Daily peak demand' + (dec ? ", past days" : "") + '</span><span><i class="sw" style="background:#9B3C78;opacity:.8"></i>Flagged by call rule</span>' +
+    (dec ? '<span><i class="sw" style="background:#fff;outline:1px dashed #9B3C78"></i>Today, 09:00 forecast</span><span><i class="sw ht"></i>Not yet known</span>' : '<span style="color:var(--peak)">&#9733; <span style="color:var(--ink3)">Official peak day</span></span>') +
+    '<span><i class="sw" style="background:var(--cust);border-radius:50%;width:8px"></i>Called</span>';
+  $("#act-chart").innerHTML = actSVG();
+  $$("#act-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.day = +r.getAttribute("data-d"); renderActivation(); }); });
+  var solid = dec ? used : calls.length, hatch = dec ? tonight : 0;
+  $("#act-budget").innerHTML = '<div class="bl"><span><b>Activation budget</b> <span class="sub">contract year 2025-26 · 1 Jul – 30 Jun</span></span><span>' +
+    (dec ? "<b>" + used + "</b> used · <b>" + tonight + "</b> tonight · <b>" + (o.cap - used - tonight) + "</b> left of " + o.cap : "<b>" + calls.length + "</b> of " + o.cap + " used in the season") + "</span></div>" +
+    '<div class="bar"><i style="width:' + (solid / o.cap * 100) + '%;background:var(--cust)"></i><i style="width:' + (hatch / o.cap * 100) + '%;background:repeating-linear-gradient(45deg,#C9822B 0 1.5px,#F1DDBF 1.5px 4px)"></i></div>';
+  var rs = RUN.scen, a = evalOffer("ref", rs), b = evalOffer("custom", rs);
+  $("#eval-sub").textContent = "Contract year 2025-26 replay · 1 Jul 2025 – 30 Jun 2026 · 365 days · in-sample · " + SCN[rs].label;
+  function vcell(r){ return r.verdict.k === "ok" ? '<span class="pill ok">Positive in ' + rs + "</span>" : '<span class="pill bad">No business case</span>'; }
+  var t = '<tr><th></th><th class="n">No-call<div class="sub" style="font-weight:400">baseline</div></th><th class="n">Reference terms<div class="sub" style="font-weight:400">70 c/kWh · 30 calls</div></th><th class="n hl">Custom offer<div class="sub" style="font-weight:400">85 c/kWh · 45 calls</div></th></tr>';
+  var capHit = a.calls >= OFF.ref.cap ? " · cap hit " + dayName(callsOf(OFF.ref)[29]).replace(/^\w+ /, "") : "";
+  [["Enrolled homes · assumed curve", "0", nf(a.enrolled), nf(b.enrolled)],
+   ["Calls used", "0", a.calls + capHit, String(b.calls)],
+   ["Peak days covered · hindsight", "—", a.peaks[2] + " of 4", b.peaks[2] + " of 4"],
+   ["Zenith incremental profit", aud(0), aud(a.z), aud(b.z)],
+   ["Customer net vs normal self-use, per home", aud(0), aud(a.enrolled ? a.c / a.enrolled : 0, 2), aud(b.enrolled ? b.c / b.enrolled : 0, 2)],
+   ["Worst Hot Season for Zenith, 2023-24 to 2025-26", aud(0), aud(a.worst), aud(b.worst)]].forEach(function(r){
+    t += "<tr><td>" + r[0] + '</td><td class="n">' + r[1] + '</td><td class="n' + (r[2].indexOf("−") === 0 ? " neg" : "") + '">' + r[2] + '</td><td class="n hl' + (r[3].indexOf("−") === 0 ? " neg" : "") + '">' + r[3] + "</td></tr>"; });
+  t += '<tr class="tot"><td>Verdict</td><td class="n"><span class="pill mu">Baseline</span></td><td class="n">' + vcell(a) + '</td><td class="n hl">' + vcell(b) + "</td></tr>";
+  $("#act-cmp").innerHTML = t;
+  $("#act-cum").innerHTML = cumSVG();
+}
+
+/* ---------- Value by party ---------- */
+var SCN = {
+  S1:{label:"S1 · Energy only", tag:"Hypothetical arrangement", cls:"hyp"},
+  S2a:{label:"S2a · Retailer, current IRCR", tag:"Current rule", cls:""},
+  S2b:{label:"S2b · Retailer, 2027 Peak IRCR", tag:"Assumed future rule · not current revenue", cls:"fut"},
+  S3:{label:"S3 · Synergy TPA, 50% share", tag:"Hypothetical share", cls:"hyp"}
+};
+function renderValue(){
+  var r = evalOffer(S.voffer, S.vscen), div = S.den === "home" ? r.enrolled : 1, sc = S.vscen;
+  $("#v-scen").innerHTML = "<b>" + r.o.name + "</b> · " + SCN[sc].label + ' <span class="chip ' + SCN[sc].cls + '">' + SCN[sc].tag + '</span><span class="sub">' + r.o.src + "</span>";
+  $("#v-verdict").innerHTML = '<div class="verdict ' + r.verdict.k + '"><span class="vt">' + r.verdict.t.toUpperCase() + "</span><div><b>" + r.o.name + " under " + SCN[sc].label + "</b><p>" + r.verdict.p + "</p></div></div>";
+  var per = S.den === "home" ? "per enrolled home" : "fleet";
+  var oname = sc === "S3" ? "Synergy" : "Other parties";
+  var tiles;
+  if (S.stat === "cy") {
+    var d = function(v){ return r.enrolled ? v / div : 0; };
+    tiles = [["z","Zenith · vs Zenith only", aud(d(r.z), S.den === "home" ? 2 : 0), per + ", contract year 2025-26"], ["c","Customers · vs normal self-use", aud(d(r.c), S.den === "home" ? 2 : 0), per + ", contract year 2025-26"], ["o", oname, aud(d(r.oth), S.den === "home" ? 2 : 0), per + ", contract year 2025-26"]];
+  } else {
+    tiles = [["z","Zenith · expected per year", aud(S.den === "home" && r.enrolled ? r.expZ / r.enrolled : r.expZ, S.den === "home" ? 2 : 0), (S.den === "home" ? "per enrolled home" : "fleet") + ", mean of 3 Hot Seasons"], ["c","Customers · expected per year", aud(r.expC, 2), "per enrolled home, mean of 3 Hot Seasons"], ["o","Worst Hot Season for Zenith", aud(r.worst), "fleet, " + SEASONS[r.worstIdx]]];
+  }
+  $("#v-parties").innerHTML = tiles.map(function(t){ return '<div class="panel party ' + t[0] + '"><div class="cap">' + t[1] + '</div><div class="big' + (t[2].indexOf("−") === 0 ? " neg" : "") + '">' + t[2] + '</div><div class="sub">' + t[3] + "</div></div>"; }).join("");
+  if (S.stat === "cy") {
+    $("#v-ledger-h").textContent = "Ledger";
+    $("#v-ledger-sub").textContent = "Contract year 2025-26 replay · in-sample · A$, " + per + (S.den === "home" ? " (" + nf(r.enrolled) + " enrolled)" : "");
+    var t = '<tr><th>Item</th><th class="n" style="color:var(--zen)">Zenith</th><th class="n" style="color:var(--cust)">Customers</th><th class="n">' + oname + '</th><th class="n">System</th></tr>';
+    r.rows.forEach(function(row, k){
+      var c = function(v){ return '<td class="n' + (v < -0.0005 ? " neg" : "") + '">' + (Math.abs(v) < 0.0005 ? "0" : aud(r.enrolled ? v / div : 0, S.den === "home" ? 2 : 0)) + "</td>"; };
+      t += '<tr class="x" data-row="' + k + '"><td>' + row[0] + (row[4] ? '<span class="trt">TRANSFER</span>' : "") + "</td>" + c(row[1]) + c(row[2]) + c(row[3]) + c(row[1] + row[2] + row[3]) + "</tr>";
+      t += '<tr class="dt" data-dt="' + k + '"><td colspan="5">' + row[5] + "</td></tr>";
+    });
+    var c2 = function(v){ return '<td class="n' + (v < -0.0005 ? " neg" : "") + '">' + aud(r.enrolled ? v / div : 0, S.den === "home" ? 2 : 0) + "</td>"; };
+    t += '<tr class="tot"><td>Net</td>' + c2(r.z) + c2(r.c) + c2(r.oth) + c2(r.sys) + "</tr>";
+    $("#v-ledger").innerHTML = t;
+    $$("#v-ledger tr.x").forEach(function(tr){ tr.addEventListener("click", function(){ tr.classList.toggle("open"); $('#v-ledger tr[data-dt="' + tr.getAttribute("data-row") + '"]').classList.toggle("show"); }); });
+    $("#v-ledger-foot").textContent = "Each row sums across parties to the System column; transfer rows sum to 0. Compensation is paid on billed event net export; market value is counted on the change against no call. These two energy quantities are never mixed. Values illustrative.";
+  } else {
+    $("#v-ledger-h").textContent = "By Hot Season";
+    $("#v-ledger-sub").textContent = "Expected per year is the mean of the three seasons below; party rows are in the contract-year view";
+    var u = '<tr><th>Season</th><th>Order</th><th class="n">Calls</th><th class="n">Peak days</th><th class="n">Zenith, fleet</th><th class="n">Customer, per home</th></tr>';
+    SEASONS.forEach(function(sn, k){ u += "<tr><td>" + sn + "</td><td>" + (CHRON[k] ? '<span class="pill ok">chronological</span>' : '<span class="pill mu">not chronological</span>') + '</td><td class="n">' + r.seasonCalls[k] + '</td><td class="n">' + r.peaks[k] + ' of 4</td><td class="n' + (r.seasonZ[k] < 0 ? " neg" : "") + '">' + aud(r.seasonZ[k]) + '</td><td class="n">' + aud(r.custHome[k], 2) + "</td></tr>"; });
+    u += '<tr class="tot"><td>Expected per year</td><td></td><td></td><td></td><td class="n' + (r.expZ < 0 ? " neg" : "") + '">' + aud(r.expZ) + '</td><td class="n">' + aud(r.expC, 2) + "</td></tr>";
+    $("#v-ledger").innerHTML = u;
+    $("#v-ledger-foot").textContent = "Expected per year and the single contract-year replay are different statistics and never share a column. Holding out 2025-26 is the only chronological season; the others train on later seasons. Values illustrative.";
+  }
+  var ir = '<div class="cap">Seasonal IRCR effect · not a daily reward</div>';
+  if (r.calls === 0) ir += '<p class="foot">' + (sc === "S1" ? "S1 has no capacity value." : "Under the current rule net export counts 0. Normal self-use already zeroes import in the peak intervals, so the median does not move.") + "</p>";
+  else {
+    ir += '<table class="tbl" style="margin-top:8px"><tr><th>Peak interval · 2025-26</th><th class="n">Change in net import, kW per home</th></tr>';
+    r.o.ircr.forEach(function(v, k){ var day = Math.floor(k / 3) + 1;
+      var times = (S.voffer === "custom" && day === 4) ? ["17:00","17:30","18:00"] : ["17:30","18:00","18:30"];
+      var lab = "Day " + day + " · " + times[k % 3];
+      if (v === 0) lab += S.voffer === "custom" ? " · before the event window" : " · not called, cap used up";
+      ir += "<tr><td>" + lab + '</td><td class="n">' + nf(v, 1) + "</td></tr>"; });
+    ir += "</table>";
+    ir += '<table class="kvt" style="margin-top:10px"><tr><td>Median change per responding home</td><td class="n">' + nf(r.dmed, 2) + " kW</td></tr>" +
+      "<tr><td>× 2 × " + nf(r.resp) + ' responding homes</td><td class="n">' + nf(-2 * Math.abs(r.dmed) * r.resp / 1000, 2) + " MW</td></tr>" +
+      '<tr><td>× AEMO ratio 1.0 (assumption) × A$216,091.78/MW-yr</td><td class="n">' + aud(r.capv) + "</td></tr>" +
+      "<tr><td>Zenith's part" + (sc === "S3" ? " (share 50%, assumption)" : "") + '</td><td class="n">' + aud(r.zc) + "</td></tr></table>";
+    ir += '<p class="foot">Season 2025-26 sets capacity year 2026-27 (as-if price). A programme starting now first affects 2027-28. Peak intervals are known only after the season; the 17:30–19:30 window is a model choice, not a rule.</p>';
+  }
+  $("#v-ircr").innerHTML = ir;
+  var own = 3100000;
+  $("#v-own").innerHTML = '<div class="cap">Zenith only · own battery · separate ledger</div><table class="kvt" style="margin-top:8px"><tr><td>Contract year 2025-26, default configuration</td><td class="n">' + aud(own) + '</td></tr><tr><td>Source</td><td class="n" style="font-weight:400">saved research result</td></tr><tr><td>Zenith + customer fleet</td><td class="n">' + aud(own + r.z) + '</td></tr></table><p class="foot">Separate meters, no shared FCESS or connection, so the two ledgers add. If the own-battery configuration changes, this card shows "pending recompute" and no saved number.</p>';
+}
+
+/* ---------- Validation ---------- */
+var VAL = {
+  ins:{note:["", "In-sample · 1 Apr 2025 – 30 Jun 2026 · 456 days. Used for training and selection; not evidence of out-of-sample performance."], q2a:[[41,58],[96,131],[0.081,0.104]], q2b:[3050,2640,"−410 [−620, −190]",4900], days:456},
+  tseen:{note:["w", "Test, seen · 1 Jul – 15 Oct 2026 · 107 days. Out of sample in time, but looked at during development. No Hot Season, so the capacity value cannot be scored."], q2a:[[33,45],[71,99],[0.064,0.077]], q2b:[2050,1700,"−350 [−560, −140]",3300], days:107},
+  tnew:{note:["i", "Test, unseen · 16–22 Oct 2026 · 7 days. Never inspected before freezing; short and calm. Report separately. No Hot Season."], q2a:[[22,27],[40,52],[0.030,0.033]], q2b:[1400,1330,"−70 [−160, +20]",2100], days:7},
+  hold:{note:["p", "Leave one Hot Season out. Only holding out 2025-26 is chronological; holding out 2023-24 or 2024-25 trains on later seasons. First forward test: 2026-27 Hot Season (1 Dec 2026 – 31 Mar 2027)."], days:0}
+};
+var CHECKS = [
+  ["Energy balance closes in every interval","pass","0","SOC(t+1) = SOC(t) + charge × 0.922 − discharge ÷ 0.922 + regulation energy; residual below tolerance."],
+  ["Power within rating (energy + raise services, charge + lower services)","pass","0","Discharge + Regulation raise + Contingency raise ≤ 10 MW, and the same on the charge side."],
+  ["SOC at or above mandatory reserve","pass","0","Mandatory reserve is never offered at any price."],
+  ["Meter import ≤ import limit, export ≤ export limit","fail","1 interval","Example failure row: one half-hour where actual load plus Regulation Lower passed the import limit. The row lists the date and interval."],
+  ["No MW or MWh allocated twice","pass","0",""],
+  ["Information timing: nothing published after 09:00 used","pass","0","Every input's available_at is checked against the decision time."],
+  ["Customer: activation cap per contract year","pass","0",""],
+  ["Customer: standby + event ≤ maximum control","pass","0",""],
+  ["Customer: battery never below customer reserve","pass","0",""],
+  ["Three-party ledger reconciles to system value","pass","0","Transfers sum to 0 across parties."]];
+function renderValidation(){
+  var v = VAL[S.per];
+  var nt = $("#val-note"); nt.className = "note mt" + (v.note[0] ? " " + v.note[0] : ""); nt.textContent = v.note[1];
+  if (S.per === "hold") {
+    $("#val-q2a").innerHTML = '<p class="foot">Forecast error is scored by date period, not by Hot Season. Choose a date period.</p>';
+    $("#val-q2b").innerHTML = '<p class="foot">Own-battery results are scored by date period. Choose a date period.</p>';
+    var r = evalOffer("custom", RUN.scen), t = '<table class="tbl"><tr><th>Held out</th><th class="n">Calls</th><th class="n">Peak days</th><th class="n">Zenith</th></tr>';
+    SEASONS.forEach(function(sn, k){ t += "<tr><td>" + sn + '<div class="sub">' + (CHRON[k] ? "chronological" : "not chronological") + '</div></td><td class="n">' + r.seasonCalls[k] + '</td><td class="n">' + r.peaks[k] + ' of 4</td><td class="n">' + aud(r.seasonZ[k]) + "</td></tr>"; });
+    $("#val-cust").innerHTML = t + '</table><p class="foot">Custom offer, ' + SCN[RUN.scen].label + '. In the 2025-26 holdout the training seasons\' flag tolerance still contains 2025-26 forecast errors (architecture note U-1). Values illustrative.</p>';
+  } else {
+    var a = v.q2a, b = v.q2b;
+    $("#val-q2a").innerHTML = '<table class="tbl"><tr><th>Series · metric</th><th class="n">Model</th><th class="n">Baseline</th></tr>' +
+      '<tr><td>Energy price · MAE, A$/MWh<div class="sub">baseline: yesterday\'s prices</div></td><td class="n">' + a[0][0] + '</td><td class="n">' + a[0][1] + "</td></tr>" +
+      '<tr><td>Energy 17:00–21:00 · MAE, A$/MWh</td><td class="n">' + a[1][0] + '</td><td class="n">' + a[1][1] + "</td></tr>" +
+      '<tr><td>Spike ≥ A$200 · Brier score<div class="sub">baseline: 28-day frequency</div></td><td class="n">' + nf(a[2][0], 3) + '</td><td class="n">' + nf(a[2][1], 3) + "</td></tr></table>" +
+      '<p class="foot">Lower is better. "x% lower MAE" is never written as "accuracy". FCESS uses a 28-day profile, not a model. Values illustrative.</p>';
+    $("#val-q2b").innerHTML = '<table class="tbl"><tr><th>Strategy</th><th class="n">A$/day</th><th class="n">vs adopted</th></tr>' +
+      '<tr><td>Adopted configuration</td><td class="n">' + nf(b[0]) + '</td><td class="n">—</td></tr><tr><td>v1 frozen baseline</td><td class="n">' + nf(b[1]) + '</td><td class="n">' + b[2] + '</td></tr><tr><td>Perfect price foresight<div class="sub">unattainable upper reference</div></td><td class="n">' + nf(b[3]) + '</td><td class="n">+' + nf(b[3] - b[0]) + "</td></tr></table>" +
+      '<p class="foot">' + v.days + " days. 95% interval from a daily bootstrap. Includes the network bill saving on a synthetic factory load. Values illustrative.</p>";
+    $("#val-cust").innerHTML = S.per === "ins" ? '<table class="kvt"><tr><td>Contract year 2025-26 · Custom · ' + RUN.scen + '</td><td class="n">' + aud(evalOffer("custom", RUN.scen).z) + '</td></tr><tr><td>Same, Reference terms</td><td class="n">' + aud(evalOffer("ref", RUN.scen).z) + '</td></tr></table><p class="foot">Zenith incremental profit. Open Value by party for the ledger. Values illustrative.</p>'
+      : '<p style="margin:0;font-size:13px;color:var(--ink3)">No Hot Season in this period, so no calls. The programme shows its operating cost only: <b>' + aud(-25 * v.days / 365, 2) + "</b> per enrolled home (A$25 a year × " + v.days + ' / 365).</p><p class="foot">The capacity value has no forward test until the 2026-27 Hot Season.</p>';
+  }
+  var t2 = '<tr><th>Check</th><th class="n">Result</th><th class="n">Failing</th></tr>';
+  CHECKS.forEach(function(c, k){ var fail = c[1] === "fail" && S.per === "ins";
+    t2 += '<tr class="x" data-row="' + k + '"><td>' + c[0] + '</td><td class="n"><span class="pill ' + (fail ? "bad" : "ok") + '">' + (fail ? "Fail" : "Pass") + '</span></td><td class="n">' + (fail ? c[2] : "0") + "</td></tr>";
+    t2 += '<tr class="dt" data-dt="' + k + '"><td colspan="3">' + (c[3] || "Definition from the engine's check registry.") + "</td></tr>"; });
+  $("#val-checks").innerHTML = t2;
+  $$("#val-checks tr.x").forEach(function(tr){ tr.addEventListener("click", function(){ tr.classList.toggle("open"); $('#val-checks tr[data-dt="' + tr.getAttribute("data-row") + '"]').classList.toggle("show"); }); });
+  var st = ["08:00 transition plan · yesterday's prices, 28-day FCESS average","09:00 forecasts published","09:00 own-battery plan and customer call decision","Re-plans every 30 minutes","Reveal: actual prices, load and settlement"];
+  $("#val-steps").innerHTML = st.map(function(t, k){ return '<li class="' + (k < S.step ? "done" : (k === S.step ? "now" : "")) + '"><span class="n">' + (k < S.step ? "&#10003;" : k + 1) + "</span>" + t + "</li>"; }).join("");
+}
+
+/* ---------- Configuration ---------- */
+var PRESET = {model:{pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, tag:"MODEL SUGGESTION", cls:"src md", note:"Research policy C from the in-sample sweep. The payment level follows an assumed participation curve and must come from a pilot. Not a contract."},
+              ref:{pay:70, evp:0, fee:0, cap:30, ev:"2", sb:"2", mx:6, res:20, tag:"REFERENCE TERMS", cls:"src rf", note:"Public Synergy Battery Rewards terms used for comparison. Not a Zenith tariff and not a contract."}};
+function fillConfig(){
+  $$("[data-k]").forEach(function(el){ var k = el.getAttribute("data-k"); if (IN[k] != null) el.value = IN[k]; });
+  var p = PRESET[IN.start]; $("#c-start-tag").className = p.cls; $("#c-start-tag").textContent = p.tag; $("#c-start-note").textContent = p.note;
+  $$(".sc").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-sc") === IN.scen); b.setAttribute("aria-checked", b.getAttribute("data-sc") === IN.scen ? "true" : "false"); });
+}
+function checks(){
+  var L = [], blocking = false, unsup = false, changed = false;
+  Object.keys(DEF).forEach(function(k){ if (String(IN[k]) !== String(DEF[k])) changed = true; });
+  var ev = +IN.ev, sb = +IN.sb, mx = +IN.mx;
+  if (ev + sb > mx) { blocking = true; L.push(["b", "Standby + event = " + (ev + sb) + " h is longer than the maximum control " + mx + " h. Blocking: the offer is infeasible.", "c-mx"]); }
+  else L.push(["ok", "Standby + event = " + (ev + sb) + " h, within the maximum control " + mx + " h."]);
+  if (+IN.res < 0 || +IN.res >= 100) { blocking = true; L.push(["b", "Customer reserve must be at least 0% and below 100%. Blocking.", "c-res"]); }
+  if (+IN.cap < 1) { blocking = true; L.push(["b", "Annual cap must be at least 1.", "c-cap"]); }
+  else if (+IN.cap < 45) L.push(["w", "Annual cap " + IN.cap + " may run out before late peak days in a heavy season (research: caps of 30 or less failed in 2023-24)."]);
+  if (+IN.imp < 9) { unsup = true; L.push(["u", "Import limit below 9 MW is unsupported: it needs a storage-value table rebuild. No result will be shown for it.", "c-imp"]); }
+  if (String(IN.exp) !== String(DEF.exp)) L.push(["i", "Export limit " + IN.exp + " MW recomputes the own-battery day, labelled unvalidated scenario. The Zenith-only period baseline then shows pending recompute, not the saved default."]);
+  if (IN.scen === "S2b") L.push(["i", "S2b uses an assumed future rule; results are not current revenue."]);
+  if (IN.rule !== "fit") L.push(["i", "This call rule is part of the full MVP."]);
+  L.push(["i", "Site load is synthetic. The network bill saving depends on it."]);
+  return {list:L, blocking:blocking, unsup:unsup, changed:changed};
+}
+function renderConfig(){
+  var c = checks();
+  $("#c-checks").innerHTML = c.list.map(function(x){ var g = {ok:"&#10003;", w:"!", b:"!", u:"?", i:"i"}[x[0]]; return '<li><span class="ci ' + x[0] + '">' + g + "</span><span>" + x[1] + "</span></li>"; }).join("");
+  $$(".f").forEach(function(f){ f.classList.remove("err"); });
+  c.list.forEach(function(x){ if (x[2]) { var el = document.getElementById(x[2]); if (el) el.closest(".f").classList.add("err"); } });
+}
+function refreshRun(){
+  var c = checks(), run = $("#run"), pri = $("#pri"), t, sub, cls;
+  document.body.classList.toggle("stale", c.changed && !S.ro);
+  if (S.ro) { cls = "ro"; t = "Read-only"; sub = "saved run R-0139"; pri.textContent = "Duplicate as draft"; pri.disabled = false; }
+  else if (c.blocking) { cls = "bad"; t = "Blocked"; sub = "fix inputs in Configuration"; pri.textContent = "Recompute"; pri.disabled = true; }
+  else if (c.unsup) { cls = "unsup"; t = "Unsupported input"; sub = "see Configuration"; pri.textContent = "Recompute"; pri.disabled = true; }
+  else if (c.changed) { cls = "stale"; t = "Inputs changed"; sub = "results from R-0142"; pri.textContent = "Recompute"; pri.disabled = false; }
+  else { cls = "ok"; t = "Up to date"; sub = "run R-0142"; pri.textContent = "Save run"; pri.disabled = false; }
+  run.className = "run " + cls; $("#run-t").textContent = t; $("#run-s").textContent = sub;
+  $("#strip-st").classList.toggle("show", c.changed && !S.ro);
+  $("#st-text").textContent = c.blocking ? "Inputs changed and blocked by the input check. The results shown are from run R-0142 with the previous inputs." : (c.unsup ? "An input is unsupported by the engine. The results shown are from run R-0142 with the previous inputs." : "Inputs changed. The results shown are from run R-0142 with the previous inputs.");
+  $("#strip-nc").classList.toggle("show", S.nc && c.changed && !S.ro);
+  $("#strip-ro").classList.toggle("show", S.ro);
+  $$("main [data-k]").forEach(function(el){ el.disabled = S.ro; });
+}
+
+/* ---------- Runs ---------- */
+var RUNS = [["R-0142","S3 · Custom 85c, 45 calls","Contract year 2025-26 + 14 Jan 2026","Complete","e5 · data 2026-10-22","25 Oct 15:10"],
+            ["R-0141","S2a · Custom 85c, 45 calls","Contract year 2025-26","No business case","e5 · data 2026-10-22","25 Oct 14:52"],
+            ["R-0140","S3 · import limit 8 MW","—","Unsupported","e5 · data 2026-10-22","25 Oct 14:40"],
+            ["R-0139","S2b · Reference 70c, 30 calls","Contract year 2025-26","No business case","e5 · data 2026-10-22","25 Oct 14:20"]];
+function renderRuns(){
+  var pc = {"Complete":"ok", "No business case":"bad", "Unsupported":"mu"};
+  $("#runs").innerHTML = '<tr><th>Run</th><th>Scenario · offer</th><th>Period</th><th>Status</th><th>Engine · data</th><th>Saved, AWST</th><th></th></tr>' +
+    RUNS.map(function(r){ return "<tr><td><b>" + r[0] + "</b></td><td>" + r[1] + "</td><td>" + r[2] + '</td><td><span class="pill ' + pc[r[3]] + '">' + r[3] + '</span></td><td class="sub">' + r[4] + '</td><td class="sub">' + r[5] + '</td><td><button class="btn sm" data-open="' + r[0] + '">Open</button></td></tr>'; }).join("");
+  $$("[data-open]").forEach(function(b){ b.addEventListener("click", function(){ S.ro = true; refreshRun(); toast("Opened " + b.getAttribute("data-open") + " read-only. Prototype: the screens keep the same illustrative values."); }); });
+}
+
+/* ---------- shell ---------- */
+var SCREENS = {
+  schedule:{t:"Today's plan", chips:[["rp","Historical replay"],["","In-sample"]], ctx:function(){ return "Wed 14 Jan 2026 · Trading day 08:00–08:00 AWST · Plan issued 09:00 with information available at 09:00"; }},
+  forecast:{t:"Forecast", chips:[["rp","Historical replay"],["","In-sample"],["","Q2A"]], ctx:function(){ return "Wed 14 Jan 2026 · Issued 09:00 AWST · Actual values stay hidden until you reveal the outcome"; }},
+  activation:{t:"Customer calls", chips:[["rp","Historical replay"],["","In-sample"],["","Hot Season 2025-26"]], ctx:function(){ return "As of " + dayName(S.day, true) + ", 09:00 AWST · Offer: " + OFF[S.offer].short + " · Scenario " + SCN[RUN.scen].label + " (hypothetical)"; }},
+  value:{t:"Value by party", chips:[["rp","Historical replay"]], ctx:function(){ return "Incremental profit = Profit(Zenith + customer fleet) − Profit(Zenith only). Customer baseline: the same battery in normal self-use. Compensation is a transfer."; }},
+  validation:{t:"Validation", chips:[["rp","Historical replay"]], ctx:function(){ return "Training and selection used in-sample data only (to 30 Jun 2026). Test results are reported, never used to choose."; }},
+  config:{t:"Configuration", chips:[], ctx:function(){ return "Inputs for the next run. Each field shows its source and whether the engine can recompute it. Changes mark results stale."; }},
+  runs:{t:"Runs & export", chips:[], ctx:function(){ return "A run stores inputs, engine and data versions, and results. Saved runs open read-only."; }},
+  states:{t:"Interaction states", chips:[["dz","Design review only"]], ctx:function(){ return "Shared result states used by every panel. Not a product screen."; }}
+};
+function header(){
+  var sc = SCREENS[S.screen];
+  $("#ph-title").textContent = sc.t;
+  $("#ph-chips").innerHTML = sc.chips.map(function(c){ return '<span class="chip ' + c[0] + '">' + c[1] + "</span>"; }).join("");
+  $("#ph-ctx").textContent = sc.ctx();
+}
+function render(){
+  header();
+  if (S.screen === "schedule") renderSchedule();
+  if (S.screen === "forecast") renderForecast();
+  if (S.screen === "activation") renderActivation();
+  if (S.screen === "value") renderValue();
+  if (S.screen === "validation") renderValidation();
+  if (S.screen === "config") renderConfig();
+  if (S.screen === "runs") renderRuns();
+  refreshRun();
+}
+function go(name){
+  if (!SCREENS[name]) name = "schedule";
+  S.screen = name;
+  $$(".screen").forEach(function(s){ s.classList.toggle("on", s.id === "s-" + name); });
+  $$(".nav").forEach(function(b){ var on = b.getAttribute("data-go") === name; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+  render(); window.scrollTo(0, 0);
+}
+$$("[data-go]").forEach(function(b){ b.addEventListener("click", function(){ go(b.getAttribute("data-go")); }); });
+function segBind(attr, key, after){
+  $$("[" + attr + "]").forEach(function(b){ b.addEventListener("click", function(){
+    S[key] = b.getAttribute(attr);
+    $$("[" + attr + "]").forEach(function(o){ o.classList.toggle("on", o.getAttribute(attr) === S[key]); });
+    if (after) after(); render(); }); });
+}
+function setReveal(v){ S.revealed = v; $$("[data-po]").forEach(function(o){ o.classList.toggle("on", o.getAttribute("data-po") === (v ? "outcome" : "plan")); }); $$(".po-out").forEach(function(e){ e.hidden = !v; }); $$("[data-po] .lk").forEach(function(e){ e.style.display = v ? "none" : ""; }); }
+$$("[data-po]").forEach(function(b){ b.addEventListener("click", function(){ setReveal(b.getAttribute("data-po") === "outcome"); render(); }); });
+function bindReveal(root){ $$("[data-reveal]").forEach(function(b){ if (root.contains(b)) b.addEventListener("click", function(){ setReveal(true); render(); }); }); }
+segBind("data-view", "view"); segBind("data-offer", "offer"); segBind("data-voffer", "voffer"); segBind("data-vscen", "vscen"); segBind("data-stat", "stat"); segBind("data-den", "den"); segBind("data-per", "per");
+$("#day-prev").addEventListener("click", function(){ S.day = Math.max(0, S.day - 1); render(); });
+$("#day-next").addEventListener("click", function(){ S.day = Math.min(DAYS - 1, S.day + 1); render(); });
+$$("[data-k]").forEach(function(el){ el.addEventListener("change", function(){
+  var k = el.getAttribute("data-k"); IN[k] = el.type === "number" ? (el.value === "" ? "" : +el.value) : el.value;
+  if (k === "start") { var p = PRESET[el.value]; ["pay","evp","fee","cap","ev","sb","mx","res"].forEach(function(q){ IN[q] = p[q]; }); fillConfig(); }
+  S.nc = false; render(); }); });
+$$(".sc").forEach(function(b){ b.addEventListener("click", function(){ IN.scen = b.getAttribute("data-sc"); fillConfig(); S.nc = false; render(); }); });
+$("#revert").addEventListener("click", function(){ IN = JSON.parse(JSON.stringify(DEF)); S.nc = false; fillConfig(); render(); toast("Inputs reverted to run R-0142. Results are up to date again."); });
+$("#nc-close").addEventListener("click", function(){ S.nc = false; refreshRun(); });
+$("#pri").addEventListener("click", function(){
+  if (S.ro) { S.ro = false; refreshRun(); toast("Duplicated as a new draft. Prototype: no new run is created."); render(); return; }
+  if (checks().changed) { S.nc = true; refreshRun(); return; }
+  toast("Prototype: Save is not implemented. The MVP stores inputs, versions and results under a new run ID.");
+});
+$("#exp-all").addEventListener("click", function(){ toast(checks().changed ? "Export is off while results are stale." : "Prototype: export is not implemented. The MVP writes the files listed for the open run."); });
+$("#step-next").addEventListener("click", function(){ S.step = Math.min(5, S.step + 1); if (S.step === 5) setReveal(true); render(); });
+$("#step-reset").addEventListener("click", function(){ S.step = 0; setReveal(false); render(); });
+var toastT;
+function toast(m){ var t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 4500); }
+document.addEventListener("keydown", function(e){
+  if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  var dl = e.key === "ArrowRight" ? 1 : (e.key === "ArrowLeft" ? -1 : 0); if (!dl) return;
+  if (S.screen === "schedule") { S.sel = Math.max(0, Math.min(N - 1, S.sel + dl)); renderSchedule(); e.preventDefault(); }
+  if (S.screen === "activation") { S.day = Math.max(0, Math.min(DAYS - 1, S.day + dl)); render(); e.preventDefault(); }
+});
+
+fillConfig();
+setReveal(false);
+go((location.hash || "#schedule").slice(1));
+})();
+</script>
+</body>
+</html>

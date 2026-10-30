@@ -1,0 +1,136 @@
+<body data-home="plan">
+{{PROTO}}
+<!-- E · after the market tools used as reference: a product bar, the two assets as underlined tabs over a row of
+     their pages, a grey filter bar with the market and trading day, bordered cards whose header carries the title
+     and the chart tools -->
+<header class="ehead">
+  <div class="eh-top">
+    <div class="eh-brand"><svg class="logo" viewBox="0 0 28 28" aria-hidden="true"><path d="M3 24.5L14 3.5l11 21z"/><path d="M8.5 24.5L14 14l5.5 10.5"/></svg><b>GreenSpark</b><span>Dispatch Desk</span></div>
+    <span class="sp"></span>
+    <span class="eh-user"><span class="av" aria-hidden="true">Z</span>Zenith · demo project</span>
+    {{GEAR}}
+  </div>
+  <div class="eh-tabs">{{ASSET_SW}}</div>
+  <div class="eh-sub">
+    <nav class="eh-pages pages" data-grp="plan compare svalid" aria-label="Site battery pages">{{PAGES_SITE}}</nav>
+    <nav class="eh-pages pages" data-grp="calls value fvalid" aria-label="Customer fleet pages">{{PAGES_FLEET}}</nav>
+    <span class="eh-here pages" data-grp="config">Settings</span>
+  </div>
+</header>
+<div class="fbar">
+  <div class="fbar-in">
+    <div class="fld"><span class="fl">Market</span><span class="fv">WEM · SWIS</span></div>
+    <div class="fld fld-day"><span class="fl">Trading day</span><span class="fv"><span id="fb-day">Wed 14 Jan 2026</span><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg></span></div>
+    <div class="fld fld-day"><span class="fl">Decision time</span><span class="fv">09:00 AWST</span></div>
+    <span class="sp"></span>
+    {{RUN}}{{PRI}}
+  </div>
+</div>
+
+<main id="main" class="emain">
+  <header class="ph">
+    <div class="ph-line"><h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span></div>
+    <div class="ctx" id="ph-ctx"></div>
+  </header>
+  {{STRIPS}}
+
+  <!-- Site battery · Decide: is the plan executable, what to do, what it is worth, why; the detail below -->
+  <section class="screen" id="s-plan" aria-label="Today's plan">
+    <div class="asset"><h2>Factory battery</h2><span class="sub">10 MW / 40 MWh · behind the factory meter · Site A</span><span class="sp"></span><button class="btn out" data-go="config">View inputs<span aria-hidden="true">›</span></button></div>
+    <div class="plan-st" id="plan-status" role="status"></div>
+    <div class="dgrid">
+      <div class="span-8 stack-cards">
+        <article class="card cap-card dec-card res" id="plan-head"></article>
+        <article class="card res"><div class="card-h"><h2>The day at a glance</h2><span class="sub">08:00 Wed 14 Jan to 08:00 Thu 15 Jan</span></div><div id="plan-timeline"></div></article>
+      </div>
+      <div class="span-4 kpi-cards res">{{PLAN_KPIS}}</div>
+      <article class="card span-12 why-card res"><div class="card-h"><h2>Why this plan</h2><span class="sub">what the 09:00 plan is based on</span></div><ul class="why-list" id="plan-why"></ul>{{PLAN_CTA}}</article>
+      <article class="card span-8 res" id="plan-detail">
+        <div class="card-h"><h2>Dispatch detail</h2><span class="sub">plan issued 09:00</span><span class="sp"></span>{{PO_SEG}}<span class="ctools" data-csv="day"></span></div>
+        <div id="sch-chart" class="chartbox"></div>
+        <p class="chart-note" id="sch-note"></p>
+        <div class="card-f"><h3 class="chk-h">Checks on this plan</h3><ul class="chk" id="sch-checks"></ul></div>
+      </article>
+      <div class="span-4 stack-cards">
+        <article class="card rail-card res"><div class="card-h"><h2>Selected half hour</h2><span class="sub">click the chart to change</span></div><div id="sch-rail" aria-live="polite"></div></article>
+        <article class="card res"><div class="card-h"><h2>Plan and outcome</h2><span class="sub">trading day</span></div><table class="tbl" id="sch-money"></table>{{MONEY_FOOT}}</article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Site battery · Improve: the adopted dispatch against the frozen baseline -->
+  <section class="screen" id="s-compare" aria-label="Compare with the baseline">
+    <div class="toolbar">{{CPER_TOOLS}}</div>
+    <div class="dgrid">
+      <article class="card cap-card hero-card span-7 res" id="cmp-hero"></article>
+      <article class="card span-5 res"><div class="card-h"><h2>Price forecast against yesterday's prices</h2></div><div id="cmp-q2a"></div></article>
+    </div>
+  </section>
+
+  <!-- Site battery · Prove: hard limits with their scope, and how much test evidence there is -->
+  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
+    <div class="toolbar">{{PER_TOOLS}}</div>
+    <div class="vt-tiles res" id="sv-tiles"></div>
+    <div class="note v-note" id="val-note"></div>
+    <article class="card res"><div class="card-h"><h2>Physical and contract checks</h2><span class="sub">site battery · click a row to open it</span></div><table class="tbl" id="val-checks"></table></article>
+  </section>
+
+  <!-- Customer fleet · Decide: the call, the demand forecast behind it, the season it was made in -->
+  <section class="screen" id="s-calls" aria-label="Tonight's call">
+    <div class="toolbar">{{ACT_TOOLS}}</div>
+    <div class="dgrid">
+      <article class="card dec-card span-4 res" id="act-card" aria-live="polite"></article>
+      <div class="span-8 stack-cards">
+        <article class="card res"><div class="card-h"><h2>System demand forecast</h2><span class="sub" id="act-dem-sub"></span></div><div id="act-dem" class="chartbox"></div></article>
+        <article class="card budget-card res"><div class="budget" id="act-budget"></div></article>
+      </div>
+      <article class="card span-12 res">
+        <div class="card-h"><h2 id="act-title"></h2><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span><span class="ctools" data-csv="act"></span></div>
+        <div class="legend legend-top" id="act-legend"></div>
+        <div id="act-chart" class="chartbox"></div>
+        <p class="foot">{{ACT_FOOT}}</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Improve: the offer's gain over reference terms first, then who gains what -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="toolbar">{{VAL_TOOLS}}</div>
+    <div class="dgrid">
+      <div class="span-8 stack-cards">
+        <article class="card cap-card hero-card res" id="v-hero"></article>
+        <div class="parties res" id="v-parties"></div>
+      </div>
+      <article class="card verdict-card span-4 res"><div class="card-h"><h2>Verdict</h2></div><div class="scenline" id="v-scen"></div><div class="v-verdict" id="v-verdict"></div></article>
+      <article class="card span-8 res"><div class="card-h"><h2>The offer against the alternatives</h2><span class="sub" id="v-cmp-sub"></span></div><table class="tbl" id="v-cmp"></table><p class="foot" id="v-cmp-foot"></p></article>
+      <div class="span-4 stack-cards">
+        <article class="card cap-card res" id="v-ircr"></article>
+        <article class="card cap-card res" id="v-own"></article>
+      </div>
+      <article class="card fold-card span-12 res">{{V_LEDGER}}</article>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Prove -->
+  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
+    <div class="vt-tiles res" id="fv-tiles"></div>
+    <div class="dgrid">
+      <article class="card span-6 res"><div class="card-h"><h2>Hot Season holdouts</h2><span class="sub">custom offer, one season held out at a time</span></div><div id="fv-hold"></div></article>
+      <article class="card span-6 res"><div class="card-h"><h2>Customer constraints</h2><span class="sub">click a row to open it</span></div><table class="tbl" id="fv-checks"></table></article>
+    </div>
+  </section>
+
+  <!-- Settings: the inputs in cards, the input check stays in view -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="dgrid form-grid">
+      <div class="span-8 stack-cards">
+        <article class="card"><div class="card-h"><h2>Customer offer</h2><span class="sub">evaluated as the Custom offer</span></div>{{CFG_OFFER}}</article>
+        <article class="card"><div class="card-h"><h2>Commercial scenario</h2><span class="sub">who receives energy and capacity value</span></div>{{CFG_SCEN}}</article>
+        <article class="card"><div class="card-h"><h2>Customer fleet assumptions</h2><span class="sub">every value here is an assumption · baseline is normal self-use</span></div>{{CFG_FLEET}}</article>
+        <article class="card"><div class="card-h"><h2>Own battery and site</h2><span class="sub">behind the factory meter</span></div>{{CFG_OWN}}</article>
+      </div>
+      <aside class="span-4 form-side"><article class="card"><div class="card-h"><h2>Input check</h2><span class="sub">before the next run</span></div><ul class="chk" id="c-checks"></ul></article></aside>
+    </div>
+  </section>
+</main>
+{{STY}}

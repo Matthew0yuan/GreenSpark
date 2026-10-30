@@ -1,0 +1,30 @@
+source,item,value,note
+predispatch,runs (one per trading day),1111,20231001 .. 20261015
+predispatch,runs not labelled 08:00 (08:00 missing from the archive),4,
+predispatch,"issue ID minus 08:00, minutes: share 15 / 30 / later",88.0% / 11.3% / 0.7%,
+predispatch,public copy after issue ID (current folder 2026-10-16),20 min on 34/34 runs,older runs: assumed the same
+predispatch,dpvLevel first present,2025-10-31 08:00:00,not used
+stpasa,files listed (ZIP/XLSX),1091,
+stpasa,parsed / unparsed,1074 / 17,unparsed: 2023-09-29..2023-10-15 layouts
+stpasa,layout json(csv body)+short_v1,1,2024-11-19 .. 2024-11-19
+stpasa,layout json+short_v1,714,2024-06-23 .. 2026-06-24
+stpasa,layout json+short_v2,105,2026-06-25 .. 2026-10-16
+stpasa,layout old_csv,249,2023-10-16 .. 2024-06-29
+stpasa,layout old_xlsx,5,2024-02-21 .. 2024-05-26
+stpasa,report days without a report,36,
+stpasa,"available_at minus 11:00 of the report day, hours: median / 95% / max",0.12 / 6.1 / 765,max = 2023 re-uploads (treated as public only then)
+outages,issue days with a snapshot,1112,of 1112
+outages,errors,0,
+outages,snapshot used: share 08:30 / older,99.5% / 0.5%,
+outages,"listing minus label, minutes: median / max",1 / 1,
+outages,header variants,1,columns missing: []
+outages,records modified after their snapshot's extract time,3,
+outages,rows kept per snapshot: median,496.0,
+outages,bytes of the snapshots used (listing sizes),16.7 GB,raw files not kept; sha256 and row counts recorded for the 31-day pilot only (the full run's manifest write failed and was rebuilt from the extracts plus each file's header line)
+weather,previous_day1 first valid time,2024-02-04 08:00:00,
+weather,previous_day2 first valid time,2024-02-05 08:00:00,
+weather,previous_day3 first valid time,2024-02-06 08:00:00,
+weather,Open-Meteo availability of ECMWF IFS 0.25 06Z 2026-10-16,7.35 h after initialisation,assumed 8h; delayed run 14h
+weather,"rows on the older vintage (18Z of D-2: targets 02:00-08:00 AWST, where 18Z of D-1 is not out by 09:00)",22.6%,the price models' day1/day2 features use the 18Z D-1 run there
+prices,trading days with prices,1111,
+table,rows / issues,"104,340 / 1110",

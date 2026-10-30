@@ -1,0 +1,376 @@
+/* C · dark console: one screen per page with no page scroll, a status bar on top, tiles that scroll inside,
+   one lime accent for the primary action, monospaced figures. */
+html{
+  color-scheme:dark;
+  --font-num:"JetBrains Mono","IBM Plex Mono",Consolas,monospace;
+  --r:10px; --r-sm:6px;
+  --bg:#0A0D12; --surface:#10151C; --surface-2:#151B23; --surface-3:#1B222C;
+  --border:#1D252F; --divider:#19212A; --rule:#27313C;
+  --text:#E7ECF2; --text-2:#B7C1CD; --text-3:#7F8C9B; --text-4:#5A6676;
+  --accent:#B8E05A; --accent-hover:#C9EC75; --accent-text:#0E1405; --accent-soft:rgba(184,224,90,.09);
+  --ok:#4ADE80; --ok-soft:rgba(74,222,128,.09); --ok-line:rgba(74,222,128,.32);
+  --warn:#FBBF24; --warn-soft:rgba(251,191,36,.09); --warn-line:rgba(251,191,36,.32); --warn-text:#FCD34D;
+  --bad:#F87171; --bad-soft:rgba(248,113,113,.09); --bad-line:rgba(248,113,113,.32);
+  --info:#60A5FA; --info-soft:rgba(96,165,250,.09); --info-line:rgba(96,165,250,.32); --info-text:#9CC5FB;
+  --unsup:#7F8C9B; --on-status:#0A0D12;
+  --hyp-text:#F2B970; --hyp-line:rgba(242,185,112,.5); --hyp-soft:rgba(242,185,112,.1);
+  --fut-text:#B6A8FF; --fut-line:rgba(182,168,255,.5); --fut-soft:rgba(182,168,255,.1);
+  --proto-bg:#17140A; --proto-text:#E3BE62; --proto-line:#2A2412;
+  --dis:#5B9BFF; --chg:#2B4878; --chg-text:#86AEF0; --rr:#7E6FC4; --rl:#3A3266; --cr:#2A9D92; --cl:#174845;
+  --soc:#4ADE80; --mand:#F87171; --mand-soft:#24151A; --mand-hatch:#6E2C33; --econ:#4A4128;
+  --load:#94A3B8; --meter:#1D2631; --price:#E7ECF2; --base:#5A6676; --actual:#FF7B72;
+  --peak:#E07CC8; --peak-soft:rgba(224,124,200,.11); --cust:#F0A043; --cust-soft:rgba(240,160,67,.16); --cust-text:#F4B867; --on-cust:#1A1204;
+  --zen:#4ADE80; --oth:#8796A8; --spike:#7F8C9B; --bar:#28323E;
+  --grid:#161D26; --axis:#3A4655; --axis-light:#26303B; --axis-strong:#5A6676;
+  --hatch-bg:#0E1319; --hatch-ln:#202A35; --chart-text:#7F8C9B; --chart-label:#D5DCE4;
+  --wm:rgba(231,236,242,.03); --mark:#E7ECF2; --mark-text:#0A0D12; --sel:rgba(231,236,242,.07); --halo:#10151C;
+}
+html,body{height:100%}
+body{overflow:hidden}
+*{scrollbar-width:thin;scrollbar-color:#2A3440 transparent}
+.kv,.party .big,.tbl td.n,.kvt td.n,.ri-head .t,.vt-big,.hero-n,.hero-bars b,.cb b{font-family:var(--font-num);font-weight:500;letter-spacing:-.02em}
+.cap{letter-spacing:.1em;font-size:10px;color:var(--text-4)}
+
+/* status bar: brand, asset switch, the open asset's pages, then run state, export, save and settings */
+.cbar{height:48px;display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:#080B0F;border-bottom:1px solid var(--border)}
+.cb-brand{display:flex;align-items:center;gap:9px;white-space:nowrap;flex:none}
+.cb-brand b{font-size:14px;font-weight:600;letter-spacing:.01em}
+.cbar .asset-sw{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--border);padding:3px;gap:2px}
+.cbar .asset-sw button{padding:3px 12px 3px 11px;font-size:12.5px;line-height:1.2;color:var(--text-3)}
+.cbar .asset-sw button small{font-size:10.5px;color:var(--text-4)}
+.cbar .asset-sw button:hover{color:var(--text)}
+.cbar .asset-sw button.on{background:var(--surface-3);color:var(--text);box-shadow:inset 2px 0 0 var(--accent),inset 0 0 0 1px var(--rule)}
+.cbar .asset-sw button.on small{color:var(--text-3)}
+.cb-nav{display:flex;align-items:center;height:100%;flex:0 1 auto;min-width:0}
+.cb-nav .nav{height:100%;padding:0 11px;font-size:13px;color:var(--text-3);gap:6px}
+.cb-nav .nav:hover{color:var(--text)}
+.cb-nav .nav.on{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
+.cbar .sp{flex:1}
+.cb-run{display:flex;align-items:center;gap:10px;flex:none}
+.cb-run .gear{width:32px;height:32px;margin-left:2px;background:var(--surface-2);border-color:var(--border);color:var(--text-3)}
+.cb-run .gear:hover{color:var(--text);border-color:var(--rule)}
+.cb-run .gear.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.btn{background:var(--surface-2)}
+.btn:hover{background:var(--surface-3)}
+.btn.pri{color:var(--accent-text)}
+
+/* the working area is exactly the viewport */
+.cmain{height:calc(100vh - 72px);display:flex;flex-direction:column;padding:8px 12px 10px;gap:8px;overflow:hidden}
+.ph{display:flex;align-items:center;gap:10px;min-width:0;flex:none}
+.ph h1{font-size:15px;font-weight:600;white-space:nowrap}
+.ph .ctx{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ph .chips{flex-wrap:nowrap;flex:none}
+.chip{background:var(--surface-2);height:20px;font-size:11px}
+.strip{margin:0}
+.cmain > .screen.on{flex:1;min-height:0}
+.grid{height:100%;display:grid;gap:8px;min-height:0}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;min-height:0;min-width:0;overflow:auto}
+.tile-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.tile-h h2{font-size:13px;font-weight:600;letter-spacing:.01em}
+.tile-h .sub{font-size:11.5px}
+.t-sep,.t-sep2{margin-top:14px;padding-top:12px;border-top:1px solid var(--divider)}
+.t-tools{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap;padding:8px 12px;overflow:visible}
+.t-tools .lbl{font-size:12px;color:var(--text-3);margin-right:-4px}
+.legend{font-size:11px;gap:4px 12px;padding-top:6px}
+.tbl{font-size:12.5px}
+.tbl td,.tbl th{padding:6px}
+.foot{font-size:11.5px}
+.seg{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--border)}
+.seg button{padding:4px 10px;font-size:12px}
+.seg button.on{background:var(--surface-3);box-shadow:inset 0 0 0 1px var(--rule)}
+.sel{background:var(--surface-2)}
+.sig .gy{color:var(--bg)}
+
+/* ---------- Today's plan ---------- */
+.g-plan{grid-template-columns:320px minmax(0,1fr) 310px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"head head head" "tl tl tl" "left chart rail"}
+.p-side{display:contents}
+
+/* the decision across the top: plan status, the action and what is scheduled or conditional, three figures */
+.t-head{grid-area:head;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto 1fr auto;grid-template-areas:"st kpis" "cap kpis" "h kpis" "acts acts";column-gap:28px;padding:12px 18px;overflow:hidden;border-color:#26331B;background:linear-gradient(90deg,rgba(184,224,90,.06),rgba(184,224,90,0) 60%),var(--surface)}
+.t-head #plan-head{display:contents}
+/* the plan status checks the current inputs, so it stays bright when the results below it are stale */
+body.stale .t-head #plan-head > *,body.stale .t-head .kpis{opacity:.5;filter:saturate(.4)}
+.t-head .plan-st{grid-area:st;justify-self:start;align-self:start;padding:4px 10px;margin-bottom:9px;font-size:12px;gap:4px 10px}
+.t-head .plan-st .btn{margin-left:4px}
+.t-head #plan-head > .cap{grid-area:cap}
+.t-head .instr-h{grid-area:h;font-size:21px;margin-top:3px}
+.t-head .acts{grid-area:acts;margin-top:10px;gap:5px}
+.t-head .acts li{font-size:13px;line-height:1.45}
+.tg{font-family:var(--font-num);font-weight:600;letter-spacing:.04em;min-width:96px;padding:1px 7px;border-radius:3px}
+.t-head .kpis{grid-area:kpis;display:flex;align-self:start}
+.t-head .kpi{width:216px;padding:0 18px;border-left:1px solid var(--rule)}
+.t-head .kv{font-size:20px;margin-top:4px}
+.t-head .ks{font-size:11.5px;white-space:normal;line-height:1.4}
+.t-head .ks .lnk{font-size:11.5px}
+
+/* the day as one bar across the width; its title and key sit at the right end */
+.t-tl{grid-area:tl;position:relative;padding:7px 364px 7px 14px;overflow:hidden}
+.t-tl .tl{height:28px;border-radius:4px}
+.t-tl .tl-b{font-size:11px;line-height:1.1}
+.t-tl .tl-b span{white-space:normal;text-align:center;padding:0 3px}
+.t-tl .tl-x{height:12px;margin-top:3px;font-size:10.5px;line-height:12px}
+.tl-h{position:absolute;top:5px;right:16px;width:332px;display:flex;align-items:baseline;gap:8px;white-space:nowrap;line-height:16px}
+.tl-h h2{font-size:12px;font-weight:600}
+.tl-h .sub{font-size:11px}
+.t-tl .tl-key{position:absolute;right:16px;bottom:6px;width:332px;margin:0;flex-direction:column;gap:0;font-size:11px;line-height:13px}
+.t-tl .tl-key span{gap:8px}
+
+/* reasons, plan value and checks: one column that scrolls inside */
+.t-left{grid-area:left}
+.t-left .tile-h{margin-bottom:6px}
+.t-left .why-list{margin:0;padding-left:16px;font-size:12.5px;line-height:1.5}
+.t-left .why-list li{margin:0 0 5px}
+.t-left .t-sep{margin-top:10px;padding-top:10px}
+.t-left .cta{margin-top:5px;gap:6px}
+.t-left .cta .btn{padding:5px 10px;font-size:12px}
+.g-plan .cta a[data-scroll]{display:none}
+.t-left .chk li{font-size:12px;padding:5px 0}
+
+/* chart fills the tile: the engine splits the box height between the two charts */
+.t-chart{grid-area:chart;display:flex;flex-direction:column;overflow:auto;padding:8px 14px}
+.t-chart .tile-h{margin-bottom:4px;flex:none;flex-wrap:nowrap;min-width:0}
+.t-chart .tile-h .sub{white-space:nowrap}
+.t-chart .chartbox{flex:0 1 auto;min-height:0}
+.t-chart .chartbox[data-fill]{flex:1 1 0}
+.t-chart .chart-note{margin:0 0 0 4px;font-size:11.5px;color:var(--text-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+
+.t-rail{grid-area:rail}
+.t-rail .act{font-size:18px}
+.t-rail .ri-say{font-size:13px}
+.t-rail .ri-facts div{font-size:12.5px;padding:6px 0}
+.t-rail .ri-facts b{font-size:12px;white-space:normal}
+.t-rail .tbl td,.t-rail .tbl th{padding:5px}
+.t-rail .why li{font-size:12.5px;padding-bottom:6px}
+.t-rail .kvt{font-size:12.5px}
+.t-rail .kvt td{padding:3px 0}
+.t-rail .rsec{margin-top:10px;padding-top:10px}
+
+/* new shared components, in the console's dark theme */
+.plan-st{border-radius:4px}
+.plan-st b{font-family:var(--font-num);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.plan-st span{color:var(--text-2)}
+.tl-hold{background:var(--surface-3);color:var(--text-3)}
+.tl-chg{color:var(--chg-text);background:color-mix(in srgb,var(--chg) 70%,var(--surface))}
+.tl-dis{color:#08111F}
+.tl-offer{background:repeating-linear-gradient(45deg,rgba(8,17,31,.85) 0 1.6px,transparent 1.6px 4px)}
+.why-list{color:var(--text-2)}
+.why-list li::marker{color:var(--text-4)}
+
+/* ---------- Compare with the baseline ---------- */
+/* the uplift as a stat panel: figure and scope left, the three bars right; the price forecast underneath */
+.g-cmp{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"tools" "hero" "q2a"}
+.g-cmp .t-tools{grid-area:tools}
+.t-chero{grid-area:hero;padding:18px 22px;display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);grid-template-rows:auto auto auto auto;grid-template-areas:"cap bars" "n bars" "sub bars" "scope bars";column-gap:56px;align-content:center}
+.t-chero > .cap{grid-area:cap}
+.t-chero .hero-n{grid-area:n;font-size:60px;margin:10px 0 6px;color:var(--accent)}
+.t-chero > .sub{grid-area:sub;margin:0}
+.t-chero .scope{grid-area:scope;margin-top:22px}
+.t-chero .cmp-bars{grid-area:bars;align-self:center;max-width:none;gap:22px;margin:0}
+.t-chero .cb{grid-template-columns:minmax(0,230px) minmax(0,1fr) 96px;font-size:13.5px}
+.t-chero .cb i{height:28px;border-radius:3px}
+.t-chero .cb b{font-size:15px}
+.t-chero .cb.on i{background:var(--accent)}
+.t-q2a{grid-area:q2a;padding:14px 22px;display:flex;flex-direction:column}
+.t-q2a > *{flex:none}
+.t-q2a > #cmp-q2a{flex:1 0 auto;display:flex;flex-direction:column}
+#cmp-q2a .tbl{flex:1 0 auto}
+#cmp-q2a .tbl td{vertical-align:middle}
+.t-q2a .tbl{font-size:13.5px}
+.t-q2a .tbl td,.t-q2a .tbl th{padding:10px 10px}
+
+/* the headline figures and scope boxes, in the console's own terms */
+.hero-n{font-weight:500}
+.hero-n small{font-family:var(--font);font-size:15px}
+.hero-n.neg{color:var(--bad)}
+.hero-bars b{font-weight:500}
+.scope{border-left-color:var(--accent);background:var(--surface-2);border-radius:0 4px 4px 0}
+.scope b{color:var(--text-4);font-size:10px;letter-spacing:.1em}
+.cb.ref i{background:repeating-linear-gradient(45deg,var(--axis) 0 1.5px,transparent 1.5px 5px)}
+
+/* ---------- validation tiles: three results first, a coloured top edge for the verdict ---------- */
+.vt-tiles{gap:8px}
+.vt-tile{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--rule);padding:18px 20px 20px}
+.vt-big{font-size:32px;font-weight:500;margin:10px 0 6px}
+.vt-tile.ok .vt-big{color:var(--ok)}
+.vt-tile.w .vt-big{color:var(--warn-text)}
+.vt-tile .sub{font-size:12.5px}
+/* check lists read as status rows */
+.t-checks .tbl td,.t-fchk .tbl td,.t-hold .tbl td{padding:12px 10px}
+.t-checks .tbl th,.t-fchk .tbl th,.t-hold .tbl th{padding:8px 10px}
+.t-checks .tbl,.t-fchk .tbl,.t-hold .tbl{font-size:13px}
+
+/* ---------- Validation, site battery ---------- */
+.g-sval{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"tools" "vt" "checks"}
+.g-sval .t-tools{grid-area:tools}
+.g-sval .t-tools .note{flex:1;min-width:300px;padding:6px 10px;font-size:12px}
+.g-sval .vt-tiles{grid-area:vt}
+.t-checks{grid-area:checks;display:flex;flex-direction:column}
+.t-checks > *{flex:none}
+.t-checks .tbl{flex:1 0 auto}
+.t-checks .tbl td{vertical-align:middle}
+
+/* ---------- Validation, customer fleet: results, then the two tables one under the other ---------- */
+.g-fval{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"vt" "hold" "fchk"}
+.g-fval .vt-tiles{grid-area:vt}
+.t-hold{grid-area:hold}
+.t-fchk{grid-area:fchk}
+
+/* ---------- Tonight's call: controls and the decision left, the two charts right ---------- */
+.g-act{grid-template-columns:320px minmax(0,1fr)}
+.a-side,.a-main{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
+.a-side .t-tools{flex:none;padding:10px 12px}
+.t-dec{flex:1 1 auto}
+.t-dec .dec{margin:12px 0 6px}
+.t-dec .ac-head .cap{font-size:10.5px}
+.t-dec .dec b{font-size:21px}
+.t-dec .dec small{font-size:12.5px}
+.t-dec .dec-pill{font-size:17px;padding:10px 16px}
+.t-dec .wl li{font-size:13.5px;padding:5px 0}
+.t-dec .kvt{font-size:13.5px}
+.t-dec .kvt td{padding:5px 0}
+.t-dec .rsec{margin-top:16px;padding-top:14px}
+.t-dem{flex:1 1 auto;display:flex;flex-direction:column;position:relative}
+.t-dem #act-dem > .chd{position:absolute;top:10px;left:210px;margin:0}
+.t-dem > *{flex:none}
+.t-dem > #act-dem{margin:auto 0}
+.t-season{flex:1 1 auto;display:flex;flex-direction:column}
+.t-season > *{flex:none}
+.t-season > .legend{margin-top:auto}
+.t-season > .foot{margin-bottom:auto}
+.t-season .budget{margin-top:12px}
+.t-season .foot{margin-top:6px}
+
+/* ---------- Value by party ---------- */
+.g-val{grid-template-columns:400px minmax(0,1fr) 340px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"tools tools tools" "hero verdict verdict" "hero parties parties" "cmp cmp side"}
+.g-val .t-tools{grid-area:tools}
+.g-val .t-tools .scenline{flex-basis:100%;font-size:12px}
+.t-vhero{grid-area:hero;padding:14px 18px}
+.t-vhero .hero-n{font-size:38px;margin:8px 0 6px}
+.t-vhero .hero-bars{gap:28px}
+.t-vhero .scope{margin-top:12px;font-size:12px}
+.t-verdict{grid-area:verdict;min-width:0}
+.t-verdict .verdict{height:100%;padding:12px 16px;border-radius:var(--r)}
+.verdict b{font-size:14.5px}
+.verdict p{font-size:12.5px}
+.t-parties{grid-area:parties;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0}
+.t-parties .party{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px}
+.t-parties .party .big{font-size:24px;margin:6px 0 0}
+.t-cmp{grid-area:cmp}
+.t-cmp .tbl .hl{background:var(--accent-soft)}
+.t-side{grid-area:side}
+.t-side .t-sep2{margin-top:12px;padding-top:10px}
+/* the ledger stays folded: one line that opens inside the tile */
+.fold > summary{font-size:13px;color:var(--text)}
+.fold > summary .sub{font-size:11.5px}
+.fold > summary::marker{color:var(--text-4)}
+
+/* ---------- Settings ---------- */
+.g-cfg{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 340px}
+.cfg-side{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
+.cfg-side > .tile{flex:0 1 auto;min-height:0}
+.cfg-side > .t-check{flex:1 0 auto}
+.g-cfg .cfg-side .f{grid-template-columns:minmax(0,1fr) 120px}
+.g-cfg .f{grid-template-columns:minmax(0,1fr) 176px;row-gap:2px}
+.g-cfg .f > :nth-child(3){grid-column:1/-1;justify-self:start}
+.g-cfg .f .sup.ok{display:none}
+.g-cfg .scen4{grid-template-columns:1fr;gap:8px}
+.g-cfg .sc{background:var(--surface-2);border-color:var(--border)}
+.g-cfg .sc.on{background:var(--accent-soft);border-color:var(--accent)}
+.f input,.f select{background:var(--surface-2)}
+
+
+@media (max-width:1365px){
+  .cbar{gap:12px}
+  .cbar .asset-sw button small{display:none}
+  .cb-nav .nav{padding:0 8px;font-size:12.5px}
+  .cb-run .run small{display:none}
+  .g-plan{grid-template-columns:280px minmax(0,1fr) 280px}
+  .t-head{column-gap:20px}
+  .t-head .instr-h{font-size:19px}
+  .t-head .kpi{width:196px;padding:0 14px}
+  .t-head .kv{font-size:18px}
+  .g-act{grid-template-columns:290px minmax(0,1fr)}
+  .g-val{grid-template-columns:340px minmax(0,1fr) 300px}
+  .g-cfg{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px}
+  .t-chero{grid-template-columns:minmax(0,400px) minmax(0,1fr);column-gap:40px}
+}
+/* shorter screens: the plan's decision moves into the left column so the chart keeps the height it needs;
+   tables sit side by side instead of one under the other */
+@media (max-height:899px) and (min-height:701px) and (min-width:1101px){
+  .cmain{padding:6px 12px 8px;gap:6px}
+  .g-plan{grid-template-columns:300px minmax(0,1fr) 280px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"tl tl tl" "side chart rail"}
+  .p-side{grid-area:side;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto}
+  .p-side > .tile{flex:none;overflow:visible}
+  .t-head{display:block;padding:12px 14px}
+  .t-head .plan-st{display:flex;margin-bottom:10px}
+  .t-head .instr-h{font-size:18px}
+  .t-head .acts li{flex-direction:column;gap:3px}
+  .t-head .kpis{display:grid;margin-top:12px;border-top:1px solid var(--rule)}
+  .t-head .kpi{width:auto;padding:8px 0;border-left:0;border-bottom:1px solid var(--divider)}
+  .t-head .kpi:last-child{border-bottom:0;padding-bottom:0}
+  .t-head .kv{font-size:17px}
+  .t-chero{padding:12px 18px}
+  .t-chero .scope{margin-top:14px}
+  .t-chero .hero-n{font-size:44px}
+  .t-chero .cb i{height:20px}
+  .t-q2a .tbl td,.t-q2a .tbl th{padding:6px 10px}
+  .t-q2a{padding:10px 18px}
+  .g-fval{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"vt vt" "hold fchk"}
+  .vt-tile{padding:14px 16px 16px}
+  .vt-big{font-size:26px;margin:8px 0 4px}
+  .t-checks .tbl td,.t-fchk .tbl td,.t-hold .tbl td{padding:8px}
+  .a-side .t-tools{padding:8px 12px}
+  .t-dem,.t-season{padding:10px 14px}
+  .t-dem{flex:none}
+  .t-dem > #act-dem{margin:0}
+  .t-season > .legend{margin-top:0;padding-top:0}
+  .a-main .tile-h{margin-bottom:4px}
+  .t-season{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:24px;align-content:start}
+  .t-season > .tile-h,.t-season > .legend,.t-season > .chartbox{grid-column:1/-1}
+  .t-season .budget,.t-season .foot{margin-top:8px}
+  .t-dec .dec b{font-size:18px}
+  .t-dec .dec-pill{font-size:15px;padding:8px 13px}
+  .t-dec .wl li,.t-dec .kvt{font-size:13px}
+  .t-dec .rsec{margin-top:12px;padding-top:10px}
+}
+/* short screens: the page scrolls so charts stay at full size */
+@media (max-height:700px){
+  body{overflow:auto}
+  .cmain{height:auto;overflow:visible}
+  .grid{height:auto}
+  .tile,.t-chart,.t-season,.t-head,.t-tl{overflow:visible}
+  .t-chart .chartbox[data-fill]{flex:none}
+  .g-plan .cta a[data-scroll]{display:inline-flex}
+}
+/* small screens fall back to an ordinary scrolling page */
+@media (max-width:1100px){
+  body{overflow:auto}
+  .cmain{height:auto;overflow:visible}
+  .grid{height:auto;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:none!important;grid-template-rows:none!important}
+  .grid > *,.p-side > *{grid-area:auto!important}
+  .p-side{display:contents}
+  .t-head{order:1}.t-tl{order:2}.t-left{order:3}.t-chart{order:4}.t-rail{order:5}
+  .tile,.t-chart,.t-season,.t-head,.t-tl{overflow:visible}
+  .t-chart .chartbox[data-fill]{flex:none}
+  .t-head{display:block}
+  .t-head .kpis{flex-wrap:wrap;row-gap:12px;margin-top:12px}
+  .t-tl{padding:8px 14px}
+  .tl-h,.t-tl .tl-key{position:static;width:auto;margin-top:6px}
+  .t-chero{display:block}
+  .t-parties{grid-template-columns:minmax(0,1fr)}
+  .g-plan .cta a[data-scroll]{display:inline-flex}
+}
+
+/* review fixes: the plan value table fits the right column at 1440×900; the baseline bar is visible on dark */
+#sch-money td,#sch-money th{padding:3px 6px;font-size:12px}
+#sch-money th{font-size:11px}
+.cb i{background:var(--axis)}
+/* the right column carries the selected half-hour and the plan value table; tighter so the net row is in view at 1440×900 */
+.t-rail .ri-say{font-size:12.5px;line-height:1.4;margin-top:4px}
+.t-rail .ri-facts{margin-top:6px}
+.t-rail .ri-facts div{padding:4px 0}
+.t-rail .ri-out{margin-top:8px}
+.t-rail .locked{padding:6px 10px}
+.t-rail .act{margin:4px 0 0}
+.t-rail #sch-money + .foot{display:none}
+.t-rail .locked.ri-out{display:none}  /* the Plan / Outcome switch sits in the chart header */

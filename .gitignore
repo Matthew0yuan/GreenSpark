@@ -1,0 +1,22 @@
+*.zip
+data/processed/v2_value_*.npz
+data/processed/v2_f5_records.parquet
+data/processed/v2_f5x_records.parquet
+# agents/launch.py: raw event logs of agent runs, and the tools' own bytecode
+agents/logs/
+agents/__pycache__/
+# app/: the operator decisions database, bytecode, frontend test output
+var/
+# deploy/: the demo login (demo.py writes it)
+deploy/.env
+app/**/__pycache__/
+app/frontend/test-results/
+app/frontend/playwright-report/
+# Python bytecode, everywhere
+__pycache__/
+*.pyc
+# documents stay local: on GitHub the only document is the root README.md (2026-10-30, the user's decision)
+*.md
+!/README.md
+deliverables/
+output/

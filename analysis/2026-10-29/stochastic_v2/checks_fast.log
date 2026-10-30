@@ -1,0 +1,7 @@
+C1 CVaR algebra: PASS - |beta=0 - sp| 0.00e+00; |objective - recomputed mix| 4.55e-13; cvar's CVaR >= sp's True; cvar's mean <= sp's True (6 random days)
+C2 non-anticipativity: PASS - |sp with a whole-day first stage - plan on the mean| 2.27e-13 $ (3 days)
+C6 options consistent: PASS - 20 feasible options on 5 random days; largest option ev - chosen ev 0.000 $ (must be <= 0 up to the MIP gap); each option's half-hour of its own kind
+570 days, 0 without scenarios
+C3 degenerate scenarios: PASS - sp with 20 copies of the forecast vs e5, money per day: largest |gap| $0.000 over 3 days
+C5 fallback without scenarios: PASS - 3/3 days counted as fallback; money vs e5 largest |gap| 0.00e+00
+5/5 pass

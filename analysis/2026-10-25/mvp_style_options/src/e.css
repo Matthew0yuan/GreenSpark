@@ -1,0 +1,209 @@
+/* E · industry tool, after the market tools used as reference: a product bar, the two assets as underlined tabs
+   over a row of their pages, a grey filter bar, flat bordered cards whose header carries the title and the chart tools.
+   Chart colours follow the references: sell (discharge) brick red, buy (charge) grey, price indigo,
+   state of charge purple, demand teal. */
+html{
+  --font:"Roboto","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  --r:6px; --r-sm:4px; --r-pill:999px;
+  --bg:#F2F3F5; --surface:#FFFFFF; --surface-2:#F5F6F8; --surface-3:#ECEEF1;
+  --border:#DFE2E7; --divider:#ECEEF1; --rule:#D9DCE2;
+  --text:#1C2333; --text-2:#3D4656; --text-3:#666F81; --text-4:#9AA1AE;
+  --accent:#2C3E85; --accent-hover:#22316B; --accent-text:#FFFFFF; --accent-soft:#ECEFF8;
+  --ok:#1E7A4C; --ok-soft:#EAF5EF; --ok-line:#B8DCC8;
+  --warn:#B26A00; --warn-soft:#FFF6E6; --warn-line:#F2D49B; --warn-text:#5E3B00;
+  --bad:#C0342B; --bad-soft:#FDEFEE; --bad-line:#F1BDB8;
+  --info:#3556C8; --info-soft:#EEF2FC; --info-line:#C3CFF1; --info-text:#22398A;
+  --unsup:#666F81; --on-status:#FFFFFF;
+  --hyp-text:#8A5310; --hyp-line:#DDB27A; --hyp-soft:#FBF3E6;
+  --fut-text:#4C3A94; --fut-line:#A99BDD; --fut-soft:#F3F0FB;
+  --proto-bg:#FFF8E1; --proto-text:#6B4A00; --proto-line:#F0E2B6;
+  --dis:#A44A3F; --chg:#A3A8B0; --chg-text:#5F656E; --rr:#8E90B4; --rl:#D4D5E5; --cr:#7FAAA8; --cl:#D3E2E1;
+  --soc:#7B62B6; --mand:#C0342B; --mand-soft:#FCEDED; --mand-hatch:#EBAAAA; --econ:#EEDFAE;
+  --load:#59626D; --meter:#E4E8EC; --price:#3F3D9E; --base:#AAB1B9; --actual:#3F3D9E;
+  --peak:#1C8A86; --peak-soft:#E3F3F2; --cust:#E07B2C; --cust-soft:#FBE7D6; --cust-text:#9A4E12; --on-cust:#FFFFFF;
+  --zen:#2C3E85; --oth:#8A93A3; --spike:#59626D; --bar:#D6DAE0;
+  --grid:#EDEFF2; --axis:#B5BAC3; --axis-light:#DCDFE4; --axis-strong:#59626D;
+  --hatch-bg:#F7F8FA; --hatch-ln:#E0E3E8; --chart-text:#6B7384; --chart-label:#2C3445;
+  --wm:rgba(100,110,120,.05); --mark:#1C2333; --mark-text:#FFFFFF; --sel:rgba(44,62,133,.06); --halo:#FFFFFF;
+  --head-h:159px; /* banner 24 + product bar 54 + asset tabs 42 + page row 38 + rule 1 */
+}
+body{background:var(--bg)}
+.cap{text-transform:none;letter-spacing:0;font-size:12px;font-weight:500}
+.kv,.party .big,.vt-big,.hero-n{font-weight:500;letter-spacing:-.01em}
+
+/* product bar; the two assets as the first row of underlined tabs; the open asset's pages as the second row */
+.ehead{position:sticky;top:24px;z-index:40;background:var(--surface);border-bottom:1px solid var(--border)}
+.eh-top{height:54px;display:flex;align-items:center;gap:14px;padding:0 24px}
+.eh-brand{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.eh-brand .logo{width:30px;height:30px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.eh-brand b{font-size:22px;font-weight:500;color:var(--accent);letter-spacing:-.01em}
+.eh-brand span{font-size:13px;color:var(--text-3);padding-left:12px;margin-left:2px;border-left:1px solid var(--rule)}
+.eh-user{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text-2);white-space:nowrap;padding-right:14px;border-right:1px solid var(--rule)}
+.eh-user .av{width:28px;height:28px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--text-2)}
+.ehead .gear{width:34px;height:34px;border-color:transparent;border-radius:50%;color:var(--text-3)}
+.ehead .gear:hover{background:var(--surface-2);color:var(--text)}
+.ehead .gear.on{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+.eh-tabs{display:flex;align-items:stretch;height:42px;padding:0 24px}
+.eh-tabs .asset-sw{display:flex;align-items:stretch;gap:32px;padding:0;background:none;border-radius:0}
+.eh-tabs .asset-sw button{display:flex;align-items:center;gap:8px;padding:0 2px;border-radius:0;font-size:15px;font-weight:400;color:var(--text-3);box-shadow:inset 0 -3px 0 transparent}
+.eh-tabs .asset-sw button small{display:inline;font-size:12px;color:var(--text-4)}
+.eh-tabs .asset-sw button:hover{color:var(--text)}
+.eh-tabs .asset-sw button.on{background:none;color:var(--accent);font-weight:600;box-shadow:inset 0 -3px 0 var(--accent)}
+.eh-tabs .asset-sw button.on small{color:var(--text-3);font-weight:400}
+.eh-sub{display:flex;align-items:stretch;height:38px;padding:0 14px;border-top:1px solid var(--divider);background:var(--surface)}
+.eh-pages{display:flex;align-items:stretch;gap:4px}
+.eh-pages .nav{padding:0 12px;font-size:13.5px;color:var(--text-3);gap:6px}
+.eh-pages .nav:hover{color:var(--text)}
+.eh-pages .nav.on,.eh-here{color:var(--accent);font-weight:600;box-shadow:inset 0 -2px 0 var(--accent)}
+.eh-here{display:flex;align-items:center;padding:0 12px;font-size:13.5px}
+
+/* filter bar: what the run is about, its state and the run actions */
+.fbar{background:#E8EAEE;border-bottom:1px solid var(--border)}
+.fbar-in{display:flex;align-items:flex-end;gap:14px;padding:10px 24px 12px}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fl,.toolbar .lbl{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3)}
+.fv{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:150px;height:34px;padding:0 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text);white-space:nowrap}
+.fv svg{width:15px;height:15px;fill:none;stroke:var(--text-2);stroke-width:1.4;stroke-linecap:round}
+.fbar .run{align-self:center;margin-right:4px}
+.fbar .btn{align-self:center;height:34px}
+
+/* page */
+.emain{max-width:1640px;margin:0 auto;padding:18px 24px 110px}
+.ph{margin-bottom:14px}
+.ph-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ph h1{font-size:20px;font-weight:600}
+.ph .ctx{margin-top:4px}
+.screen > * + *{margin-top:16px}
+.asset{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.asset h2{font-size:17px;font-weight:600}
+.btn{border-radius:var(--r-sm)}
+.btn.out,.cta .btn{border-color:var(--accent);color:var(--accent);font-weight:600;gap:8px}
+.btn.out:hover,.cta .btn:hover{background:var(--accent-soft)}
+.chip{border-radius:var(--r-sm)}
+
+/* page filters sit in a slim card above the results */
+.toolbar{min-height:52px;padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.toolbar .lbl{margin-right:0}
+.toolbar > .sub{margin-left:4px}
+
+/* pill controls, as in the references */
+.seg{border-radius:999px;padding:3px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--border)}
+.seg button{border-radius:999px;padding:4px 13px}
+.seg button.on{background:var(--accent);color:var(--accent-text);box-shadow:none}
+.seg button.on .lk{stroke:var(--accent-text)}
+
+/* flat bordered cards; the header runs edge to edge with a rule under it */
+.dgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:stretch}
+.card{min-width:0;padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.card-h,.cap-card > .cap:first-child,#act-card .ac-head > .cap:first-child{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:50px;margin:-16px -18px 14px;padding:11px 18px;border-bottom:1px solid var(--divider)}
+.card-h h2,.cap-card > .cap:first-child,#act-card .ac-head > .cap:first-child{font-size:15px;font-weight:600;color:var(--text)}
+.card h3{font-size:14px;font-weight:600;margin-bottom:8px}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}
+.stack-cards{display:flex;flex-direction:column;gap:16px;min-width:0}
+.stack-cards > :last-child{flex:1 0 auto}
+.legend-top{padding:0 0 8px}
+.tbl th{background:var(--surface-2);border-bottom-color:var(--divider)}
+.note{border:1px solid var(--border);background:var(--surface);border-radius:var(--r)}
+.note.w{border-color:var(--warn-line)}.note.i{border-color:var(--info-line)}
+.chd-t{font-size:13px}
+.foot{line-height:1.5}
+
+/* today's plan: whether it can run, the action, three figures, the day, the reasons */
+.plan-st{border-left-width:4px;border-radius:var(--r-sm);padding:10px 16px}
+.plan-st.ok{border-left-color:var(--ok)}
+.plan-st.bad{border-left-color:var(--bad)}
+.dec-card .instr-h{font-size:24px;font-weight:500;margin:2px 0 4px;letter-spacing:-.015em}
+.dec-card .acts{margin-top:14px;gap:10px}
+.dec-card .acts li{font-size:13.5px}
+.tg{border-radius:3px}
+.kpi-cards{display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:16px;min-width:0}
+.kpi-cards .kpi{display:flex;flex-direction:column;justify-content:center;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.kpi-cards .kv{font-size:24px;margin-top:6px}
+.kpi-cards .ks{white-space:normal;line-height:1.45}
+.tl{height:40px}
+.tl-key{margin-top:10px}
+.why-list{margin-top:0;columns:2;column-gap:40px}
+.why-list li{break-inside:avoid;margin:0 0 6px}
+.why-card .cta{margin-top:12px;padding-top:14px;border-top:1px solid var(--divider)}
+#plan-detail{scroll-margin-top:calc(var(--head-h) + 16px)}
+.rail-card .act{font-size:20px}
+#plan-detail{display:flex;flex-direction:column}
+#plan-detail .chart-note{margin-bottom:16px}
+.card-f{margin:auto -18px -16px;padding:12px 18px 12px;border-top:1px solid var(--divider);background:var(--surface-2);border-radius:0 0 var(--r) var(--r)}
+.card-f .chk-h{margin:0 0 2px;font-size:14px}
+.card-f .chk li{border-bottom-color:var(--border)}
+
+/* results with their scope: compare and value open with a hero card */
+.hero-n{font-size:38px}
+.hero-card .cmp-bars{max-width:none}
+.hero-card .scope{border-left-color:var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0}
+.hero-bars{gap:40px}
+
+/* customer calls */
+.dec-card .dec b{font-size:18px}
+.dec-pill{border-radius:var(--r-sm)}
+.budget-card{padding:14px 18px}
+.budget .bar{height:10px;border-radius:2px}
+.daystep{gap:6px}
+
+/* value */
+.verdict{border-radius:var(--r-sm)}
+.verdict-card .verdict{flex-direction:column;gap:10px}
+.verdict-card .verdict .vt{margin-top:0}
+.card > .scenline{display:block;margin:0 0 12px;line-height:1.6}
+.card > .scenline .chip{margin-left:6px}
+.card > .scenline .sub{display:block;margin-top:4px;line-height:1.5}
+.parties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.party{padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.party .big{font-size:28px}
+.own-line{line-height:1.6}
+
+/* the ledger folds into a card header with a chevron */
+.fold-card{padding-top:0;padding-bottom:0}
+.fold-card .fold > summary{display:flex;align-items:center;gap:10px;min-height:50px;margin:0 -18px;padding:11px 18px;font-size:15px;font-weight:600;list-style:none}
+.fold-card .fold > summary::-webkit-details-marker{display:none}
+.fold-card .fold > summary .sub{margin-left:0}
+.fold-card .fold > summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:1.6px solid var(--text-3);border-bottom:1.6px solid var(--text-3);transform:translateY(-2px) rotate(45deg)}
+.fold-card .fold > summary:hover{color:var(--accent)}
+.fold-card .fold[open] > summary{margin-bottom:14px;border-bottom:1px solid var(--divider)}
+.fold-card .fold[open] > summary::after{transform:translateY(2px) rotate(-135deg)}
+.fold-card .fold[open]{padding-bottom:16px}
+
+/* validation: three results as bordered cards, their state as a top rule */
+.vt-tiles{gap:16px}
+.vt-tile{padding:16px 18px;border-color:var(--border);border-top-width:3px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.vt-big{font-size:26px;margin:8px 0 4px}
+
+/* settings: inputs in cards, the input check stays in view */
+.form-grid{align-items:start}
+.form-side{position:sticky;top:calc(var(--head-h) + 16px)}
+.f{grid-template-columns:minmax(0,1fr) 180px 120px}
+.f input,.f select{border-radius:var(--r-sm)}
+.sc{border-radius:var(--r)}
+
+@media (max-width:1365px){
+  .dec-card .instr-h{font-size:21px}
+  .kpi-cards .kv{font-size:21px}
+  .fbar .run small{display:none}
+  .hero-n{font-size:34px}
+}
+@media (max-width:1100px){
+  .dgrid > *{grid-column:span 12!important}
+  .parties{grid-template-columns:minmax(0,1fr)}
+  .fbar-in{flex-wrap:wrap}
+  .why-list{columns:1}
+  .form-side{position:static}
+}
+/* a short window keeps the whole height for content: the header scrolls away */
+@media (max-height:760px){
+  .ehead{position:static}
+  #plan-detail{scroll-margin-top:40px}
+  .form-side{top:40px}
+}
+
+/* review fixes: the filter fields read as facts, not inputs; the day fields only where a single day is shown;
+   discharge in a calm blue so it never looks like the red of a blocked plan */
+.fv{border:0;background:none;padding:0;height:auto;min-width:0;font-size:14px;font-weight:600}
+.fv svg{display:none}
+body:not([data-screen="plan"]):not([data-screen="calls"]) .fld-day{display:none}
+html{--dis:#2E6DA4;--chg:#A3A8B0;--chg-text:#5F656E;--price:#2B2F3A;--actual:#2B2F3A}

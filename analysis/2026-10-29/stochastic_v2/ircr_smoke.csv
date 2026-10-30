@@ -1,0 +1,5 @@
+scenario,strategy,ircr_mw,ircr_no_battery_mw,saving_per_year,saving_barred_7_10_6B,intervals_covered,peak_days_covered
+m1,sp0,,,,0.0,3,1
+m1,cvar0,,,,0.0,3,1
+m1,e5,,,,0.0,3,1
+m1,roll0,,,,0.0,3,1

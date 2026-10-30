@@ -1,0 +1,16 @@
+days_ahead 0 C_strict_seed1: 34,592 predictions, refits 25
+days_ahead 0 C+stem_seed1: 34,592 predictions, refits 25
+days_ahead 1 C_strict_seed1: 36,096 predictions, refits 25
+days_ahead 1 C+stem_seed1: 36,096 predictions, refits 25
+days_ahead 0 C_strict_seed2: 34,592 predictions, refits 25
+days_ahead 0 C+stem_seed2: 34,592 predictions, refits 25
+days_ahead 1 C_strict_seed2: 36,096 predictions, refits 25
+days_ahead 1 C+stem_seed2: 36,096 predictions, refits 25
+days_ahead 0 C_strict_seed3: 34,592 predictions, refits 25
+days_ahead 0 C+stem_seed3: 34,592 predictions, refits 25
+days_ahead 1 C_strict_seed3: 36,096 predictions, refits 25
+days_ahead 1 C+stem_seed3: 36,096 predictions, refits 25
+days_ahead 0 C_strict_seed4: 34,592 predictions, refits 25
+days_ahead 0 C+stem_seed4: 34,592 predictions, refits 25
+days_ahead 1 C_strict_seed4: 36,096 predictions, refits 25
+days_ahead 1 C+stem_seed4: 36,096 predictions, refits 25

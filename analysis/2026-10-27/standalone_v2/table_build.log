@@ -1,0 +1,4 @@
+v2_value_median_h50_state_p03c16671.npz: 570 days; level $65-128/MWh (median 93); solved for 10 MW / 40 MWh, round trip 0.85, wear $30/MWh, CMD 10 MW, charging room min(import limit, CMD) 10 MW, load x0
+  2025-07-02 (L $88): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 48 / 37 / 18 / 0 / 0 / 0
+  2026-01-07 (L $77): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 49 / 41 / 32 / 21 / 12 / 5
+  2026-08-05 (L $123): 08:00 value $/MWh at 0/5/10/20/30/39 MWh: 109 / 103 / 95 / 82 / 72 / 66

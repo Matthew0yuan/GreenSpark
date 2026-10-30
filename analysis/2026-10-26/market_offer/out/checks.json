@@ -1,0 +1,418 @@
+{
+ "V0b": {
+  "days": 563,
+  "from": "2025-04-01",
+  "to": "2026-10-15",
+  "max_abs_diff": {
+   "total": 1.2732925824820995e-11,
+   "energy": 1.2732925824820995e-11,
+   "fcess": 1.1937117960769683e-11,
+   "soc_end": 4.263256414560601e-14
+  },
+  "pass": true
+ },
+ "V1": {
+  "gate": {
+   "days": 570,
+   "requests_with_errors": 0,
+   "errors": 0,
+   "dis": 164160
+  },
+  "0900": {
+   "days": 570,
+   "requests_with_errors": 0,
+   "errors": 0,
+   "dis": 155610
+  },
+  "pass": true
+ },
+ "V1c": {
+  "clean_errors": 0,
+  "plants": {
+   "11 段": {
+    "caught": true,
+    "first": "$.submission.variation.tradingDays[0].energy.facilities[0].dispatchIntervals[0].tranches: more than 10 items"
+   },
+   "价格不递增": {
+    "caught": true,
+    "first": "energy DI 1: prices not strictly rising (7.4.47(b); RTMS spec C036)"
+   },
+   "价格重复": {
+    "caught": true,
+    "first": "energy DI 1: prices not strictly rising (7.4.47(b); RTMS spec C036)"
+   },
+   "价格不是整分": {
+    "caught": true,
+    "first": "$.submission.variation.tradingDays[0].energy.facilities[0].dispatchIntervals[0].tranches[1].price: none of anyOf"
+   },
+   "价格超过上限": {
+    "caught": true,
+    "first": "energy DI 1: price 1101.0 outside -1000..1100 (Energy Offer Price limits)"
+   },
+   "MIN 不在第一段": {
+    "caught": true,
+    "first": "energy DI 1: MIN not in the first tranche (RTMS spec C047)"
+   },
+   "充电价不低于放电价": {
+    "caught": true,
+    "first": "energy DI 1: a withdrawal price not below every injection price (7.4.47(c))"
+   },
+   "数量之和不等于能力": {
+    "caught": true,
+    "first": "energy DI 1: injection tranches do not sum to maxInjectionCapacity (7.4.40(g)(iii))"
+   },
+   "0 MW 段": {
+    "caught": true,
+    "first": "energy DI 1: a 0 MW tranche (WEM Submissions E[A])"
+   },
+   "FCESS 梯形顺序错": {
+    "caught": true,
+    "first": "regulationRaise DI 101: trapezium out of order (7.4.41)"
+   },
+   "FCESS 价格超过上限": {
+    "caught": true,
+    "first": "regulationRaise DI 101: price 230.0 not whole cents in 0..229 (7.4.51A; ERA)"
+   },
+   "缺必填字段": {
+    "caught": true,
+    "first": "$.submission.variation.tradingDays[0].energy.facilities[0].dispatchIntervals[0]: missing inflexibleFlag"
+   },
+   "数量不是 0.001 的倍数": {
+    "caught": true,
+    "first": "$.submission.variation.tradingDays[0].energy.facilities[0].dispatchIntervals[0].tranches[0].quantity: -3.9995 not a multiple of 0.001"
+   }
+  },
+  "pass": true
+ },
+ "V2": {
+  "steps": 164160,
+  "strict": 164045,
+  "mismatch": 0,
+  "share_ok": 1.0,
+  "max_diff_strict": 0.0004999999999996119,
+  "outside": {
+   "价格到了上限": 115,
+   "计划充电超过充电能力": 0
+  },
+  "outside_mismatch": 9,
+  "ladder_sold_steps": {
+   "样本内": 1983,
+   "测试期A": 689,
+   "测试期B": 12
+  },
+  "non_cent_prices": 4,
+  "planted_price_mismatch": 94,
+  "planted_mw_mismatch": 2584,
+  "examples": [],
+  "pass": true
+ },
+ "V4": {
+  "样本内": {
+   "days": 456,
+   "steps": 131328,
+   "steps_off": 14859,
+   "abs_mwh": 2202.7722451748814,
+   "net_mwh": 546.2513059326959,
+   "money_aud": 225643.25495529844,
+   "money_aud_per_day": 494.83169946337375,
+   "by_cause": {
+    "FCESS 联合检查没让卖": {
+     "steps": 1176,
+     "abs_mwh": 901.4697680398458,
+     "money_aud": 211861.12887904784
+    },
+    "价格到了上下限": {
+     "steps": 88,
+     "abs_mwh": 49.500042082392234,
+     "money_aud": 46599.60415129453
+    },
+    "其他": {
+     "steps": 610,
+     "abs_mwh": 59.06674957944452,
+     "money_aud": 2086.0491041373793
+    },
+    "可卖量不同（存电、预算、负荷）": {
+     "steps": 231,
+     "abs_mwh": 8.148038981160788,
+     "money_aud": -981.4223613279783
+    },
+    "合规留电、电表上限或连接点": {
+     "steps": 9003,
+     "abs_mwh": 366.2799550152065,
+     "money_aud": -23856.405228321048
+    },
+    "截止后计划改了": {
+     "steps": 3751,
+     "abs_mwh": 818.3076914768313,
+     "money_aud": -10065.69958953227
+    }
+   }
+  },
+  "测试期A": {
+   "days": 107,
+   "steps": 30816,
+   "steps_off": 3073,
+   "abs_mwh": 354.55439731096413,
+   "net_mwh": -13.448464516503265,
+   "money_aud": -1851.337005340713,
+   "money_aud_per_day": -17.302215003184234,
+   "by_cause": {
+    "FCESS 联合检查没让卖": {
+     "steps": 25,
+     "abs_mwh": 11.446927122183393,
+     "money_aud": 3095.0164283709555
+    },
+    "其他": {
+     "steps": 98,
+     "abs_mwh": 10.03575914942251,
+     "money_aud": 487.8277796472908
+    },
+    "可卖量不同（存电、预算、负荷）": {
+     "steps": 47,
+     "abs_mwh": 1.4191470990030461,
+     "money_aud": -148.03687639799043
+    },
+    "合规留电、电表上限或连接点": {
+     "steps": 1608,
+     "abs_mwh": 52.10764977844382,
+     "money_aud": -4169.927757552981
+    },
+    "截止后计划改了": {
+     "steps": 1295,
+     "abs_mwh": 279.5449141619114,
+     "money_aud": -1116.2165794079876
+    }
+   }
+  },
+  "测试期B": {
+   "days": 7,
+   "steps": 2016,
+   "steps_off": 113,
+   "abs_mwh": 12.966615881375152,
+   "net_mwh": -7.888981030647185,
+   "money_aud": -708.7817651297313,
+   "money_aud_per_day": -101.2545378756759,
+   "by_cause": {
+    "其他": {
+     "steps": 5,
+     "abs_mwh": 1.0692797533265823,
+     "money_aud": 32.069463354367656
+    },
+    "合规留电、电表上限或连接点": {
+     "steps": 48,
+     "abs_mwh": 1.8992565484810466,
+     "money_aud": -138.70042610452225
+    },
+    "截止后计划改了": {
+     "steps": 60,
+     "abs_mwh": 9.998079579567522,
+     "money_aud": -602.1508023795767
+    }
+   }
+  }
+ },
+ "others": {
+  "max_tranches": 5,
+  "merged": 0,
+  "tranches_hist": {
+   "1": 13660,
+   "2": 39975,
+   "3": 96322,
+   "4": 14186,
+   "5": 17
+  },
+  "样本内": {
+   "neg_price_plan_discharge_steps": 273,
+   "neg_price_plan_discharge_mwh": 11.252946085289677,
+   "raise_trapezium_out": 12201,
+   "lower_trapezium_out": 1952,
+   "steps_with_raise": 130842,
+   "steps_with_lower": 112305
+  },
+  "测试期A": {
+   "neg_price_plan_discharge_steps": 0,
+   "neg_price_plan_discharge_mwh": 0.0,
+   "raise_trapezium_out": 4179,
+   "lower_trapezium_out": 706,
+   "steps_with_raise": 30495,
+   "steps_with_lower": 26886
+  },
+  "测试期B": {
+   "neg_price_plan_discharge_steps": 0,
+   "neg_price_plan_discharge_mwh": 0.0,
+   "raise_trapezium_out": 176,
+   "lower_trapezium_out": 12,
+   "steps_with_raise": 2013,
+   "steps_with_lower": 1731
+  }
+ },
+ "V3": {
+  "samples": [
+   {
+    "day": "2026-07-29",
+    "di": 91,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-03-30",
+    "di": 238,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-01-17",
+    "di": 199,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2025-09-01",
+    "di": 16,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2025-09-23",
+    "di": 123,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2025-04-24",
+    "di": 250,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2025-05-13",
+    "di": 167,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": false,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2025-04-10",
+    "di": 25,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2025-07-09",
+    "di": 224,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-07-08",
+    "di": 215,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": false,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-04-06",
+    "di": 247,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-09-03",
+    "di": 63,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-01-13",
+    "di": 40,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": false,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-03-12",
+    "di": 251,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-10-06",
+    "di": 22,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-05-21",
+    "di": 163,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": false,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-03-27",
+    "di": 37,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-02-04",
+    "di": 97,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": true,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-02-14",
+    "di": 147,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": false,
+    "replay_equals_run": true
+   },
+   {
+    "day": "2026-09-15",
+    "di": 131,
+    "same_up_to_di": true,
+    "later_changed": true,
+    "leak_caught": false,
+    "replay_equals_run": true
+   }
+  ],
+  "same": 20,
+  "later_changed": 20,
+  "leak_caught": 14,
+  "replay_equals_run": 20,
+  "pass": true
+ }
+}

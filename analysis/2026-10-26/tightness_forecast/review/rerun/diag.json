@@ -1,0 +1,12 @@
+{
+ "same_hit_days_M1_M2": true,
+ "same_top_days_M1_M2": 44,
+ "boot_M1_share_le0": 0.084,
+ "boot_M1_q": [
+  -0.1501,
+  -0.0436,
+  0.0443,
+  0.3043
+ ],
+ "error_split_max_abs_check": 1.4779288903810084e-12
+}

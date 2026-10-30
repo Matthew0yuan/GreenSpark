@@ -1,0 +1,1239 @@
+{
+ "files": {
+  "data/processed/wem_30min.parquet": 3.93,
+  "data/processed/wem_5min.parquet": 13.45,
+  "data/processed/forecast_dispatch_0900.parquet": 2.26,
+  "data/processed/forecast_dispatch_0900_d1.parquet": 2.28,
+  "data/processed/spike_risk_0900.parquet": 0.6,
+  "data/processed/aemo_predispatch.parquet": 4.76,
+  "data/processed/spike_table.parquet": 18.0,
+  "data/processed/esroi.parquet": 0.03,
+  "data/processed/weather_30min.parquet": 1.73,
+  "data/processed/spike_risk_history_0900.parquet": 0.98,
+  "data/processed/spike_risk_history_0900_d1.parquet": 1.0,
+  "data/processed/v2_test_log.parquet": 5.13,
+  "data/processed/v2_e5_records.parquet": 16.18,
+  "data/processed/policy_sweep.parquet": 2.79,
+  "data/processed/v2_value_median_h50_state.npz": 89.59,
+  "data/processed/v2_value_median.npz": 29.93,
+  "data/processed/v2_value_median_h50.npz": 29.91,
+  "reports/v2_test_daily.csv": 1.29,
+  "reports/v2_test_bills.csv": 0.02,
+  "reports/v2_test_ircr.csv": 0.0,
+  "reports/v2_test_result.csv": 0.01,
+  "reports/policy/policy_backtest.csv": 0.03,
+  "reports/policy/policy_results.csv": 5.64,
+  "reports/policy/policy_zenith_only.csv": 0.0,
+  "reports/policy/policy_loso.csv": 0.0,
+  "reports/policy/policy_stress.csv": 0.01,
+  "data/processed (all)": 772.3
+ },
+ "schemas": {
+  "wem_30min.parquet": {
+   "rows": 53664,
+   "columns": [
+    "energy",
+    "cont_raise",
+    "cont_lower",
+    "reg_raise",
+    "reg_lower",
+    "rocof",
+    "demand_mw",
+    "unscheduled_demand_mw",
+    "withdrawal_mw",
+    "dpv_mw",
+    "req_energy_mw",
+    "req_cont_raise_mw",
+    "req_cont_lower_mw",
+    "req_reg_raise_mw",
+    "req_reg_lower_mw",
+    "req_rocof",
+    "filled",
+    "esroi",
+    "ts"
+   ],
+   "n_columns": 19
+  },
+  "wem_5min.parquet": {
+   "rows": 321984,
+   "columns": [
+    "energy",
+    "cont_raise",
+    "cont_lower",
+    "reg_raise",
+    "reg_lower",
+    "rocof",
+    "filled",
+    "demand_mw",
+    "unscheduled_demand_mw",
+    "withdrawal_mw",
+    "dpv_mw",
+    "req_energy_mw",
+    "req_cont_raise_mw",
+    "req_cont_lower_mw",
+    "req_reg_raise_mw",
+    "req_reg_lower_mw",
+    "req_rocof",
+    "ts"
+   ],
+   "n_columns": 18
+  },
+  "forecast_dispatch_0900.parquet": {
+   "rows": 27360,
+   "columns": [
+    "issue_date",
+    "ts",
+    "days_ahead",
+    "target_date",
+    "energy",
+    "energy_with_aemo",
+    "energy_no_aemo",
+    "reg_raise",
+    "cont_raise",
+    "reg_lower",
+    "cont_lower",
+    "yday_energy",
+    "yday_reg_raise",
+    "yday_cont_raise",
+    "yday_reg_lower",
+    "yday_cont_lower",
+    "actual_energy",
+    "actual_cont_raise",
+    "actual_cont_lower",
+    "actual_reg_raise",
+    "actual_reg_lower",
+    "actual_rocof",
+    "issue_time"
+   ],
+   "n_columns": 23
+  },
+  "forecast_dispatch_0900_d1.parquet": {
+   "rows": 27024,
+   "columns": [
+    "issue_date",
+    "ts",
+    "days_ahead",
+    "target_date",
+    "energy",
+    "energy_with_aemo",
+    "energy_no_aemo",
+    "reg_raise",
+    "cont_raise",
+    "reg_lower",
+    "cont_lower",
+    "yday_energy",
+    "yday_reg_raise",
+    "yday_cont_raise",
+    "yday_reg_lower",
+    "yday_cont_lower",
+    "actual_energy",
+    "actual_cont_raise",
+    "actual_cont_lower",
+    "actual_reg_raise",
+    "actual_reg_lower",
+    "actual_rocof",
+    "issue_time"
+   ],
+   "n_columns": 23
+  },
+  "spike_risk_0900.parquet": {
+   "rows": 27360,
+   "columns": [
+    "issue_date",
+    "ts",
+    "days_ahead",
+    "target_date",
+    "actual_energy",
+    "p_spike"
+   ],
+   "n_columns": 6
+  },
+  "aemo_predispatch.parquet": {
+   "rows": 107328,
+   "columns": [
+    "issue_date",
+    "issued_at",
+    "ts",
+    "days_ahead",
+    "aemo_energy",
+    "aemo_cont_raise",
+    "aemo_cont_lower",
+    "aemo_reg_raise",
+    "aemo_reg_lower",
+    "aemo_rocof",
+    "aemo_req_energy_mw",
+    "aemo_demand_level_mw",
+    "aemo_dpv_level_mw",
+    "aemo_in_service_injection_mw",
+    "aemo_available_injection_mw",
+    "aemo_dispatch_injection_mw",
+    "aemo_dispatch_withdrawal_mw",
+    "aemo_energy_deficit_mw"
+   ],
+   "n_columns": 18
+  },
+  "spike_table.parquet": {
+   "rows": 104340,
+   "columns": [
+    "issue_date",
+    "issue_time",
+    "target_time",
+    "days_ahead",
+    "lead_hours",
+    "target_date",
+    "slot",
+    "rtp",
+    "max5",
+    "spike",
+    "spike300",
+    "any5",
+    "dow",
+    "month",
+    "weekend",
+    "p_prev1",
+    "p_prev7_mean",
+    "p_prev7_max",
+    "spk_slot_7",
+    "spk_near_7",
+    "spk_slot_28",
+    "p_day_max_prev1",
+    "p_day_mean_prev1",
+    "p_evening_prev1",
+    "p_max5_prev1",
+    "spk_days_7",
+    "spk_int_7",
+    "spk_int_28",
+    "p_std_7",
+    "h_since_spike",
+    "pd_req",
+    "pd_req_rev",
+    "src_pd_run",
+    "src_pd_available_at",
+    "pd_age_h",
+    "pd_inservice",
+    "pd_inservice_rev",
+    "pd_avail",
+    "pd_withdraw",
+    "pd_demand",
+    "pd_dpv",
+    "pd_inject",
+    "pd_deficit",
+    "aemo_energy",
+    "aemo_energy_rev",
+    "aemo_reg_raise",
+    "aemo_reg_lower",
+    "aemo_cont_raise",
+    "aemo_cont_lower",
+    "pd_headroom",
+    "pd_headroom_all",
+    "c_margin_avail",
+    "c_net_demand",
+    "c_day_margin_min",
+    "pd_day_headroom_min",
+    "pd_day_req_max",
+    "pd_req_vs_daymax",
+    "aemo_day_max",
+    "pd_req_ramp1h",
+    "pd_req_ramp3h",
+    "st_ref",
+    "st_ref_rev",
+    "src_st_report",
+    "src_st_available_at",
+    "st_age_h",
+    "st_high",
+    "st_low",
+    "st_spread",
+    "st_minus_pd",
+    "st_short_energy",
+    "st_short_raise",
+    "st_short_energy_day",
+    "wx_temp",
+    "src_wx_run",
+    "wx_age_h",
+    "wx_ghi",
+    "wx_cloud",
+    "wx_wind_midwest",
+    "wx_wind_merredin",
+    "src_wx_available_at"
+   ],
+   "n_columns": 100
+  },
+  "esroi.parquet": {
+   "rows": 1127,
+   "columns": [
+    "trading_date",
+    "start",
+    "end",
+    "start_ts",
+    "end_ts"
+   ],
+   "n_columns": 5
+  },
+  "weather_30min.parquet": {
+   "rows": 53471,
+   "columns": [
+    "wx_merredin_temperature_2m_previous_day1",
+    "wx_merredin_temperature_2m_previous_day2",
+    "wx_merredin_cloud_cover_previous_day1",
+    "wx_merredin_cloud_cover_previous_day2",
+    "wx_merredin_wind_speed_100m_previous_day1",
+    "wx_merredin_wind_speed_100m_previous_day2",
+    "wx_midwest_temperature_2m_previous_day1",
+    "wx_midwest_temperature_2m_previous_day2",
+    "wx_midwest_cloud_cover_previous_day1",
+    "wx_midwest_cloud_cover_previous_day2",
+    "wx_midwest_wind_speed_100m_previous_day1",
+    "wx_midwest_wind_speed_100m_previous_day2",
+    "wx_perth_temperature_2m_previous_day1",
+    "wx_perth_temperature_2m_previous_day2",
+    "wx_perth_cloud_cover_previous_day1",
+    "wx_perth_cloud_cover_previous_day2",
+    "wx_perth_wind_speed_100m_previous_day1",
+    "wx_perth_wind_speed_100m_previous_day2",
+    "wx_merredin_shortwave_radiation_previous_day1",
+    "wx_merredin_shortwave_radiation_previous_day2",
+    "wx_midwest_shortwave_radiation_previous_day1",
+    "wx_midwest_shortwave_radiation_previous_day2",
+    "wx_perth_shortwave_radiation_previous_day1",
+    "wx_perth_shortwave_radiation_previous_day2",
+    "ts"
+   ],
+   "n_columns": 25
+  },
+  "spike_risk_history_0900.parquet": {
+   "rows": 44640,
+   "columns": [
+    "issue_date",
+    "ts",
+    "days_ahead",
+    "target_date",
+    "actual_energy",
+    "p_spike"
+   ],
+   "n_columns": 6
+  },
+  "spike_risk_history_0900_d1.parquet": {
+   "rows": 44640,
+   "columns": [
+    "issue_date",
+    "ts",
+    "days_ahead",
+    "target_date",
+    "actual_energy",
+    "p_spike"
+   ],
+   "n_columns": 6
+  },
+  "v2_test_log.parquet": {
+   "rows": 191520,
+   "columns": [
+    "slot",
+    "forecast",
+    "rtp",
+    "max_5min_price",
+    "plan_net",
+    "plan_soc",
+    "floor",
+    "offer_price",
+    "offer_fcess",
+    "offer_mwh",
+    "stored_value",
+    "soc_start",
+    "risk",
+    "energy_mwh",
+    "soc",
+    "triggered",
+    "replanned",
+    "site_load_fc",
+    "site_load_plan",
+    "site_load",
+    "reg_raise_mw",
+    "cont_raise_mw",
+    "reg_lower_mw",
+    "cont_lower_mw",
+    "meter_mw",
+    "plan_net_live",
+    "cap_mw",
+    "capacity_short_mw",
+    "day",
+    "strategy"
+   ],
+   "n_columns": 30
+  },
+  "v2_e5_records.parquet": {
+   "rows": 28805,
+   "columns": [
+    "day",
+    "t0",
+    "kind",
+    "stored",
+    "budget",
+    "energy_value",
+    "fcess_value",
+    "wear",
+    "stored_value",
+    "value",
+    "money",
+    "penalty",
+    "shortfall",
+    "net",
+    "soc",
+    "reg_raise",
+    "cont_raise",
+    "reg_lower",
+    "cont_lower",
+    "prices",
+    "terminal",
+    "load",
+    "hard",
+    "soft_names",
+    "soft_values",
+    "soft_floors",
+    "cap_names",
+    "cap_kinds",
+    "cap_penalties",
+    "cap_compliance",
+    "caps",
+    "fcess_prices",
+    "config",
+    "carry_mwh",
+    "site_ircr_mwh",
+    "site_total_mwh",
+    "site_cmd_hours",
+    "site_ircr_value",
+    "site_cmd_value",
+    "site_layers",
+    "level",
+    "curve_shift_mwh",
+    "curve_shift_early_mwh",
+    "state_today",
+    "state_tomorrow"
+   ],
+   "n_columns": 45
+  },
+  "policy_sweep.parquet": {
+   "rows": 324000,
+   "columns": [
+    "scenario",
+    "pay",
+    "comp",
+    "cap",
+    "event_h",
+    "standby_h",
+    "reserve",
+    "theta",
+    "ircr_q",
+    "zen",
+    "zen_risk",
+    "cust",
+    "cust_worst",
+    "violations",
+    "energy_zen",
+    "energy_cust",
+    "annual_zen",
+    "annual_fee",
+    "covered2023",
+    "covered2024",
+    "covered2025",
+    "season2023_zen",
+    "season2024_zen",
+    "season2025_zen",
+    "season2023_cust",
+    "season2024_cust",
+    "season2025_cust"
+   ],
+   "n_columns": 27
+  },
+  "v2_value_median_h50_state.npz": {
+   "day": [
+    570
+   ],
+   "level": [
+    570
+   ],
+   "curve": [
+    570,
+    40
+   ],
+   "marg": [
+    570,
+    48,
+    8,
+    40
+   ],
+   "edges": [
+    570,
+    48,
+    9
+   ],
+   "weeks": [
+    75
+   ],
+   "n_tables": [],
+   "grid_month": [
+    75
+   ],
+   "grid_level": [
+    75
+   ],
+   "grid_curve": [
+    75,
+    7,
+    40
+   ],
+   "curve_state": [
+    570,
+    2,
+    40
+   ],
+   "marg_state": [
+    570,
+    2,
+    48,
+    8,
+    40
+   ],
+   "state_today": [
+    570
+   ],
+   "state_tomorrow": [
+    570
+   ]
+  },
+  "v2_value_median.npz": {
+   "day": [
+    570
+   ],
+   "level": [
+    570
+   ],
+   "curve": [
+    570,
+    40
+   ],
+   "marg": [
+    570,
+    48,
+    8,
+    40
+   ],
+   "edges": [
+    570,
+    48,
+    9
+   ],
+   "weeks": [
+    75
+   ],
+   "n_tables": [],
+   "grid_month": [
+    75
+   ],
+   "grid_level": [
+    75
+   ],
+   "grid_curve": [
+    75,
+    7,
+    40
+   ]
+  },
+  "v2_value_median_h50.npz": {
+   "day": [
+    570
+   ],
+   "level": [
+    570
+   ],
+   "curve": [
+    570,
+    40
+   ],
+   "marg": [
+    570,
+    48,
+    8,
+    40
+   ],
+   "edges": [
+    570,
+    48,
+    9
+   ],
+   "weeks": [
+    75
+   ],
+   "n_tables": [],
+   "grid_month": [
+    75
+   ],
+   "grid_level": [
+    75
+   ],
+   "grid_curve": [
+    75,
+    7,
+    40
+   ]
+  },
+  "v2_test_daily.csv": {
+   "columns": [
+    "scenario",
+    "strategy",
+    "day",
+    "credit_mw",
+    "energy",
+    "fcess",
+    "wear",
+    "total",
+    "discharged_mwh",
+    "triggers",
+    "replans",
+    "obligation_shortfall_mwh",
+    "site_shortfall_mw",
+    "soc_end",
+    "max_import_mw",
+    "import_mwh",
+    "export_mwh",
+    "self_mwh",
+    "plans_short",
+    "plan_shortfall_mwh",
+    "timing_errors",
+    "reg_out_mwh",
+    "reg_in_mwh",
+    "budget_overrun_mwh",
+    "capacity_short_mw_ti",
+    "planner_fallback",
+    "plan_slot",
+    "plan_money",
+    "plan_got",
+    "excess_cmd_mwh",
+    "excess_cmd_mw",
+    "excess_ircr_mwh",
+    "excess_ircr_mw",
+    "period",
+    "capacity",
+    "refund",
+    "contract",
+    "ledger_total"
+   ],
+   "n_columns": 38
+  },
+  "v2_test_bills.csv": {
+   "columns": [
+    "month",
+    "demand",
+    "fixed",
+    "enuc",
+    "total",
+    "peak_mw",
+    "days",
+    "scenario",
+    "strategy",
+    "saving",
+    "saving_per_day",
+    "period"
+   ],
+   "n_columns": 12
+  },
+  "v2_test_ircr.csv": {
+   "columns": [
+    "scenario",
+    "strategy",
+    "ircr_mw",
+    "ircr_no_battery_mw",
+    "saving_per_year",
+    "saving_barred_7_10_6B",
+    "intervals_covered",
+    "peak_days_covered"
+   ],
+   "n_columns": 8
+  },
+  "v2_test_result.csv": {
+   "columns": [
+    "period",
+    "config",
+    "base",
+    "days",
+    "per_day",
+    "vs_base",
+    "vs_base_lo",
+    "vs_base_hi",
+    "vs_base_7d_lo",
+    "vs_base_7d_hi",
+    "market_vs_base",
+    "market_lo",
+    "market_hi",
+    "bill_vs_base",
+    "bill_months_better",
+    "bill_months_worse"
+   ],
+   "n_columns": 16
+  },
+  "policy/policy_backtest.csv": {
+   "columns": [
+    "scenario",
+    "case",
+    "obligations",
+    "participation",
+    "period",
+    "days",
+    "enrolled",
+    "participation_share",
+    "zenith_profit",
+    "zenith_per_customer",
+    "customer_benefit",
+    "risk_adjusted_profit",
+    "activations",
+    "ircr_calls",
+    "energy_calls",
+    "remaining_allowance",
+    "energy_kwh",
+    "net_export_kwh",
+    "feasible",
+    "policy_name",
+    "policy_comp_type",
+    "policy_pay_per_kwh",
+    "policy_pay_per_event",
+    "policy_annual_fee",
+    "policy_max_events",
+    "policy_event_h",
+    "policy_standby_h",
+    "policy_max_control_h",
+    "policy_reserve_soc",
+    "policy_notice_h",
+    "policy_window",
+    "policy_max_events_per_day",
+    "policy_offset_rate",
+    "policy_min_usable_kwh",
+    "rule_kind",
+    "rule_theta",
+    "rule_ircr_q",
+    "rule_reserve_for_ircr",
+    "revenue_wholesale",
+    "revenue_capacity",
+    "revenue_fcess",
+    "compensation_pay_energy",
+    "compensation_pay_event",
+    "compensation_annual_fee",
+    "compensation_offset",
+    "costs_ops_event",
+    "costs_ops_customer",
+    "costs_fixed",
+    "customer_payments",
+    "customer_bill",
+    "customer_wear",
+    "customer_hassle",
+    "violations_total",
+    "covered_2025",
+    "fit_zen",
+    "fit_zen_risk",
+    "fit_cust",
+    "fit_cust_worst",
+    "covered_2023",
+    "covered_2024"
+   ],
+   "n_columns": 60
+  },
+  "policy/policy_results.csv": {
+   "columns": [
+    "scenario",
+    "pay",
+    "comp",
+    "cap",
+    "event_h",
+    "standby_h",
+    "reserve",
+    "theta",
+    "ircr_q",
+    "enrolled",
+    "zen",
+    "zen_risk",
+    "cust",
+    "cust_worst",
+    "fleet_profit",
+    "fleet_risk",
+    "violations",
+    "feasible",
+    "attractive",
+    "rank",
+    "energy_zen",
+    "season2023_zen",
+    "season2024_zen",
+    "season2025_zen",
+    "covered2023",
+    "covered2024",
+    "covered2025",
+    "fleet_profit_pessimistic",
+    "feasible_pessimistic",
+    "fleet_profit_optimistic",
+    "feasible_optimistic"
+   ],
+   "n_columns": 31
+  },
+  "policy/policy_zenith_only.csv": {
+   "columns": [
+    "Unnamed: 0",
+    "days",
+    "energy",
+    "fcess",
+    "wear",
+    "network_bill_saving",
+    "factory_ircr_saving",
+    "total"
+   ],
+   "n_columns": 8
+  },
+  "policy/policy_loso.csv": {
+   "columns": [
+    "scenario",
+    "held_out",
+    "chronological",
+    "case",
+    "pay",
+    "comp",
+    "cap",
+    "event_h",
+    "standby_h",
+    "reserve",
+    "ircr_q",
+    "enrolled",
+    "expected_profit_from_training",
+    "held_out_profit",
+    "held_out_customer_benefit",
+    "covered_held_out",
+    "feasible_on_training"
+   ],
+   "n_columns": 17
+  },
+  "policy/policy_stress.csv": {
+   "columns": [
+    "scenario",
+    "case",
+    "stress",
+    "period",
+    "enrolled",
+    "activations",
+    "energy_calls",
+    "ircr_calls",
+    "zenith_profit",
+    "customer_benefit",
+    "peak_days_covered",
+    "fails"
+   ],
+   "n_columns": 12
+  },
+  "wem_30min_index": "ts",
+  "forecast_dispatch_0900_dtypes": {
+   "issue_date": "datetime64[us]",
+   "ts": "datetime64[us]",
+   "days_ahead": "int64",
+   "target_date": "datetime64[us]",
+   "energy": "float64",
+   "energy_with_aemo": "float64",
+   "energy_no_aemo": "float64",
+   "reg_raise": "float64",
+   "cont_raise": "float64",
+   "reg_lower": "float64",
+   "cont_lower": "float64",
+   "yday_energy": "float64",
+   "yday_reg_raise": "float64",
+   "yday_cont_raise": "float64",
+   "yday_reg_lower": "float64",
+   "yday_cont_lower": "float64",
+   "actual_energy": "float64",
+   "actual_cont_raise": "float64",
+   "actual_cont_lower": "float64",
+   "actual_reg_raise": "float64",
+   "actual_reg_lower": "float64",
+   "actual_rocof": "float64",
+   "issue_time": "datetime64[us]"
+  },
+  "run_day_summary_keys": [
+   "budget_overrun_mwh",
+   "capacity_short_mw_ti",
+   "credit_mw",
+   "discharged_mwh",
+   "energy",
+   "excess_cmd_mw",
+   "excess_cmd_mwh",
+   "export_mwh",
+   "fcess",
+   "import_mwh",
+   "max_import_mw",
+   "obligation_shortfall_mwh",
+   "plan_got",
+   "plan_money",
+   "plan_shortfall_mwh",
+   "plan_slot",
+   "planner_fallback",
+   "plans_short",
+   "reg_in_mwh",
+   "reg_out_mwh",
+   "replans",
+   "self_mwh",
+   "site_shortfall_mw",
+   "soc_end",
+   "timing_errors",
+   "total",
+   "triggers",
+   "wear"
+  ],
+  "run_day_log_columns": [
+   "slot",
+   "forecast",
+   "rtp",
+   "max_5min_price",
+   "plan_net",
+   "plan_soc",
+   "floor",
+   "offer_price",
+   "offer_fcess",
+   "offer_mwh",
+   "stored_value",
+   "soc_start",
+   "risk",
+   "energy_mwh",
+   "soc",
+   "triggered",
+   "replanned",
+   "site_load_fc",
+   "site_load_plan",
+   "site_load",
+   "reg_raise_mw",
+   "cont_raise_mw",
+   "reg_lower_mw",
+   "cont_lower_mw",
+   "meter_mw",
+   "plan_net_live",
+   "cap_mw",
+   "capacity_short_mw"
+  ],
+  "record_keys": [
+   "budget",
+   "cap_compliance",
+   "cap_kinds",
+   "cap_names",
+   "cap_penalties",
+   "caps",
+   "carry_mwh",
+   "config",
+   "cont_lower",
+   "cont_raise",
+   "curve_shift_early_mwh",
+   "curve_shift_mwh",
+   "day",
+   "energy_value",
+   "fcess_prices",
+   "fcess_value",
+   "hard",
+   "kind",
+   "level",
+   "load",
+   "money",
+   "net",
+   "penalty",
+   "prices",
+   "reg_lower",
+   "reg_raise",
+   "shortfall",
+   "site_cmd_hours",
+   "site_cmd_value",
+   "site_ircr_mwh",
+   "site_ircr_value",
+   "site_layers",
+   "site_total_mwh",
+   "soc",
+   "soft_floors",
+   "soft_names",
+   "soft_values",
+   "state_today",
+   "state_tomorrow",
+   "stored",
+   "stored_value",
+   "t0",
+   "terminal",
+   "value",
+   "wear"
+  ],
+  "PolicyEvaluation_fields": [
+   "policy",
+   "rule",
+   "obligations",
+   "participation",
+   "period",
+   "days",
+   "enrolled",
+   "participation_share",
+   "zenith_profit",
+   "zenith_per_customer",
+   "customer_benefit",
+   "risk_adjusted_profit",
+   "activations",
+   "ircr_calls",
+   "energy_calls",
+   "remaining_allowance",
+   "energy_kwh",
+   "net_export_kwh",
+   "revenue",
+   "compensation",
+   "costs",
+   "customer_items",
+   "parties",
+   "violations",
+   "peak_days_covered",
+   "feasible"
+  ]
+ },
+ "ranges": {
+  "v2_value_median_h50_state.npz": [
+   "2025-04-01",
+   "2026-10-22",
+   570
+  ],
+  "v2_value_median.npz": [
+   "2025-04-01",
+   "2026-10-22",
+   570
+  ],
+  "v2_value_median_h50.npz": [
+   "2025-04-01",
+   "2026-10-22",
+   570
+  ],
+  "v2_test_daily.csv": {
+   "days": [
+    "2025-04-01",
+    "2026-10-22"
+   ],
+   "rows_per_strategy": {
+    "rel+ladder": 570,
+    "rw50": 570,
+    "rw50+state": 570,
+    "rw50+state t5": 570,
+    "rw50+state t5+roll": 570,
+    "site": 570,
+    "v1": 570
+   },
+   "scenarios": [
+    "m1"
+   ]
+  },
+  "v2_test_bills.csv": {
+   "months": [
+    "2025-04",
+    "2026-10"
+   ],
+   "rows": 133
+  },
+  "wem_30min": [
+   "2023-10-01 08:00:00",
+   "2026-10-23 07:30:00",
+   "datetime64[us]"
+  ],
+  "forecast_dispatch_0900": {
+   "issue_date": [
+    "2025-04-01 00:00:00",
+    "2026-10-22 00:00:00"
+   ],
+   "ts": [
+    "2025-04-01 08:00:00",
+    "2026-10-23 07:30:00"
+   ],
+   "target_date": [
+    "2025-04-01 00:00:00",
+    "2026-10-22 00:00:00"
+   ],
+   "issue_time": [
+    "2025-04-01 09:00:00",
+    "2026-10-22 09:00:00"
+   ]
+  },
+  "aemo_predispatch_issued_at": [
+   "2023-10-01 08:15:10",
+   "2026-10-22 08:15:07",
+   "{datetime.time(8, 15, 7): 7776, datetime.time(8, 15, 13): 7296, datetime.time(8, 15, 9): 6816, datetime.time(8, 15, 8): 6816, datetime.time(8, 15, 12): 6624}"
+  ],
+  "load_days_0900": [
+   "2025-04-01",
+   "2026-10-22",
+   570
+  ],
+  "load_days_missing": []
+ },
+ "timing_s": {
+  "load_days_0900": 5.43,
+  "q2b_aux": 1.17,
+  "replay_one_day_e5": {
+   "hot season day, in-sample 2026-02-02 record=False": {
+    "seconds": 3.56,
+    "total": 16752.076862612317,
+    "saved_total": 16752.076862612317,
+    "soc_end": 17.94862583157283,
+    "saved_soc_end": 17.94862583157283,
+    "identical": true,
+    "replans": 47,
+    "records": 0,
+    "log_columns": 28
+   },
+   "hot season day, in-sample 2026-02-02 record=True": {
+    "seconds": 2.51,
+    "total": 16752.076862612317,
+    "saved_total": 16752.076862612317,
+    "soc_end": 17.94862583157283,
+    "saved_soc_end": 17.94862583157283,
+    "identical": true,
+    "replans": 47,
+    "records": 48,
+    "log_columns": 28
+   },
+   "test day, unseen part 2026-10-20 record=False": {
+    "seconds": 1.15,
+    "total": 985.6963848129467,
+    "saved_total": 985.6963848129468,
+    "soc_end": 32.03091543680863,
+    "saved_soc_end": 32.03091543680863,
+    "identical": false,
+    "replans": 47,
+    "records": 0,
+    "log_columns": 28
+   },
+   "test day, unseen part 2026-10-20 record=True": {
+    "seconds": 1.05,
+    "total": 985.6963848129467,
+    "saved_total": 985.6963848129468,
+    "soc_end": 32.03091543680863,
+    "saved_soc_end": 32.03091543680863,
+    "identical": false,
+    "replans": 47,
+    "records": 48,
+    "log_columns": 28
+   }
+  },
+  "policy_load_market": 0.03,
+  "policy_load_forecasts": 9.06,
+  "policy_baseline": 5.8,
+  "policy_fit_rule_first (family built)": 12.36,
+  "policy_evaluate_in_sample": 0.04,
+  "policy_custom_new_family_fit_and_evaluate": 0.27,
+  "policy_custom_test_refit": 0.14,
+  "zenith_only": 0.05
+ },
+ "checks": {
+  "forecast_rows_with_energy_by_days_ahead": {
+   "0": 26220
+  },
+  "constants": {
+   "bt.FIRST_DAY": "2025-04-01",
+   "bt.LAST_DAY": "2026-10-22",
+   "CUTOFF": "2026-07-01",
+   "TRAIN_END": "2026-06-30",
+   "ps.FIRST_DAY": "2023-10-01",
+   "ps.LAST_DAY": "2026-10-22",
+   "ps.SEASONS": [
+    2023,
+    2024,
+    2025
+   ],
+   "E5": "rw50+state t5+roll",
+   "E5_fields": {
+    "name": "rw50+state t5+roll",
+    "site_reserve": "True",
+    "site_load_basis": "plan",
+    "value": "relative",
+    "curve_shift": "True",
+    "level_stat": "median",
+    "ladder": "True",
+    "spike_reserve_mwh": "0.0",
+    "offer_lag": "1",
+    "offer_end": "True",
+    "usable_mwh": "None",
+    "plan_days": "1",
+    "record": "True",
+    "hurdle": "50.0",
+    "buy": "False",
+    "state": "True",
+    "terminal_0900": "True",
+    "regime": "False",
+    "replan_every": "1",
+    "bid": "",
+    "offer_lock": "0",
+    "offer_cap": "None",
+    "buy_room": "False",
+    "curve": "()"
+   },
+   "Q2B_ASSET": "Asset(battery=Battery(power_mw=10.0, energy_mwh=40.0, round_trip=0.85), limits=Limits(cycles_per_day=1.0, fcess_sustain_h=0.25), wear_per_mwh=30.0)",
+   "FACTORY": "Site(import_limit_mw=12.0, export_limit_mw=10.0, load_scale=10.0)",
+   "CMD": 9.0,
+   "HURDLE": 75.0,
+   "PREFS": "RiskPrefs(hurdle_per_mwh=75.0, load_margin=0.16, capacity_floor='sustain', risk_threshold=None, reserve_mwh=0.0, reserve_value=200.0, ambiguity=(0.5, 1.7))"
+  },
+  "ircr_flags_by_season": {
+   "flags0": {
+    "2023": 43,
+    "2024": 27,
+    "2025": 27
+   },
+   "flags1": {
+    "2023": 43,
+    "2024": 26,
+    "2025": 22
+   },
+   "tolerance": [
+    212.21736666666698,
+    174.14473333333336
+   ],
+   "value_per_mw_flagged_day": 9165.503889626534
+  },
+  "policy_C_S2b_reproduced": {
+   "zenith_profit": 2077638.335787157,
+   "saved": 2077638.335787157,
+   "same_to_1c": true,
+   "rule": {
+    "theta": "0.0",
+    "ircr_q": 0.75
+   }
+  },
+  "custom_example_runs": {
+   "in_sample_feasible": true,
+   "test_days": 114,
+   "test_activations": 0
+  },
+  "family_array_mb": 6.6,
+  "policy_flags_by_season": {
+   "0.9": {
+    "2023": 50,
+    "2024": 28,
+    "2025": 27,
+    "2026": 0
+   },
+   "0.75": {
+    "2023": 42,
+    "2024": 25,
+    "2025": 24,
+    "2026": 0
+   },
+   "0.5": {
+    "2023": 33,
+    "2024": 21,
+    "2025": 18,
+    "2026": 0
+   }
+  },
+  "zenith_only_total": {
+   "FY2025-26": 3363431.5410828833,
+   "test": 237487.5757177758
+  },
+  "rss_mb": "psutil not installed",
+  "cpu_count": 20,
+  "installed_fastapi": false,
+  "installed_uvicorn": false,
+  "installed_pydantic": false,
+  "installed_streamlit": false,
+  "installed_flask": false,
+  "installed_httpx": false,
+  "installed_pytest": false,
+  "installed_duckdb": false,
+  "installed_orjson": false
+ }
+}

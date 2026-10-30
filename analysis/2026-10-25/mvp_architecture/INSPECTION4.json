@@ -1,0 +1,54 @@
+{
+ "scenarios_0900": {
+  "rows": 517960,
+  "columns": [
+   "day",
+   "member",
+   "analog_day",
+   "slot",
+   "energy",
+   "reg_raise",
+   "cont_raise",
+   "reg_lower",
+   "cont_lower",
+   "period"
+  ],
+  "mb": 11.57,
+  "days": [
+   "2025-04-01",
+   "2026-10-15",
+   563
+  ],
+  "members": 20
+ },
+ "days": {
+  "in_sample_2025-04-01_2026-06-30": 456,
+  "test_seen_2026-07-01_2026-10-15": 107,
+  "test_unseen_2026-10-16_on": 7,
+  "contract_year_2025-26": 365,
+  "hot_season_2025-26": 121,
+  "all": 570
+ },
+ "value_table_in_memory_mb": 106.4,
+ "value_table_arrays_mb": {
+  "marg": 35.02,
+  "marg_state": 70.04
+ },
+ "spike_risk_0900": {
+  "rows": 27360,
+  "null_p_spike": 1140,
+  "null_p_spike_by_slot_first4": {
+   "0": 570,
+   "1": 570,
+   "2": 0,
+   "3": 0
+  }
+ },
+ "forecast_0900_null_energy_by_slot_first4": {
+  "0": 570,
+  "1": 570,
+  "2": 0,
+  "3": 0
+ },
+ "forecast_0900_null_fcess": 0
+}

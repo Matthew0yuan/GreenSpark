@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {"type": "string", "enum": ["done", "partial", "blocked"]},
+    "summary_zh": {"type": "string", "description": "大白话中文：做了什么、主要结论、限制"},
+    "deliverables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}, "what": {"type": "string"}},
+        "required": ["path", "what"]
+      }
+    },
+    "commands_run": {
+      "type": "array",
+      "description": "真正执行过的命令，逐字照抄",
+      "items": {
+        "type": "object",
+        "properties": {"command": {"type": "string"}, "ok": {"type": "boolean"}, "purpose": {"type": "string"}},
+        "required": ["command", "ok"]
+      }
+    },
+    "tests": {
+      "type": "object",
+      "properties": {
+        "ran": {"type": "boolean"},
+        "command": {"type": "string"},
+        "passed": {"type": "integer"},
+        "failed": {"type": "integer"}
+      },
+      "required": ["ran"]
+    },
+    "blocked": {
+      "type": "array",
+      "description": "被拒或没做成的事",
+      "items": {
+        "type": "object",
+        "properties": {"action": {"type": "string"}, "reason": {"type": "string"}},
+        "required": ["action", "reason"]
+      }
+    },
+    "key_numbers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "value": {"type": "string"},
+          "period": {"type": "string"},
+          "status": {"type": "string"}
+        },
+        "required": ["name", "value", "period", "status"]
+      }
+    },
+    "open_issues": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["status", "summary_zh", "deliverables", "commands_run", "tests", "blocked"]
+}

@@ -1,0 +1,54 @@
+{
+ "no charging (load x100)": {
+  "files": [
+   "v2_value_median_h50_p06278c32.npz",
+   "v2_value_median_h50_p28af50f2.npz"
+  ],
+  "cells": 22800,
+  "cells_088_lower": 0,
+  "share_088_lower": 0.0,
+  "largest_drop": -3.858642578125,
+  "mean_curve_085": [
+   753.1,
+   742.47,
+   730.46,
+   684.83,
+   638.72,
+   605.36
+  ],
+  "mean_curve_088": [
+   765.55,
+   753.71,
+   740.57,
+   694.42,
+   648.87,
+   614.44
+  ]
+ },
+ "as built (load x10)": {
+  "files": [
+   "v2_value_median_h50.npz",
+   "v2_value_median_h50_p9c12852e.npz"
+  ],
+  "cells": 22800,
+  "cells_088_lower": 20989,
+  "share_088_lower": 0.9205701754385965,
+  "largest_drop": 2.5449371337890625,
+  "mean_curve_085": [
+   127.74,
+   111.02,
+   97.2,
+   76.23,
+   60.2,
+   28.26
+  ],
+  "mean_curve_088": [
+   126.77,
+   110.15,
+   96.15,
+   75.57,
+   59.89,
+   28.17
+  ]
+ }
+}

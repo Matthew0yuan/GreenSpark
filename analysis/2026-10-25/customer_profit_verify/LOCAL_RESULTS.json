@@ -1,0 +1,40 @@
+[
+  {
+    "scenario": "S2b",
+    "enrolled": 4470.825836022982,
+    "expected_profit": 1882769.5687277638,
+    "expected_unit_profit": 421.12344291241266,
+    "expected_risk_profit": 1303515.4647507346,
+    "FY_profit": 2077638.335787157,
+    "FY_unit_profit": 464.7101927001741,
+    "FY_customer_benefit": 144.59265456785826,
+    "expected_customer_benefit": 185.36043244750059,
+    "after_fixed": 1782769.5687277638,
+    "minimum_enrolled": 238,
+    "test_profit": -34909.1880347,
+    "rule": {
+      "theta": "0.0",
+      "ircr_q": 0.75
+    },
+    "accounting_difference": 0.0
+  },
+  {
+    "scenario": "S3",
+    "enrolled": 3280.255127301128,
+    "expected_profit": 408180.7684747522,
+    "expected_unit_profit": 124.4356772976339,
+    "expected_risk_profit": 48810.735574056715,
+    "FY_profit": 548740.967732849,
+    "FY_unit_profit": 167.28606356430956,
+    "FY_customer_benefit": 94.1908015344617,
+    "expected_customer_benefit": 125.829810083509,
+    "after_fixed": 308180.7684747522,
+    "minimum_enrolled": 804,
+    "test_profit": -25612.95099399511,
+    "rule": {
+      "theta": "inf",
+      "ircr_q": 0.75
+    },
+    "accounting_difference": 1.1641532182693481e-10
+  }
+]

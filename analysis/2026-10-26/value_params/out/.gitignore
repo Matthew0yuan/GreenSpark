@@ -1,0 +1,3 @@
+# value tables are 30-90 MB each: kept here for the comparison, not for the repository
+*.npz
+*.parquet

@@ -7,26 +7,34 @@ Features only use what is known at issue time: the 08:00 run itself, actual pric
 end of trading day D-1, and AEMO's errors on trading days that have already finished.
 
 Each (product, days_ahead) gets its own LightGBM model on the residual (actual - AEMO), with an
-L1 loss because we are scored on MAE. Walk-forward: refit at the start of every test month on
-all data whose actuals were known by then, then forecast that month.
+L1 loss because we are scored on MAE. Walk-forward: refit at the start of every month on all data
+whose actuals were known by then (never after TRAIN_END), then forecast that month.
 
 Two variants are fit side by side so the effect of weather is measured on identical rows:
   aemo+ml     AEMO forecast + recent prices/errors + calendar
   aemo+ml+wx  the same plus ECMWF weather forecasts (scripts/download_weather.py). Intervals of D
               use the forecast made 24h before valid time, intervals of D+1 the one made 48h
-              before, so both were issued before 08:15 on D.
+              before.
+
+Timing (found 2026-10-17, reports/spike/findings.md): the 08:00 run is public ~08:35, not by 08:15,
+and the fixed "24h / 48h before" weather vintages include ECMWF runs not yet public on the morning
+of D (valid times 18-24 UTC). build_frame(issue=...) builds the frame as of a strict issue time
+instead (vpp.spike.protocol: 09:00): weather from the newest run public by then, runs not public by
+then dropped. The default (issue=None) is the original frame.
 
 Run:  .venv/bin/python -m vpp.aemo_correction
 """
 
 import os
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
 from vpp.data import PROCESSED, PRODUCTS, ROOT, trading_date
-from vpp.evaluate import TEST_START
+from vpp.evaluate import CUTOFF, TEST_START, TRAIN_END, period_of
 
 REPORTS = ROOT / "reports"
 
@@ -39,11 +47,33 @@ WEATHER = [
     "wx_temp", "wx_ghi", "wx_cloud", "wx_wind_midwest", "wx_wind_merredin",
     "wx_tmax_day", "wx_ghi_day", "wx_wind_evening",
 ]
+# Also predict rows whose actual is not known yet (the trading day in progress, tomorrow). Off in the research runs; the
+# app's live data turn it on (app/live/build.py). Only rows with an actual train, so no other prediction changes.
+UNLABELLED = False
 LGB_PARAMS = dict(
     objective="l1", n_estimators=400, learning_rate=0.03, num_leaves=31, min_child_samples=50,
     subsample=0.8, subsample_freq=1, colsample_bytree=0.8, verbose=-1,
-    random_state=0, n_jobs=max(1, (os.cpu_count() or 2) // 2),
+    random_state=0, n_jobs=1,
 )
+# Monthly refits are independent, so they train in parallel threads (LightGBM releases the GIL),
+# one LightGBM thread each.
+N_WORKERS = os.cpu_count() or 1
+
+
+def monthly_refits(data: pd.DataFrame, days_ahead: int, start: pd.Timestamp,
+                   fit_predict: Callable[[pd.Series, pd.Series], pd.Series]) -> pd.Series:
+    """Walk-forward: for every month from `start`, fit_predict(train, test) on boolean row masks."""
+    def one_month(month_start: pd.Timestamp) -> pd.Series | None:
+        month_end = month_start + pd.offsets.MonthBegin(1)
+        # labels must be known when the month's first forecast is issued, and no later than TRAIN_END
+        train = ((data["target_date"] < month_start - pd.Timedelta(days=days_ahead))
+                 & (data["target_date"] <= TRAIN_END))
+        test = (data["target_date"] >= month_start) & (data["target_date"] < month_end)
+        return fit_predict(train, test) if test.any() else None
+
+    months = pd.date_range(start.normalize(), data["target_date"].max(), freq="MS")
+    with ThreadPoolExecutor(N_WORKERS) as pool:
+        return pd.concat([p for p in pool.map(one_month, months) if p is not None])
 
 
 def trading_slot(idx: pd.DatetimeIndex) -> np.ndarray:
@@ -85,7 +115,10 @@ def weather_features(weather: pd.DataFrame, lead: str) -> pd.DataFrame:
     return w[WEATHER]
 
 
-def build_frame(df30: pd.DataFrame, runs: pd.DataFrame, weather: pd.DataFrame | None = None) -> pd.DataFrame:
+def build_frame(df30: pd.DataFrame, runs: pd.DataFrame, weather: pd.DataFrame | None = None,
+                issue: pd.Timedelta | None = None) -> pd.DataFrame:
+    """One row per (run, interval) with the model features. issue: build as of issue_date + issue only
+    (point-in-time weather from data/pit, runs public by then); `weather` is then not used."""
     f = runs.copy()
     ts = pd.DatetimeIndex(f["ts"])
     f["target_date"] = trading_date(ts)
@@ -107,7 +140,18 @@ def build_frame(df30: pd.DataFrame, runs: pd.DataFrame, weather: pd.DataFrame | 
         # reference forecast only (not a model input): 28-day average profile
         f[f"prof28_{p}"] = _lookup(actual.rolling(28, min_periods=14).mean(), last_complete, f["slot"])
 
-    if weather is not None:
+    if issue is not None:
+        from vpp.spike import features as sf
+        from vpp.spike import protocol as pc
+        f["issue_time"] = f["issue_date"] + issue
+        r = pd.DataFrame({"issue_date": f["issue_date"].to_numpy(), "target_date": f["target_date"].to_numpy(),
+                          "target_time": ts, "issue_time": f["issue_time"].to_numpy()})
+        r = sf.weather_features(r, pc.AVAILABILITY)
+        f[WEATHER] = r[WEATHER].to_numpy()
+        f["src_wx_available_at"] = r["src_wx_available_at"].to_numpy()
+        # runs public after the issue (their issue ID + 20 min): ~8 days, all before the backtest
+        f = f[(f["issued_at"] + pc.AVAILABILITY["predispatch"] <= f["issue_time"]).to_numpy()]
+    elif weather is not None:
         same_day = weather_features(weather, "previous_day1").reindex(ts).to_numpy()
         next_day = weather_features(weather, "previous_day2").reindex(ts).to_numpy()
         f[WEATHER] = np.where((f["days_ahead"].to_numpy() == 0)[:, None], same_day, next_day)
@@ -128,20 +172,17 @@ def walk_forward(frame: pd.DataFrame, product: str, days_ahead: int, weather: bo
     residual=True learns actual - AEMO and returns that correction; residual=False learns the price
     itself. `cols` overrides the default feature list.
     """
-    data = frame[(frame["days_ahead"] == days_ahead) & frame[f"actual_{product}"].notna()]
+    data = frame[(frame["days_ahead"] == days_ahead) & (frame[f"actual_{product}"].notna() | UNLABELLED)]
+    known = data[f"actual_{product}"].notna()
     cols = features_for(product, weather) if cols is None else cols
     target = data[f"actual_{product}"] - (data[f"aemo_{product}"] if residual else 0)
-    preds = []
-    for month_start in pd.date_range(start.normalize(), data["target_date"].max(), freq="MS"):
-        month_end = month_start + pd.offsets.MonthBegin(1)
-        # labels must be known when the month's first forecast is issued
-        train = data["target_date"] < month_start - pd.Timedelta(days=days_ahead)
-        test = (data["target_date"] >= month_start) & (data["target_date"] < month_end)
-        if not test.any():
-            continue
+
+    def fit_predict(train: pd.Series, test: pd.Series) -> pd.Series:
+        train = train & known
         model = lgb.LGBMRegressor(**LGB_PARAMS).fit(data.loc[train, cols], target[train])
-        preds.append(pd.Series(model.predict(data.loc[test, cols]), index=data.index[test]))
-    return pd.concat(preds)
+        return pd.Series(model.predict(data.loc[test, cols]), index=data.index[test])
+
+    return monthly_refits(data, days_ahead, start, fit_predict)
 
 
 def score(err: pd.Series) -> dict:
@@ -170,12 +211,13 @@ def main() -> None:
             }
             ok = pd.concat(methods, axis=1).notna().all(axis=1)
             actual = sub[f"actual_{p}"][ok]
+            test = ok & (period_of(sub["target_date"]) == "test")  # metrics on the test only
             for name, fc in methods.items():
-                rows.append({"days_ahead": days_ahead, "product": p, "method": name, "n": int(ok.sum()),
-                             **score(fc[ok] - actual)})
+                rows.append({"days_ahead": days_ahead, "product": p, "method": name, "n": int(test.sum()),
+                             **score(fc[test] - sub[f"actual_{p}"][test])})
             if p == "energy":
-                errs = pd.DataFrame({k: (v[ok] - actual).abs() for k, v in methods.items()})
-                by_slot.append(errs.groupby(sub.loc[ok, "ts"].dt.strftime("%H:%M")).mean().add_suffix(f"_d{days_ahead}"))
+                errs = pd.DataFrame({k: (v[test] - sub[f"actual_{p}"][test]).abs() for k, v in methods.items()})
+                by_slot.append(errs.groupby(sub.loc[test, "ts"].dt.strftime("%H:%M")).mean().add_suffix(f"_d{days_ahead}"))
             forecasts.append(sub.loc[ok, ["issue_date", "ts", "days_ahead"]].assign(
                 product=p, actual=actual, baseline=methods["baseline"][ok], profile28=methods["profile28"][ok],
                 aemo=methods["aemo"][ok], aemo_ml=methods["aemo+ml"][ok], aemo_ml_wx=methods["aemo+ml+wx"][ok]))
@@ -190,8 +232,8 @@ def main() -> None:
     mae["skill_vs_baseline"] = 1 - mae["aemo+ml+wx"] / mae["baseline"]
     mae["skill_vs_profile28"] = 1 - mae["aemo+ml+wx"] / mae["profile28"]
     mae["weather_gain"] = 1 - mae["aemo+ml+wx"] / mae["aemo+ml"]
-    scored = frame.loc[frame["target_date"] >= TEST_START.normalize()].dropna(subset=["actual_energy"])
-    print(f"Test: target trading days {scored['target_date'].min().date()} -> {scored['target_date'].max().date()}, walk-forward monthly refits")
+    print(f"Test: trading days from {CUTOFF.date()}; walk-forward monthly refits from {TEST_START.date()}, "
+          f"trained on data up to {TRAIN_END.date()} at most")
     print("MAE ($/MWh energy, $/MW/h FCESS); skill = 1 - MAE/MAE_ref\n")
     print(mae.round(3).to_string())
     print("\nRMSE:")

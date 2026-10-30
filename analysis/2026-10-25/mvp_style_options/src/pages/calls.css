@@ -1,0 +1,53 @@
+/* Customer fleet · Decide (round 5): the day and the view on one line, the call in one line, the call budget as one bar */
+#s-calls .cl-tools{margin:0 0 20px}
+#s-calls .daystep{gap:6px;font-size:15px}
+#s-calls .daystep .btn{padding:5px 6px}
+#s-calls .daystep svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#day-label{min-width:122px;text-align:center;font-variant-numeric:tabular-nums}
+
+/* the call: the pill and the event read as one headline */
+.cl-dec .dec-h{display:flex;align-items:center;gap:16px;margin-top:0}
+.cl-dec .dec-pill{font-size:18px;line-height:1.2;padding:8px 16px;letter-spacing:.04em}
+.cl-dec .chips{margin-top:14px}
+.cl-dec .chips .hind{align-self:center;margin-right:4px}
+/* the season-review outcome: colour plus an icon, never colour alone */
+.tipc.cl-oc{gap:6px;font-weight:600}
+.tipc.cl-oc b{font-size:12px}
+.tipc.cl-oc.ok{border-color:var(--ok-line);background:var(--ok-soft);color:var(--ok)}
+.tipc.cl-oc.mu{background:var(--surface-2);color:var(--text-2)}
+
+/* the call budget: one cell per call of the contract year's cap; hatched = tonight, not yet happened at 09:00.
+   Round 6: no caption; the cap and the two denominators sit in the counts' hover notes */
+.cl-budget{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;margin-top:24px}
+.cl-bcap{font-size:13px;font-weight:600;color:var(--text-2);cursor:help;text-decoration:underline dotted var(--text-4);text-underline-offset:4px}
+.cl-cells{display:flex;gap:2px;height:14px}
+.cl-cells i{flex:1 1 0;min-width:0;border-radius:2px;background:var(--surface-3)}
+.cl-cells i.u{background:var(--cust)}
+.cl-cells i.t{background:repeating-linear-gradient(45deg,var(--cust) 0 1.5px,var(--cust-soft) 1.5px 4px);box-shadow:inset 0 0 0 1px var(--cust)}
+/* season review: a caret under the selected day's call */
+.cl-cells i.cur{position:relative}
+.cl-cells i.cur::after{content:"";position:absolute;left:50%;top:calc(100% + 2px);transform:translateX(-50%);border:4px solid transparent;border-bottom:5px solid var(--text)}
+.cl-bl{display:flex;align-items:baseline;font-size:13px;color:var(--text-3);white-space:nowrap}
+.cl-bl > span + span::before{content:"·";margin:0 8px;color:var(--text-4)}
+.cl-bl b{font-size:16px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.cl-budget + .blk{margin-top:24px}
+#act-legend{gap:4px 12px;padding:0}
+#act-tag:empty{display:none}
+#act-legend b{font-size:12px}
+
+/* words with a hover note outside a chip (a heading, a source, a legend entry): dotted underline, like the budget caption */
+#act-h[data-note],#act-dem-sub[data-note],#act-legend u{cursor:help;text-decoration:underline dotted var(--text-4);text-underline-offset:4px}
+#act-legend [data-note]{cursor:help}
+/* plain words with a note (the call window in the headline, the budget counts): same dotted underline */
+#s-calls .nt[data-note]{cursor:help;text-decoration:underline dotted var(--text-4);text-underline-offset:4px}
+#s-calls .hind[data-note]{cursor:help}
+
+@media (max-width:900px){
+  .cl-budget{grid-template-columns:minmax(0,1fr)}
+  .cl-bl{flex-wrap:wrap}
+}
+/* the right column's chips (payment, response) wrap onto two lines so the headline keeps one line */
+.cl-dec .dec-val{max-width:460px}
+
+/* round 6: the season chart's days are clickable; the cursor says so instead of a "click a day" hint */
+#act-chart .hit{cursor:pointer}

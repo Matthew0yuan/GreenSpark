@@ -1,0 +1,19 @@
+file,result
+by_month.csv,identical
+daily_predictions.csv,identical
+error_split.csv,identical
+error_split_events.csv,identical
+error_split_lrc_other.csv,identical
+events_in_sample.csv,identical
+events_test.csv,identical
+fits.csv,identical
+history_lrc_outage_lowwind.csv,identical
+main_result.csv,identical
+missed_by_M1.csv,identical
+secondary.csv,identical
+selfcheck.csv,identical
+vs_high_risk.csv,identical
+summary.json,identical
+diag.json,identical
+"F4 scrambled future, every month",0 of 1788 predicted values changed
+"F4 test period, labels after 2026-06-26 scrambled",0 of 216 changed

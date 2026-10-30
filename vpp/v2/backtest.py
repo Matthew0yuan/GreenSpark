@@ -1,0 +1,554 @@
+"""v2 backtest (reports/v2_plan.md): v2 configurations through v1's days, ledger and bills, tested as the plan
+wrote down before the runs. Choices use the days before the cutoff only; the days after it are printed once.
+
+  --step s2    ② site reserve: v1 vs v2-site (pass: month-block 95% interval of the daily gain above 0), with
+               v2-site + 20 MWh for spikes and the expected-load basis reported alongside
+  --step s3    the relative value curve (rel) and its layered offers (rel+ladder) on v2-site (pass: gain over
+               v2-site above 0 by the month-block interval, and a mean at least v2-site + 20 MWh's; both passing,
+               the higher mean)
+  --step sens  the sensitivities of section 5.4, each against its own base (reported, never chosen on)
+  --step b2    round 4 (section 11.4): the value table and the real-time offers at the wear plus h = 0 / 25 / 50, the
+               plans keeping the hurdle of 75 (pass: month-block 95% interval of the gain over rel+ladder above 0;
+               several passing, the highest mean)
+  --step b3    round 4 (section 11.5): the offers' buy side on B2's winner rw50 (pass: as b2, over rw50)
+  --step b4    round 4 (section 11.6): values by the market state of the day and of the next, on rw50 (as b3)
+  --step t5    round 5 (section 12.3): the 08:00 plan's end value without tomorrow's site reserve, public at 09:00,
+               on B4's winner (a fix, reported only; the base of the later round-5 steps)
+  --step c5    round 5 (section 12.4): today's offer values also by whether the day has already spiked, on t5
+               (pass: month-block 95% interval of the gain over t5 above 0)
+  --step e5    round 5 (section 12.5): the plans also redone at the start of every trading interval, on t5 (as c5),
+               with the energy market by time of day and the night re-plans after a dip (reports/v2_e5_roll.csv)
+  --step f5    round 5 (section 12.6): B3's buy side at the full value, capped, with or without a floor under the
+               values, and the night fill (a reference), on e5 (pass: as c5; both passing, the higher mean)
+  --step g5    round 5 (section 12.7): the gate closure (offer prices 20 minutes old; prices and quantities locked 15
+               minutes before) and the $1,000 offer ceiling, layer by layer on e5 (reported only)
+  --step f5x   section 13: f5 again with buying beyond the plan only within the room the caps leave over the
+               planned load and regulation lower (13.1, 13.2; pass: as f5)
+  --step b3x   section 13.3: B3 again with the same fix, on rw50 (reported only)
+  --step fwd   section 13.4: e5 with rw50+state, rel+ladder and v1 alongside, on the days from 2026-10-16 (reported only)
+  --step test  section 14: every version adopted so far, v1 to e5, each against the one before it on the test (every
+               day from the cutoff with data) and on its two parts, the days the earlier rounds had seen and the days
+               from 2026-10-16 (reported only)
+  --step q6    round 6 (section 15): the plans' own price-quantity curve for the interval each starts with, on e5
+               (pass: month-block 95% interval of the gain over e5 above 0); a one-point curve, the plan itself,
+               alongside (it must equal e5); FCESS by product, the buys beyond and short of the plan, the points run
+  --smoke  2026-01-12..23 and 2025-08-04..15 only (code checks; nothing is chosen on them)
+
+A day's money is its ledger plus its month's bill saving per day (vpp.stochastic.daily_money). The pass test
+resamples whole calendar months (the bill is monthly); the 7-day block interval of the earlier sections, the market
+part's interval and the bill's better / worse months are reported alongside.
+
+Run:  python -m vpp.v2.backtest --step s2|s3|sens|b2|b3|b4|t5|c5|e5|f5|g5|f5x|b3x|fwd|test|q6 [--smoke]
+"""
+
+import os
+import sys
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import replace
+
+import numpy as np
+import pandas as pd
+
+from vpp import backtest as bt
+from vpp import contracts as ct
+from vpp import dispatch as dp
+from vpp import site_bill as sb
+from vpp import stochastic as sto
+from vpp.data import PROCESSED
+from vpp.v2 import harness as hs
+from vpp.v2 import record as rc
+from vpp.v2 import value as vl
+from vpp.v2.config import V1, V2Config
+
+REPORTS = bt.REPORTS
+CMD = 9.0  # MW, m1's CMD (chosen before the cutoff, findings section 16)
+SMOKE = (("2026-01-12", "2026-01-23"), ("2025-08-04", "2025-08-15"))
+FIX = dict(offer_end=True)  # every v2 configuration prices the value offer's last half-hour (v2_plan.md, 9.1)
+SITE = V2Config("site", site_reserve=True, **FIX)  # step s2's winner: the base of step s3
+WIN = V2Config("rel+ladder", site_reserve=True, value="relative", ladder=True, **FIX)  # step s3's winner
+STEPS = {
+    "s2": {"base": "v1", "candidates": ("site",), "ref": "site+R20", "tables": (),
+           "configs": (V1, V2Config("site", site_reserve=True, record=True, **FIX),
+                       V2Config("site+R20", site_reserve=True, spike_reserve_mwh=20.0, **FIX),
+                       V2Config("site expected", site_reserve=True, site_load_basis="expected", **FIX),
+                       V2Config("v1 fixed", **FIX))},
+    "s3": {"base": "site", "candidates": ("rel", "rel+ladder"), "ref": "site+R20", "tables": (("median", 40.0),),
+           "configs": (SITE, V2Config("site+R20", site_reserve=True, spike_reserve_mwh=20.0, **FIX),
+                       V2Config("rel", site_reserve=True, value="relative", **FIX),
+                       V2Config("rel+ladder", site_reserve=True, value="relative", ladder=True, record=True, **FIX))},
+}
+STEPS["r3"] = {"base": WIN.name, "candidates": ("rel+ladder 48h",), "ref": None, "tables": (("median", 40.0),),
+               "configs": (WIN, V2Config("rel+ladder 48h", site_reserve=True, value="relative", ladder=True, plan_days=2,
+                                         record=True, **FIX))}
+# round 4, B2 (v2_plan.md section 11.4): the value table and the real-time offers at the wear plus h, the plans at 75
+B2 = tuple(V2Config(f"rw{h:g}", site_reserve=True, value="relative", ladder=True, hurdle=h, record=True, **FIX)
+           for h in (0.0, 25.0, 50.0))
+STEPS["b2"] = {"base": WIN.name, "candidates": tuple(c.name for c in B2), "ref": None,
+               "tables": (("median", 40.0), *(("median", 40.0, c.hurdle) for c in B2)), "configs": (WIN, *B2)}
+# round 4, B3 (section 11.5): the buy side of the offers, on B2's winner rw50
+B2_WIN = B2[2]
+B3 = V2Config(f"{B2_WIN.name}+buy", site_reserve=True, value="relative", ladder=True, hurdle=B2_WIN.hurdle, buy=True,
+              record=True, **FIX)
+STEPS["b3"] = {"base": B2_WIN.name, "candidates": (B3.name,), "ref": None, "tables": (("median", 40.0, B2_WIN.hurdle),),
+               "configs": (B2_WIN, B3)}
+# round 4, B4 (section 11.6): values by market state, on rw50 (B3 did not pass)
+B4 = V2Config(f"{B2_WIN.name}+state", site_reserve=True, value="relative", ladder=True, hurdle=B2_WIN.hurdle, state=True,
+              record=True, **FIX)
+STEPS["b4"] = {"base": B2_WIN.name, "candidates": (B4.name,), "ref": None,
+               "tables": (("median", 40.0, B2_WIN.hurdle), ("median", 40.0, B2_WIN.hurdle, True)), "configs": (B2_WIN, B4)}
+# round 5 (section 12), on round 4's winner B4. t5 (12.3): the 08:00 plan's end value without tomorrow's site reserve,
+# which is public at 09:00 (a fix: reported, and the base of the round's later steps)
+R4_WIN = B4
+T5 = replace(R4_WIN, name=f"{R4_WIN.name} t5", terminal_0900=True)
+STEPS["t5"] = {"base": R4_WIN.name, "candidates": (T5.name,), "ref": None, "report_only": True,
+               "tables": STEPS["b4"]["tables"], "configs": (R4_WIN, T5)}
+# c5 (12.4): today's offer values also by whether the day has already spiked, on t5
+C5 = replace(T5, name=f"{T5.name}+regime", regime=True)
+STEPS["c5"] = {"base": T5.name, "candidates": (C5.name,), "ref": None,
+               "tables": (*STEPS["b4"]["tables"], ("median", 40.0, B2_WIN.hurdle, True, True)), "configs": (T5, C5)}
+# e5 (12.5): the plans also redone at the start of every trading interval, on t5 (c5 did not pass)
+E5 = replace(T5, name=f"{T5.name}+roll", replan_every=1)
+STEPS["e5"] = {"base": T5.name, "candidates": (E5.name,), "ref": None, "tables": STEPS["b4"]["tables"], "configs": (T5, E5)}
+# f5 (12.6): B3's buy side at the full value (capped), or with a floor under the values; "fill" a reference; on e5
+F5A = replace(E5, name=f"{E5.name}+bid", bid="full")
+F5B = replace(E5, name=f"{E5.name}+bid floor", bid="floor")
+F5R = replace(E5, name=f"{E5.name}+fill", bid="fill", record=False)
+STEPS["f5"] = {"base": E5.name, "candidates": (F5A.name, F5B.name), "ref": None, "tables": STEPS["b4"]["tables"],
+               "configs": (replace(E5, record=False), F5A, F5B, F5R)}
+# g5 (12.7, reported only): the gate closure and the offer price ceiling, layer by layer, on e5 (f5 did not pass)
+G5A = replace(E5, name=f"{E5.name}+lag20", offer_lag=4, record=False)
+G5B = replace(G5A, name=f"{E5.name}+lock", offer_lock=3)
+G5C = replace(G5B, name=f"{E5.name}+lock+cap", offer_cap=1000.0)
+STEPS["g5"] = {"base": E5.name, "candidates": (G5A.name, G5B.name, G5C.name), "ref": None, "report_only": True,
+               "layers": ((G5A.name, E5.name), (G5B.name, G5A.name), (G5C.name, G5B.name)),
+               "tables": STEPS["b4"]["tables"], "configs": (replace(E5, record=False), G5A, G5B, G5C)}
+# section 13: buying beyond the plan only within the room the caps leave (13.1); step 4 again on e5 (13.2), and B3
+# again on rw50 (13.3, reported)
+F5X = tuple(replace(c, name=f"{c.name} room", buy_room=True) for c in (F5A, F5B, F5R))
+STEPS["f5x"] = {"base": E5.name, "candidates": (F5X[0].name, F5X[1].name), "ref": None, "tables": STEPS["b4"]["tables"],
+                "configs": (replace(E5, record=False), *F5X)}
+B3X = replace(B3, name=f"{B3.name} room", buy_room=True)
+STEPS["b3x"] = {"base": B2_WIN.name, "candidates": (B3X.name,), "ref": None, "report_only": True,
+                "tables": STEPS["b3"]["tables"], "configs": (replace(B2_WIN, record=False), B3X)}
+# section 13.4 (reported only): the new configuration e5 on the days from FWD_FROM, with round 4's (rw50+state),
+# round 1's (rel+ladder) and v1 alongside; run from the first backtest day on so their start state carries over
+FWD_FROM = pd.Timestamp("2026-10-16")
+STEPS["fwd"] = {"base": E5.name, "candidates": (E5.name,), "ref": None, "report_only": True, "forward": True,
+                "tables": (("median", 40.0), ("median", 40.0, B2_WIN.hurdle, True)),
+                "configs": (V1, WIN, replace(B4, record=False), replace(E5, record=False))}
+ROUND5 = ("t5", "c5", "e5", "f5", "g5", "f5x", "b3x", "fwd")
+# section 14 (reported only): the test is every day from the cutoff with data; every version adopted so far, each
+# against the one before it, and e5 against rel+ladder and v1; run from the first backtest day on
+CHAIN = (V1, SITE, WIN, replace(B2_WIN, record=False), replace(B4, record=False), replace(T5, record=False),
+         replace(E5, record=False))
+STEPS["test"] = {"base": E5.name, "candidates": (E5.name,), "ref": None, "report_only": True,
+                 "pairs": (*((b.name, a.name) for a, b in zip(CHAIN, CHAIN[1:])), (E5.name, WIN.name), (E5.name, V1.name)),
+                 "tables": (("median", 40.0), ("median", 40.0, B2_WIN.hurdle), ("median", 40.0, B2_WIN.hurdle, True)),
+                 "configs": CHAIN}
+# round 6 (section 15): the plans' own price-quantity curve for the interval each starts with, at the plan's price
+# +-20, +-50, +-100 $/MWh, on e5; the curve of the plan alone (the 0 point) must be e5, day for day (15.4)
+CURVE = (-100.0, -50.0, -20.0, 20.0, 50.0, 100.0)
+Q6 = replace(E5, name=f"{E5.name}+curve", curve=CURVE)
+Q6_0 = replace(E5, name=f"{E5.name}+curve0", curve=(0.0,), record=False)
+STEPS["q6"] = {"base": E5.name, "candidates": (Q6.name,), "ref": None, "tables": STEPS["b4"]["tables"],
+               "parts": ((Q6.name, E5.name), (Q6_0.name, E5.name)), "configs": (replace(E5, record=False), Q6, Q6_0)}
+
+
+def forward_days(ledger: pd.DataFrame, logs: dict, first: pd.Timestamp = FWD_FROM, cmd: float = CMD) -> tuple:
+    """Section 13.4: per configuration and forward day (from first), the market money (energy, FCESS, wear), MWh
+    bought and sold at their mean RTP, the meter's highest half-hour against the CMD and against the month's highest
+    before the day (the bill charges the month's highest above the CMD once); and their means."""
+    rows = []
+    for (_, name), by_day in logs.items():
+        month_max: dict = {}
+        for day in sorted(by_day):
+            lg = by_day[day]
+            m, peak = day.strftime("%Y-%m"), float(lg["meter_mw"].max())
+            before = month_max.get(m, 0.0)
+            month_max[m] = max(before, peak)
+            if day < first:
+                continue
+            e, rtp = lg["energy_mwh"].to_numpy(), lg["rtp"].to_numpy()
+            led = ledger[(ledger["strategy"] == name) & (pd.to_datetime(ledger["day"]) == day)].iloc[0]
+            rows.append({"config": name, "day": day.date(), "market": led["total"], "energy": led["energy"],
+                         "fcess": led["fcess"], "wear": led["wear"], "sold_mwh": e.clip(min=0).sum(),
+                         "sell_price": (rtp * e.clip(min=0)).sum() / max(e.clip(min=0).sum(), 1e-9),
+                         "bought_mwh": -e.clip(max=0).sum(),
+                         "buy_price": -(rtp * e.clip(max=0)).sum() / max(-e.clip(max=0).sum(), 1e-9),
+                         "meter_max_mw": peak, "month_max_before_mw": before, "over_cmd": peak > cmd + 1e-6,
+                         "raises_month_max": peak > max(before, cmd) + 1e-6, "soc_0800": float(lg["soc_start"].iloc[0])})
+    x = pd.DataFrame(rows).sort_values(["config", "day"])
+    means = x.drop(columns=["day", "over_cmd", "raises_month_max"]).groupby("config").mean()
+    means["days"] = x.groupby("config").size()
+    means["days_over_cmd"] = x.groupby("config")["over_cmd"].sum()
+    means["days_raising_month_max"] = x.groupby("config")["raises_month_max"].sum()
+    return x, means
+
+
+def test_parts(money: pd.DataFrame, ledger: pd.DataFrame, pairs, split: pd.Timestamp = FWD_FROM) -> pd.DataFrame:
+    """Section 14: the test's two parts - the days the earlier rounds had seen (from the cutoff to the day before
+    split) and the days nobody had (from split): per pair, the mean $/day, the gain over its base and its market and
+    bill parts (no intervals: the second part is a week)."""
+    led = ledger.pivot_table(index="day", columns="strategy", values="ledger_total").reindex(money.index)
+    day = money.index
+    rows = []
+    for part, sel in ((f"test to {(split - pd.Timedelta(days=1)).date()}", (day >= bt.CUTOFF) & (day < split)),
+                      (f"test from {split.date()}", day >= split)):
+        mp, lp = money[sel], led[sel]
+        for name, base in pairs if len(mp) else ():
+            gain, market = (mp[name] - mp[base]).mean(), (lp[name] - lp[base]).mean()
+            rows.append({"period": part, "config": name, "base": base, "days": len(mp), "per_day": mp[name].mean(),
+                         "vs_base": gain, "market_vs_base": market, "bill_vs_base": gain - market})
+    cols = ["period", "config", "base", "days", "per_day", "vs_base", "market_vs_base", "bill_vs_base"]
+    return pd.DataFrame(rows, columns=cols).set_index(["period", "config"])
+BLOCKS =(("08-16", 0, 16), ("16-20", 16, 24), ("20-24", 24, 32), ("00-08", 32, 48))  # e5's market by time of day
+
+
+def roll_diagnostics(logs: dict, days: list[dict], base: str, cand: str) -> tuple[pd.DataFrame, str]:
+    """e5 (v2_plan.md section 12.5), per period: the energy market's money (RTP x MWh) of base and candidate in four
+    blocks of the day; night re-plans after a dip (the latest 5-min price at least $20 below the forecast of the
+    interval it ends, the candidate then charging at least 1 MW more than the base), and the share of them where the
+    next interval's settled price did not stay $20 below its forecast; with the interpretation rule written down
+    beforehand (at least half the in-sample market gain from 00-08 and stored energy at 08:00 at least 2 MWh higher:
+    possibly the nowcast moving prices but not the end value)."""
+    by = {d["day"]: d for d in days}
+    rows = []
+    for name in (base, cand):
+        for day, lg in logs[next(k for k in logs if k[1] == name)].items():
+            rev = (lg["rtp"] * lg["energy_mwh"]).to_numpy()
+            rows.append({"config": name, "period": bt.period_of([day])[0], "day": day,
+                         **{b: rev[lo:hi].sum() for b, lo, hi in BLOCKS}, "soc_0800": float(lg["soc_start"].iloc[0])})
+    x = pd.DataFrame(rows)
+    blocks = x.groupby(["period", "config"])[[b for b, _, _ in BLOCKS] + ["soc_0800"]].mean()
+    lb, lc = logs[next(k for k in logs if k[1] == base)], logs[next(k for k in logs if k[1] == cand)]
+    dips = []
+    for day, c in lc.items():
+        b, p5, fc = lb[day], by[day]["p5"], c["forecast"].to_numpy()
+        charge_c, charge_b = (-g["energy_mwh"].to_numpy() / dp.DT for g in (c, b))
+        for t in range(33, 48):  # 00:30-07:30: the re-plan at t after interval t - 1 (night)
+            if c["replanned"].iloc[t] and p5[t * 6 - 1] - fc[t - 1] <= -20.0 and charge_c[t] - charge_b[t] >= 1.0:
+                dips.append({"period": bt.period_of([day])[0], "kept_low": c["rtp"].iloc[t] <= fc[t] - 20.0})
+    d = pd.DataFrame(dips, columns=["period", "kept_low"])
+    for period in blocks.index.get_level_values(0).unique():
+        sel = d[d["period"] == period]
+        blocks.loc[(period, cand), "dip_replans"] = len(sel)
+        blocks.loc[(period, cand), "dip_not_kept_low_share"] = float((~sel["kept_low"]).mean()) if len(sel) else np.nan
+    note = ""
+    if "validation" in blocks.index.get_level_values(0):
+        v = blocks.loc["validation"]
+        gain = v.loc[cand, [b for b, _, _ in BLOCKS]] - v.loc[base, [b for b, _, _ in BLOCKS]]
+        night_share = gain["00-08"] / gain.sum() if gain.sum() > 0 else np.nan
+        soc_up = v.loc[cand, "soc_0800"] - v.loc[base, "soc_0800"]
+        flag = gain.sum() > 0 and night_share >= 0.5 and soc_up >= 2.0
+        note = (f"in-sample energy-market gain ${gain.sum():.1f}/day, {night_share:.0%} of it 00-08; stored at 08:00 "
+                f"{soc_up:+.2f} MWh: " + ("possibly the nowcast moving prices but not the end value" if flag
+                                           else "the rule for a possible nowcast artefact is not met"))
+    return blocks, note
+SENS = (  # (configuration, its base): one setting changed each
+    (V2Config("v1 lag 15 min", offer_lag=3), "v1"), (V2Config("v1 lag 30 min", offer_lag=6), "v1"),
+    (V2Config("v1 36 MWh", usable_mwh=36.0), "v1"),
+    (V2Config("rel+ladder lag 15 min", site_reserve=True, value="relative", ladder=True, offer_lag=3, **FIX), WIN.name),
+    (V2Config("rel+ladder lag 30 min", site_reserve=True, value="relative", ladder=True, offer_lag=6, **FIX), WIN.name),
+    (V2Config("rel+ladder 36 MWh", site_reserve=True, value="relative", ladder=True, usable_mwh=36.0, **FIX), WIN.name),
+    (V2Config("rel+ladder unshifted", site_reserve=True, value="relative", ladder=True, curve_shift=False, **FIX),
+     WIN.name),
+    (V2Config("rel+ladder mean level", site_reserve=True, value="relative", ladder=True, level_stat="mean", **FIX),
+     WIN.name),
+    (V2Config("site expected", site_reserve=True, site_load_basis="expected", **FIX), SITE.name),
+)
+SENS_TABLES = (("median", 40.0), ("median", 36.0), ("mean", 40.0))
+
+
+def m1() -> bt.Scenario:
+    return bt._sc("m1", ct.Route("m1", cmd_mw=CMD, ircr="dynamic"), (bt.VALUE,))
+
+
+def sa() -> bt.Scenario:
+    """Zenith's storage network on its own connection, Scheduled, all FCESS, no site (2026-10-27,
+    analysis/2026-10-27/standalone_v2)."""
+    return bt._sc("sa", ct.Route("sa", metering="standalone"), (bt.VALUE,))
+
+
+def _run(task: tuple) -> tuple:
+    """One configuration (or, for a v1 strategy name, v1's own loop) through every day."""
+    sc, cfg, keep_logs = task
+    if isinstance(cfg, str):
+        return (*bt._run_route(sc, cfg, keep_logs), [])
+    rows, logs, meters, records = [], {}, [], []
+    for day, _, summary, log, recs in hs.route_days(sc, cfg):
+        rows.append({"scenario": sc.name, "strategy": cfg.name, "day": day, **summary})
+        meters.append(log["meter_mw"].to_numpy().astype(np.float32))
+        if keep_logs:
+            logs[day] = log
+        records.extend(recs)
+    return sc.name, cfg.name, rows, logs, np.vstack(meters), records
+
+
+def run(tasks: list[tuple], days: list[dict], aux: dict):
+    """Run (scenario, config or v1 strategy name, keep logs) tasks in parallel. Returns the daily rows, the logs and
+    float32 meters by (scenario, name), and the decision records. Value curves load in the workers on first use."""
+    daily, logs, meters, records = [], {}, {}, []
+    workers = min(len(tasks), max(1, (os.cpu_count() or 2) - 1))
+    with ProcessPoolExecutor(max_workers=workers, initializer=bt._init_worker, initargs=(days, aux)) as pool:
+        for sc, name, rows, lg, meter, recs in pool.map(_run, tasks):
+            daily.extend(rows)
+            if lg:
+                logs[sc, name] = lg
+            meters[sc, name] = meter
+            records.extend(recs)
+    daily = pd.DataFrame(daily)
+    daily["period"] = bt.period_of(daily["day"])
+    return daily, logs, meters, records
+
+
+def month_ci(diff: pd.Series, n: int = 4000, seed: int = 0) -> tuple[float, float]:
+    """95% interval of the mean daily difference, resampling whole calendar months (as many as there are)."""
+    by = diff.groupby(diff.index.to_period("M"))
+    sums, counts = by.sum().to_numpy(), by.count().to_numpy()
+    pick = np.random.default_rng(seed).integers(0, len(sums), size=(n, len(sums)))
+    lo, hi = np.percentile(sums[pick].sum(axis=1) / counts[pick].sum(axis=1), [2.5, 97.5])
+    return float(lo), float(hi)
+
+
+def _against(row: dict, mp: pd.DataFrame, lp: pd.DataFrame, bp: pd.DataFrame, name: str, base: str) -> dict:
+    """The difference from base: mean, month-block and 7-day block intervals, market part, bill part and months."""
+    diff = mp[name] - mp[base]
+    row["vs_base"] = diff.mean()
+    row["vs_base_lo"], row["vs_base_hi"] = month_ci(diff)
+    row["vs_base_7d_lo"], row["vs_base_7d_hi"] = sto.block_ci(diff.to_numpy())
+    mdiff = (lp[name] - lp[base]).to_numpy()
+    row["market_vs_base"], (row["market_lo"], row["market_hi"]) = mdiff.mean(), sto.block_ci(mdiff)
+    row["bill_vs_base"] = row["vs_base"] - row["market_vs_base"]
+    d = bp[name] - bp[base]
+    row["bill_months_better"], row["bill_months_worse"] = int((d > 1.0).sum()), int((d < -1.0).sum())
+    return row
+
+
+def _by_period(money: pd.DataFrame, ledger: pd.DataFrame, bills: pd.DataFrame):
+    period = pd.Series(bt.period_of(money.index), index=money.index)
+    led = ledger.pivot_table(index="day", columns="strategy", values="ledger_total")
+    bm = bills.pivot_table(index="month", columns="strategy", values="saving")
+    for p in bt.PERIODS:
+        mp = money[period == p]
+        if len(mp):
+            yield p, mp, led[period.reindex(led.index) == p], bm[bt.period_of(bm.index.to_timestamp()) == p]
+
+
+def compare(money: pd.DataFrame, ledger: pd.DataFrame, bills: pd.DataFrame, base: str, ref: str | None) -> pd.DataFrame:
+    """Per period and configuration: $/day, the difference from base (see _against) and the mean against ref."""
+    rows = []
+    for p, mp, lp, bp in _by_period(money, ledger, bills):
+        for name in mp.columns:
+            row = {"period": p, "config": name, "days": len(mp), "per_day": mp[name].mean()}
+            if name != base:
+                row = _against(row, mp, lp, bp, name, base)
+            if ref is not None and ref in mp and name != ref:
+                row["vs_ref"] = (mp[name] - mp[ref]).mean()
+            rows.append(row)
+    return pd.DataFrame(rows).set_index(["period", "config"])
+
+
+def compare_pairs(money: pd.DataFrame, ledger: pd.DataFrame, bills: pd.DataFrame, pairs) -> pd.DataFrame:
+    """Per period: each sensitivity against its own base (see _against)."""
+    rows = []
+    for p, mp, lp, bp in _by_period(money, ledger, bills):
+        for name, base in pairs:
+            rows.append(_against({"period": p, "config": name, "base": base, "days": len(mp), "per_day": mp[name].mean()},
+                                 mp, lp, bp, name, base))
+    return pd.DataFrame(rows).set_index(["period", "config"])
+
+
+def diagnostics(logs: dict) -> pd.DataFrame:
+    """Per configuration and period: mean stored energy, stored at 08:00 (start) and 16:00, energy charged
+    20:00-08:00, energy the standing offer sold; MWh bought and sold a day at their mean RTP (round 4)."""
+    rows = []
+    for (_, name), by_day in logs.items():
+        for day, lg in by_day.items():
+            e, rtp = lg["energy_mwh"], lg["rtp"]
+            rows.append({"config": name, "period": bt.period_of([day])[0], "soc_mean": lg["soc"].mean(),
+                         "soc_0800": lg["soc_start"].iloc[0], "soc_1600": lg["soc"].iloc[15],
+                         "night_charge_mwh": -lg["energy_mwh"].iloc[24:].clip(upper=0).sum(),
+                         "offer_mwh": lg["offer_mwh"].sum(), "bought_mwh": -e.clip(upper=0).sum(),
+                         "sold_mwh": e.clip(lower=0).sum(), "buy_cost": -(rtp * e.clip(upper=0)).sum(),
+                         "sell_revenue": (rtp * e.clip(lower=0)).sum()})
+    out = pd.DataFrame(rows).groupby(["period", "config"]).mean()
+    out["buy_price"] = out.pop("buy_cost") / out["bought_mwh"]
+    out["sell_price"] = out.pop("sell_revenue") / out["sold_mwh"]
+    return out
+
+
+FULL_MWH = 38.0  # "full": stored energy at least this (round 5, section 12.2)
+
+
+def distribution(logs: dict) -> pd.DataFrame:
+    """Round 5 (v2_plan.md section 12.2), per configuration and period: stored energy at 08:00 (10th, 50th and 90th
+    percentiles), the days that reach FULL_MWH, the share of the energy stored by charging 20:00-08:00 that is drawn
+    08:00-24:00 the next day, and the intervals where buying beyond the plan came with the meter above both its cap
+    and the month's earlier highest (0 expected; NaN without a buy side)."""
+    eta = bt.Q2B_ASSET.battery.eta
+    rows = []
+    for (_, name), by_day in logs.items():
+        days = sorted(by_day)
+        month_max: dict = {}
+        for k, day in enumerate(days):
+            lg = by_day[day]
+            e = lg["energy_mwh"].to_numpy()
+            stored_in = -e[24:].clip(max=0).sum() * eta  # charged 20:00-08:00, as stored MWh
+            nxt = by_day.get(days[k + 1]) if k + 1 < len(days) and days[k + 1] == day + pd.Timedelta(days=1) else None
+            drawn = nxt["energy_mwh"].to_numpy()[:32].clip(min=0).sum() / eta if nxt is not None else np.nan
+            over = np.nan
+            if "bid_mwh" in lg:
+                m = day.strftime("%Y-%m")
+                meter, cap, bought = (lg[c].to_numpy() for c in ("meter_mw", "cap_mw", "bid_mwh"))
+                before = np.maximum.accumulate(np.r_[month_max.get(m, 0.0), meter[:-1]])
+                over = int(((bought > 1e-9) & (meter > np.maximum(cap, before) + 1e-6)).sum())
+                month_max[m] = max(month_max.get(m, 0.0), float(meter.max()))
+            rows.append({"config": name, "period": bt.period_of([day])[0], "soc_0800": float(lg["soc_start"].iloc[0]),
+                         "full": max(float(lg["soc_start"].iloc[0]), float(lg["soc"].max())) >= FULL_MWH - 1e-9,
+                         "stored_in": stored_in, "used": min(stored_in, drawn) if np.isfinite(drawn) else np.nan,
+                         "stored_in_known": stored_in if np.isfinite(drawn) else np.nan, "buy_over_cap": over})
+    x = pd.DataFrame(rows)
+    g = x.groupby(["period", "config"])
+    out = pd.DataFrame({"soc_0800_p10": g["soc_0800"].quantile(0.1), "soc_0800_p50": g["soc_0800"].quantile(0.5),
+                        "soc_0800_p90": g["soc_0800"].quantile(0.9), "days": g.size(), "days_full": g["full"].sum(),
+                        "night_used_share": g["used"].sum() / g["stored_in_known"].sum(),
+                        "buy_over_cap": g["buy_over_cap"].sum(min_count=1)})
+    return out
+
+
+def curve_diagnostics(logs: dict, days: list[dict]) -> pd.DataFrame:
+    """Round 6 (v2_plan.md section 15.5), per configuration and period, $ or MWh a day: FCESS revenue by product (the
+    30-min price x the MW enabled), the MWh bought beyond the plan and short of it with their mean RTP, and (with a
+    curve) the share of 5-min steps run at each point."""
+    act = {d["day"]: d["act_f"] for d in days}
+    rows = []
+    for (_, name), by_day in logs.items():
+        for day, lg in by_day.items():
+            row = {"config": name, "period": bt.period_of([day])[0],
+                   **{f"fcess_{k}": float((np.asarray(act[day][k], float) * lg[f"{k}_mw"].to_numpy()).sum() * dp.DT)
+                      for k in dp.FCESS}}
+            if "bid_mwh" in lg:
+                b, rtp = lg["bid_mwh"].to_numpy(), lg["rtp"].to_numpy()
+                row.update(beyond_mwh=b.clip(min=0).sum(), beyond_cost=(rtp * b.clip(min=0)).sum(),
+                           short_mwh=-b.clip(max=0).sum(), short_cost=-(rtp * b.clip(max=0)).sum())
+            steps = [c for c in lg.columns if c.startswith("curve_steps_")]
+            row.update({c.replace("curve_steps_", "steps_"): int(lg[c].sum()) for c in steps})
+            rows.append(row)
+    x = pd.DataFrame(rows)
+    out = x.groupby(["period", "config"]).mean()
+    if "beyond_mwh" in out:
+        out["beyond_rtp"] = out.pop("beyond_cost") / out["beyond_mwh"]
+        out["short_rtp"] = out.pop("short_cost") / out["short_mwh"]
+    steps = [c for c in out.columns if c.startswith("steps_")]
+    if steps:
+        total = out[steps].sum(axis=1)
+        for c in steps:
+            out[c.replace("steps_", "share_")] = out.pop(c) / total.where(total > 0)
+    return out
+
+
+def smoke_days(days: list[dict]) -> list[dict]:
+    return [d for d in days if any(pd.Timestamp(a) <= d["day"] <= pd.Timestamp(b) for a, b in SMOKE)]
+
+
+def main(argv: list[str] | None = None) -> None:
+    argv = sys.argv[1:] if argv is None else argv
+    step = argv[argv.index("--step") + 1]
+    smoke = "--smoke" in argv
+    if step == "sens":
+        spec = {"tables": SENS_TABLES, "configs": (V1, WIN, SITE, *(c for c, _ in SENS))}
+    else:
+        spec = STEPS[step]
+    days = bt.load_days("0900", last=spec.get("last"))  # a step may end elsewhere than the backtest's last day
+    if smoke:
+        days = smoke_days(days)
+    aux = bt.q2b_aux()
+    cmd_nb = sb.cmd_kva(bt.factory_load(days).max()) * sb.PF / 1000
+    sc = m1()
+    for t in spec["tables"]:  # (level statistic, MWh[, hurdle[, by market state[, by regime]]])
+        vl.build(t[0], t[1], hurdle=t[2] if len(t) > 2 else bt.HURDLE, state=len(t) > 3 and t[3],
+                 regime=len(t) > 4 and t[4])
+    daily, logs, meters, records = run([(sc, cfg, step != "sens" or cfg.name in ("v1", WIN.name)) for cfg in spec["configs"]],
+                                       days, aux)
+    ledger = bt.q2b_ledger(daily, [sc])
+    bills, ircr = bt.q2b_bills(meters, days, [sc], cmd_nb)
+    money = sto.daily_money(ledger, bills)
+    tag = f"v2_{step}" + ("_smoke" if smoke else "")
+    pd.set_option("display.width", 250)
+    if step == "sens":
+        table = compare_pairs(money, ledger, bills, [(c.name, b) for c, b in SENS])
+        table.to_csv(REPORTS / f"{tag}_result.csv")
+        print(f"\n{len(days)} days on m1, $/day: each sensitivity against its base (reported only)\n"
+              f"{table[['base', 'per_day', 'vs_base', 'vs_base_lo', 'vs_base_hi', 'market_vs_base', 'bill_vs_base']].round(1).to_string()}\n")
+        return
+    if spec.get("pairs"):  # section 14: each version against the one before it, then the test's two parts
+        table = pd.concat([compare_pairs(money, ledger, bills, spec["pairs"]), test_parts(money, ledger, spec["pairs"])])
+    else:
+        table = compare(money, ledger, bills, spec["base"], spec.get("ref"))
+    diag = diagnostics(logs)
+    ledger.to_csv(REPORTS / f"{tag}_daily.csv", index=False)
+    bills.to_csv(REPORTS / f"{tag}_bills.csv", index=False)
+    ircr.to_csv(REPORTS / f"{tag}_ircr.csv", index=False)
+    table.to_csv(REPORTS / f"{tag}_result.csv")
+    diag.to_csv(REPORTS / f"{tag}_diag.csv")
+    if step in (*ROUND5, "test", "q6"):
+        dist = distribution(logs)
+        dist.to_csv(REPORTS / f"{tag}_soc.csv")
+        print(f"=== stored energy at 08:00, full days, night charge drawn the next day, buys over a cap\n"
+              f"{dist.round(2).to_string()}\n")
+    if step == "q6":  # round 6 (section 15.5): FCESS by product, buys beyond and short of the plan, points run
+        cdiag = curve_diagnostics(logs, days)
+        cdiag.to_csv(REPORTS / f"{tag}_curve.csv")
+        print(f"=== FCESS by product, buys beyond / short of the plan ($ and MWh a day), share of 5-min steps by point\n"
+              f"{cdiag.round(3).T.to_string()}\n")
+    if spec.get("parts"):  # the test's two parts (section 14), no intervals
+        parts = test_parts(money, ledger, spec["parts"])
+        parts.to_csv(REPORTS / f"{tag}_parts.csv")
+        print(f"=== the test's two parts, $/day\n{parts.round(1).to_string()}\n")
+    if step == "e5":
+        blocks, note = roll_diagnostics(logs, days, spec["base"], spec["candidates"][0])
+        blocks.to_csv(REPORTS / f"{tag}_roll.csv")
+        print(f"=== energy market $/day by time of day, night re-plans after a dip\n{blocks.round(2).to_string()}\n{note}\n")
+    if records:
+        rc.frame(records).to_parquet(PROCESSED / f"{tag}_records.parquet")
+    pd.concat([x.assign(day=d, strategy=name) for (_, name), lg in logs.items() for d, x in lg.items()],
+              ignore_index=True).to_parquet(PROCESSED / f"{tag}_log.parquet")
+    if spec.get("pairs"):
+        cols = ["base", "days", "per_day", "vs_base", "vs_base_lo", "vs_base_hi", "vs_base_7d_lo", "vs_base_7d_hi",
+                "market_vs_base", "market_lo", "market_hi", "bill_vs_base", "bill_months_better", "bill_months_worse"]
+        print(f"\n{len(days)} days on m1, $/day: each version against its base (month-block and 7-day block 95% "
+              f"intervals; the test's two parts without)\n{table[cols].round(1).to_string()}\n")
+    else:
+        print(f"\n{len(days)} days on m1, $/day; pass test: month-block 95% interval of the gain over {spec['base']}\n"
+              f"{table.round(1).T.to_string()}\n")
+    print(f"=== stored energy (MWh) and offers\n{diag.round(2).to_string()}\n")
+    print(f"=== IRCR, {bt.IRCR_SEASON}-{bt.IRCR_SEASON - 1999} Hot Season ($/year)\n"
+          f"{ircr[['strategy', 'ircr_mw', 'saving_per_year', 'peak_days_covered']].round(2).to_string(index=False)}\n")
+    if spec.get("forward"):  # section 13.4: the forward days only
+        per_day, means = forward_days(ledger, logs)
+        per_day.to_csv(REPORTS / f"{tag}_days.csv", index=False)
+        lead = spec["base"]
+        for c in ("market", "energy", "fcess", "wear"):
+            means[f"{c}_vs_{lead}"] = means[c] - means.loc[lead, c]
+        means.to_csv(REPORTS / f"{tag}_summary.csv")
+        print(f"=== forward days from {FWD_FROM.date()}: {per_day['day'].nunique()} days, $/day\n"
+              f"{means[['days', 'market', 'energy', 'fcess', 'wear', 'sold_mwh', 'sell_price', 'bought_mwh', 'buy_price', 'meter_max_mw', 'days_over_cmd', 'days_raising_month_max', f'market_vs_{lead}']].round(2).to_string()}\n"
+              f"\n=== per day (market $)\n{per_day.pivot(index='day', columns='config', values='market').round(1).to_string()}\n")
+    if spec.get("layers"):  # g5: each layer against the one before it
+        layers = compare_pairs(money, ledger, bills, spec["layers"])
+        layers.to_csv(REPORTS / f"{tag}_layers.csv")
+        print(f"=== each layer against the one before\n"
+              f"{layers[['base', 'per_day', 'vs_base', 'vs_base_lo', 'vs_base_hi', 'market_vs_base', 'bill_vs_base']].round(1).to_string()}\n")
+        print("reported only: what the backtest overstates without the gate closure and the price ceiling")
+    elif spec.get("report_only"):
+        print(f"reported only, not chosen on: {', '.join(spec['candidates'])}")
+    elif not smoke and "validation" in table.index.get_level_values(0):
+        val = table.loc["validation"]
+        passing = [c for c in spec["candidates"] if c in val.index and val.loc[c, "vs_base_lo"] > 0
+                   and (step == "s2" or spec.get("ref") is None or val.loc[c, "vs_ref"] >= 0)]
+        best = max(passing, key=lambda c: val.loc[c, "per_day"]) if passing else None
+        print(f"pass (before the cutoff): {', '.join(passing) or 'none'}; chosen: {best or 'none'}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,5 @@
+scenario,strategy,ircr_mw,ircr_no_battery_mw,saving_per_year,saving_barred_7_10_6B,intervals_covered,peak_days_covered,config
+m1 h75,rw50+state t5+roll,0.0,6.241723157787179,2116715.901584805,0.0,12,4,e5 h75
+m1 h75,v1,0.0,6.241723157787179,2116715.901584805,0.0,12,4,v1 h75
+m1 h50,rw50+state t5+roll,0.0,6.241723157787179,2116715.901584805,0.0,12,4,e5 h50
+m1 h50,v1,0.0,6.241723157787179,2116715.901584805,0.0,12,4,v1 h50

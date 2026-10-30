@@ -1,0 +1,30 @@
+{
+ "default": {
+  "power_mw": 10.0,
+  "days": 570,
+  "days_over": 3,
+  "largest_mw": 10.50390269216856,
+  "over_by_month": {
+   "2025-12": 2,
+   "2026-02": 1
+  },
+  "test_week_days": 7,
+  "test_week_max_mw": 9.999999999999998,
+  "test_week_over": 0
+ },
+ "power_mw8": {
+  "power_mw": 8.0,
+  "days": 570,
+  "days_over": 21,
+  "largest_mw": 10.50390269216856,
+  "over_by_month": {
+   "2025-12": 13,
+   "2026-01": 3,
+   "2026-02": 1,
+   "2026-03": 4
+  },
+  "test_week_days": 7,
+  "test_week_max_mw": 7.999999999999999,
+  "test_week_over": 0
+ }
+}

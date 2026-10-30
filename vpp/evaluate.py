@@ -1,17 +1,33 @@
 """Forecast evaluation shared by the baseline and every model we try.
 
 A forecast is a DataFrame indexed like the actuals with one column per product.
+
+Split (from 2026-10-20): a strict time split at CUTOFF. Every model trains, and every choice is made, on
+trading days before CUTOFF (the backtests compare variants on those days: "validation"); the trading days
+from CUTOFF on are the test, scored once. Until 2026-10-20 the test was every other month of 2025-26 with
+validation months around them, so choices had seen data after the test months (reports/findings.md,
+section 16).
 """
 
 import numpy as np
 import pandas as pd
 
-# Held-out test window: capacity year 2025-26 onwards. Models may only train on data before it.
+# First month the Q2A models forecast (walk-forward, refit monthly on everything known by then).
 TEST_START = pd.Timestamp("2025-10-01 08:00")
+CUTOFF = pd.Timestamp("2026-07-01")  # first test trading day
+# Last trading day any model trains on: refits after it reuse the same training data, so the models
+# are frozen from here and forecast the test without seeing it.
+TRAIN_END = CUTOFF - pd.Timedelta(days=1)
 
 
-def test_slice(df: pd.DataFrame, start: pd.Timestamp = TEST_START, end: pd.Timestamp | None = None) -> pd.DataFrame:
-    return df.loc[start:end]
+def period_of(trading_day) -> np.ndarray:
+    """'test' for trading days from CUTOFF on, 'validation' before."""
+    return np.where(pd.DatetimeIndex(trading_day) >= CUTOFF, "test", "validation")
+
+
+def test_slice(df: pd.DataFrame) -> pd.DataFrame:
+    """Intervals (30-min index) whose trading day is in the test."""
+    return df[period_of((df.index - pd.Timedelta(hours=8)).normalize()) == "test"]
 
 
 def metrics(actual: pd.DataFrame, forecast: pd.DataFrame) -> pd.DataFrame:

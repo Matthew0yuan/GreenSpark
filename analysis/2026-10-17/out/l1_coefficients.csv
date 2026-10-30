@@ -1,0 +1,76 @@
+fit,features,C,feature,group,avail,coef_per_sd
+T,actionable,0.1,energy_d1h,能量价格,RT,0.054780613415934744
+T,actionable,0.1,reg_raise_last30,FCESS 价格,RT,-0.14073197733653592
+T,actionable,0.1,reg_lower_last30,FCESS 价格,RT,-0.5618839197100155
+T,actionable,0.1,unscheduled_demand_mw_d1h,需求,RT,0.1169184680325976
+T,actionable,0.1,underlying_mw_last30,需求,RT,0.07555556247228182
+T,actionable,0.1,underlying_mw_d1h,需求,RT,0.3568230162888017
+T,actionable,0.1,underlying_mw_max5h,需求,RT,0.09605155301359165
+T,actionable,0.1,withdrawal_mw_last30,电池充电（实时）,RT,0.13147078001134083
+T,actionable,0.1,withdrawal_mw_min5h,电池充电（实时）,RT,0.06889938262349803
+T,actionable,0.1,req_cont_lower_mw_last30,调频需求量,RT,-0.12414641517531295
+T,actionable,0.1,req_rocof_d1h,调频需求量,RT,0.02791019696539898
+T,actionable,0.1,req_reg_raise_mw_last30,调频需求量,RT,0.02211431872996935
+T,actionable,0.1,kn_total_mw_last30,停机（已公布）,RT,0.18586903559480272
+T,actionable,0.1,p5_n150_5h,能量价格,RT,0.1786794012237933
+T,actionable,0.1,pd_price_max_next2h,预调度（5 小时前）,FC,0.06117007469722701
+T,actionable,0.1,pd_headroom_min_next2h,预调度（5 小时前）,FC,-0.1428013443910342
+T,actionable,0.1,pd_price_max_prev5h,预调度（5 小时前）,FC,0.06791215263341448
+T,actionable,0.1,wx_cloud_t0,天气预报,FC,0.047183403498076655
+T,actionable,0.1,wx_wind_midwest_t0,天气预报,FC,-0.1728426126380813
+T,actionable,0.1,wx_wind_d5h,天气预报,FC,-0.21385341305452893
+T,actionable,0.1,hist_spk_5to24h,价格历史,RT,0.09505998789060188
+T,actionable,0.1,hist_h_since_spike,价格历史,RT,-0.008562534150026778
+T,actionable,0.1,hist_rtp_same_slot_yday,价格历史,RT,-0.024409218480150912
+T,actionable,0.1,cal_dow,日历,CAL,0.18409982598560812
+T,all,0.1,energy_min5h,能量价格,RT,0.0015752670852480417
+T,all,0.1,reg_raise_last30,FCESS 价格,RT,-0.13066868288748468
+T,all,0.1,reg_lower_last30,FCESS 价格,RT,-0.3511663204823788
+T,all,0.1,cont_lower_last30,FCESS 价格,RT,-0.04964963394165377
+T,all,0.1,underlying_mw_last30,需求,RT,0.005408133963227732
+T,all,0.1,underlying_mw_d1h,需求,RT,0.22117471005520084
+T,all,0.1,withdrawal_mw_last30,电池充电（实时）,RT,0.04013045122429635
+T,all,0.1,withdrawal_mw_min5h,电池充电（实时）,RT,0.027478600886452525
+T,all,0.1,req_cont_lower_mw_last30,调频需求量,RT,-0.09871753104866224
+T,all,0.1,req_reg_raise_mw_last30,调频需求量,RT,0.05488836031907184
+T,all,0.1,out_total_mw_last30,停机（事后）,EP,0.2283413890090318
+T,all,0.1,out_forced_coal_mw_last30,停机（事后）,EP,0.07849630956691292
+T,all,0.1,out_forced_gas_mw_d1h,停机（事后）,EP,-0.015264283364709242
+T,all,0.1,coal_mw_last30,煤电,EP,0.13922757307761632
+T,all,0.1,gas_base_mw_min5h,燃气基荷,EP,0.050590034799479516
+T,all,0.1,peaker_units_on_d1h,燃气调峰,EP,-0.45450184794636384
+T,all,0.1,peaker_units_on_min5h,燃气调峰,EP,-0.00037947805267139306
+T,all,0.1,wind_mw_d1h,风电,EP,-0.09543553197459498
+T,all,0.1,wind_mw_d5h,风电,EP,-0.22632140434210632
+T,all,0.1,solar_mw_last30,光伏电站,EP,0.11962296960222511
+T,all,0.1,solar_mw_d5h,光伏电站,EP,0.13418669450071444
+T,all,0.1,battery_mw_max5h,电池出力,EP,0.1611538463205615
+T,all,0.1,battery_mw_min5h,电池出力,EP,0.14506399387040456
+T,all,0.1,battery_chg_mw_last30,电池出力,EP,-0.027847996417749727
+T,all,0.1,residual_mw_d1h,剩余需求,EP,0.668096344134054
+T,all,0.1,residual_mw_max5h,剩余需求,EP,0.056938050900199245
+T,all,0.1,p5_n150_5h,能量价格,RT,0.20085116576595088
+T,all,0.1,pd_cont_raise_t0,预调度（5 小时前）,FC,0.008587840231403627
+T,all,0.1,pd_price_max_next2h,预调度（5 小时前）,FC,0.0035146494596360266
+T,all,0.1,pd_headroom_min_next2h,预调度（5 小时前）,FC,-0.25621495846164266
+T,all,0.1,pd_price_max_prev5h,预调度（5 小时前）,FC,0.030102673044277134
+T,all,0.1,wx_cloud_t0,天气预报,FC,0.03436271633673201
+T,all,0.1,wx_wind_midwest_t0,天气预报,FC,-0.18550531403849596
+T,all,0.1,wx_wind_d5h,天气预报,FC,-0.11107101571637495
+T,all,0.1,hist_spk_5to24h,价格历史,RT,0.06302082649160538
+T,all,0.1,hist_h_since_spike,价格历史,RT,-0.011675689722185245
+T,all,0.1,cal_dow,日历,CAL,0.16322049165040478
+V,actionable,0.1,energy_last30,能量价格,RT,0.12195020957961669
+V,actionable,0.1,withdrawal_mw_last30,电池充电（实时）,RT,0.013017420537300668
+V,actionable,0.1,p5_std5h,能量价格,RT,0.023156038368239696
+V,actionable,0.1,p5_n150_5h,能量价格,RT,0.4735159514455028
+V,actionable,0.1,pd_headroom_t0,预调度（5 小时前）,FC,-0.0240854853983505
+V,actionable,0.1,hist_rtp_max_24h,价格历史,RT,0.18636966910074423
+V,all,0.1,energy_last30,能量价格,RT,0.04457192541203346
+V,all,0.1,out_forced_coal_mw_d1h,停机（事后）,EP,0.04397694734924682
+V,all,0.1,out_forced_gas_mw_d1h,停机（事后）,EP,-0.04295846366691505
+V,all,0.1,battery_mw_last30,电池出力,EP,0.19558506564351136
+V,all,0.1,p5_std5h,能量价格,RT,0.03863404816600582
+V,all,0.1,p5_n150_5h,能量价格,RT,0.48661875429671303
+V,all,0.1,p5_n300_5h,能量价格,RT,0.01343398754245386
+V,all,0.1,hist_rtp_max_24h,价格历史,RT,0.19465204304170775

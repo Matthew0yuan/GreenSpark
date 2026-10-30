@@ -1,0 +1,18 @@
+reproduction days_ahead 0: 34,270 rows compared, max |diff| 5.55e-17
+reproduction days_ahead 1: 35,760 rows compared, max |diff| 5.55e-17
+days_ahead 0 C_strict: 34,592 predictions, refits 25
+days_ahead 0 C+fx: 34,592 predictions, refits 25
+days_ahead 0 C+pdx: 34,592 predictions, refits 25
+days_ahead 0 C+stem: 34,592 predictions, refits 25
+days_ahead 0 C+all: 34,592 predictions, refits 25
+days_ahead 0 C+price_extra: 34,592 predictions, refits 25
+days_ahead 0 C+price_extra+all: 34,592 predictions, refits 25
+days_ahead 1 C_strict: 36,096 predictions, refits 25
+days_ahead 1 C+fx: 36,096 predictions, refits 25
+days_ahead 1 C+pdx: 36,096 predictions, refits 25
+days_ahead 1 C+stem: 36,096 predictions, refits 25
+days_ahead 1 C+all: 36,096 predictions, refits 25
+days_ahead 1 C+price_extra: 36,096 predictions, refits 25
+days_ahead 1 C+price_extra+all: 36,096 predictions, refits 25
+days_ahead 1 C+stem1330: 36,096 predictions, refits 25
+saved 530,912 predictions

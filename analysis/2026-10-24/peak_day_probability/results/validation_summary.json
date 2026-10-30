@@ -1,0 +1,12 @@
+{
+  "budget_exceeded_rows": 0,
+  "prob_out_of_range": 0,
+  "paths_not_4_peaks": 0,
+  "p_final_above_p_beat_sim": 0,
+  "train_end_after_cutoff": 0,
+  "eval_days_missing_same_day_forecast": 0,
+  "eval_days_missing_day_before_forecast": 0,
+  "eval_days_same_day_run_older_than_0800": 0,
+  "residual_pool_min": 150,
+  "runtime_s": 68.4
+}

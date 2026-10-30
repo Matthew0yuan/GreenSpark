@@ -1,0 +1,131 @@
+diff --git a/vpp/aemo_correction.py b/vpp/aemo_correction.py
+index dc43812..b1e0e02 100644
+--- a/vpp/aemo_correction.py
++++ b/vpp/aemo_correction.py
+@@ -34,7 +34,7 @@ import numpy as np
+ import pandas as pd
+ 
+ from vpp.data import PROCESSED, PRODUCTS, ROOT, trading_date
+-from vpp.evaluate import CUTOFF, TEST_START, TRAIN_END, period_of
++from vpp.evaluate import CUTOFF, TEST_START, TRAIN_END, held_out, no_holdout, period_of
+ 
+ REPORTS = ROOT / "reports"
+ 
+@@ -65,6 +65,12 @@ def monthly_refits(data: pd.DataFrame, days_ahead: int, start: pd.Timestamp,
+         # labels must be known when the month's first forecast is issued, and no later than TRAIN_END
+         train = ((data["target_date"] < month_start - pd.Timedelta(days=days_ahead))
+                  & (data["target_date"] <= TRAIN_END))
++        held = train & held_out(data["target_date"])
++        train = train & ~held  # analysis/2026-10-28/random_holdout
++        no_holdout(data.loc[train, "target_date"], f"monthly_refits {month_start:%Y-%m}")
++        TRAIN_LOG.append({"month": f"{month_start:%Y-%m}", "days_ahead": days_ahead,
++                          "train_days": int(data.loc[train, "target_date"].nunique()),
++                          "held_out_days_removed": int(data.loc[held, "target_date"].nunique())})
+         test = (data["target_date"] >= month_start) & (data["target_date"] < month_end)
+         return fit_predict(train, test) if test.any() else None
+ 
+@@ -73,6 +79,9 @@ def monthly_refits(data: pd.DataFrame, days_ahead: int, start: pd.Timestamp,
+         return pd.concat([p for p in pool.map(one_month, months) if p is not None])
+ 
+ 
++TRAIN_LOG: list[dict] = []  # analysis/2026-10-28/random_holdout: each refit's training days (PLAN.md check 1)
++
++
+ def trading_slot(idx: pd.DatetimeIndex) -> np.ndarray:
+     """Half-hour slot within the trading day: 0 = 08:00, 47 = 07:30."""
+     shifted = idx - pd.Timedelta(hours=8)
+diff --git a/vpp/evaluate.py b/vpp/evaluate.py
+index 2afda2b..cea4582 100644
+--- a/vpp/evaluate.py
++++ b/vpp/evaluate.py
+@@ -9,6 +9,8 @@ validation months around them, so choices had seen data after the test months (r
+ section 16).
+ """
+ 
++from pathlib import Path
++
+ import numpy as np
+ import pandas as pd
+ 
+@@ -18,6 +20,22 @@ CUTOFF = pd.Timestamp("2026-07-01")  # first test trading day
+ # Last trading day any model trains on: refits after it reuse the same training data, so the models
+ # are frozen from here and forecast the test without seeing it.
+ TRAIN_END = CUTOFF - pd.Timedelta(days=1)
++# analysis/2026-10-28/random_holdout (this worktree only): trading days no model trains on (PLAN.md there). They are
++# still simulated and, once past, still public inputs; only the fits leave them out.
++HOLDOUT_FILE = Path(__file__).resolve().parents[1] / "analysis" / "2026-10-28" / "random_holdout" / "holdout_days.csv"
++HOLDOUT = pd.DatetimeIndex(pd.read_csv(HOLDOUT_FILE, parse_dates=["day"])["day"]).as_unit("ns")
++
++
++def held_out(days) -> np.ndarray:
++    """True for each trading day (any datetime unit; times dropped) that is held out."""
++    return pd.DatetimeIndex(days).as_unit("ns").normalize().isin(HOLDOUT)
++
++
++def no_holdout(days, where: str) -> None:
++    """PLAN.md check 1: raise if any trading day a fit uses is held out."""
++    hit = held_out(days)
++    if hit.any():
++        raise ValueError(f"{where}: {int(hit.sum())} training rows on held-out days")
+ 
+ 
+ def period_of(trading_day) -> np.ndarray:
+diff --git a/vpp/storage_value.py b/vpp/storage_value.py
+index 9746299..501b4c7 100644
+--- a/vpp/storage_value.py
++++ b/vpp/storage_value.py
+@@ -47,7 +47,7 @@ from vpp import site as st
+ from vpp import site_bill as sb
+ from vpp import stochastic as sto
+ from vpp.data import PROCESSED
+-from vpp.evaluate import CUTOFF, TRAIN_END
++from vpp.evaluate import CUTOFF, TRAIN_END, held_out, no_holdout
+ 
+ REPORTS = bt.REPORTS
+ OUT = PROCESSED / "storage_value.npz"
+@@ -90,7 +90,9 @@ def price_states(prices: pd.DataFrame, month: pd.Period, level: pd.Series | None
+     TRAIN_END). prices: (trading day x slot 0..47) 30-min prices. level: a price level per trading day (vpp.v2.value);
+     the states are then of each half-hour's price less its day's level, and the bin means are relative to it."""
+     end = min(month.start_time, CUTOFF)
+-    x = prices[(prices.index >= end - WINDOW) & (prices.index < end) & (prices.index <= TRAIN_END)].dropna()
++    x = prices[(prices.index >= end - WINDOW) & (prices.index < end) & (prices.index <= TRAIN_END)
++               & ~held_out(prices.index)].dropna()  # analysis/2026-10-28/random_holdout
++    no_holdout(x.index, f"price_states {month}")
+     if level is not None:
+         x = x.sub(level.reindex(x.index), axis=0).dropna()
+     X, days = x.to_numpy(), x.index
+diff --git a/vpp/v2/value.py b/vpp/v2/value.py
+index 5973522..181aa34 100644
+--- a/vpp/v2/value.py
++++ b/vpp/v2/value.py
+@@ -58,7 +58,7 @@ from vpp import dispatch as dp
+ from vpp import site as st
+ from vpp import storage_value as sv
+ from vpp.data import PROCESSED
+-from vpp.evaluate import CUTOFF, TRAIN_END
++from vpp.evaluate import CUTOFF, TRAIN_END, held_out, no_holdout
+ 
+ LEVEL_DAYS = 28   # days of past prices in the level [fixed]
+ GRID_STEP = 5.0   # $/MWh between solved levels [fixed]
+@@ -231,7 +231,9 @@ def regime_trans(table: pd.DataFrame, month: pd.Period, level: pd.Series, flags:
+     """(state, slot, b, c) transitions between price states on the normal (0) and high-risk (1) days of month's
+     window, counted as vpp.storage_value.price_states counts them, each row shrunk to the pooled one."""
+     end = min(month.start_time, CUTOFF)
+-    x = table[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= TRAIN_END)].dropna()
++    x = table[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= TRAIN_END)
++              & ~held_out(table.index)].dropna()  # analysis/2026-10-28/random_holdout
++    no_holdout(x.index, f"regime_trans {month}")
+     x = x.sub(level.reindex(x.index), axis=0).dropna()
+     X, days = x.to_numpy(), x.index
+     bins = np.stack([np.searchsorted(ps["edges"][t, 1:-1], X[:, t], side="right") for t in range(dp.N)], axis=1)
+@@ -263,7 +265,9 @@ def regime_split(table: pd.DataFrame, month: pd.Period, level: pd.Series, flags:
+     the rows' days, largest change of a transition]); pool_rel[slot][b], the sorted relative prices of the slot's
+     pooled half-hours in price state b (for the chance such a half-hour spikes at a level)."""
+     end = min(month.start_time, CUTOFF)
+-    x = table[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= TRAIN_END)].dropna()
++    x = table[(table.index >= end - sv.WINDOW) & (table.index < end) & (table.index <= TRAIN_END)
++              & ~held_out(table.index)].dropna()  # analysis/2026-10-28/random_holdout
++    no_holdout(x.index, f"regime_split {month}")
+     rel = x.sub(level.reindex(x.index), axis=0).dropna()
+     if len(rel) and not (rel.index.max() < month.start_time and rel.index.max() <= TRAIN_END):
+         raise ValueError(f"{month}: the window reaches past the month or the training end")

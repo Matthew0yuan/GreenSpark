@@ -1,0 +1,78 @@
+/* Customer fleet · Improve (round 5). Only base.css tokens; everything is scoped to this page's section. */
+#s-value .toolbar{margin:0 0 4px}
+/* scenario chips keep the dashed styles of .chip.hyp and .chip.fut, and open their note on hover like every .tipc */
+#s-value .tipc.hyp{border-style:dashed;border-color:var(--hyp-line);color:var(--hyp-text);background:var(--hyp-soft)}
+#s-value .tipc.fut{border-style:dashed;border-color:var(--fut-line);color:var(--fut-text);background:var(--fut-soft)}
+#s-value .tipc.w{border-color:var(--warn-line);background:var(--warn-soft);color:var(--warn-text)}
+
+/* decision: verdict pill and the gain on the left, the basis chips on the right */
+.v-dec{margin-top:14px}
+.v-dec .dec-val{max-width:470px}
+.v-dec .chips{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+#v-pill b{text-transform:uppercase;letter-spacing:.05em;font-size:12px;cursor:help}
+/* the number carries the headline; the words after it are one step smaller so the line stays on one row */
+#v-head{font-size:22px;letter-spacing:-.01em;margin-top:8px;color:var(--text)}
+#v-head .v-n{font-size:36px;letter-spacing:-.025em;font-family:var(--font-num);font-variant-numeric:tabular-nums;margin-right:4px}
+#v-head .v-n.pos{color:var(--ok)}
+#v-head .v-n.neg{color:var(--bad)}
+#v-opts-blk{margin-top:20px;padding-top:16px}
+#v-opts-blk .blk-h{margin-bottom:6px}
+
+/* the option chart */
+.vopt .vo-n{font-size:13px;font-weight:600;fill:var(--text)}
+.vopt .vo-t{font-size:11px;fill:var(--text-3)}
+.vopt .vo-s{font-size:11px;fill:var(--text-2)}
+.vopt .vo-c{font-size:11px;font-weight:500;fill:var(--cust-text)}
+.vopt .vo-v{font-size:11px;fill:var(--text-3)}
+.vopt .vo-vn{font-weight:600;fill:var(--text)}
+.vopt .vo-vn.vo-neg{fill:var(--bad)}
+.vopt .vo-pill text{font-size:11.5px;font-weight:600}
+.vopt .vo-pill.ok rect{fill:var(--ok-soft);stroke:var(--ok-line)}
+.vopt .vo-pill.ok text{fill:var(--ok)}
+.vopt .vo-pill.bad rect{fill:var(--bad-soft);stroke:var(--bad-line)}
+.vopt .vo-pill.bad text{fill:var(--bad)}
+.vopt .vo-pill.mu rect{fill:var(--surface-3)}
+.vopt .vo-pill.mu text{fill:var(--text-3)}
+.vopt .hit{cursor:default}
+
+/* who gets what: three labelled bars */
+#v-parties-blk{margin-top:14px;padding-top:14px}
+#v-parties-blk .blk-h{margin-bottom:4px}
+.vopt .vo-big{font-size:14px;font-weight:600;fill:var(--text)}
+.vopt .vo-big.vo-neg{fill:var(--bad)}
+
+/* the verdict's conditions, under the headline where the verdict paragraph used to be */
+.v-status{display:flex;flex-wrap:wrap;gap:6px;margin-top:0;grid-column:1/-1}
+.v-status .ck{flex:none}
+
+/* the evidence, folded */
+.v-folds{margin-top:28px}
+.v-folds .fold.sm:first-child{margin-top:0}
+.v-folds .fold.sm{max-width:960px}
+.v-folds .fold.sm[open]{padding-bottom:6px}
+.v-fsub{margin:0 0 6px;font-size:12px;color:var(--text-3)}
+.v-folds .kvt{max-width:720px}
+.v-own .v-sum td{border-top:1px solid var(--text-2);font-weight:600;color:var(--text)}
+.v-hold th.grp{text-align:center;border-bottom:1px solid var(--divider)}
+.v-hold .g2{border-left:1px solid var(--divider)}
+.v-hold td .tipc{margin-left:6px;height:20px;font-size:11px}
+#v-cons{max-width:960px;display:flex;flex-wrap:wrap}
+#v-cons .ck{flex:none}
+
+/* round 5 wording pass: dates under each held-out season, hover cues for notes that sit on plain text */
+.v-hold .v-sd{font-size:11px;color:var(--text-3);margin-top:2px;white-space:nowrap}
+#v-ledger .v-rn{cursor:help;border-bottom:1px dotted var(--text-4)}
+#v-ledger .trt{cursor:help}
+#v-f-ircr > summary{cursor:pointer}
+.vopt .hit.vo-fn{cursor:help}
+
+/* glossary pass (2026-10-27): chips in the holdout caption and its table head */
+#v-hold-sub .tipc{height:20px;font-size:11px;margin-left:4px}
+.v-hold th .tipc{height:20px;font-size:11px;padding:0 7px}
+
+/* round 6: the headline is the number and "vs reference terms"; the number opens its basis on hover, the words open the
+   glossary (drawn as words with a dotted cue, like the Evidence headline, not a pill) */
+#v-head .v-n[data-note]{cursor:help}
+#v-head .tipc.v-def{display:inline;height:auto;padding:0;border:0;border-radius:0;font:inherit;color:inherit;white-space:nowrap;text-decoration:underline dotted var(--text-4);text-decoration-thickness:2px;text-underline-offset:6px}
+#v-head .tipc.v-def:hover::after,#v-head .tipc.v-def:focus-visible::after{font:400 12px/1.45 var(--font)}
+.v-dec .dec-val{max-width:360px}

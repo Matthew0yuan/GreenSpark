@@ -1,0 +1,18 @@
+{
+  "A_paths_reproduce_M3_maxdiff": 0.0,
+  "A_L1_value_curve_max": 0.0,
+  "A_L1_R3_calls_total": 0,
+  "A_L1_dVbar": 0.0,
+  "budget_exceeded": 0,
+  "A_money_reproduces_study_maxdiff": 1.4210854715202004e-14,
+  "B_paths_reproduce_M3_maxdiff": 0.0,
+  "B_L1_value_curve_max": 0.0,
+  "B_L1_R3_calls_total": 0,
+  "B_L1_dVbar": 0.0,
+  "B_money_reproduces_study_maxdiff": 0.0,
+  "B_future_perturbed_paths_identical_to_cut": true,
+  "B_future_perturbed_R3_calls_identical_to_cut": true,
+  "B_control_day_CUT_actual_moves_paths_after_publication": true,
+  "B_control_day_CUT_actual_leaves_own_decision": true,
+  "runtime_s": 21.3
+}

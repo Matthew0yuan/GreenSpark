@@ -1,0 +1,365 @@
+{
+ "defaults": {
+  "A": {
+   "file": "v2_value_median.npz",
+   "seconds": 4.63,
+   "json_written": false,
+   "vs_out_ref": {
+    "same_keys": true,
+    "n_arrays": 10,
+    "differ": [],
+    "identical": true
+   },
+   "vs_reviewer_orig": {
+    "same_keys": true,
+    "n_arrays": 10,
+    "differ": [],
+    "identical": true
+   },
+   "vs_main_workspace": {
+    "same_keys": true,
+    "n_arrays": 10,
+    "differ": [
+     "curve",
+     "day",
+     "edges",
+     "grid_curve",
+     "grid_level",
+     "grid_month",
+     "level",
+     "marg",
+     "n_tables",
+     "weeks"
+    ],
+    "identical": false
+   }
+  },
+  "B": {
+   "file": "v2_value_median_h50_state.npz",
+   "seconds": 7.93,
+   "json_written": false,
+   "vs_out_ref": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   },
+   "vs_reviewer_orig": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   },
+   "vs_main_workspace": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   }
+  }
+ },
+ "groups": {
+  "8 MW": {
+   "file": "v2_value_median_h50_state_pddde91fa.npz",
+   "seconds": 8.12,
+   "record": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 8.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "ddde91fa",
+    "file": "v2_value_median_h50_state_pddde91fa.npz",
+    "asked": {
+     "power_mw": 8.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --power 8 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:43:57"
+   },
+   "bad_cells": {
+    "curve": 0,
+    "marg": 0,
+    "curve_state": 0,
+    "marg_state": 0
+   },
+   "vs_out_tables": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   },
+   "mean_curve_seg5": 103.03425379970618,
+   "mean_curve_seg20": 70.39693946671068
+  },
+  "36 MWh": {
+   "file": "v2_value_median_36mwh_h50_state.npz",
+   "seconds": 7.94,
+   "record": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 36.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "f6016420",
+    "file": "v2_value_median_36mwh_h50_state.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 36.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --energy 36 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:44:06"
+   },
+   "bad_cells": {
+    "curve": 0,
+    "marg": 0,
+    "curve_state": 0,
+    "marg_state": 0
+   },
+   "vs_out_tables": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   },
+   "mean_curve_seg5": 109.37938261199416,
+   "mean_curve_seg20": 73.26864098666007
+  },
+  "round trip 0.88": {
+   "file": "v2_value_median_h50_state_p9c12852e.npz",
+   "seconds": 8.82,
+   "record": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.88,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "9c12852e",
+    "file": "v2_value_median_h50_state_p9c12852e.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.88,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --round-trip 0.88 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:44:15"
+   },
+   "bad_cells": {
+    "curve": 0,
+    "marg": 0,
+    "curve_state": 0,
+    "marg_state": 0
+   },
+   "vs_out_tables": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   },
+   "mean_curve_seg5": 110.14578846713952,
+   "mean_curve_seg20": 75.57336119601601
+  },
+  "wear $40": {
+   "file": "v2_value_median_h50_state_pb313fa69.npz",
+   "seconds": 9.0,
+   "record": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 40.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 9.0,
+     "load_scale": 10.0
+    },
+    "digest": "b313fa69",
+    "file": "v2_value_median_h50_state_pb313fa69.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 40.0,
+     "cmd_mw": 9.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --wear 40 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:44:25"
+   },
+   "bad_cells": {
+    "curve": 0,
+    "marg": 0,
+    "curve_state": 0,
+    "marg_state": 0
+   },
+   "vs_out_tables": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   },
+   "mean_curve_seg5": 108.1624077780205,
+   "mean_curve_seg20": 72.79925434714869
+  },
+  "CMD 10 MW": {
+   "file": "v2_value_median_h50_state_pbd524b06.npz",
+   "seconds": 10.49,
+   "record": {
+    "stat": "median",
+    "hurdle": 50.0,
+    "state": true,
+    "regime": false,
+    "params": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 10.0,
+     "import_limit_mw": 10.0,
+     "load_scale": 10.0
+    },
+    "digest": "bd524b06",
+    "file": "v2_value_median_h50_state_pbd524b06.npz",
+    "asked": {
+     "power_mw": 10.0,
+     "energy_mwh": 40.0,
+     "round_trip": 0.85,
+     "wear_per_mwh": 30.0,
+     "cmd_mw": 10.0,
+     "import_limit_mw": 12.0,
+     "load_scale": 10.0
+    },
+    "command": "python -m vpp.v2.value --cmd 10 --hurdle 50 --state",
+    "days": 570,
+    "first": "2025-04-01",
+    "last": "2026-10-22",
+    "built": "2026-10-26T14:44:36"
+   },
+   "bad_cells": {
+    "curve": 0,
+    "marg": 0,
+    "curve_state": 0,
+    "marg_state": 0
+   },
+   "vs_out_tables": {
+    "same_keys": true,
+    "n_arrays": 14,
+    "differ": [],
+    "identical": true
+   },
+   "mean_curve_seg5": 98.17003584744637,
+   "mean_curve_seg20": 67.78864429038867
+  }
+ },
+ "default_bad_cells": {
+  "curve": 0,
+  "marg": 0,
+  "curve_state": 0,
+  "marg_state": 0
+ },
+ "default_mean_curve_seg5": 111.02038214834113,
+ "direction": {
+  "rt 0.88 vs 0.85": {
+   "curve": {
+    "cells": 22800,
+    "lower": 20989,
+    "share": 0.9205701754385965,
+    "largest_drop": 2.5449371337890625,
+    "mean_lower_segments": 40,
+    "mean_seg5": [
+     110.14578846713952,
+     111.02038214834113
+    ]
+   },
+   "curve_state": {
+    "cells": 45600,
+    "lower": 41611,
+    "share": 0.9125219298245614,
+    "largest_drop": 2.9138107299804688,
+    "mean_lower_segments": 40,
+    "mean_seg5": [
+     113.26397091045715,
+     114.12219140906083
+    ]
+   }
+  },
+  "wear 30 vs 40": {
+   "curve": {
+    "cells": 22800,
+    "lower": 0,
+    "share": 0.0,
+    "largest_drop": 0.0,
+    "mean_lower_segments": 0,
+    "mean_seg5": [
+     111.02038214834113,
+     108.1624077780205
+    ]
+   },
+   "curve_state": {
+    "cells": 45600,
+    "lower": 0,
+    "share": 0.0,
+    "largest_drop": 0.0,
+    "mean_lower_segments": 0,
+    "mean_seg5": [
+     114.12219140906083,
+     111.21113089511269
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,1926 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GreenSpark Dispatch Desk · B editorial briefing (style option, illustrative data)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<script>if (/[?&]clean=1\b/.test(location.search)) document.documentElement.className += " clean";</script>
+<style>
+/* Shared by all four style options: tokens (each option overrides them), components, switcher.
+   Layout lives in each option's own stylesheet. Colours in charts come from these tokens too. */
+html{
+  --font:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --font-display:var(--font); --font-num:var(--font);
+  --r:8px; --r-sm:6px; --r-pill:999px; --shadow:none;
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F6F7F8; --surface-3:#EEF0F2;
+  --border:#E6E8EB; --divider:#EFF1F3; --rule:#E2E5E9;
+  --text:#111418; --text-2:#30363E; --text-3:#646B75; --text-4:#959CA5;
+  --accent:#0F6B4F; --accent-hover:#0B5840; --accent-text:#FFFFFF; --accent-soft:#EDF5F1;
+  --ok:#1E7F4F; --ok-soft:#EDF6F0; --ok-line:#B9DCC7;
+  --warn:#B7791F; --warn-soft:#FFF8E8; --warn-line:#F0D99A; --warn-text:#5C4300;
+  --bad:#C0262D; --bad-soft:#FDF1F0; --bad-line:#F0BAB5;
+  --info:#2F5FD0; --info-soft:#EFF3FC; --info-line:#BCCDEF; --info-text:#1F3A6E;
+  --unsup:#6B7682; --on-status:#FFFFFF;
+  --hyp-text:#8A5310; --hyp-line:#DDB27A; --hyp-soft:#FBF3E6;
+  --fut-text:#4C3A94; --fut-line:#A99BDD; --fut-soft:#F3F0FB;
+  --proto-bg:#FFF8E1; --proto-text:#6B4A00; --proto-line:#F0E2B6;
+  --dis:#2F5FD0; --chg:#A9C0F0; --chg-text:#4C6FBF; --rr:#8E90B4; --rl:#D4D5E5; --cr:#8AAEAE; --cl:#D3E2E1;
+  --soc:#0F6B4F; --mand:#C0262D; --mand-soft:#FCEDED; --mand-hatch:#EBAAAA; --econ:#EEDFAE;
+  --load:#59626D; --meter:#E4E8EC; --price:#16202A; --base:#AAB1B9; --actual:#E0533D;
+  --peak:#8E3B73; --peak-soft:#F5EAF1; --cust:#C27C2C; --cust-soft:#F5E6D2; --cust-text:#8A5310; --on-cust:#FFFFFF;
+  --zen:#0F6B4F; --oth:#7A8591; --spike:#59626D; --bar:#D5DBE0;
+  --grid:#EFF1F3; --axis:#AAB2BB; --axis-light:#D6DBE0; --axis-strong:#59626D;
+  --hatch-bg:#F8F9FA; --hatch-ln:#DCE0E5; --chart-text:#7B838D; --chart-label:#30363E;
+  --wm:rgba(100,110,120,.055); --mark:#111418; --mark-text:#FFFFFF; --sel:rgba(17,20,24,.05); --halo:#FFFFFF;
+  /* names the original prototype uses in inline styles */
+  --ink:var(--text); --ink2:var(--text-2); --ink3:var(--text-2); --ink4:var(--text-3); --mute:var(--text-3); --mute2:var(--text-4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);font-size:14px;line-height:1.45;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+[hidden]{display:none!important}
+.num,.kv,.big,.n{font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{margin:0}
+
+/* disclosure banner, always on top */
+.proto{position:fixed;top:0;left:0;right:0;height:24px;z-index:90;background:var(--proto-bg);border-bottom:1px solid var(--proto-line);color:var(--proto-text);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:14px;white-space:nowrap;overflow:hidden}
+.proto small{font-size:11px;font-weight:400;opacity:.8}
+body{padding-top:24px}
+
+/* navigation item (each layout places and shapes it) */
+.nav{position:relative;display:flex;align-items:center;gap:10px;border:0;background:none;color:inherit;cursor:pointer;text-align:left;white-space:nowrap}
+.nav svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav .dot{display:none;width:6px;height:6px;border-radius:50%;background:var(--warn)}
+body.stale .nav[data-dep] .dot{display:inline-block}
+.mk{width:26px;height:26px;border-radius:7px;background:var(--accent);color:var(--accent-text);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none;letter-spacing:.02em}
+
+/* page header */
+.ph h1{font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.chips{display:inline-flex;gap:6px;flex-wrap:wrap;font-family:var(--font);vertical-align:middle}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:var(--r-pill);border:1px solid var(--rule);background:transparent;font-size:11.5px;font-weight:500;color:var(--text-3);letter-spacing:0;white-space:nowrap}
+.chip.rp::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.fut{border-style:dashed;border-color:var(--fut-line);color:var(--fut-text);background:var(--fut-soft)}
+.chip.hyp{border-style:dashed;border-color:var(--hyp-line);color:var(--hyp-text);background:var(--hyp-soft)}
+.chip.dz{border-style:dashed}
+.ctx{font-size:13px;color:var(--text-3)}
+
+/* run state and buttons */
+.run{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;white-space:nowrap}
+.run i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.run small{font-weight:400;color:var(--text-3);font-size:12px}
+.run.ok{color:var(--ok)}.run.stale{color:var(--warn)}.run.bad{color:var(--bad)}.run.unsup{color:var(--unsup)}.run.ro{color:var(--info)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--surface);color:var(--text);border-radius:var(--r-sm);padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:600;min-width:116px;justify-content:center}
+.btn.pri:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.pri:disabled{background:var(--surface-3);border-color:var(--surface-3);color:var(--text-4);cursor:not-allowed;box-shadow:none}
+.btn.sm{padding:4px 10px;font-size:12px}
+.lnk{border:0;background:none;padding:0;color:var(--info);font-weight:600;font-size:12.5px;cursor:pointer}
+.strip{display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;border-radius:var(--r-sm);font-size:13px}
+.strip.show{display:flex}
+.strip.st{background:var(--warn-soft);border:1px solid var(--warn-line);color:var(--warn-text)}
+.strip.nc,.strip.ro{background:var(--info-soft);border:1px solid var(--info-line);color:var(--info-text)}
+.strip .sp{flex:1}
+body.stale .res{opacity:.5;filter:saturate(.4)}
+.screen{display:none}
+.screen.on{display:block}
+
+/* text helpers */
+.sub{font-size:12px;color:var(--text-3);font-weight:400}
+.cap{font-size:11px;letter-spacing:.07em;font-weight:600;color:var(--text-3);text-transform:uppercase}
+.foot{margin:10px 0 0;font-size:12px;color:var(--text-3);line-height:1.5}
+.lsub{display:block;font-size:11.5px;color:var(--text-3)}
+.sp{flex:1}
+
+/* instruction and key figures */
+.instr-h{font-family:var(--font-display);font-weight:600;letter-spacing:-.015em;line-height:1.2}
+.instr-s{color:var(--text-2)}
+.kv{font-family:var(--font-num);font-weight:600;line-height:1.2;white-space:nowrap}
+.ks{font-size:12px;color:var(--text-3);margin-top:3px;white-space:nowrap}
+
+/* charts */
+.chartbox svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--text-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .lgh{font-weight:600;color:var(--text-3);margin-left:8px}
+.legend .lgh:first-child{margin-left:0}
+.sw{display:inline-block;width:12px;height:8px;border-radius:2px}
+.sw.ln{height:2.5px;border-radius:1px}
+.sw.dsh{height:0;border-top:1.5px dashed}
+.sw.hm{background:repeating-linear-gradient(45deg,var(--mand-hatch) 0 1.5px,var(--mand-soft) 1.5px 4px)}
+.sw.ht{background:repeating-linear-gradient(45deg,var(--hatch-ln) 0 2px,var(--hatch-bg) 2px 5px);outline:1px solid var(--hatch-ln)}
+.lanes text{font-family:var(--font);font-size:10.5px;fill:var(--chart-text)}
+.lanes .lt{font-size:12px;font-weight:600;fill:var(--chart-label)}
+.lanes .lu{font-size:10.5px;fill:var(--text-4)}
+.lanes .ann{font-size:11px;fill:var(--text-2)}
+.lanes .gl{stroke:var(--grid);stroke-width:1}
+.lanes .hit{fill:transparent;cursor:pointer}
+.lanes .hit:hover{fill:var(--sel)}
+.lanes .wm{font-size:30px;font-weight:700;letter-spacing:.3em;fill:var(--wm)}
+.lanes .halo{paint-order:stroke;stroke:var(--halo);stroke-width:3px;stroke-linejoin:round}
+
+/* interval detail (rail or strip) */
+.ri-head .t{font-size:17px;font-weight:600;font-family:var(--font-num)}
+.tag{display:inline-block;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:.05em;padding:1px 6px;border-radius:4px;border:1px solid;vertical-align:2px;margin-left:8px}
+.tag.plan{color:var(--info);border-color:var(--info-line)}
+.tag.out{color:var(--mark-text);background:var(--mark);border-color:var(--mark)}
+.act{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--dis);margin:8px 0 2px;line-height:1.25}
+.ri-why,.ac-why{margin-top:12px}
+.why{list-style:none;margin:6px 0 0;padding:0}
+.why li{position:relative;padding:0 0 8px 14px;font-size:13px;color:var(--text-2)}
+.why li::before{content:"";position:absolute;left:2px;top:7px;width:4px;height:4px;border-radius:50%;background:var(--text-4)}
+.kvt{width:100%;border-collapse:collapse;font-size:13px}
+.kvt td{padding:4px 0;color:var(--text-2)}
+.kvt td.n{text-align:right;color:var(--text);font-weight:600;font-family:var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:12px}
+.rsec{margin-top:14px;padding-top:12px;border-top:1px solid var(--divider)}
+.bar{display:flex;height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-top:6px}
+.locked{margin-top:14px;padding:10px 12px;border:1px dashed var(--rule);border-radius:var(--r-sm);background:var(--surface-2);font-size:12px;color:var(--text-3)}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:11.5px;font-weight:600;color:var(--text-3);text-align:left;padding:8px;border-bottom:1px solid var(--rule);vertical-align:bottom}
+.tbl td{padding:8px;border-bottom:1px solid var(--divider);color:var(--text-2);vertical-align:top}
+.tbl td.n,.tbl th.n{text-align:right}
+.tbl td.n{color:var(--text);font-weight:600;font-family:var(--font-num);white-space:nowrap}
+.tbl tr.tot td{border-top:1px solid var(--text-2);border-bottom:0;font-weight:600;color:var(--text)}
+.tbl tr.x{cursor:pointer}
+.tbl tr.x td:first-child::before{content:"\25B8";display:inline-block;width:14px;color:var(--text-4)}
+.tbl tr.x.open td:first-child::before{content:"\25BE"}
+.tbl tr.dt{display:none}
+.tbl tr.dt.show{display:table-row}
+.tbl tr.dt td{font-size:12px;color:var(--text-3);background:var(--surface-2)}
+.tbl .hl{background:var(--accent-soft)}
+.trt{margin-left:8px;font-size:9.5px;font-weight:600;letter-spacing:.05em;color:var(--text-3);border:1px solid var(--rule);border-radius:3px;padding:0 4px}
+.neg{color:var(--bad)!important}.pos{color:var(--ok)!important}
+
+/* controls */
+.seg{display:inline-flex;padding:3px;border-radius:calc(var(--r-sm) + 2px);background:var(--surface-3);gap:2px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:var(--r-sm);font-size:12.5px;color:var(--text-3);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button.on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.lk{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.2}
+.toolbar{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.toolbar .lbl{font-size:12px;color:var(--text-3);margin-right:-4px}
+.sel{border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--surface);color:var(--text);padding:4px 8px;font-size:12.5px}
+
+/* signals and decisions */
+.sig{padding:12px 0;border-bottom:1px solid var(--divider)}
+.sig:last-child{border-bottom:0}
+.sig .hd{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px}
+.sig .gy{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;color:var(--surface);font-size:11px;flex:none}
+.sig p{margin:6px 0 0;font-size:12.5px;color:var(--text-3)}
+.st8{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:1px 7px;border-radius:4px}
+.st8.flag{background:var(--peak-soft);color:var(--peak)}
+.st8.no,.st8.hi{background:var(--surface-3);color:var(--text-2)}
+.dec{display:flex;align-items:center;gap:14px;margin:10px 0 4px}
+.dec-pill{font-size:15px;font-weight:700;color:var(--on-cust);background:var(--cust);border-radius:var(--r-sm);padding:7px 14px;letter-spacing:.03em;white-space:nowrap}
+.dec-pill.no{background:var(--text-4);color:var(--surface)}
+.dec b{display:block;font-size:16px;font-weight:600}
+.dec small{display:block;font-size:12px;color:var(--text-3)}
+.wl{list-style:none;margin:6px 0 0;padding:0}
+.wl li{display:flex;gap:10px;font-size:13px;color:var(--text-2);padding:4px 0}
+.wl .g{flex:none;width:14px;text-align:center;font-size:11px;line-height:19px}
+.ac-outp{margin:6px 0 0;font-size:13px;color:var(--text-2)}
+.daystep{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.retro{font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--mark-text);background:var(--mark);border-radius:4px;padding:2px 8px;text-transform:uppercase;white-space:nowrap}
+.hind{font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--peak);border:1px solid var(--peak);border-radius:4px;padding:1px 7px;text-transform:uppercase;white-space:nowrap}
+.budget .bl{display:flex;justify-content:space-between;font-size:13px;gap:12px;flex-wrap:wrap}
+.budget .bar{height:8px;border-radius:4px;margin-top:8px}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:var(--r-pill);white-space:nowrap;border:1px solid transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad-line)}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-line)}
+.pill.mu{background:var(--surface-3);color:var(--text-3)}
+.passmark{font-size:12px;font-weight:500;color:var(--text-3);white-space:nowrap}
+
+/* value */
+.verdict{display:flex;gap:14px;align-items:flex-start;padding:14px 18px;border-radius:var(--r);border:1px solid}
+.verdict.ok{background:var(--ok-soft);border-color:var(--ok-line)}
+.verdict.bad{background:var(--bad-soft);border-color:var(--bad-line)}
+.verdict .vt{flex:none;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--on-status);border-radius:4px;padding:4px 9px;margin-top:2px}
+.verdict.ok .vt{background:var(--ok)}.verdict.bad .vt{background:var(--bad)}
+.verdict b{display:block;font-size:15px;font-weight:600;margin-bottom:2px}
+.verdict p{margin:0;font-size:13px;color:var(--text-2)}
+.party.z{--pc:var(--zen)}.party.c{--pc:var(--cust)}.party.o{--pc:var(--oth)}
+.party .cap::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:0;background:var(--pc)}
+.party .big{font-family:var(--font-num);font-size:28px;font-weight:600;margin:8px 0 2px;letter-spacing:-.01em}
+.scenline{font-size:13px;color:var(--text-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.note{padding:10px 14px;border-radius:var(--r-sm);background:var(--surface-2);font-size:13px;color:var(--text-2)}
+.note.w{background:var(--warn-soft);color:var(--warn-text)}
+.note.i{background:var(--info-soft);color:var(--info-text)}
+.note.p{background:var(--peak-soft)}
+
+/* validation */
+.steps{list-style:none;margin:0 0 12px;padding:0}
+.steps li{display:flex;gap:10px;align-items:center;font-size:13px;padding:5px 0;color:var(--text-3)}
+.steps .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--surface-3);color:var(--text-3);flex:none}
+.steps li.done .n{background:var(--ok);color:var(--on-status)}
+.steps li.now{color:var(--text);font-weight:600}
+.steps li.now .n{background:var(--info);color:var(--on-status)}
+.row-b{display:flex;gap:8px}
+.bul{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--text-2)}
+.bul li{margin:3px 0}
+
+/* configuration */
+.f{display:grid;grid-template-columns:minmax(0,1fr) 172px 112px;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--divider);font-size:13px}
+.f:last-child{border-bottom:0}
+.f label{color:var(--text-2)}
+.f .fc{display:flex;align-items:center;gap:6px}
+.f input,.f select{width:100%;min-width:0;border:1px solid var(--rule);border-radius:var(--r-sm);padding:5px 8px;font-size:13px;background:var(--surface);color:var(--text);text-align:right}
+.f select{text-align:left}
+.f .u{flex:none;font-size:11.5px;color:var(--text-3);width:44px}
+.f.lockd input,.f.lockd select{background:var(--surface-2);color:var(--text-4);border-color:var(--divider)}
+.f.err input,.f.err select{border-color:var(--bad);background:var(--bad-soft)}
+.sup{justify-self:end;display:inline-flex;align-items:center;gap:5px;font-size:11px;line-height:1.3;color:var(--text-3);text-align:right}
+.sup::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:currentColor}
+.sup.ok{visibility:hidden}
+.sup.uv{color:var(--info)}.sup.lkd{color:var(--unsup)}.sup.b{color:var(--warn)}
+.sup.lkd::before{border-radius:1px}
+.src{white-space:nowrap;font-size:9.5px;font-weight:700;letter-spacing:.05em;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:1px;background:var(--surface-3);color:var(--text-3)}
+.src.as{background:var(--hyp-soft);color:var(--hyp-text)}
+.src.ru{background:var(--info-soft);color:var(--info-text)}
+.src.rf{background:var(--cust-soft);color:var(--cust-text)}
+.src.md{background:var(--peak-soft);color:var(--peak)}
+.scen4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sc{border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px;cursor:pointer;background:var(--surface);color:var(--text);text-align:left}
+.sc.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.sc b{font-size:13px}
+.sc p{margin:4px 0 0;font-size:12px;color:var(--text-3)}
+.chk{list-style:none;margin:0;padding:0}
+.chk li{display:flex;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--divider);color:var(--text-2)}
+.chk li:last-child{border-bottom:0}
+.ci{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:var(--on-status);font-size:10.5px;font-weight:700;margin-top:1px}
+.ci.ok{background:transparent;color:var(--ok);font-size:13px}
+.ci.w{background:var(--warn)}.ci.b{background:var(--bad)}.ci.u{background:var(--unsup)}.ci.i{background:var(--info)}
+
+
+/* interaction-state cards */
+.state .cap{display:block}
+.state .run{margin:10px 0}
+.state .verdict{margin-top:10px}
+
+.toast{position:fixed;right:24px;bottom:76px;z-index:95;max-width:440px;padding:12px 16px;border-radius:var(--r-sm);background:var(--mark);color:var(--mark-text);font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none}
+.toast.show{display:block}
+
+/* style switcher: design review only, the same in every option */
+.sty{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:99;display:flex;align-items:center;gap:2px;padding:5px;border-radius:999px;background:rgba(17,20,24,.94);border:1px solid rgba(255,255,255,.16);font:12.5px/1.2 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+.sty b{font-weight:600;padding:0 8px 0 12px;color:rgba(255,255,255,.6)}
+.sty a{color:rgba(255,255,255,.85);padding:7px 12px;border-radius:999px;text-decoration:none;white-space:nowrap}
+.sty a:hover{color:#fff;background:rgba(255,255,255,.1)}
+.sty a.on{background:#fff;color:#111418;font-weight:600}
+.clean .sty{display:none}
+
+/* small shared helpers used by the fragments */
+.kv-bind{color:var(--mand)}
+.f-gap{margin-top:8px}
+.exp-btn{margin-top:12px}
+.cum-legend{padding-top:6px}
+.rh{margin:6px 0 4px;font-size:15px;font-weight:600}
+.instr-h,.headline,.dec b,.verdict b{text-wrap:balance}
+
+/* charts in the grammar of the reference market tools: a sub-header per chart with a legend that switches
+   series on and off, axes with units, labelled limits, a crosshair and a hover table, download and expand */
+html{ --phs-dis:var(--dis); --phs-chg:var(--chg-text); --phs-shave:var(--warn); }
+.chd{display:flex;align-items:center;gap:4px 12px;flex-wrap:wrap;min-height:28px;margin:0 0 2px}
+.chd-2{margin-top:14px}
+.chd-t{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap}
+.lgd{display:flex;flex-wrap:wrap;gap:0 2px;margin-left:auto}
+.lg{display:inline-flex;align-items:center;gap:7px;border:0;background:none;padding:3px 7px;border-radius:var(--r-sm);font-size:12px;color:var(--text-2);cursor:pointer;white-space:nowrap}
+.lg:hover{background:var(--surface-2)}
+.lg.off{color:var(--text-4);text-decoration:line-through}
+.lg.off .sw2{opacity:.3}
+.sw2{display:inline-block;flex:none;width:18px;height:10px}
+.sw2.ln{height:0;border-top:2px solid var(--c)}
+.sw2.dsh{height:0;border-top:2px dashed var(--c)}
+.sw2.band{background:color-mix(in srgb,var(--c) 16%,transparent)}
+.sw2.area{background:color-mix(in srgb,var(--c) 16%,transparent);border-top:2px solid var(--c)}
+.sw2.bar{width:10px;height:12px;background:linear-gradient(var(--dis) 0 55%,var(--chg) 55% 100%)}
+.sw2.sq{width:10px;height:10px;background:var(--c)}
+.lanes .ytl{font-size:11px;font-weight:500;fill:var(--text-3)}
+.lanes .vl{font-size:11px;font-weight:600}
+.lanes .lim{font-size:10.5px;fill:var(--text-3)}
+.lanes .lmt{stroke:var(--text-4);stroke-width:1.4;stroke-dasharray:1.5 3;fill:none}
+.lanes .mk9{font-size:10px;font-weight:700;letter-spacing:.06em;fill:var(--text)}
+.lanes .pt{font-size:11px;font-weight:600;fill:var(--soc)}
+.lanes .xh{stroke:var(--text-3);stroke-width:1;stroke-dasharray:3 3;visibility:hidden;pointer-events:none}
+.chart .hit:hover{fill:transparent}
+.chart-note{margin:10px 0 0;font-size:12.5px;color:var(--text-3)}
+.ctip{position:fixed;z-index:120;display:none;pointer-events:none;min-width:210px;max-width:320px;padding:8px 10px;background:var(--surface);color:var(--text);border:1px solid var(--rule);border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,.16);font:12px/1.4 var(--font)}
+.ctip .ct-h{display:flex;flex-direction:column;padding-bottom:6px}
+.ctip .ct-h b{font-weight:600;font-variant-numeric:tabular-nums}
+.ctip .ct-h span{color:var(--text-3)}
+.ctip table{width:100%;border-collapse:collapse;border-top:1px solid var(--divider)}
+.ctip td{padding:4px 0 0;color:var(--text-2);vertical-align:middle}
+.ctip td:first-child{width:24px}
+.ctip td.n{text-align:right;color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;padding-left:16px;white-space:nowrap}
+.ctools{display:inline-flex;gap:2px}
+.ib{display:inline-grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--text-3);cursor:pointer}
+.ib:hover{background:var(--surface-2);color:var(--text)}
+.ib svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.ib[aria-pressed="true"]{color:var(--info)}
+
+/* the selected half hour: a sentence, three numbers, the rest folded away */
+.ri-head .act{margin-top:4px}
+.ri-say{margin:8px 0 0;font-size:14px;line-height:1.5;color:var(--text-2)}
+.ri-facts{display:grid;margin-top:12px}
+.ri-facts div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0;border-top:1px solid var(--divider);font-size:13px;color:var(--text-3)}
+.ri-facts b{color:var(--text);font-weight:600;font-family:var(--font-num);text-align:right;white-space:nowrap}
+.ri-out{margin-top:14px}
+.ri-more{margin-top:12px;font-size:13px}
+.ri-more summary{cursor:pointer;color:var(--info);font-weight:600;font-size:12.5px}
+.ri-more .rsec{margin-top:10px;padding-top:10px}
+
+/* checks as one line that opens; the fixed battery settings as one line */
+.chk li.chk-more{display:block;border-bottom:0;padding-top:2px}
+.chk-more summary{cursor:pointer;color:var(--info);font-weight:600;font-size:12.5px}
+.chk-more .chk{margin-top:4px}
+.chk-h{margin:18px 0 4px;font-size:13px;font-weight:600}
+.own-fixed{margin:0 0 6px;padding:8px 0;border-bottom:1px solid var(--divider);font-size:13px;color:var(--text-2)}
+.own-line{margin:8px 0 0;font-size:13px;color:var(--text-2)}
+.tbl .chk{margin:0}
+.tbl .chk li{border-bottom:0;padding:3px 0}
+
+/* ---- information architecture: two assets, each Decide → Improve → Prove ---- */
+.asset-sw{display:inline-flex;gap:3px;padding:3px;border-radius:calc(var(--r-sm) + 2px);background:var(--surface-3);flex:none}
+.asset-sw button{border:0;background:none;padding:4px 12px;border-radius:var(--r-sm);cursor:pointer;text-align:left;color:var(--text-3);font-size:13px;font-weight:600;line-height:1.25;white-space:nowrap}
+.asset-sw button small{display:block;font-size:11px;font-weight:400}
+.asset-sw button:hover{color:var(--text)}
+.asset-sw button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.pages:not(.on){display:none!important}
+.gear{display:inline-grid;place-items:center;width:34px;height:34px;flex:none;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--surface);color:var(--text-2);cursor:pointer}
+.gear:hover{color:var(--text)}
+.gear svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+.gear.on{color:var(--accent);border-color:var(--accent)}
+a.btn{text-decoration:none}
+
+/* plan status: can this plan be executed? (the run status in the header only says the results match the inputs) */
+.plan-st{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;padding:9px 14px;border:1px solid;border-radius:var(--r-sm);font-size:13.5px}
+.plan-st b{font-weight:700;white-space:nowrap}
+.plan-st span{color:var(--text-2)}
+.plan-st.ok{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+.plan-st.ok b::before{content:"\2713  "}
+.plan-st.bad{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad)}
+.plan-st.bad b::before{content:"!  "}
+.plan-st .btn{margin-left:auto}
+
+/* the decision: what is scheduled, what depends on the price */
+.acts{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.acts li{display:flex;gap:10px;align-items:baseline;font-size:14px;line-height:1.5;color:var(--text-2)}
+.tg{flex:none;min-width:92px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px;border:1px solid var(--dis);color:var(--dis)}
+.tg.sch{background:color-mix(in srgb,var(--dis) 10%,transparent)}
+.tg.cond{border-style:dashed;background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--dis) 16%,transparent) 0 2px,transparent 2px 5px)}
+.sw2.bar-s{width:10px;height:12px;background:linear-gradient(var(--dis) 0 55%,var(--chg) 55% 100%)}
+.sw2.bar-c{width:10px;height:12px;background:repeating-linear-gradient(45deg,var(--dis) 0 1.6px,var(--surface) 1.6px 4px);box-shadow:inset 0 0 0 1px var(--dis)}
+.why-list{margin:8px 0 0;padding-left:18px;font-size:13.5px;line-height:1.55;color:var(--text-2)}
+.why-list li{margin:4px 0}
+.cta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* the day as action blocks, in proportion to time */
+.tl{display:flex;gap:2px;height:36px;border-radius:var(--r-sm);overflow:hidden}
+.tl-b{position:relative;min-width:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden}
+.tl-b span{overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+.tl-pre{background:repeating-linear-gradient(45deg,var(--hatch-ln) 0 2px,var(--hatch-bg) 2px 6px)}
+.tl-hold{background:var(--surface-3);color:var(--text-3)}
+.tl-shave{background:color-mix(in srgb,var(--dis) 20%,var(--surface));color:var(--dis)}
+.tl-dis{background:var(--dis);color:var(--surface)}
+.tl-chg{background:var(--chg);color:var(--text)}
+.tl-offer{position:absolute;left:0;right:0;top:0;height:8px;background:repeating-linear-gradient(45deg,var(--surface) 0 1.6px,transparent 1.6px 4px)}
+.tl-x{position:relative;height:16px;margin-top:5px;font-size:11px;color:var(--chart-text)}
+.tl-x span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.tl-x span:first-child{transform:none}
+.tl-x span:last-child{transform:translateX(-100%)}
+.tl-key{display:flex;gap:6px 18px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--text-3)}
+.tl-key span{display:inline-flex;align-items:center;gap:7px}
+
+/* the headline result on Compare and Value, with its scope */
+.hero-n{font-family:var(--font-num);font-size:40px;font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:8px 0 4px;color:var(--ok)}
+.hero-n small{font-size:16px;font-weight:500;letter-spacing:0;color:var(--text-3);margin-left:8px}
+.hero-n.neg{color:var(--bad)}
+.hero-bars{display:flex;gap:32px;flex-wrap:wrap;margin:8px 0 2px;font-size:12.5px;color:var(--text-3)}
+.hero-bars b{display:block;font-size:18px;font-weight:600;color:var(--text);font-family:var(--font-num)}
+.hero-bars .on b{color:var(--ok)}
+.scope{margin:14px 0 0;padding:8px 12px;border-left:3px solid var(--rule);background:var(--surface-2);font-size:12.5px;line-height:1.5;color:var(--text-2)}
+.scope b{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);margin-right:8px}
+.cmp-bars{display:grid;gap:9px;margin:16px 0 4px;max-width:760px}
+.cb{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr) 84px;align-items:center;gap:12px;font-size:13px;color:var(--text-2)}
+.cb i{height:14px;border-radius:3px;background:var(--bar)}
+.cb.on i{background:var(--ok)}
+.cb.ref i{background:repeating-linear-gradient(45deg,var(--axis) 0 1.5px,transparent 1.5px 5px);box-shadow:inset 0 0 0 1px var(--axis)}
+.cb b{text-align:right;font-family:var(--font-num);font-weight:600;color:var(--text)}
+
+/* validation: three results first */
+.vt-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.vt-tile{padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--rule);border-radius:var(--r)}
+.vt-tile.ok{border-top-color:var(--ok)}.vt-tile.bad{border-top-color:var(--bad)}.vt-tile.w{border-top-color:var(--warn)}
+.vt-big{font-family:var(--font-num);font-size:24px;font-weight:600;margin:6px 0 2px}
+.vt-tile.bad .vt-big{color:var(--bad)}
+.vt-tile .sub{line-height:1.45}
+.pill.warn{background:var(--warn-soft);color:var(--warn-text);border-color:var(--warn-line)}
+.fold > summary{cursor:pointer;font-size:15px;font-weight:600;padding:2px 0}
+.fold > summary .sub{margin-left:8px}
+.fold[open] > summary{margin-bottom:10px}
+@media (max-width:900px){ .vt-tiles{grid-template-columns:minmax(0,1fr)} .cb{grid-template-columns:minmax(0,1fr) 84px}.cb i{grid-column:1/-1;order:3} }
+
+/* review fixes: the blocked instruction stays readable while results are stale; the story step on each page */
+body.stale.plan-blocked .res:has(#plan-head),body.stale.plan-blocked #plan-head.res{opacity:1;filter:none}
+/* the limit marks on the chart and the selected half-hour are checked against the current inputs, so they stay readable too */
+body.stale.plan-blocked #plan-detail,body.stale.plan-blocked #sch-rail{opacity:1;filter:none}
+.chip.step{border-color:var(--accent);color:var(--accent);font-weight:600}
+.hero-n.muted{color:var(--text-3)}
+
+/* ---- round 5, scheme A's plan page: decide in one line, the day as lanes, reasons on the chart ---- */
+.dec-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:16px 48px}
+.pst{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;font-size:13px;color:var(--text-3)}
+.pst b{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:var(--r-pill);font-size:12.5px;font-weight:700;white-space:nowrap}
+.pst.ok b{background:var(--ok-soft);color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok-line)}
+.pst.ok b::before{content:"\2713"}
+.pst.bad b{background:var(--bad);color:var(--on-status)}
+.pst.bad b::before{content:"!"}
+.pst.bad span{color:var(--bad);font-weight:600}
+.dec-h{font-family:var(--font-display);font-weight:600;letter-spacing:-.025em;line-height:1.15;margin-top:10px;text-wrap:balance}
+.dec-val{text-align:right}
+.dec-val .chips{display:flex;justify-content:flex-end}
+.dv{font-family:var(--font-num);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:4px 0 8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dv.off{color:var(--text-4)}
+/* a chip whose full wording opens on hover or keyboard focus */
+.tipc{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:var(--r-pill);border:1px solid var(--rule);font-size:11.5px;font-weight:500;color:var(--text-3);white-space:nowrap;cursor:help}
+.tipc.bad{border-color:var(--bad-line);background:var(--bad-soft);color:var(--bad);font-weight:600}
+[data-note]{position:relative}
+[data-note]:hover::after,[data-note]:focus-visible::after{content:attr(data-note);position:absolute;left:0;top:calc(100% + 6px);z-index:60;width:max-content;max-width:300px;white-space:normal;text-align:left;padding:8px 10px;background:var(--surface);color:var(--text-2);border:1px solid var(--rule);border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,.14);font:400 12px/1.45 var(--font);letter-spacing:0;text-transform:none}
+[data-note].r:hover::after,[data-note].r:focus-visible::after,.ck[data-note]:hover::after,.ck[data-note]:focus-visible::after{left:auto;right:0}
+.lanes .lnm{font-size:11px;font-weight:500;fill:var(--text-3)}
+.lanes .ol{font-size:10.5px;font-weight:600;fill:var(--dis)}
+.lanes .fl{font-size:10.5px;font-weight:500;fill:var(--text-2)}
+.lanes .selm{fill:var(--text);pointer-events:none}
+.sw2.off{width:10px;height:12px;border:1px dashed var(--dis);background:color-mix(in srgb,var(--dis) 8%,transparent)}
+/* value as a waterfall */
+.vb + .vb{margin-top:16px}
+.vb-h{font-size:12.5px;color:var(--text-3);margin-bottom:6px}
+.vb-row{display:flex;height:22px}
+.vb-row + .vb-row{margin-top:3px}
+.vb-row i{display:flex;align-items:center;flex:none;min-width:0;border-radius:3px;font-style:normal;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden}
+.vb-row i + i{border-left:2px solid var(--surface)}
+.vb-row i span{overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+.vb-row .vb-net{background:var(--text);color:var(--surface);font-size:12px}
+.vb.off .vb-row i{filter:saturate(0);opacity:.55}
+/* checks as tiles: icon and a short name; the full check opens on hover */
+.ckgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px}
+.ck{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-sm);background:var(--surface-2);font-size:12.5px;color:var(--text-2);cursor:help;white-space:nowrap}
+.ck .ci{margin-top:0}
+.ck.b{background:var(--bad-soft);color:var(--bad);font-weight:600}
+.ck.w{background:var(--warn-soft);color:var(--warn-text)}
+.fold.sm{margin-top:14px}
+.fold.sm > summary{font-size:12.5px;font-weight:600;color:var(--info)}
+@media (max-width:900px){ .dec-row{grid-template-columns:minmax(0,1fr)} .dec-val{text-align:left} .dec-val .chips{justify-content:flex-start} }
+
+/* ===== B editorial briefing ===== */
+/* B · editorial briefing: warm paper, serif headlines, a masthead with section navigation,
+   each page reads like a short report with numbered figures and tables and notes in the margin. */
+html{
+  --font-display:"Source Serif 4","Source Serif Pro",Georgia,"Times New Roman",serif;
+  --font-num:"Source Serif 4","Source Serif Pro",Georgia,serif;
+  --r:0px; --r-sm:0px; --r-pill:0px;
+  --bg:#F4EFE6; --surface:#F4EFE6; --surface-2:#ECE6DA; --surface-3:#E4DDCE;
+  --border:#1A1A1A; --divider:#DDD5C6; --rule:#C9C0AE;
+  --text:#1A1A1A; --text-2:#37342F; --text-3:#6B655B; --text-4:#9A9283;
+  --accent:#1A1A1A; --accent-hover:#000000; --accent-text:#F4EFE6; --accent-soft:#EAE3D4;
+  --ok:#2F6B3F; --ok-soft:#E4E7D5; --ok-line:#B3C2A1;
+  --warn:#94650F; --warn-soft:#F1E5C8; --warn-line:#D8BF88; --warn-text:#5A3F00;
+  --bad:#A3271D; --bad-soft:#F1DDD5; --bad-line:#D7A293;
+  --info:#24479E; --info-soft:#E2E3EA; --info-line:#B2BAD3; --info-text:#1E3570;
+  --unsup:#6B655B; --on-status:#F4EFE6;
+  --hyp-text:#8A5310; --hyp-line:#C99A5B; --hyp-soft:#EFE3CC;
+  --fut-text:#4A3B88; --fut-line:#9C90C9; --fut-soft:#E7E2EE;
+  --proto-bg:#1A1A1A; --proto-text:#F4EFE6; --proto-line:#1A1A1A;
+  --dis:#27489C; --chg:#AEBBDA; --chg-text:#3F5DA8; --rr:#9C93BC; --rl:#DCD7E8; --cr:#86A9A2; --cl:#D2DFDB;
+  --soc:#1F5D45; --mand:#A3271D; --mand-soft:#F0DFD7; --mand-hatch:#D29C8C; --econ:#E3D3A4;
+  --load:#4A4740; --meter:#E2DACB; --price:#1A1A1A; --base:#A39B8B; --actual:#C2462F;
+  --peak:#7C2E61; --peak-soft:#EBDDE4; --cust:#A8661C; --cust-soft:#EEDFC9; --cust-text:#7D4A10; --on-cust:#FFFFFF;
+  --zen:#1F5D45; --oth:#6B655B; --spike:#4A4740; --bar:#D2C9B8;
+  --grid:#E4DDCF; --axis:#A39B8B; --axis-light:#CFC6B4; --axis-strong:#4A4740;
+  --hatch-bg:#EFE9DD; --hatch-ln:#D6CCB9; --chart-text:#6B655B; --chart-label:#1A1A1A;
+  --wm:rgba(26,26,26,.045); --mark:#1A1A1A; --mark-text:#F4EFE6; --sel:rgba(26,26,26,.06); --halo:#F4EFE6;
+}
+.kv,.party .big,.ov-big,.tbl td.n,.kvt td.n,.hero-n,.vt-big{font-variant-numeric:lining-nums tabular-nums}
+
+/* masthead */
+.mast-in{max-width:1240px;margin:0 auto;padding:16px 48px 12px;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:24px}
+.mast-l,.mast-r{font-size:11.5px;line-height:1.5;color:var(--text-3)}
+.mast-r{text-align:right}
+.mast-title{font-family:var(--font-display);font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1;white-space:nowrap}
+.mast-title em{font-weight:400}
+
+/* sections bar: the asset is the newspaper section, its three pages follow, then run state and settings */
+.sections{position:sticky;top:24px;z-index:40;background:var(--bg);border-top:1px solid var(--text);border-bottom:3px double var(--text)}
+.sec-in{max-width:1240px;margin:0 auto;padding:0 48px;display:flex;align-items:center;height:54px;gap:0}
+.asset-sw{background:transparent;padding:0;gap:0;border-radius:0;box-shadow:inset 0 0 0 1px var(--text)}
+.asset-sw button{border-radius:0;padding:4px 13px 5px;color:var(--text-2);font-family:var(--font-display);font-size:15px;font-weight:600;line-height:1.2}
+.asset-sw button small{font-family:var(--font);font-size:10.5px;letter-spacing:.02em;color:var(--text-3);margin-top:1px}
+.asset-sw button + button{box-shadow:inset 1px 0 0 var(--text)}
+.asset-sw button:hover{background:var(--surface-2);color:var(--text)}
+.asset-sw button.on{background:var(--text);color:var(--bg);box-shadow:none}
+.asset-sw button.on small{color:var(--bg);opacity:.72}
+.sec-pages{display:flex;align-items:stretch;align-self:stretch}
+.sec-pages::before{content:"";flex:none;align-self:center;width:1px;height:24px;background:var(--rule);margin:0 10px 0 16px}
+.sec-pages .nav{height:100%;padding:0 11px;font-size:13.5px;color:var(--text-2);gap:5px}
+.sec-pages .nav:hover{color:var(--text);text-decoration:underline;text-underline-offset:4px}
+.sec-pages .nav.on{color:var(--text);font-weight:600;box-shadow:inset 0 -3px 0 var(--text)}
+.sec-run{display:flex;align-items:center;gap:8px;flex:none}
+.sec-run .run{margin-right:8px}
+.btn{border-color:var(--text);background:transparent}
+.btn:hover{background:var(--surface-2)}
+.gear{border-radius:0;border-color:var(--text);background:transparent;color:var(--text)}
+.gear:hover{background:var(--surface-2)}
+.gear.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* page */
+.paper{max-width:1240px;margin:0 auto;padding:26px 48px 120px}
+.ph{margin-bottom:8px}
+.kicker{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.kicker h1{font-family:var(--font);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text)}
+.chip{text-transform:uppercase;font-size:9.5px;letter-spacing:.09em;font-weight:600;height:19px;border-color:var(--text-3);color:var(--text-2)}
+.dateline{font-family:var(--font-display);font-style:italic;font-size:14.5px;color:var(--text-3);margin-top:4px}
+.cap{letter-spacing:.11em;font-size:10.5px}
+.lede{margin:14px 0 0}
+
+/* plan status: a ruled notice above the headline, apart from the run status in the bar */
+.plan-st{margin:16px 0 0;padding:9px 0;border:0;border-top:1px solid;border-bottom:1px solid;border-radius:0;font-size:13.5px}
+.plan-st b{font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.plan-st.ok{background:transparent;border-color:var(--ok-line)}
+.plan-st.bad{background:var(--bad-soft);border-color:var(--bad);padding:9px 14px}
+.plan-st.bad b::before{content:"!\00A0\00A0"}
+
+/* the recommended action is the headline; scheduled and conditional are the standfirst */
+.plan-lede{margin-top:20px}
+.plan-lede .cap{color:var(--text)}
+.plan-lede .instr-h{font-size:44px;letter-spacing:-.022em;line-height:1.08;margin-top:10px}
+.plan-lede .acts{margin-top:16px;gap:10px;max-width:1000px}
+.plan-lede .acts li{font-family:var(--font-display);font-size:18px;line-height:1.45;color:var(--text-2);gap:14px}
+.tg{border-radius:0;min-width:104px;font-family:var(--font);font-size:9.5px;letter-spacing:.11em;padding:3px 7px;position:relative;top:-2px}
+
+/* key figures as a fact box between rules */
+.factbox{display:flex;margin:26px 0 30px;padding:14px 0 16px;border-top:1px solid var(--text);border-bottom:1px solid var(--text)}
+.factbox .kpi{flex:1;min-width:0;padding:0 24px;border-left:1px solid var(--rule)}
+.factbox .kpi:first-child{padding-left:0;border-left:0}
+.factbox .kv{font-size:31px;margin-top:6px}
+.factbox .ks{white-space:normal;line-height:1.45}
+
+/* figures and captions */
+.fig{margin:0 0 30px}
+.fig-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0 10px;border-top:2px solid var(--text)}
+.fig-n{font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text)}
+figure{margin:0}
+figcaption{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule);font-size:13px;line-height:1.5;color:var(--text-2)}
+figcaption .legend{margin-top:8px;font-size:11.5px}
+.legend-top{padding-bottom:6px}
+.seg{background:transparent;box-shadow:inset 0 0 0 1px var(--text);padding:0;gap:0}
+.seg button{padding:5px 12px;color:var(--text-2)}
+.seg button + button{box-shadow:inset 1px 0 0 var(--rule)}
+.seg button.on{background:var(--text);color:var(--bg);box-shadow:none}
+.sel{background:#FBF8F2;border-color:var(--text-3)}
+.toolbar{padding:10px 0;margin:14px 0 6px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+
+/* the day at a glance: square blocks, the key set as a caption */
+.tl{height:40px}
+.tl-b{font-size:12.5px}
+.tl-key{margin-top:10px;padding-top:9px;border-top:1px solid var(--rule)}
+
+/* article with a margin column */
+.article{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:56px;align-items:start}
+.sect{font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:-.01em;margin:22px 0 10px;padding-top:10px;border-top:1px solid var(--text)}
+.sect-first{margin-top:0}
+.sect .sub{font-family:var(--font);font-size:12px;margin-left:6px}
+.sect .sn{display:inline-block;min-width:22px;font-weight:700}
+.margin-col{border-left:1px solid var(--rule);padding-left:24px}
+.side-note{padding:12px 0 16px;border-bottom:1px solid var(--rule)}
+.side-note:first-child{padding-top:12px}
+.side-note:last-child{border-bottom:0}
+.sn-h{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text);margin-bottom:6px}
+.side-note p{margin:0;font-size:13px;line-height:1.55;color:var(--text-2)}
+.side-note .chk li{font-size:12.5px;padding:4px 0;border-bottom:0}
+.side-note.sticky{position:sticky;top:118px}
+.side-note .cap{color:var(--text)}
+.side-note .tbl td,.side-note .tbl th{padding:6px 4px}
+.side-note .foot{margin-top:6px;font-size:12.5px;line-height:1.55}
+.margin-col .cta{flex-direction:column;align-items:flex-start;margin-top:10px}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px;align-items:start}
+.art-why{margin-bottom:34px}
+
+/* why this plan, as body text */
+.why-list{max-width:800px;margin:4px 0 0;padding-left:20px;list-style:square;font-family:var(--font-display);font-size:17px;line-height:1.55;color:var(--text-2)}
+.why-list li{margin:0 0 8px;padding-left:4px}
+.why-list li::marker{color:var(--text-4)}
+#plan-detail{scroll-margin-top:96px}
+
+/* the selected half hour, written out */
+.interval .ri-head{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:14px}
+.interval .act{font-size:28px;margin:0}
+.interval .ri-say{font-family:var(--font-display);font-size:19px;line-height:1.45;margin-top:6px;max-width:760px}
+.interval .ri-facts{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:24px;margin-top:14px}
+.interval .ri-facts div{flex-direction:column;align-items:flex-start;gap:2px;border-top:1px solid var(--text);font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3)}
+.interval .ri-facts b{font-family:var(--font-num);font-size:19px;font-weight:600;letter-spacing:0;text-transform:none;text-align:left}
+.interval .rsec{border-top-color:var(--rule)}
+.interval .locked{background:transparent}
+
+/* Compare and Value: the result as a headline figure, its scope as a note in the margin */
+.hero-lede{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:repeat(4,auto) 1fr;column-gap:56px;margin:22px 0 8px}
+.hero-lede > *{grid-column:1}
+.hero-lede > .cap{color:var(--text)}
+.hero-n{font-family:var(--font-display);font-size:64px;letter-spacing:-.025em;line-height:1;margin:12px 0 10px}
+.hero-n small{font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:400;margin-left:10px}
+.hero-lede > p.sub{margin:0;font-family:var(--font-display);font-style:italic;font-size:16px;color:var(--text-2)}
+.hero-lede > .scope{grid-column:2;grid-row:1 / -1;align-self:start;margin:0;padding:2px 0 4px 24px;border-left:1px solid var(--rule);background:transparent;font-size:13px;line-height:1.55}
+.hero-lede > .scope b{display:block;margin:0 0 6px;font-size:10.5px;letter-spacing:.11em;color:var(--text)}
+.hero-bars{gap:0;margin:6px 0 0;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.hero-bars > div{padding:0 28px;border-left:1px solid var(--rule)}
+.hero-bars > div:first-child{padding-left:0;border-left:0}
+.hero-bars b{font-family:var(--font-display);font-size:24px;letter-spacing:0;text-transform:none;margin-top:4px}
+.cmp-bars{max-width:none;margin:22px 0 2px;padding-top:14px;border-top:1px solid var(--rule)}
+.cb{grid-template-columns:minmax(0,250px) minmax(0,1fr) 84px}
+.cb i{border-radius:0;height:16px}
+.cb b{font-family:var(--font-display);font-size:15px}
+
+/* the call decision as the page headline */
+.decision{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"head exp" "why exp" "out exp";column-gap:56px;margin:22px 0 30px}
+.decision .ac-head{grid-area:head}
+.decision .dec{gap:18px;margin-top:10px}
+.decision .dec-pill{font-size:13px;letter-spacing:.14em;padding:7px 12px}
+.decision .dec b{font-family:var(--font-display);font-size:42px;font-weight:600;letter-spacing:-.022em;line-height:1.08}
+.decision .dec small{font-family:var(--font-display);font-size:17px;font-style:italic;color:var(--text-2);margin-top:4px}
+.decision .ac-why{grid-area:why;margin-top:16px}
+.decision .ac-why > .cap{display:none}
+.decision .wl li{font-family:var(--font-display);font-size:16.5px;line-height:1.5}
+.decision .ac-exp{grid-area:exp;margin-top:0;padding-top:12px;border-top:2px solid var(--text)}
+.decision .ac-out{grid-area:out}
+.retro,.hind,.tag,.src,.st8,.trt,.verdict .vt{border-radius:0}
+
+/* value: the verdict follows the headline figure as a subhead */
+.scen{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:20px}
+.scen b{font-style:normal}
+.scen .chip{font-family:var(--font);font-style:normal}
+.scen .sub{font-family:var(--font);font-style:normal}
+.verdict-lede{margin-top:14px}
+.verdict-lede .verdict{display:block;background:transparent;border:0;padding:0}
+.verdict-lede .vt{display:inline-block}
+.verdict-lede b{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:-.018em;line-height:1.15;margin:10px 0 8px}
+.verdict-lede p{font-family:var(--font-display);font-size:17.5px;line-height:1.5;color:var(--text-2);max-width:960px}
+.parties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:0;border-top:0}
+.panel{background:transparent;border:0;border-radius:0}
+.party{border-top:3px solid var(--pc);padding:12px 24px 0 0}
+.party .cap::before{display:none}
+.party .big{font-size:36px}
+.party .sub{display:block;padding-bottom:14px}
+/* the ledger stays folded: its summary reads as the Table 2 heading */
+.ledger{margin-top:8px}
+.fold > summary{list-style:none;display:flex;align-items:baseline;flex-wrap:wrap;font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:-.01em;margin:22px 0 0;padding:10px 0 2px;border-top:1px solid var(--text)}
+.fold > summary::-webkit-details-marker{display:none}
+.fold > summary::before{content:"Table 2 \00B7\00A0"}
+.fold > summary::after{content:"Show \25BE";margin-left:auto;font-family:var(--font);font-size:12.5px;font-weight:600;letter-spacing:0;color:var(--info)}
+.fold[open] > summary::after{content:"Hide \25B4"}
+.fold > summary .sub{font-family:var(--font);margin-left:8px}
+.fold[open] > summary{margin-bottom:10px}
+
+/* validation: three results as a fact box, square, rule on top */
+.vt-tiles{gap:0 32px;margin:22px 0 8px}
+.vt-tile{background:transparent;border:0;border-top:3px solid var(--rule);border-radius:0;padding:12px 0 4px}
+.vt-big{font-family:var(--font-display);font-size:30px;margin:8px 0 4px}
+.vt-tile .sub{font-size:12.5px}
+.note{background:transparent;border-left:2px solid var(--text);padding:2px 0 2px 14px;font-family:var(--font-display);font-style:italic;font-size:15px;margin:18px 0 6px}
+.note.w,.note.i,.note.p{background:transparent;color:var(--text-2)}
+.tbl th{text-transform:uppercase;letter-spacing:.06em;font-size:10px;border-bottom-color:var(--text)}
+.tbl tr.tot td{border-top-color:var(--text)}
+.tbl th .sub{text-transform:none;letter-spacing:0;font-size:11px}
+.passmark,.tbl .pill{font-family:var(--font)}
+#act-title::before{content:"Figure 2 \00B7\00A0"}
+#s-fvalid .cols2{margin-top:26px}
+
+/* settings */
+#s-config .article{margin-top:18px}
+.form .sect:first-child{margin-top:0}
+.form .f{grid-template-columns:minmax(0,1fr) 172px 124px}
+.f input,.f select{background:#FBF8F2;border-color:var(--rule)}
+.sc{background:transparent}
+.sc.on{background:var(--accent-soft);border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.locked{background:transparent}
+
+@media (max-width:1365px){
+  .mast-in,.sec-in{padding-left:28px;padding-right:28px}
+  .mast-title{font-size:32px}
+  .sec-pages .nav{padding:0 8px;font-size:13px}
+  .sec-run .run small{display:none}
+  .paper{padding:22px 28px 120px}
+  .plan-lede .instr-h{font-size:36px}
+  .plan-lede .acts li{font-size:17px}
+  .hero-n{font-size:54px}
+  .decision .dec b{font-size:34px}
+  .verdict-lede b{font-size:26px}
+  .article,.hero-lede{grid-template-columns:minmax(0,1fr) 260px;column-gap:36px}
+  .decision{grid-template-columns:minmax(0,1fr) 260px;column-gap:36px}
+  .factbox .kv{font-size:26px}
+}
+@media (max-width:1100px){
+  .article,.cols2,.parties,.decision,.hero-lede{grid-template-columns:minmax(0,1fr)}
+  .decision{grid-template-areas:"head" "why" "exp" "out"}
+  .hero-lede > .scope{grid-column:1;grid-row:auto;margin-top:16px}
+  .margin-col{border-left:0;padding-left:0}
+  .mast-l,.mast-r{display:none}
+  .mast-in{grid-template-columns:1fr}
+  .sec-in{height:auto;flex-wrap:wrap;row-gap:6px;padding-top:6px;padding-bottom:6px}
+  .sec-pages{height:40px}
+  .factbox{flex-wrap:wrap;row-gap:14px}
+}
+</style>
+</head>
+<body data-home="plan">
+<div class="proto" role="note">Design prototype - illustrative data; not connected to the model <small>Historical replay. Every value is a placeholder; nothing is calculated.</small></div>
+<header class="mast">
+  <div class="mast-in">
+    <div class="mast-l"><span id="mast-day">Wednesday 14 January 2026</span><br>Decision time 09:00 AWST</div>
+    <div class="mast-title">GreenSpark <em>Dispatch Desk</em></div>
+    <div class="mast-r">Zenith · Site A + customer fleet<br>Demo project</div>
+  </div>
+</header>
+<!-- the sections bar: which asset (the newspaper's section), its three pages, then run state and settings -->
+<div class="sections">
+  <div class="sec-in">
+    <div class="asset-sw" role="group" aria-label="Asset"><button data-go="plan" data-grp="plan compare svalid">Site battery<small>10 MW / 40 MWh</small></button><button data-go="calls" data-grp="calls value fvalid">Customer fleet<small>home batteries (VPP)</small></button></div>
+    <nav class="sec-pages pages" data-grp="plan compare svalid" aria-label="Site battery pages"><button class="nav" data-go="plan">Plan<span class="dot" aria-hidden="true"></span></button><button class="nav" data-go="compare" data-dep="1">Compare<span class="dot" aria-hidden="true"></span></button><button class="nav" data-go="svalid" data-dep="1">Validation<span class="dot" aria-hidden="true"></span></button></nav>
+    <nav class="sec-pages pages" data-grp="calls value fvalid" aria-label="Customer fleet pages"><button class="nav" data-go="calls" data-dep="1">Tonight's call<span class="dot" aria-hidden="true"></span></button><button class="nav" data-go="value" data-dep="1">Value<span class="dot" aria-hidden="true"></span></button><button class="nav" data-go="fvalid" data-dep="1">Validation<span class="dot" aria-hidden="true"></span></button></nav>
+    <span class="sp"></span>
+    <div class="sec-run"><div class="run ok" id="run" role="status" aria-live="polite"><i></i><span id="run-t">Up to date</span><small id="run-s">run R‑0142</small></div><button class="btn" id="exp-all">Export</button><button class="btn pri" id="pri">Save run</button><button class="gear" data-go="config" data-grp="config" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
+  </div>
+</div>
+
+<main id="main" class="paper">
+  <header class="ph">
+    <div class="kicker"><h1 id="ph-title">Today's plan</h1><span class="chips" id="ph-chips"></span></div>
+    <div class="ctx dateline" id="ph-ctx"></div>
+  </header>
+  <div class="strip st" id="strip-st" role="status"><span id="st-text">Inputs changed. The results shown are from run R‑0142 with the previous inputs.</span><span class="sp"></span><button class="btn sm" id="revert">Revert inputs</button></div>
+<div class="strip nc" id="strip-nc" role="status"><span><b>Not connected.</b> This design prototype cannot recompute. In the MVP, Recompute runs the engine and opens a new run ID; until then every result keeps the stale label.</span><span class="sp"></span><button class="btn sm" id="nc-close">Close</button></div>
+
+  <!-- Site battery · Decide: status and the action as the headline, the three figures, Figure 1, why, then the detail -->
+  <section class="screen" id="s-plan" aria-label="Today's plan">
+    <div class="plan-st" id="plan-status" role="status"></div>
+    <div class="lede plan-lede res" id="plan-head"></div>
+    <div class="factbox res"><div class="kpi"><div class="cap">Expected net value</div><div class="kv" id="k-net"></div><div class="ks" id="k-net-s"></div></div>
+<div class="kpi"><div class="cap">Evening discharge</div><div class="kv" id="k-dis"></div><div class="ks" id="k-dis-s"></div></div>
+<div class="kpi"><div class="cap">Constraints</div><div class="kv" id="k-con"></div><div class="ks" id="k-con-s"></div></div></div>
+    <figure class="fig res">
+      <div class="fig-tools"><span class="fig-n">Figure 1 · The day at a glance</span><span class="sp"></span><span class="sub">08:00 Wed 14 Jan to 08:00 Thu 15 Jan</span></div>
+      <div id="plan-timeline"></div>
+    </figure>
+    <div class="article art-why res">
+      <div class="main-col">
+        <h3 class="sect sect-first">Why this plan</h3>
+        <ul class="why-list" id="plan-why"></ul>
+      </div>
+      <aside class="margin-col"><div class="side-note"><div class="sn-h">Read on</div><div class="cta"><a class="btn" href="#plan-detail" data-scroll>Dispatch detail ↓</a><button class="btn" data-go="compare">Compare with the baseline →</button></div></div></aside>
+    </div>
+    <figure class="fig res" id="plan-detail">
+      <div class="fig-tools"><span class="fig-n">Figure 2 · Dispatch detail</span><span class="sub">plan issued 09:00 · 10 MW / 40 MWh battery behind the factory meter</span><span class="sp"></span><div class="seg" role="group" aria-label="Plan or outcome"><button data-po="plan" class="on">Plan</button><button data-po="outcome">Outcome <svg class="lk" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5"/></svg></button></div><span class="ctools" data-csv="day"></span></div>
+      <div id="sch-chart" class="chartbox"></div>
+      <figcaption><b>Figure 2.</b> Top: battery power (bars up discharge, down charge) under the forecast price; the hatched layer is the conditional offer, sold only if the price reaches it. Bottom: the energy the battery holds, never below the reserve floor. Dashed lines are the plan or forecast, solid lines what actually happened. <span id="sch-note"></span></figcaption>
+    </figure>
+    <div class="article">
+      <div class="main-col">
+        <h3 class="sect sect-first">The selected interval</h3>
+        <div class="interval res" id="sch-rail" aria-live="polite"></div>
+        <h3 class="sect">Table 1 · Plan and outcome for the trading day</h3>
+        <table class="tbl res" id="sch-money"></table>
+        <p class="foot">Plan: expected at 09:00. Outcome: replayed at actual prices, hidden until revealed.</p>
+      </div>
+      <aside class="margin-col">
+        <div class="side-note res"><div class="sn-h">Checks on this plan</div><ul class="chk" id="sch-checks"></ul></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Site battery · Improve: the uplift over the frozen baseline as the headline figure, its scope in the margin -->
+  <section class="screen" id="s-compare" aria-label="Compare with the baseline">
+    <div class="toolbar"><span class="lbl">Period</span><div class="seg" role="group" aria-label="Period"><button data-cper="ins">In-sample · 456 d</button><button data-cper="tseen" class="on">Test, seen · 107 d</button><button data-cper="tnew">Test, unseen · 7 d</button></div></div>
+    <div class="hero-lede res" id="cmp-hero"></div>
+    <h3 class="sect">Table 1 · Price forecast against yesterday's prices</h3>
+    <div class="res" id="cmp-q2a"></div>
+  </section>
+
+  <!-- Site battery · Prove: three results as a fact box, then the checks -->
+  <section class="screen" id="s-svalid" aria-label="Validation, site battery">
+    <div class="toolbar"><span class="lbl">Period</span><div class="seg" role="group" aria-label="Period"><button data-per="ins" class="on">In-sample · 456 d</button><button data-per="tseen">Test, seen · 107 d</button><button data-per="tnew">Test, unseen · 7 d</button></div></div>
+    <div class="vt-tiles res" id="sv-tiles"></div>
+    <div class="note" id="val-note"></div>
+    <h3 class="sect">Table 1 · Physical and contract checks <span class="sub">site battery · click a row to open it</span></h3>
+    <table class="tbl res" id="val-checks"></table>
+  </section>
+
+  <!-- Customer fleet · Decide: the decision as the headline, the demand forecast behind it, then the season -->
+  <section class="screen" id="s-calls" aria-label="Tonight's call">
+    <div class="toolbar"><div class="seg" role="group" aria-label="View"><button data-view="decision" class="on">Decision view</button><button data-view="review">Season review · hindsight</button></div>
+<span class="lbl">Day</span><span class="daystep"><button class="btn sm" id="day-prev" aria-label="Previous day">&#8249;</button><span id="day-label"></span><button class="btn sm" id="day-next" aria-label="Next day">&#8250;</button></span></div>
+    <div class="decision res" id="act-card" aria-live="polite"></div>
+    <figure class="fig res">
+      <div class="fig-tools"><span class="fig-n">Figure 1 · System demand forecast</span><span class="sp"></span><span class="sub" id="act-dem-sub"></span></div>
+      <div id="act-dem" class="chartbox"></div>
+      <figcaption><b>Figure 1.</b> The forecast that decides tonight's call: a call is made when the forecast peak reaches the threshold and calls are left.</figcaption>
+    </figure>
+    <figure class="fig res">
+      <div class="fig-tools"><span class="fig-n" id="act-title"></span><span id="act-tag"></span><span class="sp"></span><span class="sub" id="act-sub"></span><span class="ctools" data-csv="act"></span></div>
+      <div class="legend legend-top" id="act-legend"></div>
+      <div id="act-chart" class="chartbox"></div>
+      <div class="budget" id="act-budget"></div>
+      <figcaption><b>Figure 2.</b> Bars: daily peak demand on past days; today, the AEMO forecast issued before 09:00. Capacity value is settled once per season, so it is not known at 09:00. Illustrative.</figcaption>
+    </figure>
+  </section>
+
+  <!-- Customer fleet · Improve: the offer's gain over reference terms as the headline figure, then who gains what -->
+  <section class="screen" id="s-value" aria-label="Value by party">
+    <div class="toolbar"><span class="lbl">Scenario</span><div class="seg" role="group" aria-label="Commercial scenario"><button data-vscen="S3" class="on">S3 · Synergy TPA, 50% share</button><button data-vscen="S2b">S2b · Retailer, 2027 Peak IRCR</button></div>
+<span class="sub">S1 (energy only) and S2a (current IRCR rule) give no business case for either offer.</span></div>
+    <div class="hero-lede res" id="v-hero"></div>
+    <div class="dateline scen" id="v-scen"></div>
+    <div class="verdict-lede res" id="v-verdict"></div>
+    <div class="factbox parties res" id="v-parties"></div>
+    <div class="article">
+      <div class="main-col">
+        <h3 class="sect sect-first">Table 1 · The offer against the alternatives</h3><div class="dateline" id="v-cmp-sub"></div><table class="tbl res" id="v-cmp"></table><p class="foot" id="v-cmp-foot"></p>
+        <div class="ledger res"><details class="fold"><summary>Ledger by party <span class="sub" id="v-ledger-sub"></span></summary><table class="tbl" id="v-ledger"></table><p class="foot" id="v-ledger-foot"></p></details></div>
+      </div>
+      <aside class="margin-col"><div class="side-note res" id="v-ircr"></div><div class="side-note res" id="v-own"></div></aside>
+    </div>
+  </section>
+
+  <!-- Customer fleet · Prove -->
+  <section class="screen" id="s-fvalid" aria-label="Validation, customer fleet">
+    <div class="vt-tiles res" id="fv-tiles"></div>
+    <div class="cols2">
+      <div><h3 class="sect sect-first">Table 1 · Hot Season holdouts</h3><div class="res" id="fv-hold"></div></div>
+      <div><h3 class="sect sect-first">Table 2 · Customer constraints</h3><table class="tbl res" id="fv-checks"></table></div>
+    </div>
+  </section>
+
+  <!-- Settings: numbered sections, the input check in the margin -->
+  <section class="screen" id="s-config" aria-label="Settings">
+    <div class="article">
+      <div class="main-col form">
+        <h3 class="sect"><span class="sn">1</span>Customer offer <span class="sub">evaluated as the Custom offer</span></h3><div class="f"><label for="c-start">Start from</label><div class="fc"><select id="c-start" data-k="start"><option value="model">Model suggestion</option><option value="ref">Reference terms</option></select></div><span class="src md" id="c-start-tag">MODEL SUGGESTION</span></div>
+<p class="foot" id="c-start-note" style="margin:2px 0 6px"></p>
+<div class="f"><label for="c-pay">Payment per kWh of event net export</label><div class="fc"><input id="c-pay" type="number" step="1" data-k="pay"><span class="u">c/kWh</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-evp">Payment per responded event</label><div class="fc"><input id="c-evp" type="number" step="0.5" data-k="evp"><span class="u">A$</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-fee">Annual fee to the customer</label><div class="fc"><input id="c-fee" type="number" step="10" data-k="fee"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-cap">Annual activation cap</label><div class="fc"><input id="c-cap" type="number" step="1" data-k="cap"><span class="u">calls</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-ev">Event length</label><div class="fc"><select id="c-ev" data-k="ev"><option>1</option><option>2</option><option>3</option><option>4</option></select><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-sb">Standby before the event</label><div class="fc"><select id="c-sb" data-k="sb"><option>1</option><option>2</option></select><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-mx">Maximum control per event<span class="src rf">REF</span></label><div class="fc"><input id="c-mx" type="number" step="1" data-k="mx"><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-res">Customer reserve, never discharged</label><div class="fc"><input id="c-res" type="number" step="5" data-k="res"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-win">Event window (model window, not a rule)</label><div class="fc"><select id="c-win" data-k="win"><option>17:30–19:30</option><option>17:00–19:00</option><option>18:00–20:00</option></select><span class="u">AWST</span></div><span class="sup ok">Recomputes</span></div>
+        <h3 class="sect"><span class="sn">2</span>Commercial scenario <span class="sub">who receives energy and capacity value</span></h3><div class="scen4" role="radiogroup" aria-label="Commercial scenario">
+  <button class="sc" data-sc="S1" role="radio"><b>S1 · Energy only</b> <span class="chip hyp">Hypothetical</span><p>Zenith settles the change in net position at wholesale price. No capacity value.</p></button>
+  <button class="sc" data-sc="S2a" role="radio"><b>S2a · Retailer, current IRCR</b> <span class="chip">Current rule</span><p>Net export counts 0 in the 12 peak intervals.</p></button>
+  <button class="sc" data-sc="S2b" role="radio"><b>S2b · Retailer, 2027 Peak IRCR</b> <span class="chip fut">Assumed future rule</span><p>Net export counts negative. Text not yet checked against the gazetted rules.</p></button>
+  <button class="sc on" data-sc="S3" role="radio"><b>S3 · Synergy TPA</b> <span class="chip hyp">Hypothetical share</span><p>Energy value to Synergy; Zenith receives share s of the capacity value.</p></button>
+</div>
+<div class="f f-gap"><label for="c-share">Capacity share s (S3 only)<span class="src as">ASSUMPTION</span></label><div class="fc"><input id="c-share" type="number" step="5" data-k="share"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+        <h3 class="sect"><span class="sn">3</span>Customer fleet assumptions <span class="sub">every value here is an assumption · baseline is normal self-use</span></h3><div class="f"><label for="c-elig">Households offered</label><div class="fc"><input id="c-elig" type="number" step="500" data-k="elig"><span class="u">homes</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-curve">Participation curve</label><div class="fc"><select id="c-curve" data-k="curve"><option>Central</option><option>Pessimistic</option><option>Optimistic</option></select></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-resp">Response rate (average, not firm)</label><div class="fc"><input id="c-resp" type="number" step="5" data-k="resp"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-ops">Operating cost per enrolled home</label><div class="fc"><input id="c-ops" type="number" step="1" data-k="ops"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-fix">Programme fixed cost</label><div class="fc"><input id="c-fix" type="number" step="10000" data-k="fix"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+        <h3 class="sect"><span class="sn">4</span>Own battery and site <span class="sub">behind the factory meter</span></h3><p class="own-fixed">Fixed in this version: 10 MW / 40 MWh, round-trip efficiency 85%, CMD 9 MW, wear A$30/MWh (assumption), synthetic factory load.</p>
+<div class="f"><label for="c-exp">Export limit at the meter<span class="src as">ASSUMPTION</span></label><div class="fc"><select id="c-exp" data-k="exp"><option>10</option><option>3</option></select><span class="u">MW</span></div><span class="sup uv">Unvalidated</span></div>
+<div class="f"><label for="c-fcess">FCESS services</label><div class="fc"><select id="c-fcess" data-k="fcess"><option>RR, RL, CR, CL</option><option>Contingency only</option><option>None</option></select></div><span class="sup uv">Unvalidated</span></div>
+      </div>
+      <aside class="margin-col"><div class="side-note sticky"><div class="sn-h">Input check</div><ul class="chk" id="c-checks"></ul></div></aside>
+    </div>
+  </section>
+</main>
+<nav class="sty" aria-label="Style options, design review only" lang="zh-CN"><b>风格</b><a data-to="A_minimal_focus.html" href="A_minimal_focus.html" class="">A 极简·聚焦</a><a data-to="B_editorial_briefing.html" href="B_editorial_briefing.html" class="on">B 编辑·简报</a><a data-to="C_dark_console.html" href="C_dark_console.html" class="">C 深色·控制台</a><a data-to="D_soft_bento.html" href="D_soft_bento.html" class="">D 柔和·卡片</a><a data-to="E_industry_tool.html" href="E_industry_tool.html" class="">E 行业工具</a></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* All numbers are ILLUSTRATIVE placeholders that are internally consistent (VISUAL_DIRECTION.md section 2.8).
+   Nothing is computed from user inputs: changing an input only marks results stale. */
+(function(){
+"use strict";
+var N = 48, X0 = 64, IW = 16, EFF = 0.922;
+function X(i){ return X0 + i * IW; }
+function p2(n){ return (n < 10 ? "0" : "") + n; }
+function hhmm(i){ var m = (480 + 30 * i) % 1440; return p2(Math.floor(m / 60)) + ":" + p2(m % 60); }
+function nf(v, d){ d = d || 0; return Number(v).toLocaleString("en-AU", {minimumFractionDigits:d, maximumFractionDigits:d}); }
+function aud(v, d){ return (v < -0.0005 ? "−A$ " : "A$ ") + nf(Math.abs(v), d); }
+/* a layout may leave a slot out; writing to a detached element then does nothing */
+function $(s){ return document.querySelector(s) || document.createElement("div"); }
+function $$(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+function blk(spec){ var a = [], i; for (i = 0; i < N; i++) a.push(null); spec.forEach(function(s){ for (var j = s[0]; j < s[1]; j++) a[j] = s[2]; }); return a; }
+function sum(a){ return a.reduce(function(t, v){ return t + (v || 0); }, 0); }
+function median(a){ var b = a.slice().sort(function(x, y){ return x - y; }); var n = b.length; return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2; }
+
+/* ---------- own battery, 14 Jan 2026 (illustrative) ---------- */
+var P = {
+  price: blk([[2,4,90],[4,14,25],[14,19,70],[19,24,230],[24,30,120],[30,42,75],[42,48,95]]),
+  yday:  blk([[0,2,100],[2,4,110],[4,14,30],[14,19,95],[19,24,180],[24,30,140],[30,42,80],[42,48,100]]),
+  actual:blk([[0,4,95],[4,14,18],[14,19,85],[19,20,260],[20,21,310],[21,22,640],[22,23,280],[23,24,210],[24,30,135],[30,42,70],[42,48,105]]),
+  pspike:blk([[2,14,.03],[14,19,.12],[19,24,.45],[24,30,.15],[30,48,.04]]),
+  dis: blk([[0,4,0],[4,18,.4],[18,19,0],[19,24,7.5],[24,48,0]]),
+  chg: blk([[0,34,0],[34,46,4.2],[46,48,0]]),
+  rr:  blk([[0,4,1],[4,24,0],[24,48,1]]),
+  rl:  blk([[0,24,0],[24,48,1]]),
+  cr:  blk([[0,48,2]]),
+  cl:  blk([[0,48,1.5]]),
+  load:blk([[0,4,8],[4,18,9.2],[18,20,3.45],[20,48,3]]),
+  fRR: blk([[0,4,14],[4,24,19],[24,48,14]]),
+  fRL: blk([[0,24,8],[24,48,6]]),
+  fCR: blk([[0,48,4]]),
+  fCL: blk([[0,48,1.2]])
+};
+P.lo = P.price.map(function(v){ return v == null ? null : v * 0.6; });
+P.hi = P.price.map(function(v, i){ return v == null ? null : v * (i >= 19 && i < 24 ? 1.9 : 1.6); });
+var SOC = [30], MAND = [], ECON = [], METER = [], i;
+for (i = 0; i < N; i++) {
+  SOC.push(SOC[i] + 0.5 * (P.chg[i] * EFF - P.dis[i] / EFF));
+  MAND.push(1 + 0.25 * (P.cr[i] + P.rr[i]) / EFF);
+  ECON.push(i >= 19 ? 3.5 : (i < 4 ? 14 * 0.2 / EFF : (i <= 17 ? (18 - i) * 0.2 / EFF : 0)));
+  METER.push(P.load[i] - P.dis[i] + P.chg[i]);
+}
+var SOCOUT = SOC.map(function(v, b){ return v - (b >= 24 ? 0.3 : 0.3 * b / 24); });
+var DEMFC = [], DEMACT = [];
+for (i = 0; i < N; i++) { var hm = 8 + 0.5 * i + 0.25; DEMFC.push(2350 + 1520 * Math.exp(-Math.pow((hm - 18.25) / 3.3, 2))); }
+DEMACT = DEMFC.map(function(v){ return v * 3840 / 3870; });
+var MONEY = (function(){
+  var e = 0, eo = 0, fc = 0, dm = 0;
+  for (var k = 0; k < N; k++) {
+    e += (P.price[k] || 0) * (P.dis[k] - P.chg[k]) * 0.5;
+    eo += P.actual[k] * (P.dis[k] - P.chg[k]) * 0.5;
+    fc += 0.5 * (P.rr[k] * P.fRR[k] + P.rl[k] * P.fRL[k] + P.cr[k] * P.fCR[k] + P.cl[k] * P.fCL[k]);
+    dm += P.dis[k] * 0.5;
+  }
+  var plan = {energy:e, fcess:fc, network:900, wear:-30 * dm};
+  plan.net = plan.energy + plan.fcess + plan.network + plan.wear;
+  var out = {energy:eo, fcess:fc * 0.9, network:900, wear:-30 * dm};
+  out.net = out.energy + out.fcess + out.network + out.wear;
+  return {plan:plan, out:out, dischargeMWh:dm};
+})();
+/* the conditional layer: spare energy offered 17:30–20:00 in layers from A$150/MWh. It is sized so that, if it all
+   sells, the battery still stays above its reserve floor (plan margin +1.3 MWh, less the replay's own 0.3 MWh drift).
+   In the replay it sells wherever the actual price reached the offer; the plan's expected value leaves it out. */
+var OFFERS = [{a:19, b:24, mw:0.3, price:150}];
+function offerAt(k){ return k >= OFFERS[0].a && k < OFFERS[0].b ? OFFERS[0] : null; }
+var OFFER_OUT = P.actual.map(function(v, k){ return offerAt(k) && v >= OFFERS[0].price ? OFFERS[0].mw : 0; });
+(function(){ var cum = 0; for (var b = 0; b <= N; b++) { if (b) cum += OFFER_OUT[b - 1] * 0.5 / EFF; SOCOUT[b] -= cum; } })();
+MONEY.out.offer = sum(OFFER_OUT.map(function(v, k){ return v * 0.5 * P.actual[k]; })); MONEY.out.net += MONEY.out.offer; MONEY.plan.offer = 0;
+var MARGIN = (function(){
+  var m = 1e9, from = -1, to = -1;
+  for (var k = 0; k < N; k++) { var v = SOC[k + 1] - MAND[k] - ECON[k]; if (v < m - 0.005) { m = v; from = k; to = k; } else if (Math.abs(v - m) < 0.005) to = k; }
+  return {v:m, from:from, to:to, req:MAND[from] + ECON[from]};
+})();
+
+/* ---------- customer fleet, Hot Season 2025-26 (illustrative) ---------- */
+var DAYS = 121, TODAY = 44;
+var ACT = [3050,3120,2980,3200,3010,3150,3650,3720,3300,3200,3350,3400,3100,3780,3450,3500,3300,3550,3400,3760,3905,3600,3500,3650,3700,3450,3300,3930,3550,3650,3600,3400,3700,3800,3960,3750,3600,3500,3780,3650,3915,3700,3600,3550,3840,4080];
+for (i = 46; i < DAYS; i++) ACT.push(Math.round(3350 + 220 * Math.sin(i / 5.3) + 130 * Math.cos(i / 2.9)));
+var OVR = {49:3790,52:3880,55:3800,58:3900,59:3930,63:4050,64:4120,67:3780,70:3890,74:3820,78:3870,81:3810,85:3920,92:3860,99:3940,107:3950,108:4010,114:3900};
+Object.keys(OVR).forEach(function(k){ ACT[+k] = OVR[k]; });
+var PEAK = [45,63,64,108];
+var FLAG_C = [6,7,13,19,20,27,33,34,40,44,45,52,58,59,63,64,70,78,85,92,99,107,108,114];
+var FLAG_R = FLAG_C.concat([2,3,10,16,24,30,37,49,55,67,74,81]).sort(function(a, b){ return a - b; });
+function run4(d){ var a = ACT.slice(0, d).sort(function(x, y){ return y - x; }); return a.length >= 4 ? a[3] : 3300; }
+function fcPeak(d){ var r = run4(d); return FLAG_C.indexOf(d) >= 0 ? r - 35 : (FLAG_R.indexOf(d) >= 0 ? r - 110 : Math.min(ACT[d], r - 170)); }
+var OFF = {
+  custom: {name:"Custom offer", short:"Custom 85 c/kWh, 45 calls", rate:0.85, cap:45, q:"0.75", tol:85, enrolled:3000, flags:FLAG_C, kwh:9.0,
+    ircr:[-1.7,-1.6,-1.5,-1.6,-1.5,-1.4,-1.7,-1.6,-1.5,0,-1.6,-1.5], sb:3200, retail:32000, debs:16000, energy:24000,
+    seasons:{S3:[40000,350000,327184], S2b:[670000,1366000,1287528]}, cust:[196.67,150.00,140.45], calls:[41,26,24], peaks:[4,4,4],
+    src:"Started from the model suggestion (research policy C). Not a contract; the payment level must come from a pilot."},
+  ref: {name:"Reference terms", short:"Reference 70 c/kWh, 30 calls", rate:0.70, cap:30, q:"0.9", tol:140, enrolled:2000, flags:FLAG_R, kwh:9.0,
+    ircr:[-1.5,-1.4,-1.6,-1.4,-1.3,-1.5,-1.4,-1.5,-1.3,0,0,0], sb:2400, retail:24000, debs:12000, energy:18000,
+    seasons:{S3:[-406000,260000,149251], S2b:[-372000,1032000,735802]}, cust:[145.00,140.00,139.65], calls:[30,30,30], peaks:[0,4,3],
+    src:"Public Synergy Battery Rewards terms used for comparison. Not a Zenith tariff or contract."}
+};
+function callsOf(o){ return o.flags.slice(0, o.cap); }
+var SEASONS = ["2023-24","2024-25","2025-26"], CHRON = [false,false,true];
+var RUN = {scen:"S3", share:0.5};   /* inputs of the saved run R‑0142 */
+var CAPPRICE = 216091.78, RESP = 0.9;
+
+function evalOffer(k, sc){
+  var o = OFF[k], r = {o:o, sc:sc};
+  if (sc === "S1" || sc === "S2a") {
+    r.enrolled = 380; r.calls = 0; r.resp = 342;
+    r.rows = [
+      ["Capacity value (IRCR, seasonal)", 0, 0, 0, false, sc === "S1" ? "S1 has no capacity value." : "Current rule: net export counts 0, and normal self-use already zeroes peak import."],
+      ["Wholesale value of changed net export", 0, 0, 0, false, "No call has a positive expected margin at 09:00, so the rule makes no calls."],
+      ["Compensation for event net export", 0, 0, 0, true, "No calls, so no compensation."],
+      ["Operating cost", -9500, 0, 0, false, "A$25 a year for each of 380 homes that enrol at zero expected benefit (assumed central curve)."]];
+    r.seasonZ = [-9500,-9500,-9500]; r.custHome = [0,0,0]; r.seasonCalls = [0,0,0]; r.peaks = [0,0,0];
+  } else {
+    var calls = Math.min(o.flags.length, o.cap), en = o.enrolled, rsp = en * RESP;
+    var dmed = median(o.ircr), capv = Math.floor(2 * Math.abs(dmed) * rsp / 1000 * CAPPRICE);
+    var comp = o.rate * o.kwh * rsp * calls, wear = 0.05 * o.kwh * rsp * calls, hassle = 0.5 * rsp * calls, ops = 25 * en + 0.05 * rsp * calls;
+    var zc = sc === "S3" ? Math.round(capv * RUN.share) : capv;
+    r.enrolled = en; r.calls = calls; r.resp = rsp; r.dmed = dmed; r.capv = capv; r.zc = zc;
+    r.rows = [
+      ["Capacity value (IRCR, seasonal)", zc, 0, capv - zc, false, sc === "S3" ? "Zenith receives share s = " + Math.round(RUN.share * 100) + "% (assumption); the rest stays with Synergy. See the IRCR card." : "Assumed future rule: net export counts negative; Zenith as retailer keeps the whole change."],
+      ["Wholesale value of changed net export", sc === "S3" ? 0 : o.energy, 0, sc === "S3" ? o.energy : 0, false, sc === "S3" ? "In S3 the energy value goes to Synergy." : "Zenith settles the change in the meters' net position at actual prices."],
+      ["Compensation for event net export", -comp, comp, 0, true, nf(o.rate * 100) + " c/kWh × " + nf(o.kwh, 1) + " kWh × " + nf(rsp) + " responding homes × " + calls + " calls. Paid on billed event net export."],
+      ["Standby offset credits", -o.sb, o.sb, 0, true, "Extra import during standby, credited to the customer."],
+      ["Retail bill change after events", sc === "S3" ? 0 : o.retail, -o.retail, sc === "S3" ? o.retail : 0, true, "Customers import more after events; the retailer earns it."],
+      ["Feed-in (DEBS) change", 0, o.debs, -o.debs, true, "Feed-in credits on extra exports, paid by the scheme's payer."],
+      ["Customer battery wear", 0, -wear, 0, false, "A$0.05 per kWh of extra throughput (assumption)."],
+      ["Customer disutility", 0, -hassle, 0, false, "A$0.50 per responding home per event (assumption)."],
+      ["Operating cost", -ops, 0, 0, false, "A$25 per enrolled home a year + A$0.05 per responding home per event (assumptions)."],
+      ["Programme fixed cost", 0, 0, 0, false, "Default 0 (assumption)."]];
+    r.seasonZ = o.seasons[sc]; r.custHome = o.cust; r.seasonCalls = o.calls; r.peaks = o.peaks;
+  }
+  r.z = sum(r.rows.map(function(x){ return x[1]; })); r.c = sum(r.rows.map(function(x){ return x[2]; })); r.oth = sum(r.rows.map(function(x){ return x[3]; }));
+  r.sys = r.z + r.c + r.oth;
+  r.worst = Math.min.apply(null, r.seasonZ); r.worstIdx = r.seasonZ.indexOf(r.worst);
+  r.expZ = sum(r.seasonZ) / 3; r.expC = sum(r.custHome) / 3;
+  if (r.calls === 0) r.verdict = {k:"bad", t:"No business case", p: sc === "S1" ? "S1 energy only: no call has a positive expected margin at 09:00, so only the operating cost remains." : "S2a current IRCR rule: net export counts 0, and normal self-use already zeroes peak import, so calls add almost no capacity value."};
+  else if (r.worst < 0) r.verdict = {k:"bad", t:"No business case", p:"Fails the downside test: Zenith loses " + aud(-r.worst) + " in Hot Season " + SEASONS[r.worstIdx] + " (" + r.peaks[r.worstIdx] + " of 4 peak days covered). The expected value alone is not enough."};
+  else r.verdict = {k:"ok", t:"Positive in this scenario", p:(sc === "S2b" ? "Depends on an assumed future rule (2027 Peak IRCR); not current revenue. " : "Depends on a hypothetical Synergy share of " + Math.round(RUN.share * 100) + "%. ") + "Customers are better off than normal self-use, no customer constraint is broken (activation cap, control time, customer reserve) and no Hot Season loses money. The capacity value has no forward test until the 2026-27 Hot Season; enrolment follows an assumed curve."};
+  return r;
+}
+
+/* ---------- state ---------- */
+var S = {screen:"plan", sel:20, revealed:false, view:"decision", offer:"custom", day:TODAY, vscen:"S3", per:"ins", cper:"tseen", nc:false};
+var DEF = {start:"model", pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, win:"17:30–19:30", share:50, elig:10000, curve:"Central", resp:90, ops:25, fix:0, exp:"10", fcess:"RR, RL, CR, CL", scen:"S3"};
+var IN = JSON.parse(JSON.stringify(DEF));
+
+/* ---------- svg helpers ---------- */
+function stepPath(vals, yf, from, to){
+  var d = "", pen = false;
+  for (var k = from; k < to; k++) {
+    var v = vals[k]; if (v == null) { pen = false; continue; }
+    var y = yf(v).toFixed(2);
+    d += (pen ? "V" + y : "M" + X(k).toFixed(2) + "," + y) + "H" + X(k + 1).toFixed(2); pen = true;
+  }
+  return d;
+}
+function bandPath(lo, hi, yf, from, to){
+  var d = "M" + X(from).toFixed(2) + "," + yf(hi[from]).toFixed(2), k;
+  for (k = from; k < to; k++) d += "V" + yf(hi[k]).toFixed(2) + "H" + X(k + 1).toFixed(2);
+  for (k = to - 1; k >= from; k--) d += "V" + yf(lo[k]).toFixed(2) + "H" + X(k).toFixed(2);
+  return d + "Z";
+}
+/* a line through interval boundaries b = from..to (state of charge is a level at each boundary) */
+function linePath(vals, yf, from, to){ var d = ""; for (var b = from; b <= to; b++) d += (b === from ? "M" : "L") + X(b).toFixed(2) + "," + yf(vals[b]).toFixed(2); return d; }
+function tx(x, y, t, cls, extra){ return '<text x="' + (+x).toFixed(1) + '" y="' + (+y).toFixed(1) + '"' + (cls ? ' class="' + cls + '"' : "") + (extra || "") + ">" + t + "</text>"; }
+function ln(x1, y1, x2, y2, st){ return '<line x1="' + (+x1).toFixed(2) + '" y1="' + (+y1).toFixed(2) + '" x2="' + (+x2).toFixed(2) + '" y2="' + (+y2).toFixed(2) + '" ' + st + "/>"; }
+function rc(x, y, w, h, st){ return '<rect x="' + (+x).toFixed(2) + '" y="' + (+y).toFixed(2) + '" width="' + (+w).toFixed(2) + '" height="' + Math.max(0, h).toFixed(2) + '" ' + st + "/>"; }
+/* each chart gets its own pattern id: a pattern inside a hidden screen may not render if another chart refers to it */
+function HATCH(id){ return '<pattern id="' + id + '" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--hatch-ln)" stroke-width="2"/></pattern>'; }
+/* chart width follows the container, so text keeps its size in every layout */
+function fitW(sel, min, dflt){
+  var el = document.querySelector(sel); if (!el || !el.clientWidth) return dflt;
+  var cs = getComputedStyle(el), w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  return Math.max(min, Math.floor(w));
+}
+/* every time-of-day chart uses the same margins, so charts stacked in one box line up hour for hour */
+var RM = 56;
+function setW(W){ IW = (W - RM - X0) / N; return W; }
+/* a layout lets the charts fill a fixed-height box (the console) by marking the box data-fill;
+   the box must grow with the layout, not with its content, or the charts would chase their own height */
+function fitH(sel){ var el = document.querySelector(sel); return el && el.hasAttribute("data-fill") && getComputedStyle(el).flexGrow !== "0" ? Math.floor(el.clientHeight) : 0; }
+function fits(t, fs, w){ return t.length * fs * 0.56 <= w - 6; }
+function mid(a, b){ return (X(a) + X(b)) / 2; }
+
+/* ---------- chart grammar, after the market tools used as reference ----------
+   Colour names the quantity. A dashed line is a forecast or plan, a solid line is what happened, a shaded
+   band is the forecast range. Axes carry units. Limits such as Max or the reserve floor are labelled where
+   the line ends. Legend items switch series on and off; hovering shows the values as a small table. */
+var HID = {};   /* series switched off in a legend, keyed "chart:series" */
+function shown(c, k){ return !HID[c + ":" + k]; }
+function swatch(kind, col){ return '<i class="sw2 ' + kind + '"' + (col ? ' style="--c:' + col + '"' : "") + "></i>"; }
+function lgdHTML(c, items){
+  return '<div class="lgd" role="group" aria-label="Show or hide series">' + items.map(function(it){
+    var on = shown(c, it[0]);
+    return '<button class="lg' + (on ? "" : " off") + '" data-lg="' + c + ":" + it[0] + '" aria-pressed="' + on + '" title="' + (on ? "Hide" : "Show") + '">' + swatch(it[1], it[2]) + it[3] + "</button>"; }).join("") + "</div>";
+}
+function yTitle(x, y, t){ return '<text class="ytl" transform="translate(' + x + "," + y.toFixed(1) + ') rotate(-90)" text-anchor="middle">' + t + "</text>"; }
+function svgOpen(W, H, tip, label){ return '<svg viewBox="0 0 ' + W + " " + H + '" class="lanes chart"' + (tip ? ' data-tip="' + tip + '" data-xg="day" data-x0="' + X0 + '" data-iw="' + IW.toFixed(3) + '"' : "") + ' role="img" aria-label="' + label + '">'; }
+/* the trading day runs 08:00 to 08:00; the calendar date sits under its first hour and under midnight */
+function dayAxis(y1, d){
+  var s = [];
+  [0, 8, 16, 24, 32, 40, 48].forEach(function(q){
+    s.push(ln(X(q), y1, X(q), y1 + 4, 'style="stroke:var(--axis)"') + tx(X(q), y1 + 16, q < N ? hhmm(q) : "08:00", "", ' text-anchor="' + (q === 0 ? "start" : (q === N ? "end" : "middle")) + '"'));
+  });
+  return s.join("") + tx(X(0), y1 + 30, dayName(d), "lu") + tx(X(32), y1 + 30, dayName(d + 1), "lu", ' text-anchor="middle"');
+}
+/* the 09:00 decision, drawn like the "latest" marker of a market tool */
+function planMark(y0, y1, label){ return ln(X(2), y0 - (label ? 8 : 0), X(2), y1, 'style="stroke:var(--mark)" stroke-width="1"') + (label ? tx(X(2), y0 - 12, "09:00 PLAN", "mk9", ' text-anchor="middle"') : ""); }
+/* invisible columns that drive hover and click, and the crosshair they move */
+function hitCols(y0, y1){
+  var s = ['<line class="xh" x1="0" x2="0" y1="' + y0 + '" y2="' + y1 + '"/>'];
+  for (var k = 0; k < N; k++) s.push('<rect class="hit" data-i="' + k + '" x="' + X(k).toFixed(2) + '" y="' + y0 + '" width="' + IW.toFixed(2) + '" height="' + (y1 - y0) + '"/>');
+  return s.join("");
+}
+function limLine(y, label, x1){ return ln(X0, y, X(N), y, 'class="lmt"') + (label ? tx(x1 || X(N) - 2, y - 5, label, "lim halo", ' text-anchor="end"') : ""); }
+
+/* ---------- Today's plan: battery power under the price, then the energy it holds ---------- */
+var FLOOR = MAND.map(function(m, k){ return m + ECON[k]; });
+function modeOf(k){ return k < 2 ? "pre" : (P.chg[k] > 0 ? "chg" : (P.dis[k] > 1 ? "dis" : (P.dis[k] > 0 ? "shave" : "hold"))); }
+function doing(k){
+  var m = modeOf(k);
+  if (m === "dis") return "Discharging " + nf(P.dis[k], 1) + " MW, scheduled; " + nf(OFFERS[0].mw, 1) + " MW more offered from A$" + OFFERS[0].price;
+  if (m === "chg") return "Charging " + nf(P.chg[k], 1) + " MW";
+  if (m === "shave") return "Shaving " + nf(P.dis[k], 1) + " MW to stay under CMD 9 MW";
+  if (m === "pre") return "Earlier plan, before the 09:00 forecast";
+  return k >= 24 && k < 34 ? "Holding energy for tomorrow" : "Standing by";
+}
+/* what is firm and what depends on the market. As in the model: the plan (shave, discharge, hold, recharge) is scheduled
+   and re-solved every 30 minutes with the latest price; only spare energy above the plan is offered, in layers from a
+   A$150/MWh floor, and sells only if the price reaches each layer. The offer itself is defined with the data above. */
+
+function powerSVG(sel, h){
+  var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], k, rev = S.revealed, pc = planCheck();
+  var H = h || 280, y0 = 30, y1 = H - 40;
+  /* one grid for both axes, so zero lines up: price −250…500 A$/MWh on the left, power −5…10 MW on the right */
+  var yv = function(mw){ return y1 - (mw + 5) * (y1 - y0) / 15; }, yp = function(p){ return yv(Math.max(-250, Math.min(p, 500)) / 50); };
+  s.push(svgOpen(W, H, "pw", "Plan for 14 Jan 2026: scheduled battery power, conditional offers and the forecast energy price (illustrative)") + "<defs>" + HATCH("hPw") +
+    '<pattern id="cdP" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--surface)"/><rect width="2.6" height="6" style="fill:var(--dis)"/></pattern></defs>');
+  [-5, 0, 5, 10].forEach(function(v){
+    s.push(ln(X0, yv(v), XR, yv(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yv(v) + 3.5, (v < 0 ? "−" : "") + nf(Math.abs(v) * 50), "", ' text-anchor="end"') + tx(XR + 8, yv(v) + 3.5, (v < 0 ? "−" : "") + Math.abs(v)));
+  });
+  s.push(yTitle(14, (y0 + y1) / 2, "Price, A$/MWh") + yTitle(W - 10, (y0 + y1) / 2, "Battery power, MW"));
+  /* no forecast exists before 09:00 */
+  s.push(rc(X(0), y0, X(2) - X(0), y1 - y0, 'fill="url(#hPw)"') + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
+  /* bars: one block per run of equal power; conditional offers are hatched */
+  for (k = 0; k < N; k++) {
+    var v = P.dis[k] - P.chg[k], e = k; if (!v) continue;
+    while (e + 1 < N && P.dis[e + 1] - P.chg[e + 1] === v) e++;
+    if (shown("pw", "sch")) s.push(rc(X(k) + 0.5, Math.min(yv(v), yv(0)), X(e + 1) - X(k) - 1, Math.abs(yv(v) - yv(0)), 'style="fill:var(--' + (v > 0 ? "dis" : "chg") + ')" opacity="0.88"'));
+    k = e;
+  }
+  var o = OFFERS[0];
+  if (shown("pw", "cond")) s.push(rc(X(o.a) + 0.5, yv(P.dis[o.a] + o.mw), X(o.b) - X(o.a) - 1, yv(P.dis[o.a]) - yv(P.dis[o.a] + o.mw), 'style="fill:url(#cdP);stroke:var(--dis)" stroke-width="1.2"'));
+  if (shown("pw", "p50")) s.push('<path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" style="stroke:var(--price)" stroke-width="1.8" stroke-dasharray="5 3"/>');
+  /* the lowest offer layer: spare energy sells only if the price reaches it */
+  if (shown("pw", "cond")) s.push(ln(X(o.a), yp(o.price), X(o.b), yp(o.price), 'style="stroke:var(--dis)" stroke-width="1.6" stroke-dasharray="1.5 2.5"') +
+    tx(X(o.b) + 5, yp(o.price) + 4, "offers from A$" + o.price, "halo vl", ' style="fill:var(--dis)"'));
+  if (rev && shown("pw", "act")) {
+    s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" fill="none" style="stroke:var(--price)" stroke-width="2"/>');
+    var am = P.actual.indexOf(Math.max.apply(null, P.actual));
+    if (P.actual[am] > 500) s.push(tx(X(am) + IW / 2, yp(500) - 5, "A$" + nf(P.actual[am]) + " ↑", "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
+  }
+  /* what the battery does, in words, next to the bars; the shave sits under the zero line, clear of the price */
+  if (shown("pw", "sch")) {
+    var sh = "Shave " + nf(P.dis[4], 1) + " MW to stay under CMD 9 MW";
+    s.push(tx(mid(4, 18), yv(0) + 15, fits(sh, 11, X(18) - X(4)) ? sh : "Shave " + nf(P.dis[4], 1) + " MW", "halo vl", ' text-anchor="middle" style="fill:var(--dis)"'));
+    s.push(tx(mid(34, 46), (yv(0) + yv(-P.chg[34])) / 2 + 4, "Recharge " + nf(P.chg[34], 1) + " MW", "vl", ' text-anchor="middle" style="fill:var(--text)"'));
+  }
+  if (shown("pw", "sch") || shown("pw", "cond")) s.push(tx(mid(19, 24), yv(P.dis[19] + (shown("pw", "cond") ? o.mw : 0)) - 7, "Discharge " + nf(P.dis[19], 1) + " MW" + (shown("pw", "cond") ? " + " + nf(o.mw, 1) + " offered" : ""), "halo vl", ' text-anchor="middle" style="fill:var(--dis)"'));
+  /* intervals where the shown plan breaks a limit under the current inputs */
+  pc.bad.forEach(function(q){ s.push(rc(X(q) + 0.5, y0 - 6, IW - 1, 5, 'style="fill:var(--bad)"')); });
+  if (pc.bad.length) s.push(tx(X(pc.bad[0]), y0 - 10, pc.badShort, "vl", ' style="fill:var(--bad)"'));
+  return s.join("") + planMark(y0, y1, true) + dayAxis(y1, TODAY) + hitCols(y0, y1) + "</svg>";
+}
+/* direct: the lines are named on the chart, with no legend (scheme A's plan page) */
+function socSVG(sel, h, direct){
+  var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], rev = S.revealed, CAP = 40;
+  var H = h || 210, y0 = 18, y1 = H - 40;
+  var ys = function(v){ return y1 - v * (y1 - y0) / CAP; };
+  s.push(svgOpen(W, H, "soc", "Plan for 14 Jan 2026: energy held in the battery (illustrative)"));
+  [0, 10, 20, 30, 40].forEach(function(v){ s.push(ln(X0, ys(v), XR, ys(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, ys(v) + 3.5, String(v), "", ' text-anchor="end"')); });
+  s.push((direct ? tx(X0, y0 - 6, "State of charge, MWh", "lnm") : yTitle(14, (y0 + y1) / 2, "State of charge, MWh")) + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
+  if (direct) {
+    s.push(tx(X(2) + 6, ys(SOC[2]) - 7, "Planned", "halo pt"));
+    if (rev) s.push(tx(XR - 2, ys(SOCOUT[N]) + 15, "Actual", "halo pt", ' text-anchor="end"'));
+  }
+  s.push(limLine(ys(CAP), "Max") + '<path d="' + stepPath(FLOOR, ys, 0, N) + '" fill="none" class="lmt"/>' + tx(XR - 2, ys(FLOOR[N - 1]) - 5, "Reserve floor", "lim halo", ' text-anchor="end"'));
+  /* what happened: 08:00–09:00 is already known; the whole day once the outcome is revealed */
+  var to = rev ? N : 2;
+  if (shown("soc", "act")) {
+    var a = linePath(SOCOUT, ys, 0, to);
+    s.push('<path d="' + a + "L" + X(to).toFixed(2) + "," + y1 + "L" + X(0) + "," + y1 + 'Z" style="fill:var(--soc)" opacity="0.15"/><path d="' + a + '" fill="none" style="stroke:var(--soc)" stroke-width="2" stroke-linejoin="round"/>');
+  }
+  if (shown("soc", "plan")) {
+    s.push('<path d="' + linePath(SOC, ys, 2, N) + '" fill="none" style="stroke:var(--soc)" stroke-width="2" stroke-dasharray="5 3" stroke-linejoin="round"/>');
+    s.push('<circle cx="' + X(24).toFixed(1) + '" cy="' + ys(SOC[24]).toFixed(1) + '" r="3" style="fill:var(--soc)"/>' + tx(X(24) + 7, ys(SOC[24]) - 7, "Lowest " + nf(SOC[24], 1) + " MWh", "halo pt"));
+    s.push(tx(XR - 2, ys(SOC[N]) - 8, nf(SOC[N], 1) + " MWh", "halo pt", ' text-anchor="end"'));
+    var sx = X(S.sel) + IW / 2, sy = (ys(SOC[S.sel]) + ys(SOC[S.sel + 1])) / 2;
+    s.push('<circle cx="' + sx.toFixed(1) + '" cy="' + sy.toFixed(1) + '" r="4" style="fill:var(--surface);stroke:var(--soc)" stroke-width="2"/>');
+  }
+  return s.join("") + planMark(y0, y1, false) + dayAxis(y1, TODAY) + hitCols(y0, y1) + "</svg>";
+}
+/* the two charts share one box and one time axis; in a filling box they split its height */
+var CHD_H = 76;
+function schedHTML(){
+  var f = fitH("#sch-chart"), hp = 0, hs = 0;
+  if (f) { var room = f - CHD_H; hp = Math.round(room * 0.58); hs = room - hp; if (hp < 180 || hs < 130) { hp = 0; hs = 0; } }
+  var pw = [["sch", "bar-s", "", "Scheduled"], ["cond", "bar-c", "", "Conditional offer"], ["p50", "dsh", "var(--price)", "Price forecast"]];
+  if (S.revealed) pw.push(["act", "ln", "var(--price)", "Actual price"]);
+  return '<div class="chd"><span class="chd-t">Battery power and price</span>' + lgdHTML("pw", pw) + "</div>" + powerSVG("#sch-chart", hp) +
+    '<div class="chd chd-2"><span class="chd-t">State of charge</span>' + lgdHTML("soc", [["act", "area", "var(--soc)", "Actual"], ["plan", "dsh", "var(--soc)", "Planned"]]) + "</div>" + socSVG("#sch-chart", hs);
+}
+
+/* is the plan on screen executable under the current inputs? This is not the run status: a run can be up to date and
+   its plan still break a limit, for example after the export limit is lowered */
+function planCheck(){
+  var exp = +IN.exp, k, bad = [], maxImp = 0, maxExp = 0;
+  for (k = 0; k < N; k++) { maxImp = Math.max(maxImp, METER[k]); maxExp = Math.max(maxExp, -METER[k]); if (-METER[k] > exp + 1e-9) bad.push(k); }
+  /* [passes, full text, "warn" for an economic limit, short label] */
+  var list = [
+    [true, "Power: energy + raise services ≤ 10 MW in every interval (highest 9.5 MW)", "", "Power ≤ 10 MW"],
+    [MARGIN.v >= 0, "SOC stays above mandatory + site backup reserve (lowest margin +" + nf(MARGIN.v, 1) + " MWh)", "", "SoC ≥ reserve"],
+    [maxImp <= 12, "Meter import ≤ import limit 12 MW (highest " + nf(maxImp, 1) + " MW)", "", "Import ≤ 12 MW"],
+    [maxImp <= 9, "Site import ≤ CMD 9 MW, an economic limit priced in the network bill (highest " + nf(maxImp, 1) + " MW)", "warn", "CMD 9 MW"],
+    [!bad.length, "Meter export ≤ " + exp + " MW (highest " + nf(maxExp, 1) + " MW" + (bad.length ? ", above the limit in " + bad.length + " half-hours, " + hhmm(bad[0]) + "–" + hhmm(bad[bad.length - 1] + 1) : "") + ")", "", "Export ≤ " + exp + " MW"],
+    [true, "No MW or MWh allocated twice", "", "No double count"],
+    [true, "Every input published by 09:00 (08:00–09:00 runs on the transition plan)", "", "Inputs by 09:00"]];
+  var fails = list.filter(function(c){ return !c[0] && !c[2]; }), warns = list.filter(function(c){ return !c[0] && c[2]; });
+  return {list:list, fails:fails, warns:warns, bad:bad, exp:exp, badShort:bad.length ? "Export above " + exp + " MW" : "",
+    why:bad.length ? bad.length + " half-hours above the " + exp + " MW export limit (" + hhmm(bad[0]) + "–" + hhmm(bad[bad.length - 1] + 1) + ")" : ""};
+}
+
+/* the selected half hour: one sentence and three numbers */
+function railHTML(k){
+  var m = modeOf(k), pr = P.price[k], exp = +IN.exp, over = -METER[k] > exp + 1e-9;
+  var lvl = nf(SOC[k], 1) + " → " + nf(SOC[k + 1], 1) + " MWh", price = pr == null ? "not issued yet" : "A$" + nf(pr) + "/MWh";
+  var act, say, facts, kind = "Scheduled";
+  if (m === "dis") {
+    act = "Discharging " + nf(P.dis[k], 1) + " MW";
+    say = "The evening price is forecast at A$" + nf(pr) + "/MWh, worth more than keeping the energy. The plan is re-solved every 30 minutes with the latest price.";
+    facts = [["Battery", lvl], ["Sent to the grid", '<span class="' + (over ? "neg" : "") + '">' + nf(-METER[k], 1) + " of " + exp + " MW allowed</span>"], ["Conditional offer", "+" + nf(OFFERS[0].mw, 1) + " MW from A$" + OFFERS[0].price + "/MWh"]];
+  } else if (m === "shave") {
+    act = "Shaving " + nf(P.dis[k], 1) + " MW";
+    say = "Without the battery the factory would draw " + nf(P.load[k], 1) + " MW, above its 9 MW contract limit (CMD).";
+    facts = [["Battery", lvl], ["Factory import", nf(METER[k], 1) + " of 9 MW allowed"], ["Price forecast", price]];
+  } else if (m === "chg") {
+    act = "Charging " + nf(P.chg[k], 1) + " MW";
+    say = "Night-time energy is cheap (A$" + nf(pr) + "/MWh forecast), so the battery refills for tomorrow.";
+    facts = [["Battery", lvl], ["Price forecast", price], ["Factory import", nf(METER[k], 1) + " of 9 MW allowed"]];
+  } else if (m === "pre") {
+    act = "Following the earlier plan";
+    say = "Today's forecast is issued at 09:00. Until then the battery runs the transition plan.";
+    facts = [["Battery", nf(SOC[k], 1) + " MWh"], ["Price forecast", price]];
+  } else {
+    act = k >= 24 && k < 34 ? "Holding " + nf(SOC[k], 1) + " MWh" : "Standing by";
+    say = "No trade beats keeping the energy at A$" + nf(pr) + "/MWh. Part of the battery stays on standby for grid services (FCESS).";
+    facts = [["Battery", nf(SOC[k], 1) + " MWh"], ["Price forecast", price], ["Grid-service standby", nf(P.rr[k] + P.cr[k], 1) + " MW"]];
+  }
+  var col = {dis:"var(--phs-dis)", chg:"var(--phs-chg)", shave:"var(--phs-shave)", hold:"var(--text-2)", pre:"var(--text-2)"}[m];
+  var h = '<div class="ri-head"><div class="t">' + hhmm(k) + "–" + hhmm(k + 1) + '<span class="tag plan">' + kind.toUpperCase() + '</span></div><div class="act" style="color:' + col + '">' + act + "</div></div>";
+  h += '<p class="ri-say">' + say + "</p>";
+  h += '<div class="ri-facts">' + facts.map(function(f){ return "<div><span>" + f[0] + "</span><b>" + f[1] + "</b></div>"; }).join("") + "</div>";
+  if (S.revealed) h += '<div class="ri-out"><div class="cap">Outcome<span class="tag out">REPLAYED</span></div><table class="kvt"><tr><td>Actual price</td><td class="n">A$' + nf(P.actual[k]) + '/MWh</td></tr><tr><td>Energy settled</td><td class="n">' + aud(P.actual[k] * (P.dis[k] - P.chg[k]) * 0.5) + "</td></tr></table></div>";
+  else h += '<div class="locked ri-out">Outcome hidden until you reveal it. <button class="lnk" data-reveal>Reveal outcome →</button></div>';
+  return h;
+}
+
+/* the day as action blocks, in proportion to time: scheduled solid, conditional hatched */
+function timelineHTML(){
+  var segs = [], k = 0;
+  while (k < N) { var m = modeOf(k), e = k; while (e + 1 < N && modeOf(e + 1) === m) e++; segs.push({m:m, a:k, b:e + 1}); k = e + 1; }
+  var lab = {shave:"Shave " + nf(P.dis[4], 1) + " MW", dis:"Discharge " + nf(P.dis[19], 1) + " MW", chg:"Recharge " + nf(P.chg[34], 1) + " MW", hold:"Hold", pre:""};
+  var h = '<div class="tl" role="img" aria-label="Today\'s actions from 08:00 to 08:00: shave 10:00–17:00, discharge 17:30–20:00 with a conditional offer on top, hold overnight, recharge 01:00–07:00">';
+  segs.forEach(function(g){
+    var n = g.b - g.a, t = g.m === "hold" && g.a === 24 ? "Hold " + nf(SOC[24], 1) + " MWh" : lab[g.m];
+    h += '<div class="tl-b tl-' + g.m + '" style="flex-grow:' + n + '" title="' + hhmm(g.a) + "–" + hhmm(g.b) + " · " + (g.m === "pre" ? "earlier plan" : "scheduled") + (g.m === "dis" ? ", plus a conditional offer" : "") + '">' + (g.m === "dis" ? '<i class="tl-offer" title="Conditional: ' + nf(OFFERS[0].mw, 1) + " MW more offered from A$" + OFFERS[0].price + '/MWh"></i>' : "") + "<span>" + (n >= 4 ? t : "") + "</span></div>";
+  });
+  h += '</div><div class="tl-x">' + [0, 8, 16, 24, 32, 40, 48].map(function(q){ return '<span style="left:' + (q / N * 100) + '%">' + (q < N ? hhmm(q) : "08:00") + "</span>"; }).join("") + "</div>";
+  return h + '<div class="tl-key"><span><i class="sw2 bar-s"></i>Scheduled, re-planned every 30 minutes</span><span><i class="sw2 bar-c"></i>Conditional offer: sells only if the price reaches it</span></div>';
+}
+
+/* ---------- Today's plan, scheme A (round 5): decide in one line, the day as lanes, reasons on the chart ----------
+   A layout with a #plan-dec slot gets this page; the other schemes keep the round-4 page in renderPlan below.
+   Scheduled actions are solid blocks; the conditional offer is a dashed outline, because it runs only if the price
+   reaches it; hatching marks 08:00–09:00, still on the earlier plan with no 09:00 forecast, and nothing else.
+   Full wording sits in hover notes (data-note). */
+function noteAttr(t){ return ' tabindex="0" data-note="' + String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;") + '"'; }
+function segsOf(from, f){ var g = [], k = from; while (k < N) { var m = f(k), e = k; while (e + 1 < N && f(e + 1) === m) e++; g.push({m:m, a:k, b:e + 1}); k = e + 1; } return g; }
+var SEGC = {shave:["color-mix(in srgb,var(--dis) 20%,var(--surface))", "var(--dis)"], dis:["var(--dis)", "var(--surface)"], chg:["var(--chg)", "var(--text)"], hold:["var(--surface-3)", "var(--text-3)"]};
+function segLabel(g, w){
+  var full = {shave:"Shave " + nf(P.dis[g.a], 1) + " MW · under CMD 9 MW", dis:"Discharge " + nf(P.dis[g.a], 1) + " MW", chg:"Recharge " + nf(P.chg[g.a], 1) + " MW", hold:g.b - g.a >= 4 ? "Hold " + nf(SOC[g.a], 1) + " MWh" : ""}[g.m];
+  var short = {shave:"Shave " + nf(P.dis[g.a], 1) + " MW", dis:nf(P.dis[g.a], 1) + " MW", chg:nf(P.chg[g.a], 1) + " MW", hold:"Hold"}[g.m];
+  return full && fits(full, 11, w) ? full : (fits(short, 11, w) ? short : "");
+}
+function standby(k){ return P.rr[k] + P.rl[k] + P.cr[k] + P.cl[k]; }
+function laneSVG(sel){
+  var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], rev = S.revealed, pc = planCheck(), o = OFFERS[0];
+  var yA = 22, hA = 30, yO = yA + hA + 5, hO = 16, yF = yO + hO + 5, hF = 14, y0 = yF + hF + 28, y1 = y0 + 150, H = y1 + 22;
+  var yp = function(p){ return y1 - Math.max(0, Math.min(p, 500)) * (y1 - y0) / 500; };
+  s.push(svgOpen(W, H, "day", "Plan for 14 Jan 2026: scheduled actions, the conditional offer, FCESS standby and the forecast price (illustrative)") + "<defs>" + HATCH("hDy") + "</defs>");
+  /* lane tracks named in the left margin, a light grid every four hours, and no forecast before 09:00 */
+  [[yA, hA, "Plan"], [yO, hO, "Offer"], [yF, hF, "FCESS"]].forEach(function(l){ s.push(rc(X0, l[0], XR - X0, l[1], 'rx="3" style="fill:var(--surface-2)"') + tx(X0 - 8, l[0] + l[1] / 2 + 3.5, l[2], "lnm", ' text-anchor="end"')); });
+  [8, 16, 24, 32, 40].forEach(function(q){ s.push(ln(X(q), yA, X(q), y1, 'class="gl"')); });
+  s.push(rc(X(0), yA, X(2) - X(0), y1 - yA, 'fill="url(#hDy)"'));
+  /* the price panel: forecast with its P10–P90 band, the offer price, and the actual price once revealed */
+  [0, 250, 500].forEach(function(v){ s.push(ln(X0, yp(v), XR, yp(v), v ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yp(v) + 3.5, nf(v), "", ' text-anchor="end"')); });
+  s.push(tx(X(2) + 6, y0 - 10, "Price forecast, A$/MWh", "lnm halo") + rc(X(S.sel), y0, IW, y1 - y0, 'style="fill:var(--sel)"'));
+  if (shown("pw", "p50")) {
+    s.push('<path d="' + bandPath(P.lo, P.hi, yp, 2, N) + '" style="fill:var(--price)" opacity="0.045"/><path d="' + stepPath(P.price, yp, 2, N) + '" fill="none" style="stroke:var(--price)" stroke-width="1.8" stroke-dasharray="5 3"/>');
+    var pk = 2, lo = -1, k;
+    for (k = 2; k < N; k++) { if (P.price[k] > P.price[pk]) pk = k; if (P.chg[k] > 0 && (lo < 0 || P.price[k] < P.price[lo])) lo = k; }
+    [pk, lo].forEach(function(q){ if (q < 0) return; var a = q, b = q + 1; while (a > 2 && P.price[a - 1] === P.price[q]) a--; while (b < N && P.price[b] === P.price[q]) b++;
+      /* once the outcome is shown the actual price runs over the evening run, so its label moves left of the step */
+      s.push(rev && q === pk ? tx(X(a) - 4, yp(P.price[q]) + 4, "A$" + nf(P.price[q]), "halo vl", ' text-anchor="end" style="fill:var(--price)"')
+        : tx(mid(a, b), yp(P.price[q]) - 7, "A$" + nf(P.price[q]), "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
+      /* the shaded band is named once, just right of the evening peak, clear of the actual price once revealed */
+      if (q === pk) s.push(tx(X(b) + 5, yp(P.hi[q]) + 4, "P10–P90", "halo"));
+    });
+  }
+  s.push(ln(X(o.a), yp(o.price), X(o.b), yp(o.price), 'style="stroke:var(--dis)" stroke-width="1.6" stroke-dasharray="3 2"') + tx(mid(o.a, o.b), yp(o.price) + 13, "offer A$" + o.price, "halo vl", ' text-anchor="middle" style="fill:var(--dis)"'));
+  if (rev) {
+    s.push('<path d="' + stepPath(P.actual, yp, 0, N) + '" fill="none" style="stroke:var(--price)" stroke-width="2"/>');
+    var am = P.actual.indexOf(Math.max.apply(null, P.actual));
+    if (P.actual[am] > 500) s.push(tx(X(am) + IW / 2, yp(500) - 5, "A$" + nf(P.actual[am]) + " ↑", "halo vl", ' text-anchor="middle" style="fill:var(--price)"'));
+  }
+  /* what the battery is scheduled to do, labelled where it happens */
+  segsOf(2, modeOf).forEach(function(g){
+    var c = SEGC[g.m], x = X(g.a) + 0.5, w = X(g.b) - X(g.a) - 1, t = segLabel(g, w);
+    s.push(rc(x, yA, w, hA, 'rx="3" style="fill:' + c[0] + '"') + (t ? tx(x + w / 2, yA + hA / 2 + 4, t, "vl", ' text-anchor="middle" style="fill:' + c[1] + '"') : ""));
+  });
+  /* the conditional offer: an outline, it sells only if the price reaches it */
+  var ox = X(o.a) + 0.5, ow = X(o.b) - X(o.a) - 1, ot = "+" + nf(o.mw, 1) + " MW if ≥ A$" + o.price;
+  s.push(rc(ox, yO, ow, hO, 'rx="3" style="fill:color-mix(in srgb,var(--dis) 8%,var(--surface));stroke:var(--dis)" stroke-width="1.2" stroke-dasharray="3 2"'));
+  s.push(fits(ot, 10.5, ow) ? tx(ox + ow / 2, yO + hO / 2 + 3.5, ot, "ol", ' text-anchor="middle"') : tx(ox + ow + 6, yO + hO / 2 + 3.5, ot, "ol"));
+  /* grid-service standby (FCESS), labelled in its longest run */
+  var fr = segsOf(2, function(q){ return standby(q) > 0; }).filter(function(g){ return g.m; }), best = null;
+  fr.forEach(function(g){ s.push(rc(X(g.a) + 0.5, yF, X(g.b) - X(g.a) - 1, hF, 'rx="3" style="fill:color-mix(in srgb,var(--cr) 45%,var(--surface))"')); if (!best || g.b - g.a > best.b - best.a) best = g; });
+  if (best) { var ft = (best.a === 2 && best.b === N ? "Standby all day · " : "Standby · ") + aud(MONEY.plan.fcess); if (fits(ft, 10.5, X(best.b) - X(best.a) - 12)) s.push(tx(X(best.a) + 8, yF + hF / 2 + 3.5, ft, "fl")); }
+  /* half-hours where the plan breaks a limit under the current inputs */
+  segsOf(0, function(q){ return pc.bad.indexOf(q) >= 0; }).filter(function(g){ return g.m; }).forEach(function(g){
+    s.push(rc(X(g.a) - 1, yA - 3, X(g.b) - X(g.a) + 2, hA + 6, 'rx="4" style="fill:none;stroke:var(--bad)" stroke-width="2"'));
+  });
+  if (pc.bad.length) s.push(tx(X(pc.bad[0]), y0 + 12, pc.badShort, "halo vl", ' style="fill:var(--bad)"'));
+  /* the selected half-hour: a mark under the lanes (an outline would cover their labels) and a shaded column below */
+  s.push(rc(X(S.sel), yF + hF + 4, IW, 3, 'class="selm"'));
+  [0, 8, 16, 24, 32, 40, 48].forEach(function(q){ s.push(tx(X(q), y1 + 15, q < N ? hhmm(q) : "08:00", "", ' text-anchor="' + (q === 0 ? "start" : (q === N ? "end" : "middle")) + '"')); });
+  return s.join("") + planMark(yA, y1, true) + hitCols(yA - 3, y1) + "</svg>";
+}
+/* the day's value as a small waterfall: what earns stacks to the right, wear comes off the end, the net is the third bar */
+function vbarHTML(blocked){
+  var parts = [["energy", "Energy", "var(--dis)", "var(--surface)"], ["offer", "Offer cleared", "color-mix(in srgb,var(--dis) 14%,var(--surface))", "var(--dis)"],
+    ["fcess", "FCESS", "color-mix(in srgb,var(--cr) 45%,var(--surface))", "var(--text)"], ["network", "Network saving", "var(--econ)", "var(--text)"],
+    ["wear", "Wear", "color-mix(in srgb,var(--bad) 14%,var(--surface))", "var(--bad)"]];
+  var rows = [["Plan at 09:00", MONEY.plan]].concat(S.revealed ? [["Outcome, replayed", MONEY.out]] : []);
+  var gain = function(m){ return sum(parts.map(function(p){ return Math.max(0, m[p[0]] || 0); })); };
+  var max = Math.max.apply(null, rows.map(function(r){ return gain(r[1]); }));
+  var pct = function(v){ return (100 * v / max).toFixed(2) + "%"; };
+  var seg = function(p, v, lead){ var t = p[1] + " " + (v < 0 ? "−" : "") + nf(Math.abs(v)); return '<i style="' + (lead || "") + "width:" + pct(Math.abs(v)) + ";background:" + p[2] + ";color:" + p[3] + '" title="' + t + '"><span>' + t + "</span></i>"; };
+  return rows.map(function(r){
+    var m = r[1], negs = parts.filter(function(p){ return (m[p[0]] || 0) < 0; }), net = gain(m) - sum(negs.map(function(p){ return -m[p[0]]; }));
+    return '<div class="vb' + (blocked ? " off" : "") + '"><div class="vb-h">' + r[0] + (blocked ? " · simulation only" : "") + "</div>" +
+      '<div class="vb-row">' + parts.filter(function(p){ return (m[p[0]] || 0) > 0; }).map(function(p){ return seg(p, m[p[0]]); }).join("") + "</div>" +
+      '<div class="vb-row">' + negs.map(function(p, j){ return seg(p, m[p[0]], j ? "" : "margin-left:" + pct(net) + ";"); }).join("") + "</div>" +
+      '<div class="vb-row"><i class="vb-net" style="width:' + pct(Math.max(0, net)) + '"><span>Net ' + aud(m.net) + "</span></i></div></div>";
+  }).join("");
+}
+function moneyTable(){
+  var m = MONEY, rows = [["Energy", "energy"], ["Conditional offer, cleared", "offer"], ["FCESS", "fcess"], ["Network bill saving (CMD)", "network"], ["Battery wear", "wear"]];
+  var t = '<tr><th>Item</th><th class="n">Plan at 09:00</th><th class="n">Outcome, replayed</th></tr>';
+  var dim = function(x){ return '<span style="color:var(--text-3);font-weight:400">' + x + "</span>"; };
+  rows.forEach(function(r){ t += "<tr><td>" + r[0] + '</td><td class="n">' + (r[1] === "offer" ? dim("not counted") : aud(m.plan[r[1]])) + '</td><td class="n">' + (S.revealed ? aud(m.out[r[1]]) : dim("hidden")) + "</td></tr>"; });
+  return t + '<tr class="tot"><td>Net for the trading day</td><td class="n">' + aud(m.plan.net) + '</td><td class="n">' + (S.revealed ? aud(m.out.net) : "—") + "</td></tr>";
+}
+function renderPlanA(){
+  var pc = planCheck(), blocked = pc.fails.length > 0;
+  document.body.classList.toggle("plan-blocked", blocked);
+  $("#plan-status").className = "pst " + (blocked ? "bad" : "ok");
+  $("#plan-status").innerHTML = blocked
+    ? "<b>Plan blocked</b><span>" + pc.why + " · do not execute</span><button class=\"btn sm\" data-inspect>Inspect</button>"
+    : "<b>Plan executable</b><span>" + pc.list.length + " checks pass</span>";
+  $("#plan-head").textContent = blocked ? "Resolve the export limit before execution" : "Discharge " + nf(P.dis[19], 1) + " MW · " + hhmm(19) + "–" + hhmm(24);
+  $("#plan-val").innerHTML = '<div class="cap">Expected net value</div><div class="dv' + (blocked ? " off" : "") + '">' + aud(MONEY.plan.net) + '</div><div class="chips">' + (blocked
+    ? '<span class="tipc bad r"' + noteAttr("The plan breaks a hard limit under the current inputs, so this value is a simulation and must not be executed.") + ">Simulation only · not executable</span>"
+    : '<span class="tipc r"' + noteAttr("Expected at 09:00 from forecasts. Not settlement.") + '>forecast 09:00</span><span class="tipc r"' + noteAttr("Counts the scheduled plan only. The conditional offer is left out, and the model assumes the battery does not move the price.") + ">scheduled only</span>") + "</div>";
+  $("#sch-chart").innerHTML = laneSVG("#sch-chart") + socSVG("#sch-chart", 190, true);
+  $$("#sch-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.sel = +r.getAttribute("data-i"); renderPlan(); }); });
+  $("#sch-rail").innerHTML = railHTML(S.sel);
+  bindReveal($("#sch-rail"));
+  $("#plan-vbar").innerHTML = vbarHTML(blocked);
+  $("#sch-money").innerHTML = moneyTable();
+  $("#sch-checks").innerHTML = pc.list.map(function(c){ var k = c[0] ? "ok" : (c[2] ? "w" : "b");
+    return '<div class="ck ' + k + '"' + noteAttr(c[1]) + '><span class="ci ' + k + '">' + (c[0] ? "&#10003;" : "!") + "</span>" + c[3] + "</div>"; }).join("");
+}
+
+function renderPlan(){
+  if (document.getElementById("plan-dec")) { renderPlanA(); return; }
+  var pc = planCheck(), blocked = pc.fails.length > 0;
+  document.body.classList.toggle("plan-blocked", blocked);
+  /* plan status, kept apart from the run status in the header */
+  $("#plan-status").className = "plan-st " + (blocked ? "bad" : "ok");
+  $("#plan-status").innerHTML = blocked
+    ? '<b>Plan blocked</b><span>' + pc.why + ' under the current inputs. Do not execute.</span><button class="btn sm" data-inspect>Inspect</button>'
+    : "<b>Plan executable</b><span>All " + pc.list.length + " checks pass for today's plan.</span>";
+  /* the decision: what is scheduled, what depends on the price */
+  $("#plan-head").innerHTML = '<div class="cap">' + (blocked ? "Planned, not executable" : "Recommended action") + " · Wed 14 Jan · plan 09:00</div>" +
+    '<div class="instr-h">' + (blocked ? "Resolve the export limit before execution" : "Discharge " + nf(P.dis[19], 1) + " MW into the 17:30–20:00 evening peak") + "</div>" +
+    '<ul class="acts"><li><span class="tg sch">Scheduled</span>Shave ' + nf(P.dis[4], 1) + " MW 10:00–17:00 (CMD 9 MW) · discharge " + nf(P.dis[19], 1) + " MW 17:30–20:00 · recharge " + nf(P.chg[34], 1) + " MW 01:00–07:00. Re-planned every 30 minutes with the latest price.</li>" +
+    '<li><span class="tg cond">Conditional</span>Up to ' + nf(OFFERS[0].mw, 1) + " MW more in the evening, offered in layers from A$" + OFFERS[0].price + "/MWh upward. It sells only if the price reaches an offer and is not counted in the expected value.</li></ul>";
+  $("#k-net").textContent = aud(MONEY.plan.net);
+  $("#k-net-s").innerHTML = blocked ? '<span class="neg">Simulation only · not executable</span>' : "scheduled plan, forecast at 09:00 · not settlement";
+  $("#k-dis").textContent = nf(P.dis[19], 1) + " MW";
+  $("#k-dis-s").textContent = "scheduled 17:30–20:00 · +" + nf(OFFERS[0].mw, 1) + " MW offered from A$" + OFFERS[0].price;
+  $("#k-con").innerHTML = blocked ? '<span class="neg">' + pc.fails.length + " fail</span>" : pc.list.length + " of " + pc.list.length + " pass";
+  $("#k-con-s").innerHTML = "today's plan · backtest run R‑0142, 1 Apr 2025 – 22 Oct 2026 (570 days): 0 hard-limit violations <button class=\"lnk\" data-go=\"svalid\">Validation →</button>";
+  $("#plan-timeline").innerHTML = timelineHTML();
+  $("#plan-why").innerHTML = "<li>Factory load of " + nf(P.load[4], 1) + " MW would pass its 9 MW contract limit (CMD) 10:00–17:00, so the battery shaves " + nf(P.dis[4], 1) + " MW.</li>" +
+    "<li>The evening price is forecast at A$" + nf(P.price[19]) + "/MWh, with a " + nf(P.pspike[19] * 100) + "% chance of A$200 or more, so " + nf(P.dis[19], 1) + " MW is scheduled for 17:30–20:00. The spare " + nf(OFFERS[0].mw, 1) + " MW is offered in layers from A$" + OFFERS[0].price + "/MWh upward and is not counted in the expected value.</li>" +
+    "<li>Night energy is forecast at A$" + nf(P.price[34]) + "/MWh, so the battery refills to " + nf(SOC[46], 1) + " MWh by 07:00 for tomorrow.</li>" +
+    "<li>Standby for grid frequency services (FCESS) all day, worth " + aud(MONEY.plan.fcess) + " in the plan.</li>" +
+    "<li>The expected value counts the scheduled plan only. Offers are simulated in the replay, and the model assumes the battery does not move the price.</li>";
+  /* detail */
+  $("#sch-chart").innerHTML = schedHTML();
+  $$("#sch-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.sel = +r.getAttribute("data-i"); renderPlan(); }); });
+  $("#sch-rail").innerHTML = railHTML(S.sel);
+  bindReveal($("#sch-rail"));
+  $("#sch-note").textContent = "Hover the charts for values; click a time to see why.";
+  $("#sch-money").innerHTML = moneyTable();
+  $("#sch-checks").innerHTML = (blocked
+    ? pc.fails.map(function(c){ return '<li><span class="ci b">!</span><span>' + c[1] + "</span></li>"; }).join("")
+    : '<li><span class="ci ok">&#10003;</span><span>All ' + pc.list.length + " checks pass. Lowest reserve margin +" + nf(MARGIN.v, 1) + " MWh, " + hhmm(MARGIN.from) + "–" + hhmm(MARGIN.to + 1) + ".</span></li>") +
+    '<li class="chk-more"><details' + (blocked ? " open" : "") + '><summary>Show each check</summary><ul class="chk">' +
+    pc.list.map(function(c){ return '<li><span class="ci ' + (c[0] ? "ok" : (c[2] ? "w" : "b")) + '">' + (c[0] ? "&#10003;" : "!") + "</span><span>" + c[1] + "</span></li>"; }).join("") + "</ul></details></li>";
+}
+
+/* ---------- Customer calls ---------- */
+function dayName(d, yr){ var dt = new Date(Date.UTC(2025, 11, 1 + d)); return dt.toLocaleDateString("en-AU", {weekday:"short", day:"numeric", month:"short", timeZone:"UTC"}).replace(",", "") + (yr ? " " + dt.getUTCFullYear() : ""); }
+function actSVG(){
+  var o = OFF[S.offer], dec = S.view === "decision", d0 = S.day, calls = callsOf(o), s = [], d;
+  var L = 62, W = fitW("#act-chart", 560, 792), XE = W - 20, DW = (XE - L) / DAYS, BW = Math.max(2, DW - 2), xa = function(d){ return L + DW * d; };
+  var ya = function(v){ return 156 - (v - 2600) * 0.08; };
+  s.push('<svg viewBox="0 0 ' + W + ' 206" class="lanes chart" data-tip="act" data-xg="season" data-x0="' + L + '" data-iw="' + DW.toFixed(3) + '" role="img" aria-label="Hot Season 2025-26 daily peak demand, flags and calls (illustrative)">' + "<defs>" + HATCH("aF") + "</defs>");
+  [[3000,"3,000"],[3500,"3,500"],[4000,"4,000"]].forEach(function(g){ s.push(ln(L, ya(g[0]), XE, ya(g[0]), 'class="gl"') + tx(L - 8, ya(g[0]) + 3.5, g[1], "", ' text-anchor="end"')); });
+  s.push(yTitle(14, 92, "Daily peak, MW"));
+  for (d = 0; d < DAYS; d++) {
+    if (dec && d > d0) break;
+    var fl = o.flags.indexOf(d) >= 0;
+    if (dec && d === d0) { var f = fcPeak(d); s.push(rc(xa(d) + 1, ya(f), BW, 156 - ya(f), 'style="fill:var(--surface);stroke:var(--peak)" stroke-width="1.2" stroke-dasharray="2 1.5"')); continue; }
+    s.push(rc(xa(d) + 1, ya(ACT[d]), BW, 156 - ya(ACT[d]), fl ? 'style="fill:var(--peak)" opacity="0.8"' : 'style="fill:var(--bar)"'));
+    if (!dec && PEAK.indexOf(d) >= 0) s.push(tx(xa(d) + DW / 2, ya(ACT[d]) - 4, "★", "", ' text-anchor="middle" style="font-size:12px;fill:var(--peak)"'));
+  }
+  if (dec && d0 < DAYS - 1) {
+    s.push(rc(xa(d0 + 1), 20, xa(DAYS) - xa(d0 + 1), 136, 'fill="url(#aF)"'));
+    var cx = (xa(d0 + 1) + xa(DAYS)) / 2;
+    if (xa(DAYS) - xa(d0 + 1) > 240) s.push(tx(cx, 84, "Not yet known at the decision time", "", ' text-anchor="middle" style="font-size:12.5px;font-weight:600;fill:var(--text-3)"') + tx(cx, 101, "Switch to Season review to see the whole season, labelled hindsight", "", ' text-anchor="middle" style="font-size:11px;fill:var(--text-3)"'));
+  }
+  if (dec) {
+    var r4 = run4(d0), thr = r4 - o.tol, xe = xa(d0) + 10;
+    s.push(tx(xa(d0) + DW / 2, ya(fcPeak(d0)) - 6, "Today", "halo", ' text-anchor="middle" style="font-size:10.5px;font-weight:600;fill:var(--peak)"'));
+    s.push(ln(L, ya(thr), xe, ya(thr), 'style="stroke:var(--peak)" stroke-width="1.2" stroke-dasharray="2 2"') + tx(xe + 4, ya(thr) + 3.5, "← threshold today " + nf(thr) + " MW", "halo", ' style="font-size:10.5px;font-weight:600;fill:var(--peak)"'));
+  } else {
+    s.push(rc(xa(d0), 20, DW, 136, 'style="fill:var(--sel)"'));
+  }
+  s.push(ln(L, 156, XE, 156, 'style="stroke:var(--axis)"') + tx(L - 8, 173.5, "Calls", "", ' text-anchor="end" style="font-size:11px;fill:var(--text-3)"'));
+  calls.forEach(function(c){ if (dec && c > d0) return; var today = dec && c === d0;
+    s.push('<circle cx="' + (xa(c) + DW / 2).toFixed(1) + '" cy="170" r="' + (today ? 3.5 : 3) + '" style="fill:' + (today ? "var(--surface);stroke:var(--cust)" : "var(--cust)") + '"' + (today ? ' stroke-width="1.6"' : "") + "/>"); });
+  [["Dec 2025",0],["Jan 2026",31],["Feb",62],["Mar",90]].forEach(function(m){ s.push(ln(xa(m[1]), 156, xa(m[1]), 161, 'style="stroke:var(--axis)"') + tx(xa(m[1]), 194, m[0], "", m[1] ? "" : "")); });
+  s.push('<line class="xh" x1="0" x2="0" y1="20" y2="176"/>');
+  for (d = 0; d < DAYS; d++) s.push('<rect class="hit" data-d="' + d + '" x="' + xa(d).toFixed(2) + '" y="20" width="' + DW.toFixed(2) + '" height="156"/>');
+  s.push("</svg>");
+  return s.join("");
+}
+function actCard(){
+  var o = OFF[S.offer], d = S.day, calls = callsOf(o), fl = o.flags.indexOf(d) >= 0, called = calls.indexOf(d) >= 0;
+  var used = calls.filter(function(c){ return c < d; }).length, r4 = run4(d), thr = r4 - o.tol, f = fcPeak(d), left = 121 - d;
+  var spikeHi = d % 4 === 0;
+  var h = '<div class="ac-head"><div class="cap">' + (S.view === "decision" ? "Tonight · " : "Decided at 09:00 · ") + dayName(d) + "</div>";
+  h += '<div class="dec"><span class="dec-pill' + (called ? "" : " no") + '">' + (called ? "CALL" : "NO CALL") + "</span><div>" +
+    (called ? "<b>Event 17:30–19:30</b><small>Standby 15:30–17:30 · 20% reserve kept</small>" : "<b>Normal self-use</b><small>No compensation, no call used</small>") + "</div></div></div>";
+  h += '<div class="ac-why"><div class="cap">Why</div><ul class="wl">';
+  h += '<li><span class="g" style="color:var(--peak)">&#9650;</span><span>' + (fl ? "Customer call rule flags today: forecast peak " + nf(f) + " MW ≥ threshold " + nf(thr) + " MW" : "Not flagged: forecast peak " + nf(f) + " MW is below the threshold " + nf(thr) + " MW") + " (4th-highest daily peak so far, " + nf(r4) + " MW, minus " + o.tol + " MW)." + "</span></li>";
+  h += '<li><span class="g" style="color:var(--cust)">&#9679;</span><span>' + (called ? ordinal(used + 1) + " call of " + o.cap + " in contract year 2025-26 · " + (o.cap - used - 1) + " left · " + left + " Hot Season days remain." : (fl && used >= o.cap ? "Flagged, but all " + o.cap + " calls this contract year are used." : used + " of " + o.cap + " calls used this contract year · " + (o.cap - used) + " left · " + left + " Hot Season days remain.")) + "</span></li>";
+  h += '<li><span class="g" style="color:var(--spike)">&#8623;</span><span>Price spike risk is ' + (spikeHi ? "high" : "low") + " today; it never triggers a customer call.</span></li></ul></div>";
+  if (called) {
+    var rsp = o.enrolled * RESP, ex = rsp * o.kwh;
+    h += '<div class="rsec ac-exp"><div class="cap">Expected tonight · plan</div><table class="kvt">' +
+      "<tr><td>Responding homes (90% of " + nf(o.enrolled) + ')</td><td class="n">' + nf(rsp) + "</td></tr>" +
+      "<tr><td>Event net export (" + nf(o.kwh, 1) + " kWh × " + nf(rsp) + ')</td><td class="n">' + nf(ex) + " kWh</td></tr>" +
+      "<tr><td>Compensation · transfer (" + nf(o.rate * 100) + ' c/kWh)</td><td class="n">' + aud(ex * o.rate) + "</td></tr></table>" +
+      '<p class="foot" style="margin-top:4px">Average response, not firm capacity.</p></div>';
+  }
+  if (S.view === "review") {
+    var pk = PEAK.indexOf(d) >= 0;
+    h += '<div class="rsec ac-out"><div class="cap">Outcome<span class="tag out">HINDSIGHT</span></div><p class="ac-outp">' +
+      (pk ? "<b>Official peak day.</b> " + (called ? "Covered by this call." : '<span class="neg">Missed: no call.</span>') : "Not a peak day." + (called ? " The call cost compensation without capacity value." : "")) + "</p></div>";
+  }
+  return h;
+}
+function ordinal(n){ var s = ["th","st","nd","rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+/* intraday system demand: the 14 Jan profile scaled to each day's peak (illustrative) */
+function demDay(d, actual){ var pk = actual ? ACT[d] : fcPeak(d); return DEMFC.map(function(v){ return 2350 + (v - 2350) * (pk - 2350) / 1520; }); }
+function callWin(d){ return callsOf(OFF[S.offer]).indexOf(d) >= 0; }
+function demSVG(sel){
+  var d = S.day, dec = S.view === "decision", o = OFF[S.offer], thr = run4(d) - o.tol, fc = demDay(d, false);
+  var W = setW(fitW(sel, 560, 852)), XR = X(N), s = [], H = 210, y0 = 18, y1 = H - 40, k;
+  var top = Math.max(4100, Math.ceil((Math.max(fcPeak(d), S.view === "decision" ? 0 : ACT[d], thr) + 60) / 100) * 100);
+  var yd = function(v){ return y1 - (v - 2000) * (y1 - y0) / (top - 2000); };
+  var smooth = function(vals){ var p = ""; for (k = 0; k < N; k++) p += (k ? "L" : "M") + (X(k) + IW / 2).toFixed(2) + "," + yd(vals[k]).toFixed(2); return p; };
+  s.push(svgOpen(W, H, "dem", "System demand forecast for " + dayName(d, true) + " against the customer call threshold (illustrative)"));
+  [2000, 2500, 3000, 3500, 4000].forEach(function(v){ s.push(ln(X0, yd(v), XR, yd(v), v > 2000 ? 'class="gl"' : 'style="stroke:var(--axis)"') + tx(X0 - 8, yd(v) + 3.5, nf(v), "", ' text-anchor="end"')); });
+  s.push(yTitle(14, (y0 + y1) / 2, "Demand, MW"));
+  /* the customer event, when there is one */
+  if (callWin(d)) s.push(rc(X(19), y0, X(23) - X(19), y1 - y0, 'style="fill:var(--cust)" opacity="0.12"') + tx(mid(19, 23), y1 - 8, "Call 17:30–19:30", "vl", ' text-anchor="middle" style="fill:var(--cust-text)"'));
+  s.push(ln(X0, yd(thr), XR, yd(thr), 'style="stroke:var(--peak)" stroke-width="1.3" stroke-dasharray="1.5 3"') + tx(XR - 2, yd(thr) - 6, "Call threshold " + nf(thr) + " MW", "lim halo", ' text-anchor="end" style="fill:var(--peak)"'));
+  if (shown("dem", "fc")) s.push('<path d="' + smooth(fc) + '" fill="none" style="stroke:var(--peak)" stroke-width="1.8" stroke-dasharray="5 3"/>' +
+    tx(X(20) + IW / 2, yd(Math.max.apply(null, fc)) - 8, "Peak " + nf(Math.max.apply(null, fc)) + " MW", "halo vl", ' text-anchor="end" style="fill:var(--peak)"'));
+  if (!dec && shown("dem", "act")) s.push('<path d="' + smooth(demDay(d, true)) + '" fill="none" style="stroke:var(--peak)" stroke-width="2"/>');
+  return s.join("") + planMark(y0, y1, false) + dayAxis(y1, d) + hitCols(y0, y1) + "</svg>";
+}
+function renderActivation(){
+  var o = OFF[S.offer], dec = S.view === "decision", calls = callsOf(o), used = calls.filter(function(c){ return c < S.day; }).length, tonight = calls.indexOf(S.day) >= 0 ? 1 : 0;
+  $("#day-label").textContent = dayName(S.day, true);
+  var card = $("#act-card"); card.classList.toggle("no", calls.indexOf(S.day) < 0); card.innerHTML = actCard();
+  $("#act-dem-sub").textContent = (dec ? "AEMO forecast issued before 09:00 · " : "forecast and actual, hindsight · ") + dayName(S.day, true);
+  var it = [["fc", "dsh", "var(--peak)", "Forecast"]]; if (!dec) it.push(["act", "ln", "var(--peak)", "Actual"]);
+  $("#act-dem").innerHTML = '<div class="chd">' + lgdHTML("dem", it) + "</div>" + demSVG("#act-dem");
+  $("#act-title").textContent = "Hot Season 2025-26 · " + (dec ? "decision view" : "season review");
+  $("#act-tag").innerHTML = dec ? "" : '<span class="hind">Hindsight</span>';
+  $("#act-sub").textContent = dec ? "Shows only what was known at 09:00 on " + dayName(S.day).replace(/^\w+ /, "") : "Not available at the decision time";
+  $("#act-legend").innerHTML = '<span><i class="sw" style="background:var(--bar)"></i>Daily peak demand</span><span><i class="sw" style="background:var(--peak);opacity:.8"></i>Flagged by the call rule</span><span><i class="sw" style="background:var(--cust);border-radius:50%;width:8px"></i>Called</span>' +
+    (dec ? "" : '<span style="color:var(--peak)">&#9733; <span style="color:var(--text-2)">Official peak day</span></span>');
+  $("#act-chart").innerHTML = actSVG();
+  $$("#act-chart .hit").forEach(function(r){ r.addEventListener("click", function(){ S.day = +r.getAttribute("data-d"); renderActivation(); }); });
+  var solid = dec ? used : calls.length, hatch = dec ? tonight : 0;
+  $("#act-budget").innerHTML = '<div class="bl"><span><b>Activation budget</b> <span class="sub">contract year 2025-26 · 1 Jul – 30 Jun</span></span><span>' +
+    (dec ? "<b>" + used + "</b> used · <b>" + tonight + "</b> tonight · <b>" + (o.cap - used - tonight) + "</b> left of " + o.cap : "<b>" + calls.length + "</b> of " + o.cap + " used in Hot Season 2025-26") + "</span></div>" +
+    '<div class="bar"><i style="width:' + (solid / o.cap * 100) + '%;background:var(--cust)"></i><i style="width:' + (hatch / o.cap * 100) + '%;background:repeating-linear-gradient(45deg,var(--cust) 0 1.5px,var(--cust-soft) 1.5px 4px)"></i></div>';
+}
+
+/* ---------- Value by party ---------- */
+var SCN = {
+  S1:{label:"S1 · Energy only", tag:"Hypothetical arrangement", cls:"hyp"},
+  S2a:{label:"S2a · Retailer, current IRCR", tag:"Current rule", cls:""},
+  S2b:{label:"S2b · Retailer, 2027 Peak IRCR", tag:"Assumed future rule · not current revenue", cls:"fut"},
+  S3:{label:"S3 · Synergy TPA, 50% share", tag:"Hypothetical share", cls:"hyp"}
+};
+function renderValue(){
+  var sc = S.vscen, r = evalOffer("custom", sc), a = evalOffer("ref", sc), oname = sc === "S3" ? "Synergy" : "Other parties";
+  $("#v-scen").innerHTML = "<b>" + r.o.name + "</b> · " + SCN[sc].label + ' <span class="chip ' + SCN[sc].cls + '">' + SCN[sc].tag + '</span><span class="sub">' + r.o.src + "</span>";
+  var gain = r.z - a.z;
+  $("#v-hero").innerHTML = '<div class="cap">Extra Zenith profit from the custom offer, against reference terms</div><div class="hero-n' + (gain < 0 ? " neg" : "") + '">' + (gain >= 0 ? "+" : "−") + aud(Math.abs(gain)).replace("A$ ", "A$") + '</div>' +
+    '<div class="hero-bars"><div><span>Reference terms</span><b>' + aud(a.z) + '</b></div><div class="on"><span>Custom offer</span><b>' + aud(r.z) + "</b></div></div>" +
+    '<p class="scope"><b>Scope</b> Historical simulation · contract year 2025-26 replay · in-sample · ' + SCN[sc].label + " (" + SCN[sc].tag.toLowerCase() + ") · run R‑0142 · values illustrative. Not tested out of sample: the first forward test is the 2026-27 Hot Season.</p>";
+  $("#v-verdict").innerHTML = '<div class="verdict ' + r.verdict.k + '"><span class="vt">' + r.verdict.t.toUpperCase() + "</span><div><b>" + r.o.name + " under " + SCN[sc].label + "</b><p>" + r.verdict.p + "</p></div></div>";
+  $("#v-parties").innerHTML = [["z", "Zenith · vs Zenith only", r.z], ["c", "Customers · vs normal self-use", r.c], ["o", oname, r.oth]].map(function(t){
+    return '<div class="panel party ' + t[0] + '"><div class="cap">' + t[1] + '</div><div class="big' + (t[2] < -0.0005 ? " neg" : "") + '">' + aud(t[2]) + '</div><div class="sub">fleet · ' + aud(t[2] / r.enrolled, 2) + " per enrolled home · contract year 2025-26</div></div>"; }).join("");
+  /* the offer against the alternatives */
+  $("#v-cmp-sub").textContent = "Contract year 2025-26 replay · 1 Jul 2025 – 30 Jun 2026 · 365 days · in-sample";
+  function vcell(x){ return x.verdict.k === "ok" ? '<span class="pill ok">Positive in ' + sc + "</span>" : '<span class="pill bad">No business case</span>'; }
+  var t = '<tr><th></th><th class="n">No calls</th><th class="n">Reference terms<div class="sub" style="font-weight:400">70 c/kWh · 30 calls</div></th><th class="n hl">Custom offer<div class="sub" style="font-weight:400">85 c/kWh · 45 calls</div></th></tr>';
+  [["Calls used", "0", a.calls + (a.calls >= OFF.ref.cap ? " · cap hit " + dayName(callsOf(OFF.ref)[29]).replace(/^\w+ /, "") : ""), String(r.calls)],
+   ["Peak days covered · hindsight", "—", a.peaks[2] + " of 4", r.peaks[2] + " of 4"],
+   ["Zenith incremental profit", aud(0), aud(a.z), aud(r.z)],
+   ["Customer net vs normal self-use, per home", aud(0), aud(a.c / a.enrolled, 2), aud(r.c / r.enrolled, 2)],
+   ["Worst Hot Season for Zenith · holdouts 2023-24 to 2025-26, 2 of 3 not chronological", aud(0), aud(a.worst), aud(r.worst)]].forEach(function(x){
+    t += "<tr><td>" + x[0] + '</td><td class="n">' + x[1] + '</td><td class="n' + (x[2].indexOf("−") === 0 ? " neg" : "") + '">' + x[2] + '</td><td class="n hl' + (x[3].indexOf("−") === 0 ? " neg" : "") + '">' + x[3] + "</td></tr>"; });
+  t += '<tr class="tot"><td>Verdict</td><td class="n"><span class="pill mu">Baseline</span></td><td class="n">' + vcell(a) + '</td><td class="n hl">' + vcell(r) + "</td></tr>";
+  $("#v-cmp").innerHTML = t;
+  $("#v-cmp-foot").textContent = "Reference terms are the public Synergy Battery Rewards terms, used for comparison; not a Zenith tariff or contract. A positive verdict needs customers no worse off, no hard-constraint violations and no Hot Season losing money.";
+  /* the ledger: who gains what, fleet, contract year */
+  $("#v-ledger-sub").textContent = "Custom offer · contract year 2025-26 replay · in-sample · A$, fleet";
+  var u = '<tr><th>Item</th><th class="n" style="color:var(--zen)">Zenith</th><th class="n" style="color:var(--cust)">Customers</th><th class="n">' + oname + '</th><th class="n">System</th></tr>';
+  var c = function(v){ return '<td class="n' + (v < -0.0005 ? " neg" : "") + '">' + (Math.abs(v) < 0.0005 ? "0" : aud(v)) + "</td>"; };
+  r.rows.forEach(function(row, k){
+    u += '<tr class="x" data-row="' + k + '"><td>' + row[0] + (row[4] ? '<span class="trt">TRANSFER</span>' : "") + "</td>" + c(row[1]) + c(row[2]) + c(row[3]) + c(row[1] + row[2] + row[3]) + "</tr>";
+    u += '<tr class="dt" data-dt="' + k + '"><td colspan="5">' + row[5] + "</td></tr>";
+  });
+  u += '<tr class="tot"><td>Net</td>' + c(r.z) + c(r.c) + c(r.oth) + c(r.sys) + "</tr>";
+  $("#v-ledger").innerHTML = u;
+  $$("#v-ledger tr.x").forEach(function(tr){ tr.addEventListener("click", function(){ tr.classList.toggle("open"); $('#v-ledger tr[data-dt="' + tr.getAttribute("data-row") + '"]').classList.toggle("show"); }); });
+  $("#v-ledger-foot").textContent = "Each row sums across parties to the System column; transfer rows sum to 0. Click a row for its basis. Values illustrative.";
+  /* capacity value: the result, with the 12 peak intervals folded away */
+  var ir = '<div class="cap">Seasonal IRCR effect · not a daily reward</div>';
+  if (r.calls === 0) ir += '<p class="foot">No calls, so no capacity value.</p>';
+  else {
+    ir += '<table class="kvt" style="margin-top:8px"><tr><td>Median change in net import per responding home, per half-hour</td><td class="n">' + nf(r.dmed, 2) + " kWh</td></tr>" +
+      "<tr><td>× 2 (kWh per half-hour to kW) × " + nf(r.resp) + ' responding homes</td><td class="n">' + nf(-2 * Math.abs(r.dmed) * r.resp / 1000, 2) + " MW</td></tr>" +
+      '<tr><td>× AEMO ratio 1.0 (assumption) × A$216,091.78/MW-yr</td><td class="n">' + aud(r.capv) + "</td></tr>" +
+      "<tr><td>Zenith's part" + (sc === "S3" ? " (share 50%, assumption)" : "") + '</td><td class="n">' + aud(r.zc) + "</td></tr></table>";
+    ir += '<details class="ri-more"><summary>The 12 peak intervals, 2025-26</summary><table class="tbl" style="margin-top:6px"><tr><th>Peak interval</th><th class="n">Change in net import, kWh per half-hour per home</th></tr>';
+    r.o.ircr.forEach(function(v, k){ var day = Math.floor(k / 3) + 1, times = day === 4 ? ["17:00","17:30","18:00"] : ["17:30","18:00","18:30"];
+      ir += "<tr><td>Day " + day + " · " + times[k % 3] + (v === 0 ? " · before the event window" : "") + '</td><td class="n">' + nf(v, 1) + "</td></tr>"; });
+    ir += "</table></details>";
+    ir += '<p class="foot">Season 2025-26 sets capacity year 2026-27 (as-if price). Peak intervals are known only after the season.</p>';
+  }
+  $("#v-ircr").innerHTML = ir;
+  var own = VAL.ins.q2b[0] * 365;   /* the adopted dispatch, A$ a day in-sample, as on Compare */
+  $("#v-own").innerHTML = '<div class="cap">Zenith only · own battery</div><p class="own-line">Contract year 2025-26 · in-sample · run R‑0142: <b>' + aud(own) + "</b> (A$" + nf(VAL.ins.q2b[0]) + " a day × 365, as on Compare). With the customer fleet: <b>" + aud(own + r.z) + "</b>. Separate meters, so the two ledgers add.</p>";
+}
+
+/* ---------- Validation ---------- */
+var VAL = {
+  ins:{note:["", "In-sample · 1 Apr 2025 – 30 Jun 2026 · 456 days. Used for training and selection; not evidence of out-of-sample performance."], q2a:[[41,58],[96,131],[0.081,0.104]], q2b:[3050,2640,[190,620],4900], days:456, hc:0, cmd:1, lab:"In-sample · 1 Apr 2025 – 30 Jun 2026 · 456 days"},
+  tseen:{note:["w", "Test, seen · 1 Jul – 15 Oct 2026 · 107 days. Out of sample in time, but looked at during development. No Hot Season."], q2a:[[33,45],[71,99],[0.064,0.077]], q2b:[2050,1700,[140,560],3300], days:107, hc:0, cmd:1, lab:"Test, seen · 1 Jul – 15 Oct 2026 · 107 days"},
+  tnew:{note:["i", "Test, unseen · 16–22 Oct 2026 · 7 days. Never inspected before freezing; short and calm. Too short to prove the strategy on its own. No Hot Season."], q2a:[[22,27],[40,52],[0.030,0.033]], q2b:[1400,1330,[-20,160],2100], days:7, hc:0, cmd:0, lab:"Test, unseen · 16–22 Oct 2026 · 7 days"}
+};
+var SITE_CHECKS = [
+  ["Energy balance closes in every interval", "SOC(t+1) = SOC(t) + charge × 0.922 − discharge ÷ 0.922 + regulation energy; residual below tolerance."],
+  ["Power within rating (energy + raise services, charge + lower services)", "Discharge + Regulation raise + Contingency raise ≤ 10 MW, and the same on the charge side."],
+  ["SOC at or above mandatory reserve", "Mandatory reserve is never offered at any price."],
+  ["Meter import ≤ import limit, export ≤ export limit", "Connection limits at the meter, checked on the executed 5-minute dispatch."],
+  ["No MW or MWh allocated twice", "Energy and FCESS never share the same MW or MWh."],
+  ["Information timing: nothing published after 09:00 used", "Every input's publication time is checked against the decision time; AEMO's 09:00 pre-dispatch is left out because it is published after 09:00."]];
+var FLEET_CHECKS = [["Activation cap per contract year", "45 calls for the custom offer, 30 for reference terms."], ["Standby + event ≤ maximum control", "2 h + 2 h within 6 h."], ["Customer battery never below customer reserve", "20% is never discharged."], ["Three-party ledger reconciles to system value", "Transfers sum to 0 across parties."]];
+function pct(a, b){ return (a >= b ? "+" : "−") + nf(Math.abs(a - b) / b * 100, 1) + "%"; }
+function tile(cls, cap, big, sub){ return '<div class="vt-tile ' + cls + '"><div class="cap">' + cap + '</div><div class="vt-big">' + big + '</div><div class="sub">' + sub + "</div></div>"; }
+function chkRows(list, failIdx, scope, extra){
+  var t = '<tr><th>Check</th><th class="n">Result</th><th class="n">Failing</th></tr>';
+  list.forEach(function(c, k){ var f = k === failIdx;
+    t += '<tr class="x' + (f ? " open" : "") + '" data-row="' + k + '"><td>' + c[0] + '</td><td class="n">' + (f ? '<span class="pill bad">Fail</span>' : '<span class="passmark">&#10003; Pass</span>') + '</td><td class="n">' + (f ? scope : "0") + "</td></tr>" +
+      '<tr class="dt' + (f ? " show" : "") + '" data-dt="' + k + '"><td colspan="3">' + c[1] + "</td></tr>"; });
+  return t + (extra || "");
+}
+function bindRows(sel){ $$(sel + " tr.x").forEach(function(tr){ tr.addEventListener("click", function(){ tr.classList.toggle("open"); $(sel + ' tr[data-dt="' + tr.getAttribute("data-row") + '"]').classList.toggle("show"); }); }); }
+
+/* Improve: the adopted dispatch against the frozen v1 baseline, and the price forecast against yesterday's prices */
+function renderCompare(){
+  var v = VAL[S.cper], b = v.q2b, up = b[0] - b[1], max = b[3];
+  var sa = function(x){ return (x < 0 ? "−" : "+") + "A$" + nf(Math.abs(x)); }, ci = sa(b[2][0]) + " to " + sa(b[2][1]), sig = b[2][0] > 0;
+  $("#cmp-hero").innerHTML = '<div class="cap">Adopted dispatch against the frozen v1 baseline · A$ per day</div>' +
+    '<div class="hero-n' + (sig ? "" : " muted") + '">+A$' + nf(up) + '<small>/day · ' + pct(b[0], b[1]) + "</small></div>" +
+    '<p class="sub">95% interval ' + ci + " from a daily bootstrap" + (sig ? "" : '; it includes 0, so <b class="neg">no clear uplift yet</b>') + ".</p>" +
+    '<div class="cmp-bars">' + [["Frozen v1 baseline", b[1], "base"], ["Adopted dispatch", b[0], "on"], ["Perfect price foresight · unattainable reference", b[3], "ref"]].map(function(x){
+      return '<div class="cb ' + x[2] + '"><span>' + x[0] + '</span><i style="width:' + (x[1] / max * 100) + '%"></i><b>A$' + nf(x[1]) + "</b></div>"; }).join("") + "</div>" +
+    '<p class="scope"><b>Scope</b> ' + v.lab + " · same days, same prices · includes the network bill saving on a synthetic factory load · run R‑0142 · values illustrative." + (S.cper === "ins" ? " In-sample: used for training and selection, so not evidence of out-of-sample uplift." : "") + "</p>";
+  var a = v.q2a;
+  $("#cmp-q2a").innerHTML = '<table class="tbl"><tr><th>Price forecast · metric</th><th class="n">Model</th><th class="n">Baseline</th><th class="n">Change</th></tr>' +
+    '<tr><td>Energy price · MAE, A$/MWh<div class="sub">baseline: yesterday\'s prices</div></td><td class="n">' + a[0][0] + '</td><td class="n">' + a[0][1] + '</td><td class="n">' + pct(a[0][0], a[0][1]) + "</td></tr>" +
+    '<tr><td>Energy 17:00–21:00 · MAE, A$/MWh</td><td class="n">' + a[1][0] + '</td><td class="n">' + a[1][1] + '</td><td class="n">' + pct(a[1][0], a[1][1]) + "</td></tr>" +
+    '<tr><td>Spike ≥ A$200 · Brier score<div class="sub">baseline: 28-day frequency</div></td><td class="n">' + nf(a[2][0], 3) + '</td><td class="n">' + nf(a[2][1], 3) + '</td><td class="n">' + pct(a[2][0], a[2][1]) + "</td></tr></table>" +
+    '<p class="foot">Lower is better. A lower MAE is not an accuracy percentage. ' + v.lab + ". Values illustrative.</p>";
+}
+
+/* Prove, site battery: hard constraints with their scope, how much test evidence there is */
+function renderSValid(){
+  var v = VAL[S.per], hh = v.days * 48;
+  var nt = $("#val-note"); nt.classList.remove("w", "i", "p"); if (v.note[0]) nt.classList.add(v.note[0]); nt.textContent = v.note[1];
+  $("#sv-tiles").innerHTML =
+    tile(v.hc ? "bad" : "ok", "Hard limits · replayed dispatch", v.hc ? v.hc + " violation" : "0 violations", nf(hh) + " half-hours · " + v.lab + " · run R‑0142" + (v.cmd ? " · CMD exceeded at times (economic limit, priced in the bill)" : "")) +
+    tile("w", "Out-of-sample evidence", "114 test days", "107 seen during development, 7 never inspected · no Hot Season yet") +
+    tile("ok", "Information timing", "All by 09:00", "every input was published before the decision · " + v.lab + " · run R‑0142");
+  /* the CMD is an economic limit: going over it costs money in the network bill, it is not a breach of the connection */
+  $("#val-checks").innerHTML = chkRows(SITE_CHECKS, v.hc ? 3 : -1, v.hc + " of " + nf(hh) + " half-hours",
+    '<tr class="x' + (v.cmd ? " open" : "") + '" data-row="cmd"><td>Site import ≤ CMD 9 MW <span class="sub">economic limit</span></td><td class="n">' + (v.cmd ? '<span class="pill warn">Exceeded</span>' : '<span class="passmark">&#10003; Held</span>') + '</td><td class="n">' + (v.cmd ? "at times" : "0") + "</td></tr>" +
+    '<tr class="dt' + (v.cmd ? " show" : "") + '" data-dt="cmd"><td colspan="3">' + (v.cmd ? "Actual factory load ran above the forecast, and the battery could not always hold import under 9 MW. The extra demand charge is counted in the result." : "Import stayed at or below the contract maximum demand.") + "</td></tr>");
+  bindRows("#val-checks");
+}
+
+/* Prove, customer fleet: customer constraints, Hot Season holdouts, the forward test still to come */
+function renderFValid(){
+  var r = evalOffer("custom", RUN.scen);
+  $("#fv-tiles").innerHTML =
+    tile("ok", "Customer constraints", "0 violations", "activation cap, control time, customer reserve · contract year 2025-26 replay · " + RUN.scen + " · run R‑0142") +
+    tile("w", "Hot Season holdouts", "3 seasons", "only holding out 2025-26 is chronological; the others train on later seasons") +
+    tile("w", "Forward test", "Not yet", "first in the 2026-27 Hot Season, 1 Dec 2026 – 31 Mar 2027");
+  var t = '<table class="tbl"><tr><th>Held out</th><th class="n">Calls</th><th class="n">Peak days</th><th class="n">Zenith</th></tr>';
+  SEASONS.forEach(function(sn, k){ t += "<tr><td>" + sn + '<div class="sub">' + (CHRON[k] ? "chronological" : "not chronological") + '</div></td><td class="n">' + r.seasonCalls[k] + '</td><td class="n">' + r.peaks[k] + ' of 4</td><td class="n' + (r.seasonZ[k] < 0 ? " neg" : "") + '">' + aud(r.seasonZ[k]) + "</td></tr>"; });
+  $("#fv-hold").innerHTML = t + '</table><p class="foot">Custom offer, ' + SCN[RUN.scen].label + " (hypothetical) · run R‑0142 · values illustrative.</p>";
+  $("#fv-checks").innerHTML = chkRows(FLEET_CHECKS, -1, "");
+  bindRows("#fv-checks");
+}
+
+/* ---------- Configuration ---------- */
+var PRESET = {model:{pay:85, evp:0, fee:0, cap:45, ev:"2", sb:"2", mx:6, res:20, tag:"MODEL SUGGESTION", cls:"src md", note:"Research policy C from the in-sample sweep. The payment level follows an assumed participation curve and must come from a pilot. Not a contract."},
+              ref:{pay:70, evp:0, fee:0, cap:30, ev:"2", sb:"2", mx:6, res:20, tag:"REFERENCE TERMS", cls:"src rf", note:"Public Synergy Battery Rewards terms used for comparison. Not a Zenith tariff and not a contract."}};
+function fillConfig(){
+  $$("[data-k]").forEach(function(el){ var k = el.getAttribute("data-k"); if (IN[k] != null) el.value = IN[k]; });
+  var p = PRESET[IN.start]; $("#c-start-tag").className = p.cls; $("#c-start-tag").textContent = p.tag; $("#c-start-note").textContent = p.note;
+  $$(".sc").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-sc") === IN.scen); b.setAttribute("aria-checked", b.getAttribute("data-sc") === IN.scen ? "true" : "false"); });
+}
+function checks(){
+  var L = [], blocking = false, changed = false;
+  Object.keys(DEF).forEach(function(k){ if (String(IN[k]) !== String(DEF[k])) changed = true; });
+  var ev = +IN.ev, sb = +IN.sb, mx = +IN.mx;
+  if (ev + sb > mx) { blocking = true; L.push(["b", "Standby + event = " + (ev + sb) + " h is longer than the maximum control " + mx + " h. Blocking: the offer is infeasible.", "c-mx"]); }
+  else L.push(["ok", "Standby + event = " + (ev + sb) + " h, within the maximum control " + mx + " h."]);
+  if (+IN.res < 0 || +IN.res >= 100) { blocking = true; L.push(["b", "Customer reserve must be at least 0% and below 100%. Blocking.", "c-res"]); }
+  if (+IN.cap < 1) { blocking = true; L.push(["b", "Annual cap must be at least 1.", "c-cap"]); }
+  else if (+IN.cap < 45) L.push(["w", "Annual cap " + IN.cap + " may run out before late peak days in a heavy season (research: caps of 30 or less failed in 2023-24)."]);
+  if (String(IN.exp) !== String(DEF.exp)) L.push(["i", "Export limit " + IN.exp + " MW recomputes the own-battery day, labelled unvalidated scenario."]);
+  var pc = planCheck(); if (pc.fails.length) L.push(["w", "Today's plan exports more than " + IN.exp + " MW in " + pc.bad.length + " half-hours, so the plan is blocked until it is recomputed."]);
+  if (IN.scen === "S2b") L.push(["i", "S2b uses an assumed future rule; results are not current revenue."]);
+  L.push(["i", "Site load is synthetic. The network bill saving depends on it."]);
+  return {list:L, blocking:blocking, changed:changed};
+}
+function renderConfig(){
+  var c = checks();
+  $("#c-checks").innerHTML = c.list.map(function(x){ var g = {ok:"&#10003;", w:"!", b:"!", u:"?", i:"i"}[x[0]]; return '<li><span class="ci ' + x[0] + '">' + g + "</span><span>" + x[1] + "</span></li>"; }).join("");
+  $$(".f").forEach(function(f){ f.classList.remove("err"); });
+  c.list.forEach(function(x){ if (x[2]) { var el = document.getElementById(x[2]), f = el && el.closest(".f"); if (f) f.classList.add("err"); } });
+}
+function refreshRun(){
+  var c = checks(), run = $("#run"), pri = $("#pri"), t, sub, cls;
+  document.body.classList.toggle("stale", c.changed);
+  if (c.blocking) { cls = "bad"; t = "Inputs blocked"; sub = "fix them in Settings"; pri.textContent = "Recompute"; pri.disabled = true; }
+  else if (c.changed) { cls = "stale"; t = "Results stale"; sub = "inputs changed since R‑0142"; pri.textContent = "Recompute"; pri.disabled = false; }
+  else { cls = "ok"; t = "Results up to date"; sub = "run R‑0142"; pri.textContent = "Save run"; pri.disabled = false; }
+  run.className = "run " + cls; $("#run-t").textContent = t; $("#run-s").textContent = sub;
+  $("#strip-st").classList.toggle("show", c.changed);
+  $("#st-text").textContent = (c.blocking ? "Inputs changed and blocked by the input check. " : "Inputs changed. ") + "The results shown are from run R‑0142 with the previous inputs.";
+  $("#strip-nc").classList.toggle("show", S.nc && c.changed);
+}
+
+/* ---------- shell ---------- */
+/* two assets, each read as Decide → Improve → Prove; settings sit apart */
+var HOME = "plan", ALIAS = {schedule:"plan", forecast:"plan", activation:"calls", validation:"svalid"};
+var SCREENS = {
+  plan:{t:"Today's plan", chips:[["step","1 · Decide"],["","In-sample"]], ctx:function(){ return document.getElementById("plan-dec") ? "Wed 14 Jan 2026 · trading day 08:00–08:00 AWST · plan 09:00" : "Site battery · Wed 14 Jan 2026 · trading day 08:00–08:00 AWST · plan issued 09:00 with information available at 09:00"; }},
+  compare:{t:"Compare with the baseline", chips:[["step","2 · Improve"]], ctx:function(){ return "Site battery · the adopted dispatch against the frozen v1 baseline on the same days and prices"; }},
+  svalid:{t:"Validation · site battery", chips:[["step","3 · Prove"]], ctx:function(){ return "Training and selection used in-sample data only (to 30 Jun 2026). Test results are reported, never used to choose."; }},
+  calls:{t:"Tonight's call", chips:[["step","1 · Decide"],["","In-sample"],["","Hot Season 2025-26"]], ctx:function(){ return "Customer fleet · as of " + dayName(S.day, true) + ", 09:00 AWST · " + OFF[S.offer].short + " · Scenario " + SCN[RUN.scen].label + " (hypothetical)"; }},
+  value:{t:"Value by party", chips:[["step","2 · Improve"]], ctx:function(){ return "Customer fleet · incremental profit = Profit(Zenith + customer fleet) − Profit(Zenith only). Customer baseline: the same battery in normal self-use. Compensation is a transfer."; }},
+  fvalid:{t:"Validation · customer fleet", chips:[["step","3 · Prove"]], ctx:function(){ return "Hot Season holdouts and customer constraints. The capacity value has no forward test until the 2026-27 Hot Season."; }},
+  config:{t:"Settings", chips:[], ctx:function(){ return "Inputs for the next run. Any change marks the results stale until they are recomputed."; }}
+};
+function header(){
+  var sc = SCREENS[S.screen];
+  $("#ph-title").textContent = sc.t;
+  $("#ph-chips").innerHTML = sc.chips.map(function(c){ return '<span class="chip ' + c[0] + '">' + c[1] + "</span>"; }).join("");
+  $("#ph-ctx").textContent = sc.ctx();
+  var dd = S.screen === "calls" ? S.day : TODAY;
+  $("#fb-day").textContent = dayName(dd, true);
+  $("#mast-day").textContent = new Date(Date.UTC(2025, 11, 1 + dd)).toLocaleDateString("en-AU", {weekday:"long", day:"numeric", month:"long", year:"numeric", timeZone:"UTC"}).replace(",", "");
+  document.body.setAttribute("data-screen", S.screen);
+}
+function render(){
+  if (tipEl) tipHide();
+  header();
+  if (S.screen === "plan") renderPlan();
+  if (S.screen === "compare") renderCompare();
+  if (S.screen === "svalid") renderSValid();
+  if (S.screen === "calls") renderActivation();
+  if (S.screen === "value") renderValue();
+  if (S.screen === "fvalid") renderFValid();
+  if (S.screen === "config") renderConfig();
+  refreshRun();
+}
+function go(name){
+  name = ALIAS[name] || name;
+  if (!SCREENS[name] || !document.getElementById("s-" + name)) name = HOME;
+  S.screen = name;
+  $$(".screen").forEach(function(s){ s.classList.toggle("on", s.id === "s-" + name); });
+  $$(".nav").forEach(function(b){ var on = b.getAttribute("data-go") === name; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+  /* the asset switch and its row of pages are on when they list the open page */
+  $$("[data-grp]").forEach(function(e){ e.classList.toggle("on", e.getAttribute("data-grp").split(" ").indexOf(name) >= 0); });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+  render(); window.scrollTo(0, 0);
+}
+/* delegated, so links drawn later (for example inside a summary tile) work too */
+document.addEventListener("click", function(e){ var b = e.target && e.target.closest ? e.target.closest("[data-go]") : null; if (b) go(b.getAttribute("data-go")); });
+function segBind(attr, key, after){
+  $$("[" + attr + "]").forEach(function(b){ b.addEventListener("click", function(){
+    S[key] = b.getAttribute(attr);
+    $$("[" + attr + "]").forEach(function(o){ o.classList.toggle("on", o.getAttribute(attr) === S[key]); });
+    if (after) after(); render(); }); });
+}
+function setReveal(v){ S.revealed = v; $$("[data-po]").forEach(function(o){ o.classList.toggle("on", o.getAttribute("data-po") === (v ? "outcome" : "plan")); }); $$(".po-out").forEach(function(e){ e.hidden = !v; }); $$("[data-po] .lk").forEach(function(e){ e.style.display = v ? "none" : ""; }); }
+$$("[data-po]").forEach(function(b){ b.addEventListener("click", function(){ setReveal(b.getAttribute("data-po") === "outcome"); render(); }); });
+function bindReveal(root){ $$("[data-reveal]").forEach(function(b){ if (root.contains(b)) b.addEventListener("click", function(){ setReveal(true); render(); }); }); }
+segBind("data-view", "view"); segBind("data-vscen", "vscen"); segBind("data-per", "per"); segBind("data-cper", "cper");
+$("#day-prev").addEventListener("click", function(){ S.day = Math.max(0, S.day - 1); render(); });
+$("#day-next").addEventListener("click", function(){ S.day = Math.min(DAYS - 1, S.day + 1); render(); });
+$$("[data-k]").forEach(function(el){ el.addEventListener("change", function(){
+  var k = el.getAttribute("data-k"); IN[k] = el.type === "number" ? (el.value === "" ? "" : +el.value) : el.value;
+  if (k === "start") { var p = PRESET[el.value]; ["pay","evp","fee","cap","ev","sb","mx","res"].forEach(function(q){ IN[q] = p[q]; }); fillConfig(); }
+  S.nc = false; render(); }); });
+$$(".sc").forEach(function(b){ b.addEventListener("click", function(){ IN.scen = b.getAttribute("data-sc"); fillConfig(); S.nc = false; render(); }); });
+$("#revert").addEventListener("click", function(){ IN = JSON.parse(JSON.stringify(DEF)); S.nc = false; fillConfig(); render(); toast("Inputs reverted to run R‑0142. Results are up to date again."); });
+$("#nc-close").addEventListener("click", function(){ S.nc = false; refreshRun(); });
+$("#pri").addEventListener("click", function(){
+  if (checks().changed) { S.nc = true; refreshRun(); return; }
+  toast("Prototype: Save is not implemented. The MVP stores inputs, versions and results under a new run ID.");
+});
+$("#exp-all").addEventListener("click", function(){ toast(checks().changed ? "Export is off while results are stale." : "Prototype: export is not implemented. The MVP writes a readable report and CSV files for the open run, each headed with the run ID, period and HISTORICAL REPLAY."); });
+var toastT;
+function toast(m){ var t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove("show"); }, 4500); }
+var rzT;
+window.addEventListener("resize", function(){ clearTimeout(rzT); rzT = setTimeout(render, 150); });
+/* redraw a chart as soon as its box changes size (layout settling, sidebar, fonts); a filling box also tracks height */
+if (window.ResizeObserver) {
+  var boxSize = {}, ro = new ResizeObserver(function(entries){
+    var changed = false;
+    entries.forEach(function(e){
+      var key = Math.round(e.contentRect.width) + "x" + (e.target.hasAttribute("data-fill") ? Math.round(e.contentRect.height) : 0);
+      if (boxSize[e.target.id] !== undefined && boxSize[e.target.id] !== key) changed = true;
+      boxSize[e.target.id] = key;
+    });
+    if (changed) requestAnimationFrame(render);
+  });
+  ["#sch-chart", "#act-chart", "#act-dem"].forEach(function(q){ var el = document.querySelector(q); if (el) ro.observe(el); });
+}
+document.addEventListener("keydown", function(e){
+  if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  var dl = e.key === "ArrowRight" ? 1 : (e.key === "ArrowLeft" ? -1 : 0); if (!dl) return;
+  if (S.screen === "plan") { S.sel = Math.max(0, Math.min(N - 1, S.sel + dl)); renderPlan(); e.preventDefault(); }
+  if (S.screen === "calls") { S.day = Math.max(0, Math.min(DAYS - 1, S.day + dl)); render(); e.preventDefault(); }
+});
+
+/* ---------- chart interactions: hover table, legend switches, CSV ---------- */
+function rng(lo, hi){ return lo == null ? "not issued" : "A$" + nf(lo) + "–" + nf(hi); }
+var TIPS = {
+  pw:function(k){
+    var v = P.dis[k] - P.chg[k], r = [["dsh", "var(--price)", "Price forecast", P.price[k] == null ? "not issued" : "A$" + nf(P.price[k]) + "/MWh"], ["", "", "P10–P90", rng(P.lo[k], P.hi[k])],
+      ["", "", "Chance of A$200 or more", P.pspike[k] == null ? "not issued" : nf(P.pspike[k] * 100) + "%"]];
+    if (S.revealed) r.push(["ln", "var(--price)", "Actual price", "A$" + nf(P.actual[k]) + "/MWh"]);
+    r.push(["sq", "var(--" + (v < 0 ? "chg" : "dis") + ")", "Scheduled power", (v > 0 ? "+" : (v < 0 ? "−" : "")) + nf(Math.abs(v), 1) + " MW"]);
+    if (offerAt(k)) r.push(["bar-c", "", "Conditional offer", "+" + nf(offerAt(k).mw, 1) + " MW from A$" + offerAt(k).price]);
+    return {h:hhmm(k) + "–" + hhmm(k + 1), s:doing(k), r:r};
+  },
+  day:function(k){
+    var v = P.dis[k] - P.chg[k], r = [["sq", "var(--" + (v < 0 ? "chg" : "dis") + ")", "Scheduled power", (v > 0 ? "+" : (v < 0 ? "−" : "")) + nf(Math.abs(v), 1) + " MW"]];
+    if (offerAt(k)) r.push(["off", "", "Conditional offer", "+" + nf(offerAt(k).mw, 1) + " MW if ≥ A$" + offerAt(k).price]);
+    r.push(["sq", "color-mix(in srgb,var(--cr) 45%,var(--surface))", "FCESS standby", "raise " + nf(P.rr[k] + P.cr[k], 1) + " · lower " + nf(P.rl[k] + P.cl[k], 1) + " MW"]);
+    r.push(["dsh", "var(--price)", "Price forecast", P.price[k] == null ? "not issued" : "A$" + nf(P.price[k]) + "/MWh"], ["", "", "P10–P90", rng(P.lo[k], P.hi[k])],
+      ["", "", "Chance of A$200 or more", P.pspike[k] == null ? "not issued" : nf(P.pspike[k] * 100) + "%"]);
+    if (S.revealed) r.push(["ln", "var(--price)", "Actual price", "A$" + nf(P.actual[k]) + "/MWh"]);
+    return {h:hhmm(k) + "–" + hhmm(k + 1), s:doing(k), r:r};
+  },
+  soc:function(k){
+    var r = [];
+    if (k >= 2) r.push(["dsh", "var(--soc)", "Planned", nf(SOC[k], 1) + " → " + nf(SOC[k + 1], 1) + " MWh"]);
+    if (k < 2 || S.revealed) r.push(["area", "var(--soc)", "Actual", nf(SOCOUT[k], 1) + " → " + nf(SOCOUT[k + 1], 1) + " MWh"]);
+    r.push(["", "", "Reserve floor", nf(FLOOR[k], 1) + " MWh"]);
+    return {h:hhmm(k) + "–" + hhmm(k + 1), s:doing(k), r:r};
+  },
+  dem:function(k){
+    var d = S.day, dec = S.view === "decision", r = [["dsh", "var(--peak)", "Forecast", nf(demDay(d, false)[k]) + " MW"]];
+    if (!dec) r.push(["ln", "var(--peak)", "Actual · hindsight", nf(demDay(d, true)[k]) + " MW"]);
+    r.push(["", "", "Call threshold", nf(run4(d) - OFF[S.offer].tol) + " MW"]);
+    if (callWin(d) && k >= 19 && k < 23) r.push(["sq", "var(--cust)", "Customer batteries", "called"]);
+    return {h:hhmm(k) + "–" + hhmm(k + 1), s:dayName(d, true), r:r};
+  },
+  act:function(d){
+    var o = OFF[S.offer], dec = S.view === "decision", calls = callsOf(o), r = [];
+    if (dec && d > S.day) return {h:dayName(d, true), s:"Not yet known at 09:00 on " + dayName(S.day).replace(/^\w+ /, ""), r:[]};
+    if (dec && d === S.day) r.push(["dsh", "var(--peak)", "Forecast daily peak", nf(fcPeak(d)) + " MW"]);
+    else r.push(["sq", o.flags.indexOf(d) >= 0 ? "var(--peak)" : "var(--bar)", "Daily peak demand", nf(ACT[d]) + " MW"]);
+    r.push(["", "", "Flagged by the call rule", o.flags.indexOf(d) >= 0 ? "Yes" : "No"]);
+    r.push(["", "", "Called", calls.indexOf(d) >= 0 ? "Yes" : "No"]);
+    if (!dec) r.push(["", "", "Official peak day · hindsight", PEAK.indexOf(d) >= 0 ? "Yes" : "No"]);
+    return {h:dayName(d, true), s:dec ? (d === S.day ? "Today · decided at 09:00" : "Known by 09:00") : "Season review · hindsight", r:r};
+  }
+};
+var tipEl = null, tipKey = "";
+function tipShow(svg, k, ev){
+  var name = svg.getAttribute("data-tip"), f = TIPS[name]; if (!f) return;
+  if (!tipEl) { tipEl = document.createElement("div"); tipEl.className = "ctip"; tipEl.setAttribute("role", "tooltip"); document.body.appendChild(tipEl); }
+  if (tipKey !== name + k) {
+    var t = f(k); tipKey = name + k;
+    tipEl.innerHTML = '<div class="ct-h"><b>' + t.h + "</b>" + (t.s ? "<span>" + t.s + "</span>" : "") + "</div>" + (t.r.length ? "<table>" + t.r.map(function(r){ return "<tr><td>" + (r[0] ? swatch(r[0], r[1]) : "") + "</td><td>" + r[2] + '</td><td class="n">' + r[3] + "</td></tr>"; }).join("") + "</table>" : "");
+  }
+  tipEl.style.display = "block";
+  var w = tipEl.offsetWidth, h = tipEl.offsetHeight, x = ev.clientX + 16, y = ev.clientY + 14;
+  if (x + w > window.innerWidth - 8) x = ev.clientX - w - 16;
+  if (y + h > window.innerHeight - 8) y = Math.max(8, ev.clientY - h - 14);
+  tipEl.style.left = x + "px"; tipEl.style.top = y + "px";
+  /* the crosshair follows on every chart that shares this time axis */
+  $$('svg[data-xg="' + svg.getAttribute("data-xg") + '"]').forEach(function(g){
+    var xh = g.querySelector(".xh"); if (!xh) return;
+    var cx = (+g.getAttribute("data-x0") + (k + 0.5) * +g.getAttribute("data-iw")).toFixed(1);
+    xh.setAttribute("x1", cx); xh.setAttribute("x2", cx); xh.style.visibility = "visible";
+  });
+}
+function tipHide(){ if (tipEl) tipEl.style.display = "none"; tipKey = ""; $$(".xh").forEach(function(l){ l.style.visibility = "hidden"; }); }
+document.addEventListener("mousemove", function(e){
+  var hit = e.target && e.target.closest ? e.target.closest(".hit") : null, svg = hit && hit.closest("svg[data-tip]");
+  if (!svg) { if (tipKey || (tipEl && tipEl.style.display === "block")) tipHide(); return; }
+  tipShow(svg, +(hit.getAttribute("data-i") || hit.getAttribute("data-d")), e);
+});
+window.addEventListener("scroll", tipHide, true);
+
+/* CSV of exactly what the chart shows: no actuals before they are revealed, no future days in the decision view */
+function isoDay(d){ return new Date(Date.UTC(2025, 11, 1 + d)).toISOString().slice(0, 10); }
+function csvDownload(kind){
+  if (document.body.classList.contains("stale")) { toast("Export is off while results are stale."); return; }
+  var rev = S.revealed, head, rows = [], name, meta, k;
+  if (kind === "day") {
+    head = ["interval_start", "interval_end", "price_forecast_p50_aud_per_mwh", "price_p10_aud_per_mwh", "price_p90_aud_per_mwh", "discharge_mw", "conditional_offer_mw", "offer_floor_aud_per_mwh", "charge_mw", "soc_start_mwh", "soc_end_mwh", "reserve_floor_mwh"].concat(rev ? ["price_actual_aud_per_mwh", "soc_end_actual_mwh"] : []);
+    for (k = 0; k < N; k++) rows.push([hhmm(k), hhmm(k + 1), P.price[k], P.lo[k], P.hi[k], P.dis[k], offerAt(k) ? offerAt(k).mw : 0, offerAt(k) ? offerAt(k).price : null, P.chg[k], SOC[k], SOC[k + 1], FLOOR[k]].concat(rev ? [P.actual[k], SOCOUT[k + 1]] : []));
+    name = "R-0142_plan_2026-01-14"; meta = "trading day 14 Jan 2026 08:00-08:00 AWST, plan issued 09:00" + (rev ? " | includes revealed actuals" : "");
+  } else {
+    var o = OFF[S.offer], dec = S.view === "decision", calls = callsOf(o);
+    head = ["date", "daily_peak_mw", "peak_is_forecast", "flagged", "called"].concat(dec ? [] : ["official_peak_day_hindsight"]);
+    for (var d = 0; d < DAYS; d++) { if (dec && d > S.day) break;
+      rows.push([isoDay(d), dec && d === S.day ? fcPeak(d) : ACT[d], dec && d === S.day ? "yes" : "no", o.flags.indexOf(d) >= 0 ? "yes" : "no", calls.indexOf(d) >= 0 ? "yes" : "no"].concat(dec ? [] : [PEAK.indexOf(d) >= 0 ? "yes" : "no"])); }
+    name = "R-0142_calls_" + (dec ? "as_of_" + isoDay(S.day) : "season_review_hindsight"); meta = "Hot Season 2025-26, " + o.short + ", scenario " + SCN[RUN.scen].label;
+  }
+  var txt = "# Run R-0142 | HISTORICAL REPLAY | ILLUSTRATIVE placeholder values from the design prototype | " + meta + "\n" + head.join(",") + "\n" +
+    rows.map(function(r){ return r.map(function(v){ return v == null ? "" : (typeof v === "number" ? String(+v.toFixed(3)) : v); }).join(","); }).join("\n") + "\n";
+  var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], {type:"text/csv"})); a.download = name + ".csv";
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast("Downloaded " + name + ".csv. Illustrative values.");
+}
+$$(".ctools[data-csv]").forEach(function(t){
+  t.innerHTML = '<button class="ib" data-csvdl="' + t.getAttribute("data-csv") + '" title="Download CSV" aria-label="Download CSV"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7L8 10.5 11.5 7M2.5 12.5v1.5h11v-1.5"/></svg></button>';
+});
+document.addEventListener("click", function(e){
+  var t = e.target && e.target.closest ? e.target : null; if (!t) return;
+  var b = t.closest("[data-lg]"); if (b) { var key = b.getAttribute("data-lg"); HID[key] = !HID[key]; tipHide(); render(); return; }
+  var c = t.closest("[data-csvdl]"); if (c) { csvDownload(c.getAttribute("data-csvdl")); return; }
+  var sc = t.closest("[data-scroll]"); if (sc) { e.preventDefault(); var to = document.getElementById(sc.getAttribute("href").slice(1)); if (to && to.scrollIntoView) to.scrollIntoView({behavior:"smooth", block:"start"}); return; }
+  if (t.closest("[data-inspect]")) { var pc = planCheck(); if (pc.bad.length) S.sel = pc.bad[0]; renderPlan(); var el = document.getElementById("sch-chart"); if (el && el.scrollIntoView) el.scrollIntoView({block:"center"}); }
+});
+
+/* style options: design review only, not part of the product; keeps the open screen */
+$$(".sty a[data-to]").forEach(function(a){ a.addEventListener("click", function(e){ e.preventDefault(); location.href = a.getAttribute("data-to") + location.hash; }); });
+
+fillConfig();
+setReveal(false);
+go((location.hash || "#" + HOME).slice(1));
+})();
+</script>
+</body>
+</html>

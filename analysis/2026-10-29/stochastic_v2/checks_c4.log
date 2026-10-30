@@ -1,0 +1,4 @@
+570 days, 0 without scenarios
+C4 future scrambled (sp): PASS - largest move before t 0.00e+00 over 15 (day, t); positive controls moved: planted leak 15/15, interval before t 8/15
+C4 future scrambled (cvar): PASS - largest move before t 0.00e+00 over 15 (day, t); positive controls moved: planted leak 14/15, interval before t 9/15
+2/2 pass

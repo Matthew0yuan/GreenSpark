@@ -1,0 +1,89 @@
+<!--@PROTO-->
+<div class="proto" role="note">Design prototype - historical replay <small>Site battery plan: the model's own output for one trading day. Evidence, Call and Value: illustrative placeholders.</small></div>
+<!--@/PROTO-->
+
+<!--@WHO--><details class="who"><summary>Who is who</summary><div class="chips" id="who-line"></div></details><!--@/WHO-->
+
+<!--@STRIPS-->
+<div class="strip st" id="strip-st" role="status"><span id="st-text">Inputs changed. The results shown are from run R‑0142 with the previous inputs.</span><span class="sp"></span><button class="btn sm" id="revert">Revert inputs</button></div>
+<!--@/STRIPS-->
+
+<!--@RUN--><div class="run ok" id="run" role="status" aria-live="polite"><i></i><span id="run-t">Up to date</span><small id="run-s">run R‑0142</small></div><!--@/RUN-->
+<!--@PRI--><button class="btn" id="exp-all">Export</button><button class="btn pri" id="pri">Save run</button><!--@/PRI-->
+<!--@LOCK--><svg class="lk" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="4.5" width="6" height="4.5" rx="1"/><path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5"/></svg><!--@/LOCK-->
+<!--@PO_SEG--><div class="seg" role="group" aria-label="Plan or outcome"><button data-po="plan">Plan only</button><button data-po="outcome" class="on">Plan + what happened</button></div><!--@/PO_SEG-->
+
+<!--@ASSET_SW-->
+<div class="asset-sw" role="group" aria-label="Asset"><button data-go="plan" data-grp="plan evidence">Site battery<small>10 MW / 40 MWh</small></button><button data-go="calls" data-grp="calls value" tabindex="0" data-note="Batteries owned by Zenith's business customers, at their sites, called as one virtual power plant (VPP). Zenith pays for each call and has a yearly cap on calls.">Customer fleet<small>customer batteries (VPP)</small></button></div>
+<!--@/ASSET_SW-->
+<!--@PAGES_SITE--><button class="nav" data-go="plan">Plan<span class="dot" aria-hidden="true"></span></button><button class="nav" data-go="evidence" data-dep="1">Evidence<span class="dot" aria-hidden="true"></span></button><!--@/PAGES_SITE-->
+<!--@PAGES_FLEET--><button class="nav" data-go="calls" data-dep="1">Call<span class="dot" aria-hidden="true"></span></button><button class="nav" data-go="value" data-dep="1">Value<span class="dot" aria-hidden="true"></span></button><!--@/PAGES_FLEET-->
+<!--@GEAR--><button class="gear" data-go="config" data-grp="config" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><!--@/GEAR-->
+
+<!--@PLAN_KPIS-->
+<div class="kpi"><div class="cap">Expected net value</div><div class="kv" id="k-net"></div><div class="ks" id="k-net-s"></div></div>
+<div class="kpi"><div class="cap">Evening discharge</div><div class="kv" id="k-dis"></div><div class="ks" id="k-dis-s"></div></div>
+<div class="kpi"><div class="cap">Constraints</div><div class="kv" id="k-con"></div><div class="ks" id="k-con-s"></div></div>
+<!--@/PLAN_KPIS-->
+<!--@PLAN_CTA--><div class="cta"><a class="btn" href="#plan-detail" data-scroll>Dispatch detail ↓</a><button class="btn" data-go="evidence">Against the baseline →</button></div><!--@/PLAN_CTA-->
+
+<!--@PER_TOOLS-->
+<span class="lbl">Period</span><div class="seg" role="group" aria-label="Period"><button data-per="ins" class="on">In-sample · 456 d</button><button data-per="tseen">Test, seen · 107 d</button><button data-per="tnew">Test, unseen · 7 d</button></div>
+<!--@/PER_TOOLS-->
+<!--@CPER_TOOLS-->
+<span class="lbl">Period</span><div class="seg" role="group" aria-label="Period"><button data-cper="ins">In-sample · 456 d</button><button data-cper="tseen" class="on">Test, seen · 107 d</button><button data-cper="tnew">Test, unseen · 7 d</button></div>
+<!--@/CPER_TOOLS-->
+<!--@V_LEDGER--><details class="fold"><summary>Ledger by party <span class="sub" id="v-ledger-sub"></span></summary><table class="tbl" id="v-ledger"></table><p class="foot" id="v-ledger-foot"></p></details><!--@/V_LEDGER-->
+
+<!--@ACT_TOOLS-->
+<div class="seg" role="group" aria-label="View"><button data-view="decision" class="on">Decision view</button><button data-view="review">Season review · hindsight</button></div>
+<span class="lbl">Day</span><span class="daystep"><button class="btn sm" id="day-prev" aria-label="Previous day">&#8249;</button><span id="day-label"></span><button class="btn sm" id="day-next" aria-label="Next day">&#8250;</button></span>
+<!--@/ACT_TOOLS-->
+<!--@ACT_FOOT-->Bars: daily peak demand on past days; today, the AEMO forecast issued before 09:00. Capacity value is settled once per season, so it is not known at 09:00. Illustrative.<!--@/ACT_FOOT-->
+<!--@MONEY_FOOT--><p class="foot">Plan: expected at 09:00. What happened: the same plan replayed at the prices that actually occurred, known only afterwards.</p><!--@/MONEY_FOOT-->
+
+<!--@VAL_TOOLS-->
+<span class="lbl">Scenario</span><div class="seg" role="group" aria-label="Commercial scenario"><button data-vscen="S2b" class="on">S2b · Retailer, 2027 Peak IRCR</button></div>
+<span class="sub">S1 (energy only) and S2a (current IRCR rule) give no business case for either offer.</span>
+<!--@/VAL_TOOLS-->
+
+<!--@CFG_OFFER-->
+<div class="f"><label for="c-start">Start from</label><div class="fc"><select id="c-start" data-k="start"><option value="model">Model suggestion</option><option value="ref">Reference terms</option></select></div><span class="src md" id="c-start-tag">MODEL SUGGESTION</span></div>
+<p class="foot" id="c-start-note" style="margin:2px 0 6px"></p>
+<div class="f"><label for="c-pay">Payment per kWh the customer exports during a call</label><div class="fc"><input id="c-pay" type="number" step="1" data-k="pay"><span class="u">c/kWh</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-evp">Payment per call, per responding customer (on top of the kWh payment)</label><div class="fc"><input id="c-evp" type="number" step="0.5" data-k="evp"><span class="u">A$</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-fee">Fixed payment to each enrolled customer, per year</label><div class="fc"><input id="c-fee" type="number" step="10" data-k="fee"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-cap">Calls per contract year, cap</label><div class="fc"><input id="c-cap" type="number" step="1" data-k="cap"><span class="u">calls</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-ev">Call length</label><div class="fc"><select id="c-ev" data-k="ev"><option>1</option><option>2</option><option>3</option><option>4</option></select><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-sb">Hold charge before the call</label><div class="fc"><select id="c-sb" data-k="sb"><option>1</option><option>2</option></select><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-mx">Max hours Zenith may control a battery per call (hold charge + call)<span class="src rf">REF</span></label><div class="fc"><input id="c-mx" type="number" step="1" data-k="mx"><span class="u">h</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-res">Customer floor: share of each battery never discharged</label><div class="fc"><input id="c-res" type="number" step="5" data-k="res"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-win">Call window (an assumption of this model, not a market rule)</label><div class="fc"><select id="c-win" data-k="win"><option>17:30–19:30</option><option>17:00–19:00</option><option>18:00–20:00</option></select><span class="u">AWST</span></div><span class="sup ok">Recomputes</span></div>
+<!--@/CFG_OFFER-->
+
+<!--@CFG_SCEN-->
+<div class="scen4" role="radiogroup" aria-label="Commercial scenario">
+  <button class="sc" data-sc="S1" role="radio"><b>S1 · energy only</b> <span class="chip hyp">Hypothetical</span><p>Zenith only sells the customers' extra export at the wholesale price. No capacity value.</p></button>
+  <button class="sc" data-sc="S2a" role="radio"><b>S2a · today's capacity rule</b> <span class="chip">Current rule</span><p>A customer's export counts as zero demand in the 12 peak half-hours, so calls barely lower the capacity charge.</p></button>
+  <button class="sc on" data-sc="S2b" role="radio"><b>S2b · assumed 2027 capacity rule</b> <span class="chip fut">Assumed future rule</span><p>A customer's export counts against the peak. Rule text not yet confirmed; not current revenue.</p></button>
+</div>
+<!--@/CFG_SCEN-->
+
+<!--@CFG_FLEET-->
+<div class="f"><label for="c-elig">Customers the offer is shown to</label><div class="fc"><input id="c-elig" type="number" step="500" data-k="elig"><span class="u">customers</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-curve">Sign-up curve: how many enrol at each payment level</label><div class="fc"><select id="c-curve" data-k="curve"><option>Central</option><option>Pessimistic</option><option>Optimistic</option></select></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-resp">Share of enrolled customers that respond to a call (average, not guaranteed)</label><div class="fc"><input id="c-resp" type="number" step="5" data-k="resp"><span class="u">%</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-ops">Operating cost per enrolled customer, per year</label><div class="fc"><input id="c-ops" type="number" step="1" data-k="ops"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+<div class="f"><label for="c-fix">Programme fixed cost, per year</label><div class="fc"><input id="c-fix" type="number" step="10000" data-k="fix"><span class="u">A$/yr</span></div><span class="sup ok">Recomputes</span></div>
+<!--@/CFG_FLEET-->
+
+<!--@CFG_OWN-->
+<p class="own-fixed">Fixed in this version: 10 MW / 40 MWh, round-trip efficiency 85%, import contract (CMD) 9 MW, battery wear A$30/MWh (assumption), simulated factory load.</p>
+<div class="f"><label for="c-exp">Grid export limit at the factory meter<span class="src as">ASSUMPTION</span></label><div class="fc"><select id="c-exp" data-k="exp"><option>10</option><option>3</option></select><span class="u">MW</span></div><span class="sup uv">Unvalidated</span></div>
+<div class="f"><label for="c-fcess">Grid services (FCESS) the battery offers</label><div class="fc"><select id="c-fcess" data-k="fcess"><option>RR, RL, CR, CL</option><option>Contingency only</option><option>None</option></select></div><span class="sup uv">Unvalidated</span></div>
+<!--@/CFG_OWN-->
+
+<!--@STY-->
+<nav class="sty" aria-label="Style options, design review only" lang="zh-CN"><b>风格</b><a data-to="A_minimal_focus.html" href="A_minimal_focus.html" class="{{ON_A}}">A 极简·聚焦</a><a data-to="B_editorial_briefing.html" href="B_editorial_briefing.html" class="{{ON_B}}">B 编辑·简报</a><a data-to="C_dark_console.html" href="C_dark_console.html" class="{{ON_C}}">C 深色·控制台</a><a data-to="D_soft_bento.html" href="D_soft_bento.html" class="{{ON_D}}">D 柔和·卡片</a><a data-to="E_industry_tool.html" href="E_industry_tool.html" class="{{ON_E}}">E 行业工具</a></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<!--@/STY-->

@@ -1,24 +1,29 @@
-"""Spike risk: probability that a trading interval's price reaches SPIKE, issued at 08:15 for the same
-trading day. Spikes are too rare and too erratic to time from the morning (reports/findings.md,
-section 7), so the dispatcher uses this as a risk level - how much energy to keep on offer - not as a
-price.
+"""Spike risk: probability that a trading interval's price reaches SPIKE, issued for the same trading
+day. Spikes are too rare and too erratic to time from the morning (reports/findings.md, section 7), so
+the dispatcher uses this as a risk level - how much energy to keep on offer - not as a price.
 
 Signals known at issue time: the AEMO 08:00 run (price, capacity margin), recent prices and spikes,
-ECMWF weather. LightGBM classifier with monthly walk-forward refits, like the price models.
+ECMWF weather. LightGBM classifier with monthly walk-forward refits, like the price models. OUT is
+the original "08:15" issue, OUT_0900 the strict 09:00 one (vpp.forecast), covering 09:00 .. 07:30.
 
-Run:  .venv/bin/python -m vpp.spike_risk
+Run:  .venv/bin/python -m vpp.spike_risk [--legacy]
 """
 
+import sys
+
 import lightgbm as lgb
+import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from vpp import aemo_correction as ac
 from vpp.data import PROCESSED, trading_date
-from vpp.forecast import FORECAST_START
+from vpp.evaluate import period_of
+from vpp.forecast import FORECAST_START, ISSUE
 
 SPIKE = 200.0  # $/MWh
 OUT = PROCESSED / "spike_risk.parquet"
+OUT_0900 = PROCESSED / "spike_risk_0900.parquet"
 EXTRA = ["margin_avail", "margin_inservice", "day_margin_min", "day_aemo_max", "net_demand_fc", "yday_max", "spike_days_7"]
 CLF_PARAMS = dict(
     objective="binary", n_estimators=300, learning_rate=0.03, num_leaves=15, min_child_samples=50,
@@ -43,35 +48,38 @@ def add_signals(frame: pd.DataFrame, df30: pd.DataFrame) -> pd.DataFrame:
 
 
 def walk_forward_risk(f: pd.DataFrame, days_ahead: int = 0, start: pd.Timestamp = FORECAST_START) -> pd.Series:
-    data = f[(f["days_ahead"] == days_ahead) & f["actual_energy"].notna()]
+    data = f[(f["days_ahead"] == days_ahead) & (f["actual_energy"].notna() | ac.UNLABELLED)]
+    known = data["actual_energy"].notna()
     cols = ac.features_for("energy", weather=True) + EXTRA
     y = (data["actual_energy"] >= SPIKE).astype(int)
-    preds = []
-    for month_start in pd.date_range(start.normalize(), data["target_date"].max(), freq="MS"):
-        train = data["target_date"] < month_start - pd.Timedelta(days=days_ahead)
-        test = (data["target_date"] >= month_start) & (data["target_date"] < month_start + pd.offsets.MonthBegin(1))
-        if not test.any():
-            continue
+
+    def fit_predict(train: pd.Series, test: pd.Series) -> pd.Series:
+        train = train & known
         clf = lgb.LGBMClassifier(**CLF_PARAMS).fit(data.loc[train, cols], y[train])
-        preds.append(pd.Series(clf.predict_proba(data.loc[test, cols])[:, 1], index=data.index[test]))
-    return pd.concat(preds)
+        return pd.Series(clf.predict_proba(data.loc[test, cols])[:, 1], index=data.index[test])
+
+    return ac.monthly_refits(data, days_ahead, start, fit_predict)
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    legacy = "--legacy" in (sys.argv[1:] if argv is None else argv)
     df30 = pd.read_parquet(PROCESSED / "wem_30min.parquet")
     runs = pd.read_parquet(PROCESSED / "aemo_predispatch.parquet")
     weather = pd.read_parquet(PROCESSED / "weather_30min.parquet")
-    f = add_signals(ac.build_frame(df30, runs, weather), df30)
+    f = add_signals(ac.build_frame(df30, runs, weather, issue=None if legacy else ISSUE), df30)
     p = walk_forward_risk(f)
     out = f.loc[p.index, ["issue_date", "ts", "days_ahead", "target_date", "actual_energy"]].assign(p_spike=p)
-    out.sort_values("ts").reset_index(drop=True).to_parquet(OUT)
-    for name, lo, hi in [("validation", "2025-04-01", "2025-10-01"), ("test", "2025-10-01", "2100-01-01")]:
-        x = out[(out["target_date"] >= lo) & (out["target_date"] < hi)]
+    if not legacy:
+        out.loc[(out["ts"] < out["issue_date"] + ISSUE).to_numpy(), "p_spike"] = np.nan
+    out = out.sort_values("ts").reset_index(drop=True)
+    out.to_parquet(OUT if legacy else OUT_0900)
+    for name in ("validation", "test"):
+        x = out[(period_of(out["target_date"]) == name) & out["p_spike"].notna().to_numpy()]
         spike = x["actual_energy"] >= SPIKE
         print(f"{name}: {spike.sum()} spike intervals ({spike.mean():.1%}), AUC {roc_auc_score(spike, x['p_spike']):.3f}, "
               f"mean risk {x['p_spike'].mean():.3f}, share of intervals with risk >= 0.05/0.10/0.20: "
               f"{(x['p_spike'] >= 0.05).mean():.1%} / {(x['p_spike'] >= 0.10).mean():.1%} / {(x['p_spike'] >= 0.20).mean():.1%}")
-    print(f"saved {OUT}")
+    print(f"saved {OUT if legacy else OUT_0900}")
 
 
 if __name__ == "__main__":

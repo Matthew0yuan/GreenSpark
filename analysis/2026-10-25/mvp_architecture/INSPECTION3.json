@@ -1,0 +1,179 @@
+{
+ "dp.explain": {
+  "ok": true,
+  "lines": 13,
+  "first_lines": [
+   "Site: load 3.00-8.00 MW expected (planned with 16% spare for forecast error), sharing a 12.0 MW import / 10.0 MW export connection with the battery.",
+   "Starts the day with 36.0 of 40.0 MWh stored.",
+   "Standing offer in layers: each MWh stored is offered at its own price, higher the less energy is left (1.2x what keeping it is worth, plus $30/MWh wear and a $75/MWh margin for forecast error, never below $150); the layers the price reached today were offered at $189-190/MWh.",
+   "FCESS: spare headroom offered at $0, on average 5.88 MW raise and 3.34 MW lower.",
+   "07:00-08:00 the price reached up to $303: the standing offer sold 5.00 MWh more than planned, and the rest of the day was re-planned.",
+   "Executed in the end: discharged 5.1 MWh and charged 1.7 MWh (morning plan: 0.0 and 0.0).",
+   "Ends the day holding 32.0 MWh, valued by the storage-value curve (each further MWh is worth less): selling it for less than that, after losses and wear, would not pay.",
+   "09:00 forecast issued: the rest of the day was re-planned from the 36.0 MWh then stored.",
+   "09:00 site reserve for tomorrow: the rest of the day was re-planned from the 36.0 MWh then stored.",
+   "09:00 tomorrow's market state: the rest of the day was re-planned from the 36.0 MWh then stored.",
+   "Meter: 134.1 MWh in, 1.9 MWh out; the battery supplied 3.1 MWh of the site's own load; highest import 9.02 MW at 12:30.",
+   "Cap 'cmd' (import at most 9.02 MW at the meter, 08:00-08:00): kept."
+  ]
+ },
+ "records_on_day": {
+  "count": 48,
+  "kinds": {
+   "scheduled": 45,
+   "morning": 1,
+   "reveal": 1,
+   "trigger": 1
+  },
+  "t0_first": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "v2_outputs_0900": {
+  "charging_plan": {
+   "rows": 8,
+   "columns": [
+    "slot",
+    "time",
+    "charge_mw",
+    "grid_mwh",
+    "stored_mwh",
+    "price",
+    "cost",
+    "layer",
+    "stored_after",
+    "worth_at_0800",
+    "max_price"
+   ],
+   "text_values": []
+  },
+  "reserve_plan": {
+   "rows": 3,
+   "columns": [
+    "time",
+    "stored",
+    "mandatory",
+    "site",
+    "site_ircr",
+    "opportunity",
+    "next_mwh_worth"
+   ],
+   "text_values": []
+  },
+  "bidding_plan": {
+   "rows": 8,
+   "columns": [
+    "slot",
+    "time",
+    "stored",
+    "first_mwh",
+    "for_5_mwh",
+    "for_10_mwh",
+    "protected_mwh",
+    "protected_from",
+    "locked",
+    "first_fill_freq"
+   ],
+   "text_values": []
+  },
+  "allocation": {
+   "rows": 46,
+   "columns": [
+    "slot",
+    "time",
+    "to_factory_mw",
+    "to_grid_mw",
+    "charge_mw",
+    "reg_raise",
+    "cont_raise",
+    "reg_lower",
+    "cont_lower",
+    "stored",
+    "mandatory",
+    "site",
+    "fcess_backing",
+    "opportunity",
+    "empty"
+   ],
+   "text_values": []
+  },
+  "money": {
+   "energy": -247.73256012349478,
+   "fcess": 68.84916732610252,
+   "wear": 0.0,
+   "stored": 2954.9571075439453,
+   "money": 3469.429682042677,
+   "penalty": 0.0
+  }
+ },
+ "record_soft_names": [
+  "site reserve: CMD and IRCR"
+ ],
+ "record_cap_names": [
+  "cmd"
+ ],
+ "ledger_and_bills_s": 0.13,
+ "ledger_columns": [
+  "scenario",
+  "strategy",
+  "day",
+  "credit_mw",
+  "energy",
+  "fcess",
+  "wear",
+  "total",
+  "discharged_mwh",
+  "triggers",
+  "replans",
+  "obligation_shortfall_mwh",
+  "site_shortfall_mw",
+  "soc_end",
+  "max_import_mw",
+  "import_mwh",
+  "export_mwh",
+  "self_mwh",
+  "plans_short",
+  "plan_shortfall_mwh",
+  "timing_errors",
+  "reg_out_mwh",
+  "reg_in_mwh",
+  "budget_overrun_mwh",
+  "capacity_short_mw_ti",
+  "planner_fallback",
+  "plan_slot",
+  "plan_money",
+  "plan_got",
+  "excess_cmd_mwh",
+  "excess_cmd_mw",
+  "period",
+  "capacity",
+  "refund",
+  "contract",
+  "ledger_total"
+ ],
+ "bills_rows": [
+  {
+   "month": "2026-10",
+   "days": "3.0",
+   "peak_mw": "9.016666412353516",
+   "saving": "4580.289000000001"
+  }
+ ],
+ "ircr_on_partial_period": [
+  {
+   "scenario": "m1",
+   "strategy": "rw50+state t5+roll",
+   "ircr_mw": NaN,
+   "ircr_no_battery_mw": NaN,
+   "saving_per_year": NaN,
+   "saving_barred_7_10_6B": "0.0",
+   "intervals_covered": "0",
+   "peak_days_covered": "0"
+  }
+ ],
+ "cmd_nb_mw": 11.78,
+ "chain_largest_abs_diff_vs_saved_total": 1.1368683772161603e-13
+}

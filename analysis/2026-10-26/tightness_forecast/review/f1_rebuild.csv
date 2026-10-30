@@ -1,0 +1,21 @@
+item,value
+F1 m1_mw vs mine,"894 days, max |diff| 6.82e-13 MW, present only one side 0"
+F1 m2_mw vs mine,"894 days, max |diff| 4.55e-12 MW, present only one side 0"
+F1 t_star vs mine,mismatches 0
+F3 fits.csv months with train_last_day > month start - 5 or > TRAIN_END,0
+F3 fits.csv rows (months fitted),31; last fit month 2026-07; test months reuse it: ['2026-07']
+F3 conv_days per fit month equal,True
+F2 n,456
+F2 k,46
+F2 hits_B0,15
+F2 hits_M1,29
+F2 hits_M2,29
+F2 M1_seed20261026,"diff +0.3043, 95% [-0.1501, +0.6000], share<=0 0.084"
+F2 M1_seed1,"diff +0.3043, 95% [-0.1538, +0.5898], share<=0 0.085"
+F2 M1_seed2,"diff +0.3043, 95% [-0.1786, +0.6000], share<=0 0.087"
+F2 M2_seed20261026,"diff +0.3043, 95% [-0.1501, +0.6000], share<=0 0.084"
+F2 M2_seed1,"diff +0.3043, 95% [-0.1538, +0.5898], share<=0 0.085"
+F2 M2_seed2,"diff +0.3043, 95% [-0.1786, +0.6000], share<=0 0.087"
+F2 delivered main_result,"[{'method': 'M1', 'hits_method': 29, 'hits_B0': 15, 'diff': 0.3043478260869565, 'lo': -0.1500961538461538, 'hi': 0.6, 'verdict': '不通过'}, {'method': 'M2', 'hits_method': 29, 'hits_B0': 15, 'diff': 0.3043478260869565, 'lo': -0.1500961538461538, 'hi': 0.6, 'verdict': '不通过'}]"
+F5 test_seen,"n 106, k 11, hits B0 4, M1 7, M2 7, MAE M1 143.6, M2 135.3"
+F5 test_unseen,0 days with label and all three predictions -> not evaluable

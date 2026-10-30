@@ -1,0 +1,16 @@
+hurdle 50 A$/MWh: 570 days x 4 runs in 144 s
+energy balance: largest error 7.11e-14 MWh -> PASS
+half-hour mean output within 10 MW: 0 of 54720 outside -> PASS; stored energy within 0-40 MWh: 0 outside -> PASS
+                            period              strategy  days  energy_50  fcess_50  wear_50  total_50  discharged_mwh_50  total_75  discharged_mwh_75  h50_minus_h75  lo95_month  hi95_month  days_50_better
+  in-sample 2025-04-01..2026-06-30              forecast   456      300.5    3722.6    109.1    3914.0                3.6    3877.1                2.2           36.9         2.5        70.2             173
+  in-sample 2025-04-01..2026-06-30 forecast+offer(value)   456      598.4    3625.6    170.8    4053.2                5.6    4032.5                3.9           20.7       -12.8        53.3             168
+  in-sample 2025-04-01..2026-06-30               perfect   456     1636.5    3704.0    538.4    4802.2               17.9    4802.2               17.9           -0.0        -0.0         0.0              37
+  in-sample 2025-04-01..2026-06-30    rw50+state t5+roll   456      513.0    3730.5    138.9    4104.6                4.6    4074.7                3.7           29.9         1.1        62.4             171
+  test seen 2026-07-01..2026-10-15              forecast   107       46.7      68.2     32.6      82.4                1.1      70.2                0.5           12.2        -4.8        41.1              15
+  test seen 2026-07-01..2026-10-15 forecast+offer(value)   107      960.5      63.6    289.6     734.4                9.5     625.9                6.7          108.5        37.0       203.4              55
+  test seen 2026-07-01..2026-10-15               perfect   107     2010.6      70.7    729.3    1352.0               24.3    1352.0               24.3           -0.0        -0.0         0.0               4
+  test seen 2026-07-01..2026-10-15    rw50+state t5+roll   107      642.2      73.4    169.6     546.0                5.6     552.4                5.2           -6.5       -35.5        20.5              23
+test unseen 2026-10-16..2026-10-22              forecast     7        9.1      86.7     50.9      44.9                1.7      92.1                1.7          -47.1         NaN         NaN               1
+test unseen 2026-10-16..2026-10-22 forecast+offer(value)     7      147.1      81.1    117.2     111.0                3.9     228.3                3.7         -117.3         NaN         NaN               2
+test unseen 2026-10-16..2026-10-22               perfect     7     1210.0     141.9    565.5     786.5               18.8     786.5               18.8            0.0         NaN         NaN               2
+test unseen 2026-10-16..2026-10-22    rw50+state t5+roll     7      435.1     146.5    122.6     459.0                4.1     415.4                3.4           43.6         NaN         NaN               1
