@@ -222,6 +222,7 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;margin:0}
 .detail{display:grid;grid-template-columns:220px minmax(0,1fr) minmax(0,1fr);gap:var(--s5);padding:var(--s4) 0;border-top:1px solid var(--divider);border-bottom:1px solid var(--divider);margin:0 0 var(--s5)}
 .detail .t{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .detail .a{font-size:20px;font-weight:600;margin-top:4px}
+.detail .a2{font-size:15px;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap}
 .det-out{background:var(--surface-2);border-radius:var(--r);padding:var(--s3) var(--s4);min-height:100%}
 .det-hidden{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;height:100%;min-height:72px;font-size:13px}
 .kvs{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13px;align-content:start;margin:0;max-width:400px}

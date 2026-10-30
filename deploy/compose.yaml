@@ -13,7 +13,7 @@ services:
       dockerfile: deploy/Dockerfile
     image: greenspark-app:demo
     environment:
-      GS_AUTH: ${GS_AUTH:?GS_AUTH="user:password" must be set (deploy/.env, written by demo.py)}
+      GS_AUTH: ${GS_AUTH:-}  # "user:password" from deploy/.env; empty: no login (2026-10-30, the user's choice)
     volumes:
       - var:/app/var
     ports:
@@ -29,7 +29,7 @@ services:
     pids_limit: 512
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import os, base64, urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/api/v1/meta', headers={'Authorization': 'Basic ' + base64.b64encode(os.environ['GS_AUTH'].encode()).decode()}), timeout=5)"]
+      test: ["CMD", "python", "-c", "import os, base64, urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/api/v1/meta', headers={'Authorization': 'Basic ' + base64.b64encode(os.environ.get('GS_AUTH', '').encode()).decode()}), timeout=5)"]
       interval: 30s
       timeout: 10s
       start_period: 60s
