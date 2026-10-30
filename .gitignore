@@ -15,3 +15,8 @@ app/frontend/playwright-report/
 # Python bytecode, everywhere
 __pycache__/
 *.pyc
+# documents stay local: on GitHub the only document is the root README.md (2026-10-30, the user's decision)
+*.md
+!/README.md
+deliverables/
+output/

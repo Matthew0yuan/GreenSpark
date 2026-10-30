@@ -76,5 +76,5 @@ the storage-value tables, which are not in git, so it takes longer.
 
 ## Layout
 
-`app/` the web app · `vpp/` the models · `scripts/` data downloads · `reports/` specification and results (mostly in
-Chinese) · `analysis/` dated experiments, each with its plan written before the results
+`app/` the web app · `vpp/` the models · `scripts/` data downloads · `reports/` result tables · `analysis/` dated
+experiments: scripts and their outputs
