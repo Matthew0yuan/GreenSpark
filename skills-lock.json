@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "slides": {
+      "source": "JetBrains/skills",
+      "sourceType": "github",
+      "skillPath": "slides/SKILL.md",
+      "computedHash": "49bad82e1865f92880c04ad34657478b0b608b261f21a2d7031c205ae31086a8"
+    }
+  }
+}

@@ -47,6 +47,9 @@ WEATHER = [
     "wx_temp", "wx_ghi", "wx_cloud", "wx_wind_midwest", "wx_wind_merredin",
     "wx_tmax_day", "wx_ghi_day", "wx_wind_evening",
 ]
+# Also predict rows whose actual is not known yet (the trading day in progress, tomorrow). Off in the research runs; the
+# app's live data turn it on (app/live/build.py). Only rows with an actual train, so no other prediction changes.
+UNLABELLED = False
 LGB_PARAMS = dict(
     objective="l1", n_estimators=400, learning_rate=0.03, num_leaves=31, min_child_samples=50,
     subsample=0.8, subsample_freq=1, colsample_bytree=0.8, verbose=-1,
@@ -169,11 +172,13 @@ def walk_forward(frame: pd.DataFrame, product: str, days_ahead: int, weather: bo
     residual=True learns actual - AEMO and returns that correction; residual=False learns the price
     itself. `cols` overrides the default feature list.
     """
-    data = frame[(frame["days_ahead"] == days_ahead) & frame[f"actual_{product}"].notna()]
+    data = frame[(frame["days_ahead"] == days_ahead) & (frame[f"actual_{product}"].notna() | UNLABELLED)]
+    known = data[f"actual_{product}"].notna()
     cols = features_for(product, weather) if cols is None else cols
     target = data[f"actual_{product}"] - (data[f"aemo_{product}"] if residual else 0)
 
     def fit_predict(train: pd.Series, test: pd.Series) -> pd.Series:
+        train = train & known
         model = lgb.LGBMRegressor(**LGB_PARAMS).fit(data.loc[train, cols], target[train])
         return pd.Series(model.predict(data.loc[test, cols]), index=data.index[test])
 

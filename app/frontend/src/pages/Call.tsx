@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type CallDay, type Season } from "../api";
 import { around, DayAxis, geo, Hatch, N, Placer, segPts, tw, vbar, X0, YGrid, type Pt } from "../components/chart";
 import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Note, PageHead, Seg, useWidth, type TipData } from "../components/ui";
-import { addDays, aud, dayLabel, hhmm, isNum, nf, periodOf } from "../lib/format";
+import { Point, WhyHead } from "../components/why";
+import { addDays, aud, dayLabel, hhmm, isNum, nf, PERIOD_CHIP, periodOf } from "../lib/format";
 import { glNote } from "../lib/gloss";
 import { useApp } from "../state";
 
@@ -25,7 +26,7 @@ export default function Call() {
       <PageHead title="Tonight's call"
         chips={<>
           <Chip cls="step">1 · Decide</Chip>
-          <Chip note={glNote(periodOf(day))}>{periodOf(day) === "TRAIN" ? "training-period day" : periodOf(day) === "TREV" ? "test · reviewed" : "test · blind"}</Chip>
+          <Chip note={glNote(periodOf(day))}>{PERIOD_CHIP[periodOf(day)]}</Chip>
           <Chip cls={offer === "custom" ? "hyp" : ""} note={glNote(offer === "custom" ? "CUSTOMOFFER" : "REFTERMS")}>{offer === "custom" ? "model suggestion" : "reference terms"}</Chip>
         </>}
         ctx={<>{c ? <>{c.terms.pay_aud_per_event ? `A$${nf(c.terms.pay_aud_per_event, 2)} a call` : `${nf(c.terms.pay_c_per_kwh ?? 0)} c/kWh`} · {c.terms.max_calls} calls a year · </> : null}
@@ -52,6 +53,7 @@ function CallBody({ c, hind }: { c: CallDay; hind: boolean }) {
     qc.invalidateQueries({ queryKey: ["value"] });
   };
   const [start, setStart] = useState<string>(c.model.start ?? "17:30");
+  const [why, setWhy] = useState(false);
   const decide = useMutation({ mutationFn: (call: boolean) => api.decide(c.day, c.offer, call, call ? start : null), onSuccess: done });
   const undo = useMutation({ mutationFn: () => api.undo(c.day, c.offer), onSuccess: done });
   const d = c.decision, mine = d.source === "operator";
@@ -91,9 +93,20 @@ function CallBody({ c, hind }: { c: CallDay; hind: boolean }) {
         <label><select className="sel" aria-label="Event start" value={d.call && d.start ? d.start : start} onChange={(e) => { setStart(e.target.value); if (d.call) api.decide(c.day, c.offer, true, e.target.value).then(done); }}>
           {c.start_options.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
         <span className="who-dec">Model: {c.model.call ? `call ${c.model.start}–${c.model.end}` : `no call · ${c.model.reason}`}</span>
+        {c.explain && <button className="lnk" aria-expanded={why} aria-controls="why-call" onClick={() => setWhy(!why)}>Why?</button>}
         {mine && <button className="lnk" onClick={() => undo.mutate()}>Undo · follow the model</button>}
         {err && <span style={{ color: "var(--bad)" }}>{err.message}</span>}
       </div>
+      {why && c.explain && (
+        <section className="why-panel" id="why-call" aria-label="Why this call">
+          <WhyHead title="Why" sub="the model's rule, with what was known at 09:00" close={() => setWhy(false)} />
+          {c.explain.operator && <div className="wp-op">{c.explain.operator}</div>}
+          <div className={"pts lg" + (c.model.call ? " is-call" : "")}>
+            {c.explain.points.map((x, i) => <Point key={i} p={x} />)}
+            {c.explain.hindsight && <div className="hind"><Point p={c.explain.hindsight} /></div>}
+          </div>
+        </section>
+      )}
 
       <div className="budget">
         <div className="cells" aria-label={`${c.calls.used_with_today} of ${c.calls.cap} calls used`}>

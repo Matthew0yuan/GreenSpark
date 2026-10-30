@@ -16,6 +16,7 @@ from vpp import site_bill as sb
 from vpp.data import PROCESSED
 from vpp.policy import policy_simulator as ps
 
+from . import explain as ex
 from .common import ROOT, clock, hot_season, num, weekday_label
 
 POL = ROOT / "reports" / "policy"
@@ -132,6 +133,9 @@ class Fleet:
     def _i(self, day) -> int:
         d = pd.Timestamp(day)
         if d not in self.m.days:
+            if d > self.m.days[-1]:  # live data: the policy model's days end with its study (vpp.policy LAST_DAY)
+                raise KeyError(f"the customer-battery model covers trading days to {self.m.days[-1]:%d %b %Y}; "
+                               "later days are not modelled yet")
             raise KeyError(f"no customer-battery data for {d.date()}")
         return int(self.m.days.get_loc(d))
 
@@ -251,6 +255,7 @@ class Fleet:
                                 "official_peak_day": D in peak_days,
                                 "peak_intervals": [t[11:] for t in sb.OFFICIAL_PEAK_INTERVALS.get(2025, []) if t.startswith(str(D.date()))],
                                 "payment_settled": self._payment(o, i, eff[0], hindsight=True) if eff else None}
+        out["explain"] = ex.call(out)
         return out
 
     def _window(self, o: Offer, j) -> dict:

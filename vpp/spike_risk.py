@@ -48,11 +48,13 @@ def add_signals(frame: pd.DataFrame, df30: pd.DataFrame) -> pd.DataFrame:
 
 
 def walk_forward_risk(f: pd.DataFrame, days_ahead: int = 0, start: pd.Timestamp = FORECAST_START) -> pd.Series:
-    data = f[(f["days_ahead"] == days_ahead) & f["actual_energy"].notna()]
+    data = f[(f["days_ahead"] == days_ahead) & (f["actual_energy"].notna() | ac.UNLABELLED)]
+    known = data["actual_energy"].notna()
     cols = ac.features_for("energy", weather=True) + EXTRA
     y = (data["actual_energy"] >= SPIKE).astype(int)
 
     def fit_predict(train: pd.Series, test: pd.Series) -> pd.Series:
+        train = train & known
         clf = lgb.LGBMClassifier(**CLF_PARAMS).fit(data.loc[train, cols], y[train])
         return pd.Series(clf.predict_proba(data.loc[test, cols])[:, 1], index=data.index[test])
 

@@ -7,6 +7,8 @@ agents/logs/
 agents/__pycache__/
 # app/: the operator decisions database, bytecode, frontend test output
 var/
+# deploy/: the demo login (demo.py writes it)
+deploy/.env
 app/**/__pycache__/
 app/frontend/test-results/
 app/frontend/playwright-report/

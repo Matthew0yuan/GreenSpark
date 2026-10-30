@@ -27,9 +27,11 @@ from vpp.v2 import offers as of
 from vpp.v2.config import V1
 
 from . import evidence as ev
+from . import explain as ex
+from . import live as lv
 from .common import (CONNECTIONS, DEFAULT_CONNECTION, DEFAULT_DISPATCHER, DISPATCHERS, FIRST, HURDLE, N, PERFECT,
-                     PLAN_ONLY, ROOT, SAVED_DIR, STRATEGY, arr, check_mode, clock, hot_season, num, other, pad, period,
-                     period_key, saved_rel, weekday_label)
+                     PERIODS, PLAN_ONLY, ROOT, SAVED_DIR, STRATEGY, arr, check_mode, clock, hot_season, num, other, pad,
+                     period, period_key, saved_rel, weekday_label)
 
 # MW or MWh: the plan checks allow the MILP solver's feasibility tolerance (HiGHS: on 2026-01-20 behind the meter the room
 # behind FCESS lower is short by 1.5e-6 MWh, 1.5 Wh of 40 MWh)
@@ -61,9 +63,12 @@ class Storage:
     def __init__(self):
         assert (STRATEGY["standalone", "v1"], STRATEGY["factory", "v1"], STRATEGY["factory", "e5"]) == \
             (bt.VALUE, V1.name, vb.E5.name), "common.STRATEGY no longer names the saved runs"
-        self.days = bt.load_days("0900")
+        # live data (app/live): the complete days up to the last one AEMO's yearly files hold, then the day in progress
+        self.live = lv.state()
+        self.days = bt.load_days("0900", last=None if self.live is None else self.live["complete_through"])
         self.aux = bt.q2b_aux()
         self.index = {d["day"]: i for i, d in enumerate(self.days)}
+        self.live_info = None
         self.saved, self.money, self.bills, self.mtd = {}, {}, {}, {}
         for conn, folder in SAVED_DIR.items():  # incl. the 09:00 plan alone ("forecast"), prices known ("perfect")
             daily, self.money[conn], _ = ev.saved_runs(conn)
@@ -80,6 +85,46 @@ class Storage:
         risk = pd.read_parquet(PROCESSED / "spike_risk_0900.parquet", columns=["ts", "target_date", "days_ahead", "p_spike"])
         risk = risk[risk["days_ahead"] == 0]
         self.risk = {pd.Timestamp(d): g.sort_values("ts")["p_spike"].to_numpy() for d, g in risk.groupby("target_date")}
+        self.saved_last = {conn: min(g.index.max() for g in self.saved[conn].values()) for conn in CONNECTIONS}
+        if self.live is not None:
+            self.inputs = lv.Inputs(pd.Timestamp(self.live["live_day"]))
+            self.refresh_today()
+
+    # ------------------------------------------------------------------------------------------------ live data
+    def refresh_today(self) -> dict | None:
+        """Re-read the 5-minute prices of the trading day in progress (app/live/today.py) and rebuild that day; replays
+        of it, and of the day before (whose "tomorrow" it is), are dropped from the cache."""
+        if self.live is None:
+            return None
+        D = pd.Timestamp(self.live["live_day"])
+        if pd.Timestamp(self.live["complete_through"]) >= D:
+            self.live_info = {"day": str(D.date()), "complete": True}
+            PERIODS["live"]["end"] = str(self.days[-1]["day"].date())
+            return self.live_info
+        d, info = lv.day_input(self.inputs, D, lv.today_prices(D))
+        had = D in self.index
+        if had:
+            self.days.pop(self.index.pop(D))
+        if d is not None:
+            self.days.append(d)
+            self.index[D] = len(self.days) - 1
+        for k in [k for k in self.cache if k[0] == D or (k[0] == D - pd.Timedelta(days=1) and had != (d is not None))]:
+            del self.cache[k]
+        self.live_info = {"day": str(D.date()), "complete": False, "ready": d is not None, **info}
+        PERIODS["live"]["end"] = str(self.days[-1]["day"].date())
+        return self.live_info
+
+    def live_meta(self) -> dict | None:
+        if self.live is None:
+            return None
+        s = self.live
+        return {"live_day": s["live_day"], "complete_through": s["complete_through"], "built_at": s["built_at"],
+                "predispatch_issued_at": s.get("predispatch_issued_at"), "today": self.live_info,
+                "saved_backtests_end": str(min(self.saved_last.values()).date())}
+
+    def _live_day(self, D: pd.Timestamp) -> bool:
+        return self.live is not None and not (self.live_info or {}).get("complete", True) and \
+            str(D.date()) == self.live["live_day"]
 
     def _month_peaks(self, folder) -> dict:
         """{strategy: {day: {month: the highest meter import before the day}}} from the saved log (route_days' mtd0;
@@ -94,6 +139,7 @@ class Storage:
                 by_day[day] = dict(run)
                 for m, v in zip(months[day], x["meter_mw"].to_numpy()):
                     run[m] = max(run.get(m, 0.0), float(v))
+            by_day["after"] = dict(run)  # for the first day after the saved log (live data)
             out[name] = by_day
         return out
 
@@ -105,7 +151,7 @@ class Storage:
                 "defaults": {"connection": DEFAULT_CONNECTION, "dispatcher": DEFAULT_DISPATCHER},
                 "dispatcher": self.dispatcher(DEFAULT_CONNECTION, DEFAULT_DISPATCHER),
                 "baseline": self.baseline_info(DEFAULT_CONNECTION, DEFAULT_DISPATCHER),
-                "asset": self.asset_info(DEFAULT_CONNECTION), "verdicts": self.verdicts}
+                "asset": self.asset_info(DEFAULT_CONNECTION), "verdicts": self.verdicts, "live": self.live_meta()}
 
     def dispatcher(self, connection: str, dispatcher: str) -> dict:
         v = self.verdicts[connection]
@@ -137,8 +183,20 @@ class Storage:
     def _cfg(dispatcher: str):
         return config(dispatcher, record=True)
 
+    def _before(self, day: pd.Timestamp, connection: str) -> pd.Timestamp | None:
+        """For a day after the saved backtest's last day but one (live data), the day before it, whose replay (with
+        the default settings, as saved) gives the day's start state; None where the saved backtest gives it."""
+        day = pd.Timestamp(day)
+        i = self.index.get(day)
+        if i is None or i == 0 or self.days[i - 1]["day"] <= self.saved_last[connection]:
+            return None
+        return self.days[i - 1]["day"]
+
     def start_mwh(self, day: pd.Timestamp, connection: str = DEFAULT_CONNECTION,
                   dispatcher: str = DEFAULT_DISPATCHER) -> float:
+        prev = self._before(day, connection)
+        if prev is not None:  # the saved backtest carried on through the live days
+            return float(self.replay(prev, connection, dispatcher)["summary"]["soc_end"])
         g = self.saved[connection][STRATEGY[connection, dispatcher]]
         before = g[g.index < day]
         return float(before["soc_end"].iloc[-1]) if len(before) else 0.0
@@ -146,7 +204,16 @@ class Storage:
     def month_peaks(self, day: pd.Timestamp, connection: str, dispatcher: str) -> dict:
         if connection != "factory":
             return {}
-        return dict(self.mtd[STRATEGY[connection, dispatcher]].get(pd.Timestamp(day), {}))
+        prev = self._before(day, connection)
+        if prev is not None:  # the day before's month peaks, raised by its own meter
+            r = self.replay(prev, connection, dispatcher)
+            run = dict(r["mtd0"])
+            for m, v in zip(self.days[self.index[prev]]["slot_month"], r["log"]["meter_mw"].to_numpy()):
+                run[m] = max(run.get(m, 0.0), float(v))
+            return run
+        saved = self.mtd[STRATEGY[connection, dispatcher]]
+        day = pd.Timestamp(day)
+        return dict(saved["after"] if day > self.saved_last[connection] else saved.get(day, {}))
 
     def replay(self, day, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
                fcess: tuple = SERVICES, start_mwh: float | None = None, perturb: bool = False) -> dict:
@@ -159,6 +226,9 @@ class Storage:
             return self.cache[key]
         if day not in self.index:
             raise KeyError(f"no market data for trading day {day.date()}")
+        # first the start state: on live days it replays the day before, which sets vpp's shared days (_init_worker)
+        s0 = self.start_mwh(day, connection, dispatcher) if start_mwh is None else float(start_mwh)
+        mtd0 = self.month_peaks(day, connection, dispatcher)
         i = self.index[day]
         sub = [dict(d) for d in self.days[i:i + 2]]
         if perturb:  # every actual price from 09:00 on x 3: the 09:00 plan must not move (check info_timing)
@@ -200,8 +270,6 @@ class Storage:
                 col.on_day(d, {**kw, "load_fc": np.zeros(N), "site": SimpleNamespace(export_limit_mw=P, import_limit_mw=P)},
                            summary, log)
 
-        s0 = self.start_mwh(day, connection, dispatcher) if start_mwh is None else float(start_mwh)
-        mtd0 = self.month_peaks(day, connection, dispatcher)
         _, terms, summary, log, recs = next(hs.route_days(sc, cfg, s0, mtd0, until=day, on_day=on_day, on_step=on_step))
         out = {"day": day, "sc": sc, "bat": bat, "summary": summary, "log": log, "records": recs,
                "steps": pd.DataFrame(steps), "forward": col.forward.get(day, {}), "at9": col._at9, "day_input": sub[0],
@@ -231,6 +299,54 @@ class Storage:
         caps = {n: np.asarray(c, float) for n, c in zip(rec["cap_names"] or (), rec["caps"] or ())}
         return {"lf": lf, "lfe": lfe, "meter": lfe - net, "caps": caps}
 
+    @classmethod
+    def _plan_parts(cls, r: dict, rec: dict) -> tuple:
+        """What explaining one adopted plan needs, aligned with its arrays: the FCESS MW, the hard floor, the factory's
+        part, and the action of each half-hour with the cap it holds (a shave)."""
+        net = np.asarray(rec["net"], float)
+        f = {k: np.clip(np.asarray(rec[k], float), 0.0, None) for k in SERVICES}
+        f = {k: np.where(v < 5e-7, 0.0, v) for k, v in f.items()}
+        hard = np.zeros(len(net)) if rec["hard"] is None else np.asarray(rec["hard"], float)
+        site = cls._site_plan(r, rec)
+        # the action of each half-hour, from the plan's MW and its own economic caps on the meter (the record gives no
+        # reason per half-hour): a discharge that holds the meter at a cap is a shave
+        action, action_cap = [], []
+        for k, x in enumerate(net):
+            binding = [n for n, c in site["caps"].items() if np.isfinite(c[k]) and c[k] < 0 and abs(-x - c[k]) <= 1e-3]
+            if x < -1e-3:
+                action.append("charge"); action_cap.append(None)
+            elif x > 1e-3 and binding:
+                action.append("shave"); action_cap.append("ircr" if "ircr" in binding else binding[0])
+            else:
+                action.append("discharge" if x > 1e-3 else "hold"); action_cap.append(None)
+        return f, hard, site, action, action_cap
+
+    def _ircr_flagged(self, r: dict) -> bool:
+        """The 09:00 peak-day flag behind the factory meter (as _site_block's ircr_flag_0900)."""
+        D = r["day"]
+        return (r["connection"] == "factory" and D.month in (12, 1, 2, 3)
+                and (D in set(self.aux["flags0"]) or D in set(self.aux["flags1"])))
+
+    def _decided(self, r: dict, upto: int, plan_mw: list) -> tuple[dict, list | None]:
+        """The decision in effect at the start of each half-hour from 09:00 (explain.decisions), and the expected
+        factory load each deciding plan used (None on a standalone connection). The plan in effect at the start of
+        half-hour k is the first adopted at k, else the last adopted before k: the 5-minute steps follow it (checked on
+        2026-01-20, 2026-09-09 and 2026-10-20, both connections and dispatchers: every pw_plan equals it)."""
+        recs = r["records"]
+        plans, pick, load_exp = [], [None] * N, [None] * N
+        for x in recs:
+            plans.append((int(x["t0"]), x["kind"], (x, *self._plan_parts(r, x))))
+        for k in range(FIRST, N):
+            same = [i for i, x in enumerate(recs) if int(x["t0"]) == k]
+            before = [i for i, x in enumerate(recs) if int(x["t0"]) < k]
+            pick[k] = same[0] if same else before[-1] if before else None
+            if pick[k] is not None:
+                t0, _, parts = plans[pick[k]]
+                load_exp[k] = float(parts[3]["lfe"][k - t0])
+        factory = r["connection"] == "factory" and r["sc"].site is not None
+        dec = ex.decisions(r, plans, pick, self._ircr_flagged(r), upto, plan_mw)
+        return dec, load_exp if factory else None
+
     # ------------------------------------------------------------------------------------------------ the 09:00 plan
     def plan(self, day, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
              fcess: tuple = SERVICES, start_mwh: float | None = None, export_mw: float | None = None,
@@ -250,25 +366,11 @@ class Storage:
         gaps: list = []
         net = np.asarray(rec["net"], float)
         soc = np.asarray(rec["soc"], float)
-        f = {k: np.clip(np.asarray(rec[k], float), 0.0, None) for k in SERVICES}
-        f = {k: np.where(v < 5e-7, 0.0, v) for k, v in f.items()}
+        f, hard, site, action, action_cap = self._plan_parts(r, rec)
         rr, cr, rl, cl = f["reg_raise"], f["cont_raise"], f["reg_lower"], f["cont_lower"]
         tau = sc.asset.limits.fcess_sustain_h
-        hard = np.zeros(len(net)) if rec["hard"] is None else np.asarray(rec["hard"], float)
         floor = hard + (rr + cr) * tau / eta
         soc_start = np.r_[rec["stored"], soc[:-1]]
-        site = self._site_plan(r, rec)
-        # the action of each half-hour, from the plan's MW and its own economic caps on the meter (the record gives no
-        # reason per half-hour): a discharge that holds the meter at a cap is a shave
-        action, action_cap = [], []
-        for k, x in enumerate(net):
-            binding = [n for n, c in site["caps"].items() if np.isfinite(c[k]) and c[k] < 0 and abs(-x - c[k]) <= 1e-3]
-            if x < -1e-3:
-                action.append("charge"); action_cap.append(None)
-            elif x > 1e-3 and binding:
-                action.append("shave"); action_cap.append("ircr" if "ircr" in binding else binding[0])
-            else:
-                action.append("discharge" if x > 1e-3 else "hold"); action_cap.append(None)
         # before 09:00 the battery ran the 08:00 plan: executed, known at 09:00
         log = r["log"]
         pre_mw = (log["energy_mwh"].to_numpy()[:FIRST] / dp.DT).tolist()
@@ -292,6 +394,7 @@ class Storage:
 
         default = tuple(r["fcess"]) == SERVICES and start_mwh is None
         src = saved_rel(connection)
+        site_block = self._site_block(r, rec, site, gaps) if factory else None
         out = {
             "day": str(D.date()), "weekday_label": weekday_label(D), "basis": "plan",
             "period": period(period_key(D), self._period_days(period_key(D))), "hot_season": hot_season(D),
@@ -301,8 +404,14 @@ class Storage:
                          "start_mwh": start_mwh, "export_mw": export_mw, "import_mw": import_mw},
             "unvalidated": not default or export_mw != exp0 or import_mw != imp0,
             "start_state": {"stored_mwh": num(r["start_mwh"]),
-                            "source": "the day before's stored energy at 08:00 in this dispatcher's saved backtest "
-                                      f"({src}/daily.csv soc_end)" if start_mwh is None else "set in Settings"},
+                            "source": "set in Settings" if start_mwh is not None else
+                                      "the day before's stored energy at 08:00 in this dispatcher's saved backtest "
+                                      f"({src}/daily.csv soc_end)" if self._before(D, connection) is None else
+                                      "the day before's stored energy at 08:00, replayed with this dispatcher from the "
+                                      f"saved backtest's end ({self.saved_last[connection].date()}) on AEMO's live data"},
+            "live": None if not self._live_day(D) else {
+                "prices_to": self.live_info["as_of"], "predispatch_issued_at": self.live["predispatch_issued_at"],
+                "built_at": self.live["built_at"]},
             "plan": {"first_interval": FIRST, "stored_at_0900_mwh": num(rec["stored"]),
                      "battery_mw": [*arr(pre_mw), *arr(net)], "soc_mwh": [*arr(pre_soc), *arr(soc)],
                      "pre_0900": "08:00-09:00 is the 08:00 plan as executed (known at 09:00)",
@@ -310,12 +419,14 @@ class Storage:
                      "action": ["pre"] * FIRST + action, "action_cap": [None] * FIRST + action_cap,
                      "value_at_forecast_aud": value,
                      "source": "vpp.dispatch.run_day on_plan record at interval 2, kind 'reveal'", "status": "backtest"},
-            "site": self._site_block(r, rec, site, gaps) if factory else None,
+            "site": site_block,
             "price": self._price(r, gaps),
             "offers_0900": self._offers(r, soc_start, gaps, site),
             "value_now": self._value_now(r, rec),
             "checks": checks,
             "state": state, "blocked_halfhours": breaches,
+            "explain": ex.plan(r, rec, f, hard, site, ["pre"] * FIRST + action, [None] * FIRST + action_cap, value,
+                               bool(site_block and site_block["ircr_flag_0900"])),
             "gaps": gaps,
         }
         return out
@@ -567,8 +678,12 @@ class Storage:
             month = D.strftime("%Y-%m")
             b = self.bills[connection]
             b = b[(b["strategy"] == name) & (b["month"].astype(str) == month)]
-            if default and len(b):
+            if default and len(b) and D in saved.index:
                 network = float(b["saving"].iloc[0] / b["days"].iloc[0])
+            elif D > self.saved_last[connection]:
+                gaps.append({"field": "money_aud.network", "reason": "the network bill is settled per calendar month "
+                             "on its highest import; the saved months end on "
+                             f"{self.saved_last[connection].date()}, and this month's bill is not settled yet"})
             else:
                 gaps.append({"field": "money_aud.network", "reason": "the network bill is settled per calendar month "
                              "on its highest import: with changed settings only this day is replayed, so the month's "
@@ -589,7 +704,7 @@ class Storage:
             if ref in money and D in money.index and np.isfinite(money.loc[D, ref]):
                 baselines.append({"name": short, "net_aud": num(money.loc[D, ref])})
         net = summ["total"] + (network or 0.0)
-        return {
+        out = {
             "day": str(D.date()), "basis": "outcome", "unvalidated": not default, "connection": connection,
             "dispatcher": dispatcher,
             "battery_mw": arr(log["energy_mwh"].to_numpy() / dp.DT), "soc_mwh": arr(np.r_[log["soc_start"].iloc[0], log["soc"].to_numpy()]),
@@ -611,3 +726,68 @@ class Storage:
                       (" + the month's network bill saving per day" if factory else
                        "; no network bill on this connection [assumed]"),
         }
+        planned = [*(log["energy_mwh"].to_numpy()[:FIRST] / dp.DT), *np.asarray(self.record_0900(r["records"])["net"], float)]
+        known = N
+        if self._live_day(D):
+            known = int(self.live_info["known_halfhours"])
+            self._so_far(out, r, known)
+        # the decisions to the half-hour in progress: each is made at its start from what was published by then
+        dec, load_exp = self._decided(r, min(known + 1, N), planned)
+        dispatch_mw = st["pw"].to_numpy().reshape(N, dp.STEPS).mean(axis=1)
+        out["explain"] = ex.outcome(planned, out, dec["by_halfhour"], dispatch_mw, load_exp, bat.energy_mwh, known)
+        out["explain"]["decisions"] = dec["by_halfhour"]
+        out["explain"]["unaccounted"] += dec["unaccounted"]
+        return out
+
+    @staticmethod
+    def wear_by_halfhour(r: dict) -> np.ndarray:
+        """A$ wear per half-hour, from the replay's 5-minute steps as vpp.dispatch.run_day charges it: on each MWh
+        discharged and each MWh regulation raise sends out (its expected use, reg_util)."""
+        st, sc = r["steps"].sort_values("step"), r["sc"]
+        dt5 = dp.DT / dp.STEPS
+        up = sc.route.reg_util[0] * st["en_reg_raise"].to_numpy() * dt5 if "en_reg_raise" in st else 0.0
+        mwh = np.maximum(st["pw"].to_numpy(), 0.0) * dt5 + up
+        return sc.asset.wear_per_mwh * mwh.reshape(N, dp.STEPS).sum(axis=1)
+
+    def _so_far(self, out: dict, r: dict, known: int) -> None:
+        """The trading day in progress: only its half-hours already over are shown, and the money so far. The replay
+        ran the rest on the 09:00 forecast (it needs a price everywhere); none of that is shown."""
+        log, D = r["log"], r["day"]
+        cut = lambda v: [x if k < known else None for k, x in enumerate(v)]  # noqa: E731
+        for f in ("battery_mw", "offer_cleared_mw", "offer_sold_aud", "offer_price_live", "price_actual",
+                  "price_actual_max_5min"):
+            out[f] = cut(out[f])
+        out["fcess_mw"] = {k: cut(v) for k, v in out["fcess_mw"].items()}
+        out["soc_mwh"] = [x if k <= known else None for k, x in enumerate(out["soc_mwh"])]
+        if out["site"]:
+            for f in ("load_mw", "meter_mw", "cap_mw"):
+                out["site"][f] = cut(out["site"][f])
+            meter = np.asarray([x for x in out["site"]["meter_mw"] if x is not None], float)
+            out["site"]["max_import_mw"] = num(meter.max()) if len(meter) else None
+            over = log["meter_mw"].to_numpy() - log["cap_mw"].to_numpy()
+            out["site"]["cap_excess_halfhours"] = [clock(t) for t in np.flatnonzero(over > 1e-6) if t < known]
+            out["site"]["network_basis"] = None
+        k = slice(0, known)
+        e = log["energy_mwh"].to_numpy()[k]
+        energy = float((log["rtp"].to_numpy()[k] * e).sum())
+        act_f = r["day_input"]["act_f"]
+        fcess = float(sum((np.asarray(act_f[s])[k] * log[f"{s}_mw"].to_numpy()[k] * dp.DT).sum() for s in SERVICES)) \
+            if r["fcess"] else 0.0
+        wear = float(self.wear_by_halfhour(r)[k].sum())
+        out["money_aud"] = {"energy": num(energy), "fcess": num(fcess), "wear": num(wear),
+                            **({"network": None} if out["site"] is not None else {}),
+                            "net": num(energy + fcess - wear), "market_net": num(energy + fcess - wear)}
+        out["discharged_mwh"] = num(np.clip(e, 0, None).sum())
+        out["replans"] = int(log["replanned"].to_numpy()[k].sum())
+        out["baseline_same_day"], out["baselines"], out["replay_check"] = None, [], None
+        out["status"] = "live"
+        out["live"] = {"known_halfhours": known, "through": clock(known) if known < N else "08:00",
+                       "known_5min": self.live_info["known_5min"], "as_of": self.live_info["as_of"]}
+        out["gaps"] = [g for g in out["gaps"] if g["field"] != "money_aud.network"] + [
+            {"field": "outcome", "reason": f"the trading day {D.date()} is in progress: AEMO's prices are published to "
+                                           f"{self.live_info['as_of']}, so only the half-hours before "
+                                           f"{out['live']['through']} are shown, and the money is so far"},
+            {"field": "money_aud.network", "reason": "the network bill is settled per calendar month"}]
+        out["source"] = ("vpp.v2.harness.route_days from the day before's replayed end state, on AEMO's 5-minute "
+                         "dispatch prices so far (app/live/today.py); money = energy + FCESS − wear of the half-hours "
+                         "already over")

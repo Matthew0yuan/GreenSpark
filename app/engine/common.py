@@ -56,12 +56,17 @@ PERIODS = {
                   "used_for_selection": False},
     "test_unseen": {"kind": "test_unseen", "label": "Test · blind", "start": "2026-10-16", "end": "2026-10-22",
                     "used_for_selection": False},
+    # live data (app/live): the days after the saved backtests, as AEMO publishes them; the end is set on loading
+    "live": {"kind": "live", "label": "Live", "start": "2026-10-23", "end": None, "used_for_selection": False},
 }
+
+
+SAVED_PERIODS = ("in_sample", "test_seen", "test_unseen")  # what the saved backtests (and a full rerun) cover
 
 
 def period_key(day) -> str:
     d = pd.Timestamp(day)
-    return "in_sample" if d < CUTOFF else "test_seen" if d < UNSEEN else "test_unseen"
+    return "in_sample" if d < CUTOFF else "test_seen" if d < UNSEEN else "test_unseen" if d <= LAST_DAY else "live"
 
 
 def period(key: str, days: int) -> dict:

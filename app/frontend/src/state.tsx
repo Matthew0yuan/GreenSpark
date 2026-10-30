@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Connection, DispatcherKey, StorageSettings } from "./api";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api, type Connection, type DispatcherKey, type StorageSettings } from "./api";
 
 export type Page = "plan" | "evidence" | "call" | "value" | "settings";
 export const ASSET_OF: Record<Page, "storage" | "fleet" | null> = { plan: "storage", evidence: "storage", call: "fleet", value: "fleet", settings: null };
@@ -24,11 +25,32 @@ function settingsFrom(v: Partial<StorageSettings> | null): StorageSettings {
   return s;
 }
 export const FIRST_DAY = "2025-04-01";
+/** The saved backtests' last day: the replay ends here, and live data (app/live) start the day after. */
 export const LAST_DAY = "2026-10-22";
+
+/** /meta, shared: polled while the engines warm up, and every 30 s on live data (new 5-minute prices, new days). */
+export function useMeta() {
+  return useQuery({ queryKey: ["meta"], queryFn: api.meta, staleTime: 0,
+    refetchInterval: (q) => {
+      const m = q.state.data;
+      if (!m || !Object.values(m.engines).every((e) => e.state === "ready")) return 2000;
+      return m.live ? 30_000 : false;
+    } });
+}
+
+/** What the live data say about a day: the trading day in progress, or a complete day after the saved backtests. */
+export function useLive(day?: string) {
+  const m = useMeta().data;
+  const sl = m?.storage?.live ?? null;
+  const today = sl?.today && !sl.today.complete ? sl.today : null;
+  return { on: !!m?.live, lastDay: m?.storage?.last_day ?? LAST_DAY, liveDay: today ? today.day : null,
+    asOf: today?.as_of ?? null, builtAt: sl?.built_at ?? null, isToday: !!today && day === today.day,
+    after: !!day && day > LAST_DAY };
+}
 
 type Ctx = {
   page: Page; go: (p: Page) => void; lastAsset: "storage" | "fleet"; setAsset: (a: "storage" | "fleet") => void;
-  day: string; setDay: (d: string) => void;
+  day: string; setDay: (d: string) => void; lastDay: string;
   settings: StorageSettings; setSettings: (s: StorageSettings) => void;
   offer: "ref" | "custom"; setOffer: (o: "ref" | "custom") => void;
   revealed: boolean; setRevealed: (v: boolean) => void;
@@ -52,6 +74,10 @@ export function AppState({ children }: { children: ReactNode }) {
   const [page, setPage] = useState<Page>(pageFromHash);
   const [lastAsset, setLastAsset] = useState<"storage" | "fleet">(ASSET_OF[pageFromHash()] ?? "storage");
   const [day, setDayS] = useState<string>(() => load("day", LAST_DAY));
+  const { lastDay, on } = useLive();
+  // on live data the app opens on the newest day, unless the viewer picked one before
+  const picked = useRef(load<string | null>("day", null) != null);
+  useEffect(() => { if (on && !picked.current) setDayS(lastDay); }, [on, lastDay]);
   const [settings, setSettingsS] = useState<StorageSettings>(() => settingsFrom(load<Partial<StorageSettings> | null>("settings", null)));
   const [offer, setOfferS] = useState<"ref" | "custom">(() => load("offer", "custom"));
   const [revealed, setRevealed] = useState(false);
@@ -66,7 +92,11 @@ export function AppState({ children }: { children: ReactNode }) {
   const value: Ctx = {
     page, go, lastAsset,
     setAsset: (a) => go(a === "storage" ? "plan" : "call"),
-    day, setDay: (d) => { const x = d < FIRST_DAY ? FIRST_DAY : d > LAST_DAY ? LAST_DAY : d; setDayS(x); save("day", x); setRevealed(false); },
+    day, lastDay,
+    setDay: (d) => {
+      const x = d < FIRST_DAY ? FIRST_DAY : d > lastDay ? lastDay : d;
+      picked.current = true; setDayS(x); save("day", x); setRevealed(false);
+    },
     settings, setSettings: (s) => { setSettingsS(s); save("settings", s); },
     offer, setOffer: (o) => { setOfferS(o); save("offer", o); },
     revealed, setRevealed,

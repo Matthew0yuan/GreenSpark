@@ -71,6 +71,47 @@ def test_plan_has_no_actuals_after_0900(storage, day, mode):
     assert p["state"] == "PASS"
 
 
+@pytest.mark.parametrize("mode", MODES)
+@pytest.mark.parametrize("day", DAYS)
+def test_plan_explains_each_decision(storage, day, mode):
+    """Every half-hour and every run of one action has a plain-language reason, a charge, discharge or shave says why
+    and not only what, and every number in the text was computed (app/engine/explain.py)."""
+    p = storage.plan(day, *mode)
+    e, act = p["explain"], p["plan"]["action"]
+    assert e["unaccounted"] == [] and len(e["by_halfhour"]) == 48 and all(e["by_halfhour"]) and e["day"]
+    segs = e["segments"]
+    assert segs[0]["from"] == 2 and segs[-1]["to"] == 48 and all(a["to"] == b["from"] for a, b in zip(segs, segs[1:]))
+    assert all(set(act[s["from"]:s["to"]]) == {s["action"]} and s["text"] for s in segs)
+    for k in range(2, 48):
+        if act[k] != "hold":
+            body = e["by_halfhour"][k].split(" Grid services:")[0]
+            assert body.count(". ") >= 1, body
+    # the grid-service sentences price the standby at the plan's own FCESS prices: they add up to the plan's FCESS value
+    from app.engine.storage import SERVICES
+    import numpy as np
+    rec = storage.record_0900(storage.replay(day, *mode)["records"])
+    total = sum((np.clip(np.asarray(rec[k], float), 0, None) * np.asarray(rec["fcess_prices"][k], float)).sum() * 0.5
+                for k in SERVICES)
+    assert math.isclose(total, p["plan"]["value_at_forecast_aud"]["fcess"], abs_tol=0.01)
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_outcome_explains_each_half_hour(storage, mode):
+    """What happened is told against the decision in effect at each half-hour's start: the MW the 5-minute steps
+    followed (e5 re-plans every half-hour, v1 keeps the 09:00 plan), with its reasons; every number was computed."""
+    out = storage.outcome(DAYS[0], *mode)
+    assert out["explain"]["unaccounted"] == [] and len(out["explain"]["by_halfhour"]) == 48
+    dec = out["explain"]["decisions"]
+    assert dec[:2] == [None, None] and all(dec[2:])
+    pw_plan = storage.replay(DAYS[0], *mode)["steps"].sort_values("step")["pw_plan"].to_numpy()[::6]
+    assert all(abs(dec[k]["mw"] - pw_plan[k]) < 1e-3 for k in range(2, 48))
+    if mode[1] == "e5":
+        assert dec[3]["at"] == "09:30" and not dec[3]["is_0900"] and dec[3]["points"]
+    else:
+        assert dec[3]["is_0900"]
+    assert all(p["say"] == "Actual" for p in out["explain"]["points"])
+
+
 @pytest.mark.parametrize("connection, limit", (("standalone", {"export_mw": 3.0}), ("factory", {"import_mw": 6.0})))
 def test_connection_limit_blocks(storage, connection, limit):
     # standalone: 3 MW export is below the plan's discharge; behind the meter: 6 MW import is below the factory's load
@@ -113,6 +154,30 @@ def test_operator_call_changes_count_and_money(fleet):
     a, b = fleet.value("custom", 2025, {}), fleet.value("custom", 2025, {day: flip})
     assert a["calls"] != b["calls"] and a["parties_aud"]["zenith"] != b["parties_aud"]["zenith"]
     assert "hindsight" not in mine
+
+
+def test_explain_rounds_like_the_page():
+    """Numbers in a reason read as the page's toLocaleString writes them: halves away from zero on the exact value."""
+    from app.engine.explain import Facts
+    f = Facts()
+    assert f.aud("x", 35174.5) == "A$35,175" and f.aud("x", -2.5) == "−A$3"
+    assert f("x", 0.125, "{:.2f}") == "0.13" and f("x", 8.745, "{:.2f}") == "8.74"  # 8.745 is stored as 8.74499…
+    assert f.pct("x", 0.15) == "15%" and f("x", 2027, "{:d}") == "2027"
+
+
+@pytest.mark.parametrize("day", ("2025-12-01", "2026-01-06", "2026-01-20", "2026-02-02", "2026-09-09"))
+@pytest.mark.parametrize("offer", ("custom", "ref"))
+def test_call_explains_decision(fleet, day, offer):
+    """Season start, not flagged, flagged, an official peak day, outside the Hot Season: the reason opens with the
+    decision, every number was computed, and hindsight is said only in the hindsight view."""
+    for hind in (False, True):
+        c = fleet.call_day(offer, day, {}, hindsight=hind)
+        lines = c["explain"]["lines"]
+        assert c["explain"]["unaccounted"] == []
+        assert lines[0].startswith("Call " if c["decision"]["call"] else "No call")
+        assert any("In hindsight" in x for x in lines) == (hind and c["hot_season"] is not None)
+    mine = fleet.call_day(offer, "2026-01-06", {"2026-01-06": {"call": True, "start": "18:00"}})
+    assert mine["explain"]["lines"][0].startswith("Your decision: call 18:00") and not mine["explain"]["unaccounted"]
 
 
 def test_fleet_season_hides_future(fleet):

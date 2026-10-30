@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Check, type Outcome, type Plan as PlanT } from "../api";
 import { around, bandPath, DayAxis, geo, Hatch, linePath, linePts, N, Placer, segPts, stepPath, stepPts, tw, X0, YGrid } from "../components/chart";
 import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Note, PageHead, Seg, useWidth, type TipData } from "../components/ui";
-import { addDays, aud, dayLabel, hhmm, isNum, nf, periodOf } from "../lib/format";
+import { Point, WhyHead } from "../components/why";
+import { addDays, aud, dayLabel, hhmm, isNum, nf, PERIOD_CHIP, periodOf } from "../lib/format";
 import { glNote } from "../lib/gloss";
-import { CONN, DISP, isDefault, useApp, whoItems } from "../state";
+import { CONN, DISP, isDefault, useApp, useLive, whoItems } from "../state";
 
 const FIRST = 2;
 type Seg_ = { m: string; a: number; b: number; mw: number };
@@ -26,6 +27,9 @@ function segments(p: PlanT): Seg_[] {
 }
 
 const VERB: Record<string, string> = { discharge: "Discharge", charge: "Charge", shave: "Shave" };
+/** Fill and text colour of each action, in the chart's plan lane and the Why timeline. */
+const ACT: Record<string, [string, string]> = { discharge: ["var(--dis)", "var(--on-dis)"], shave: ["var(--shave)", "var(--shave-text)"],
+  charge: ["var(--chg)", "var(--text)"], hold: ["var(--hold)", "var(--text-3)"] };
 const segName = (s: Seg_) => (VERB[s.m] ? `${VERB[s.m]} ${nf(s.mw, 1)} MW` : "Hold");
 
 function mainAction(p: PlanT, segs: Seg_[]) {
@@ -71,8 +75,11 @@ const SHORT: Record<string, string> = {
 
 export default function Plan() {
   const { day, setDay, settings, revealed, setRevealed, go } = useApp();
-  const plan = useQuery({ queryKey: ["plan", day, settings], queryFn: () => api.plan(day, settings) });
-  const out = useQuery({ queryKey: ["outcome", day, settings.connection, settings.dispatcher, settings.fcess, settings.startMwh],
+  const live = useLive(day);
+  // live data: a day's plan changes when the data are rebuilt, today's outcome with every new 5-minute price
+  const plan = useQuery({ queryKey: ["plan", day, settings, live.after ? live.builtAt : null], queryFn: () => api.plan(day, settings) });
+  const out = useQuery({ queryKey: ["outcome", day, settings.connection, settings.dispatcher, settings.fcess, settings.startMwh,
+    live.after ? live.builtAt : null, live.isToday ? live.asOf : null],
     enabled: revealed && !!plan.data,
     queryFn: () => api.outcome(day, settings) });
   const [sel, setSel] = useState<number>(20);
@@ -86,7 +93,7 @@ export default function Plan() {
       <PageHead title="Today's plan"
         chips={<>
           <Chip cls="step">1 · Decide</Chip>
-          <Chip note={glNote(periodOf(day))}>{periodOf(day) === "TRAIN" ? "training-period day" : periodOf(day) === "TREV" ? "test · reviewed" : "test · blind"}</Chip>
+          <Chip cls={live.isToday ? "live" : ""} note={glNote(periodOf(day))}>{live.isToday ? `live · to ${live.asOf}` : PERIOD_CHIP[periodOf(day)]}</Chip>
           {!isDefault(settings) && <Chip cls="unv" note={glNote("UNVALIDATED")}>changed settings</Chip>}
           {p?.site?.ircr_flag_0900 && <Chip cls="hyp" note={glNote("IRCRFLAG")}>IRCR peak flag</Chip>}
         </>}
@@ -118,6 +125,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
   setSel: (k: number) => void; reveal: () => void; go: (pg: "evidence" | "settings") => void }) {
   const segs = useMemo(() => segments(p), [p]);
   const [hover, setHover] = useState<number | null>(null);
+  const [why, setWhy] = useState(false);
   const blocked = p.state === "BLOCKED";
   const failed = p.checks.filter((c) => c.status === "fail");
   const passed = p.checks.filter((c) => c.status === "pass").length;
@@ -140,6 +148,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
           <div className="statusline">
             {blocked ? <span className="pill bad">! Blocked</span> : <span className="pill ok">✓ Plan executable</span>}
             <span className="sub">{passed} of {p.checks.length} checks pass{notChecked ? ` · ${notChecked} not checked` : ""}</span>
+            {p.explain && <button className="lnk" aria-expanded={why} aria-controls="why-plan" onClick={() => setWhy(!why)}>Why this plan</button>}
           </div>
           <div className="title">{blocked ? `Resolve ${SHORT[failed[0].id]?.toLowerCase() ?? "the limit"} first` : mainAction(p, segs)}</div>
         </div>
@@ -152,6 +161,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
           </div>
         </div>
       </div>
+      {why && <WhyPlan p={p} sel={sel} setSel={setSel} close={() => setWhy(false)} />}
 
       <div className="fig">
         <DayChart p={p} o={o} segs={segs} sel={sel} setSel={setSel} hover={hover} setHover={setHover} day={dayLabel(p.day, false)} next={dayLabel(next, false)} />
@@ -169,7 +179,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
             wear={v.wear ?? 0} net={v.net ?? 0} dim={blocked} />
           {o ? (
             <>
-              <div className="wf-h">What happened · replayed</div>
+              <div className="wf-h">{o.live ? `What happened · so far, to ${o.live.through}` : "What happened · replayed"}</div>
               <Waterfall parts={[["e", "Energy", o.money_aud.energy ?? 0], ["f", "Grid services", o.money_aud.fcess ?? 0],
                 ...(isNum(o.money_aud.network) ? [["b", "Network bill", o.money_aud.network] as [string, string, number]] : [])]}
                 wear={o.money_aud.wear ?? 0} net={o.money_aud.net ?? 0} />
@@ -187,7 +197,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
           <details className="more">
             <summary>Breakdown</summary>
             <table className="t">
-              <thead><tr><th>A$</th><th className="r">Plan 09:00</th><th className="r">Replayed</th></tr></thead>
+              <thead><tr><th>A$</th><th className="r">Plan 09:00</th><th className="r">{o?.live ? "So far" : "Replayed"}</th></tr></thead>
               <tbody>
                 <tr><td>Energy</td><td className="r">{aud(v.energy)}</td><td className="r">{o ? aud(o.money_aud.energy) : "hidden"}</td></tr>
                 <tr><td>Regulation energy</td><td className="r">{aud(v.regulation_energy)}</td><td className="r">{o ? "in energy" : "hidden"}</td></tr>
@@ -200,7 +210,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
               </tbody>
             </table>
             <p className="sub">Plan: the dispatcher's own forecast at 09:00, from 09:00 on, with the value of energy left at 08:00 tomorrow.
-              Replayed: the whole day settled at actual prices{p.site
+              {o?.live ? `So far: the half-hours to ${o.live.through} at AEMO's 5-minute prices as published (final once AEMO's files hold the day, about 08:20 tomorrow)` : "Replayed: the whole day settled at actual prices"}{p.site
                 ? "; plus the month's network bill saving per day (the bill is set by the month's highest import). The capacity charge (IRCR) is counted per year on Evidence. The factory load is synthetic [assumed]."
                 : "; no network charges on this connection [assumed]."} Start: {nf(p.start_state.stored_mwh ?? 0, 1)} MWh at 08:00.</p>
           </details>
@@ -213,6 +223,39 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
         </div>
       </div>
     </>
+  );
+}
+
+/** The plan's reasons as a timeline: the yardsticks most choices are weighed against, then one row per stretch with one
+ *  reason (the action pill on the first row of each run, coloured as in the chart's plan lane); a row selects its first
+ *  half-hour, and its time carries the whole sentence on hover. */
+function WhyPlan({ p, sel, setSel, close }: { p: PlanT; sel: number; setSel: (k: number) => void; close: () => void }) {
+  const e = p.explain;
+  return (
+    <section className="why-panel" id="why-plan" aria-label="Why this plan">
+      <WhyHead title="Why this plan" sub={`${e.start} at 09:00 → ${e.end} at 08:00 tomorrow`} close={close}
+        extra={e.flagged ? <Chip cls="hyp" note={glNote("IRCRFLAG")}>capacity peak day</Chip> : undefined} />
+      <div className="ys" aria-label="What each choice is weighed against">
+        <span className="eyebrow">Weighed against</span>
+        {e.yardsticks.map((y) => <div key={y.l} className="y" tabIndex={0} data-note={y.note}><b>{y.v}</b><span>{y.l}</span></div>)}
+      </div>
+      <ol className="wl">
+        <li className="wl-h" aria-hidden="true"><span>Time</span><span>Plan</span><span>Forecast</span><span>Reason</span></li>
+        {e.segments.flatMap((s) => s.stretches.map((st, i) => {
+          const [bg, fg] = ACT[s.action] ?? ACT.hold;
+          return (
+            <li key={st.from} className={"wr" + (sel >= st.from && sel < st.to ? " on" : "") + (i ? " cont" : "")}
+              style={{ "--c": bg } as CSSProperties} onClick={() => setSel(st.from)}>
+              <button className="wr-t" data-note={st.text}>{hhmm(st.from)}–{hhmm(st.to)}</button>
+              <span className="wr-a"><span className="act-pill" style={{ background: bg, color: fg }}>{segName({ m: s.action, a: st.from, b: st.to, mw: st.mw ?? 0 })}</span></span>
+              <span className="wr-p">{st.price}</span>
+              <div className="pts">{st.points.length ? st.points.map((x, j) => <Point key={j} p={x} />) : <div className="pt"><span className="pt-w">{st.text}</span></div>}</div>
+            </li>
+          );
+        }))}
+      </ol>
+      <p className="sub foot">{e.basis}</p>
+    </section>
   );
 }
 
@@ -370,8 +413,7 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
     if (e.key === "ArrowLeft") { setSel(Math.max(0, sel - 1)); e.preventDefault(); }
   };
 
-  const colours: Record<string, [string, string]> = { discharge: ["var(--dis)", "var(--on-dis)"], shave: ["var(--shave)", "var(--shave-text)"],
-    charge: ["var(--chg)", "var(--text)"], hold: ["var(--hold)", "var(--text-3)"] };
+  const colours = ACT;
   const sellTxt = `${floor ? `price ≥ A$${nf(floor)}: +up to ${nf(spare, 0)} MW` : "no extra offer"}${o ? ` · sold ${soldN} · ${aud(soldAud)}` : ""}`;
   const earnTxt = fcessAud > 0.5 ? `earns ${aud(fcessAud)}` : "";
   const tag = (txt: string, lane: { y: number; h: number }, fill: string) => (
@@ -533,11 +575,13 @@ function Detail({ p, o, k, segs, outLoading, reveal }: { p: PlanT; o?: Outcome; 
   const xo = extraOffer(p);
   const soc = p.plan.soc_mwh;
   const s_ = p.site;
+  const hh = p.explain?.halfhours?.[k] ?? null;
+  const dec = o?.explain?.decisions?.[k] ?? null;  // the decision in effect at this half-hour's start, and why
   const rows: [ReactNode, ReactNode][] = [
     ["Stored", isNum(soc[k]) && isNum(soc[k + 1]) ? `${nf(soc[k]!, 1)} → ${nf(soc[k + 1]!, 1)} MWh` : "–"],
     [<Gl k="FCESS">Grid services</Gl>, `${nf(standby(p, k), 1)} MW standby`],
     [<Gl k={p.offers_0900?.rule === "ladder" ? "EXTRAE5" : "EXTRA"}>Sell extra if</Gl>, k >= FIRST && isNum(xo.lowest[k]) ? `≥ A$${nf(xo.lowest[k]!)} · up to ${nf(xo.mw[k], 1)} MW` : "–"],
-    ["Forecast price", isNum(p.price.forecast_p50[k]) ? `A$${nf(p.price.forecast_p50[k]!)}/MWh` : "not yet issued"],
+    ["Forecast price", isNum(p.price.forecast_p50[k]) ? `A$${nf(p.price.forecast_p50[k]!)}/MWh${hh ? ` · ${hh.rank}` : ""}` : "not yet issued"],
     ...(s_ ? [[<Gl k="METER">Site import</Gl>, isNum(s_.meter_mw[k]) ? `${nf(s_.meter_mw[k]!, 1)} MW${isNum(s_.cmd_cap_mw?.[k]) ? ` · cap ${nf(s_.cmd_cap_mw![k]!, 1)}` : ""}` : "–"] as [ReactNode, ReactNode]] : []),
   ];
   return (
@@ -551,17 +595,38 @@ function Detail({ p, o, k, segs, outLoading, reveal }: { p: PlanT; o?: Outcome; 
       <div className="det-out">
         {o ? (
           <dl className="kvs">
-            <dt>Outcome</dt><dd><span className="tag out">REPLAYED</span></dd>
+            <dt>Outcome</dt><dd><span className="tag out">{o.live ? (isNum(o.price_actual[k]) ? "SO FAR" : "NOT YET") : "REPLAYED"}</span></dd>
             <dt>Actual price</dt><dd>{isNum(o.price_actual[k]) ? `A$${nf(o.price_actual[k]!)}/MWh` : "–"}</dd>
-            <dt>Battery</dt><dd>{nf(o.battery_mw[k] ?? 0, 1)} MW</dd>
-            {o.site && <><dt>Site import</dt><dd>{nf(o.site.meter_mw[k] ?? 0, 1)} MW</dd></>}
-            <dt>Sold extra</dt><dd>{(o.offer_cleared_mw[k] ?? 0) > 0.01 ? `${nf(o.offer_cleared_mw[k]!, 1)} MW · ${aud(o.offer_sold_aud[k])}` : "none"}</dd>
+            <dt>Battery</dt><dd>{isNum(o.battery_mw[k]) ? `${nf(o.battery_mw[k]!, 1)} MW` : "–"}</dd>
+            {o.site && <><dt>Site import</dt><dd>{isNum(o.site.meter_mw[k]) ? `${nf(o.site.meter_mw[k]!, 1)} MW` : "–"}</dd></>}
+            <dt>Sold extra</dt><dd>{(o.offer_cleared_mw[k] ?? 0) > 0.01 ? `${nf(o.offer_cleared_mw[k]!, o.offer_cleared_mw[k]! < 0.05 ? 2 : 1)} MW · ${aud(o.offer_sold_aud[k])}` : "none"}</dd>
             <dt>Offer price</dt><dd>{isNum(o.offer_price_live[k]) ? `A$${nf(o.offer_price_live[k]!)}` : "not set"}</dd>
           </dl>
         ) : outLoading ? <Loading what="what happened" /> : (
           <div className="det-hidden"><span className="na">Outcome hidden</span><button className="lnk" onClick={reveal}>Plan + what happened</button></div>
         )}
       </div>
+      {p.explain && (
+        <div className="why-hh">
+          <div className="wh">
+            <span className="eyebrow tipc" tabIndex={0} data-note={p.explain.by_halfhour[k]}>Why</span>
+            <div className="pts">
+              {hh ? <>{hh.points.map((x, j) => <Point key={j} p={x} />)}{hh.grid && <Point p={hh.grid} />}</>
+                : <div className="pt"><span className="pt-w">{p.explain.by_halfhour[k]}</span></div>}
+            </div>
+          </div>
+          {o?.explain && (
+            <div className="wh">
+              <span className="eyebrow tipc" tabIndex={0} data-note={[dec?.text, o.explain.by_halfhour[k]].filter(Boolean).join(" ")}>What happened</span>
+              <div className="pts">
+                {dec && <Point p={dec.head} />}
+                {dec?.changed && <>{dec.points.map((x, j) => <Point key={j} p={x} />)}{dec.grid && <Point p={dec.grid} />}</>}
+                <Point p={o.explain.points[k]} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

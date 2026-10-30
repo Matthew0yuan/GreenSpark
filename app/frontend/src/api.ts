@@ -15,6 +15,7 @@ export type Plan = {
     site: { import_limit_mw: number; export_limit_mw: number; cmd_mw: number; load: string } | null };
   settings: { connection: Connection; dispatcher: DispatcherKey; fcess: string[]; start_mwh: Num; export_mw: number; import_mw: number }; unvalidated: boolean;
   start_state: { stored_mwh: Num; source: string };
+  live?: { prices_to: string | null; predispatch_issued_at: string | null; built_at: string } | null;
   plan: {
     first_interval: number; stored_at_0900_mwh: Num; battery_mw: Num[]; soc_mwh: Num[];
     fcess_mw: Record<"reg_raise" | "cont_raise" | "reg_lower" | "cont_lower", Num[]>; reserve_floor_mwh: Num[];
@@ -28,7 +29,20 @@ export type Plan = {
     | { rule: "ladder"; by_halfhour: ({ mw: number; price_aud_per_mwh: number | "MAX" }[] | null)[]; ceiling_aud_per_mwh: number } | null;
   value_now: { stored_mwh: Num; top_mwh_aud_per_mwh: Num } | null;
   checks: Check[]; state: "PASS" | "BLOCKED"; blocked_halfhours: number[]; gaps: Gap[];
+  /** Plain-language reasons (app/engine/explain.py): each half-hour, each run of one action, the day. */
+  explain: {
+    by_halfhour: string[];
+    halfhours: ({ price: string; rank: string; lead: string | null; points: XPoint[]; grid: XPoint | null; text: string } | null)[];
+    segments: { from: number; to: number; action: string; mw: Num; text: string;
+      stretches: { from: number; to: number; at: number; mw: Num; price: string; points: XPoint[]; text: string }[] }[];
+    day: string[]; yardsticks: XValue[]; start: string; end: string; end_value: string; flagged: boolean;
+    basis: string; unaccounted: string[];
+  };
 };
+
+/** One reason: a short lead (say), a plain phrase (why), the numbers it compares, and the whole sentence (text). */
+export type XValue = { v: string; l: string; note?: string };
+export type XPoint = { say: string | null; why: string; nums: (XValue | { op: string })[]; text: string };
 
 export type Outcome = {
   day: string; basis: "outcome"; unvalidated: boolean; battery_mw: Num[]; soc_mwh: Num[];
@@ -37,7 +51,14 @@ export type Outcome = {
   money_aud: { energy: Num; fcess: Num; wear: Num; net: Num; network?: Num; market_net?: Num };
   site: { load_mw: Num[]; meter_mw: Num[]; cap_mw: Num[]; max_import_mw: Num; cap_excess_halfhours: string[]; network_basis: string | null } | null;
   baseline_same_day: { name: string; net_aud: Num } | null; baselines?: { name: string; net_aud: Num }[]; gaps?: Gap[];
+  /** The trading day in progress: only the half-hours before `through` are filled; the money is so far. */
+  live?: { known_halfhours: number; through: string; known_5min: number; as_of: string | null };
+  /** points: what actually happened against the decision in effect at each half-hour's start; decisions: that decision
+   *  and its reasons (the 09:00 plan, or a later re-plan), to the half-hour in progress on a live day. */
+  explain: { by_halfhour: string[]; points: XPoint[]; decisions: (XDecision | null)[]; unaccounted: string[] };
 };
+export type XDecision = { at: string; kind: string; is_0900: boolean; changed: boolean; action: string; mw: Num; head: XPoint;
+  lead: string | null; points: XPoint[]; grid: XPoint | null; text: string };
 
 export type Uplift = { mean: Num; lo95: Num; hi95: Num; pct?: Num; days_better: number };
 export type Evidence = {
@@ -65,6 +86,8 @@ export type CallDay = {
   terms: { pay_c_per_kwh: Num; pay_aud_per_event: Num; max_calls: number; status: string };
   hindsight?: { actual_peak_mw: Num; demand_actual_mw: Num[]; official_peak_day: boolean; peak_intervals: string[];
     payment_settled: { fleet_aud: Num } | null };
+  explain: { model_say: string; operator: string | null; points: XPoint[]; hindsight: XPoint | null; lines: string[];
+    unaccounted: string[] };
 };
 
 export type Season = { season: string; days: { day: string; forecast_mw: Num; threshold_mw: Num; flagged: boolean; model_call: boolean;
@@ -84,9 +107,17 @@ export type ValueSummary = { scenario: string; difference_custom_minus_ref_aud: 
     holdouts: { held_out: string; chronological: boolean; held_out_profit: number; covered_held_out: number }[] }> };
 export type Job = { id: number; state: "queued" | "running" | "done" | "failed" | "cancelled"; progress: number; message: string | null;
   result: { periods: { period: Period; per_day_aud: Num; default_per_day_aud: Num; difference_aud: Num }[] } | null };
-export type Meta = { engines: Record<string, { state: string; error: string | null }>;
+/** Live data (app/live): the trading day in progress and how much of it AEMO has published. */
+export type LiveToday = { day: string; complete: boolean; ready?: boolean; reason?: string; known_5min?: number;
+  known_halfhours?: number; as_of?: string | null };
+export type StorageLive = { live_day: string; complete_through: string; built_at: string; predispatch_issued_at: string | null;
+  today: LiveToday | null; saved_backtests_end: string };
+export type Meta = { engines: Record<string, { state: string; error: string | null }>; data: string;
   storage: { first_day: string; last_day: string; days: number; dispatcher: { name: string; short: string };
-    defaults: { connection: Connection; dispatcher: DispatcherKey }; verdicts: Record<Connection, Verdict> } | null };
+    defaults: { connection: Connection; dispatcher: DispatcherKey }; verdicts: Record<Connection, Verdict>;
+    live: StorageLive | null } | null;
+  live: { mode: "live"; now: string; prices: { day?: string; last_interval?: string | null; polled_at: string; error?: string } | null;
+    build: { state: string; detail: string | null; at: string | null }; reload: { state: string | null; error: string | null } } | null };
 
 export class ApiError extends Error {
   status: number;

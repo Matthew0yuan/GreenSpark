@@ -13,8 +13,8 @@ from vpp import dispatch as dp
 from vpp.data import PROCESSED
 from vpp.v2 import backtest as vb
 
-from .common import (DEFAULT_CONNECTION, DEFAULT_DISPATCHER, HURDLE, PERFECT, PERIODS, PLAN_ONLY, SAVED_DIR, STRATEGY,
-                     check_mode, num, other, period, period_key, saved_rel)
+from .common import (DEFAULT_CONNECTION, DEFAULT_DISPATCHER, HURDLE, PERFECT, PLAN_ONLY, SAVED_DIR, SAVED_PERIODS,
+                     STRATEGY, check_mode, num, other, period, period_key, saved_rel)
 
 
 def _ci(diff: pd.Series) -> tuple:
@@ -66,7 +66,7 @@ def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DIS
     led = daily.pivot_table(index="day", columns="strategy", values="ledger_total") if factory else None
 
     rows = []
-    for k in PERIODS:
+    for k in SAVED_PERIODS:
         g = v[keys == k]
         row = {"period": period(k, len(g)), "per_day_aud": {short[s]: num(g[s].mean(), 1) for s in g.columns}}
         if PLAN_ONLY in g:
@@ -95,7 +95,7 @@ def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DIS
     evening = pd.to_datetime(fc["ts"]).dt.hour.between(17, 20)
     fk = pd.Series([period_key(d) for d in td], index=fc.index)
     forecast = []
-    for k in PERIODS:
+    for k in SAVED_PERIODS:
         m = fk == k
         e = (m & evening)
         forecast.append({"period": period(k, td[m].nunique()),
@@ -111,7 +111,7 @@ def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DIS
     P, E = bt.Q2B_ASSET.battery.power_mw, bt.Q2B_ASSET.battery.energy_mwh
     lk = pd.Series([period_key(d) for d in pd.to_datetime(log["day"])], index=log.index)
     limits = []
-    for k in PERIODS:
+    for k in SAVED_PERIODS:
         g = log[lk == k]
         row = {"period": period(k, g["day"].nunique()), "halfhours": int(len(g)),
                "over_power": int((np.abs(g["energy_mwh"]) / dp.DT > P + 1e-6).sum()),
