@@ -13,26 +13,117 @@ customers to use their batteries. Every morning at 09:00 it has to decide two th
 2. **Whether to call customer batteries this evening.** Every call costs a payment to the customers, and calls are
    limited.
 
-## What it does
+## How it works
 
-- Forecasts today's half-hourly prices at 09:00, using only data public by then.
-- Prices each stored MWh by what it is worth to keep, and offers the spare energy at that price. If a spike comes, the
-  offer sells; if not, the energy stays. The day is re-planned every 30 minutes.
-- Calls customer batteries only on likely system-peak days, the days that set the capacity charge, within a budget of
-  45 calls a year. Trading the energy alone never covers the customers' payment, so it never calls on price.
-- Explains every decision in plain English and replays what actually happened, in a web app.
+Every morning at 09:00:
+
+1. Forecast today's half-hourly prices, and the chance of a price spike, from data already public by 09:00.
+2. Plan the battery's day: when to charge, when to discharge, how much to hold back for grid services, and how to keep
+   the factory under its demand cap.
+3. Put a price on every stored MWh (what it is worth to keep for later) and offer the spare energy at that price. If a
+   spike comes, the offer sells; if not, the energy stays.
+4. Re-plan every 30 minutes as new prices come in.
+5. Decide whether to call customer batteries this evening: only on likely system-peak days, at most 45 times a year.
+
+## What makes it different
+
+- **It does not bet on guessing the spike.** No forecast can say which half-hour will spike, so the battery is never
+  all-in on one guess. It keeps energy on offer at a fair price all day and lets the market come to it.
+- **Rules first, money second.** The plan is built inside the factory's demand cap, the battery's limits and its
+  grid-service commitments, and looks for profit only within them. (When the factory's real load runs above its
+  forecast, the meter can still go slightly over the cap.)
+- **No peeking.** Each decision uses only data that was public at that moment. The models were frozen on 30 Jun 2026
+  and judged on the days after.
+- **Judged in dollars, with the rules written first.** A change was kept only if it made more money on the training
+  data, under a pass rule written down before the results were seen. A better-looking forecast alone did not count.
+- **Fair books for customer batteries.** A call is compared with the customer's battery doing its normal job, not with
+  having no battery. Zenith's money and the customers' money are kept apart, so a payment to a customer is never
+  counted as value created.
+- **It explains itself.** Every decision comes with a plain-English reason and the value of the energy kept. The web
+  app runs on live AEMO data and replays what actually happened.
 
 ## Results
 
-| What | Result | Period |
-|---|---|---|
-| Price forecast error, same day, issued at 09:00 (mean absolute error) | A$19.2/MWh, against A$28.0 for "same as yesterday": 31% lower | Test: 1 Jul – 22 Oct 2026, 114 days |
-| Battery market income, as a share of a plan made with the day's actual prices | 68% (first version 39%, the 09:00 plan alone 7%) | Test: 114 days |
-| Profit per day, current dispatcher minus first version, at the factory site | +A$440 (95% interval +A$247 to +A$626) | Training: 1 Apr 2025 – 30 Jun 2026, 456 days |
-| Customer-battery calls | 24 calls; 3 of the season's 4 official peak days caught | Summer 2025-26 (training) |
+**How it was tested.** Everything was built and tuned on 1 Apr 2025 – 30 Jun 2026 (456 days, "training"). The models
+were then frozen and run on 1 Jul – 22 Oct 2026 (114 days, "test"), days they never learned from. Test results are
+only reported, never used to choose anything. One caveat: the first 107 test days were looked at during development;
+only the last 7 (16–22 Oct) are completely unseen.
 
-Everything was built and chosen on the training period; the test period is reported only. The plan made with actual
-prices is a reference, not a ceiling: on some spike days the current dispatcher earns more.
+### The factory battery
+
+**Where the money comes from.** Each source as a share of what the battery earns per day (current dispatcher;
+rounded):
+
+| | Training | Test |
+|---|---|---|
+| Lower network bill: keeping the factory's peak demand under its cap | 31% | 72% |
+| Grid services (FCESS): being paid to stand by for the grid | 62% | 2% |
+| Energy trading: charging when cheap, selling into high prices | 10% | 34% |
+| Battery wear (a cost) | −3% | −9% |
+| Earnings per day, for scale | A$4,664 | A$2,096 |
+
+In plain words: grid services used to pay most of the money. That income fell 98% in the test period, so the battery
+now earns mainly by trimming the factory's peak demand and by selling when prices jump.
+
+**Is it better than the first version?** Yes, in both periods.
+
+- Training: **10% more** money per day (95% interval: 6% to 15%).
+- Test: **28% more** per day (12% to 42%). The first 107 test days: 30% more. The last 7 unseen days, a quiet week with
+  few spikes: 4% more, too few days to judge.
+- It comes out ahead on about two days in three (66% of training days, 64% of test days).
+
+The 95% interval is the range the true gain most likely falls in. Both ranges stay above zero, so the gain is not luck.
+They are wide because the network bill is monthly and the test period is only four months long.
+
+**How close to perfect?** Picture a battery that knew every price of the day in advance. In the test period, the
+current dispatcher made **68%** of that battery's market income (trading plus grid services, less wear). The first
+version made 39%. Making a plan at 09:00 and never changing it made 7%. So most of the money comes from reacting during
+the day: re-planning every half-hour and keeping sell offers ready for spikes. In training the three were close (93%,
+87%, 86%), because grid services, which every version earned, were most of the money. The perfect-knowledge battery is
+a yardstick, not a ceiling: on some spike days the dispatcher beats it.
+
+**The capacity charge (IRCR).** Each summer, the factory's share of the grid's capacity cost is set by how much it
+draws in the 12 half-hours of highest demand across the whole system. In summer 2025-26 (training) the battery covered
+**all 12 (100%)**, so the factory's share fell to zero, worth about A$2.12M a year on top of the daily figures. The
+perfect-knowledge battery covered only 11 of 12 (92%): knowing the prices does not tell you which days will be the
+system peaks. The factory's load is made up, so treat the dollar figure as an order of magnitude.
+
+### Forecasts
+
+- **Prices.** The 09:00 forecast of the day's half-hourly prices has a **31% smaller** average error than assuming
+  today repeats yesterday (A$19.2 against A$28.0 per MWh; test).
+- **Spike days.** The day before, a model flags days likely to have a spike: a half-hour settling at A$150/MWh or more.
+  In the test period it flagged 18 days, and **all 18 (100%)** had a spike, against 67% of the other days. In training:
+  74% against 41%. Spikes are common either way, but a flagged day is clearly more likely to have one.
+
+### Customer batteries
+
+Zenith would pay customers to discharge their batteries on chosen evenings. This was modelled with a household battery
+(13.5 kWh, 5 kW), 10,000 customers offered, and an assumed 2027 capacity-charge rule under which exports count. The
+suggested terms: call only on likely system-peak days in summer (1 Dec – 31 Mar), at most 45 times a year, for 2 hours
+at 17:30–19:30, paying about A$8.70 a call. These are the model's suggestion, not a real tariff. "2025-26" below is the
+contract year 1 Jul 2025 – 30 Jun 2026, inside training.
+
+- **Price spikes alone never pay.** Even with perfect hindsight, a customer battery earns Zenith at most A$8.14 a year
+  from energy prices: about a third (33%) of the A$25 a year it costs to serve that customer (2025-26).
+- **The money is in the summer peak days.** In 2025-26 the policy used 24 of its 45 calls (53%) and covered 3 of the 4
+  official peak days (75%). About 45% of the customers offered would join (from an assumed take-up curve). Each comes
+  out about A$145 a year ahead, and Zenith about A$2.08M.
+- **Tested on a summer it had not seen.** Chosen using only the two earlier summers, then run on summer 2025-26, the
+  policy made 12.5% more than it expected, and 65% more than a policy on Synergy's Battery Rewards terms (70c/kWh, at
+  most 30 calls).
+- **Why the call budget matters.** In the heavy summer of 2023-24, that Synergy-like policy used up its 30 calls before
+  the peak days arrived, covered none of the 4 (0%), and lost money.
+- **Test period:** no summer, so no calls; the only cost was running the programme.
+
+### Tried and not adopted
+
+Research runs, compared with the current dispatcher on the training data:
+
+- **Two-stage stochastic MILP** (planning over 20 price scenarios instead of one forecast): at most 0.4% more per day,
+  within noise (the 95% interval includes zero); no better in the first 107 test days.
+- **A charging bid curve**, solved from the plan at seven price points: 0.06% more per day (−0.5% to +0.6%), so no real
+  difference. The test period showed 3.6% more, but test results do not choose.
 
 ## Models
 
