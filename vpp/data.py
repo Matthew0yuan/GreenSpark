@@ -6,13 +6,16 @@ A WEM trading day runs 08:00 -> 07:55 the next calendar day.
 Run:  .venv/bin/python -m vpp.data
 """
 
+import os
 from pathlib import Path
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
-RAW = ROOT / "data" / "raw"
-PROCESSED = ROOT / "data" / "processed"
+# GS_DATA: another data folder with the same layout (raw/, processed/, pit/); the app's live data use one (app/live)
+DATA = Path(os.environ.get("GS_DATA") or ROOT / "data")
+RAW = DATA / "raw"
+PROCESSED = DATA / "processed"
 
 TS_FORMAT = "%d/%m/%Y %H:%M:%S"
 

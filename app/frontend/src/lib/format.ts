@@ -32,7 +32,9 @@ export function addDays(iso: string, n: number) {
   return d.toISOString().slice(0, 10);
 }
 
-export const periodOf = (iso: string) => (iso < "2026-07-01" ? "TRAIN" : iso < "2026-10-16" ? "TREV" : "TBLIND");
+export const periodOf = (iso: string) => (iso < "2026-07-01" ? "TRAIN" : iso < "2026-10-16" ? "TREV" : iso <= "2026-10-22" ? "TBLIND" : "LIVE");
+/** The period chip's words, by periodOf. */
+export const PERIOD_CHIP: Record<string, string> = { TRAIN: "training-period day", TREV: "test · reviewed", TBLIND: "test · blind", LIVE: "live data" };
 
 /** Short A$ for axis ticks: A$0, A$500k, A$1.5M. */
 export const audShort = (v: number) => {

@@ -196,6 +196,51 @@ test("plan: hover table ≤ 5 rows, labels ≤ 2 words; outcome only after askin
   await expect(page.locator(".ctip")).toContainText("Actual");
 });
 
+test("plan: each decision is explained; Why this plan lists the reasons by time, a click selects one; outcome reasons after asking", async ({ page }) => {
+  await open(page, "plan");
+  const why = page.locator(".detail .why-hh");
+  await expect(why).toContainText(/why/i);
+  await expect(why).not.toContainText(/what happened/i);
+  await expect(why.locator(".pt .pt-w").first()).not.toBeEmpty();
+  await page.getByRole("button", { name: "Why this plan" }).click();
+  const panel = page.locator("#why-plan");
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText("capacity peak day");  // 2026-01-20 is a flagged day behind the factory meter
+  expect(await panel.locator(".ys .y").count()).toBeGreaterThanOrEqual(3);
+  const rows = panel.locator("li.wr");
+  const n = await rows.count();
+  expect(n).toBeGreaterThan(1);
+  for (let i = 0; i < n; i++) {  // every row: an action, a forecast, a plain reason and the numbers it compares
+    await expect(rows.nth(i).locator(".act-pill")).toHaveCount(1);
+    await expect(rows.nth(i).locator(".pt-w").first()).not.toBeEmpty();
+    expect(await rows.nth(i).locator(".nm").count()).toBeGreaterThan(0);
+  }
+  const t = await rows.nth(1).locator(".wr-t").innerText();
+  await rows.nth(1).click();
+  await expect(page.locator(".detail .t")).toContainText(t.slice(0, 5));
+  await expect(rows.nth(1)).toHaveClass(/on/);
+  expect(await layoutDefects(page)).toEqual([]);
+  await panel.getByRole("button", { name: "Close" }).click();
+  await expect(panel).toHaveCount(0);
+  await page.getByRole("radio", { name: "Plan + what happened" }).click();
+  await expect(why).toContainText(/what happened/i, { timeout: 30_000 });
+  // what happened: the decision in effect at the half-hour's start (e5 re-plans then) and the actual result
+  await expect(why.locator(".pt-s", { hasText: /^Decided \d\d:\d\d$/ })).toHaveCount(1);
+  await expect(why.locator(".pt-s", { hasText: /^Actual$/ })).toHaveCount(1);
+  expect(await layoutDefects(page)).toEqual([]);
+});
+
+test("call: Why? gives the rule's verdict and the comparison behind it", async ({ page }) => {
+  await open(page, "call", DAY);
+  await page.getByRole("button", { name: "Why?" }).click();
+  const panel = page.locator("#why-call");
+  await expect(panel).toBeVisible();
+  await expect(panel.locator(".pt-s").first()).toHaveText(/^(Call|No call)/);
+  await expect(panel.locator(".nm", { hasText: "threshold" })).toHaveCount(1);
+  await expect(panel.locator(".op").first()).toHaveText(/[<>]/);
+  expect(await layoutDefects(page)).toEqual([]);
+});
+
 test("plan: a 3 MW connection blocks the plan; Inspect jumps to the first breach", async ({ page }) => {
   await open(page, "plan", "2026-02-02", { connection: "standalone", dispatcher: "e5", fcess: ["reg_raise", "cont_raise", "reg_lower", "cont_lower"],
     startMwh: null, exportMw: 3, importMw: null });
@@ -289,4 +334,33 @@ test("settings: grid services off recomputes the plan and marks it changed", asy
   await page.goto("/#/plan");
   await expect(page.locator(".ph .chip.unv")).toContainText("changed settings", { timeout: 60_000 });
   await expect(page.locator(".topbar .engine")).toContainText("changed settings");
+});
+
+/* Live data (app/live). Runs only against a server on live data (after `python -m app.live.run --init`, without
+   GS_LIVE=0); on the replay it is skipped. */
+test("live: opens on the newest day; today's outcome stops at the last published half-hour; no layout defects", async ({ page }) => {
+  const m = await (await page.request.get("/api/v1/meta")).json();
+  test.skip(!m.live, "the server runs the replay");
+  const t = m.storage.live.today;
+  await page.goto("/#/plan");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector("main section .dec") && !document.querySelector('[aria-busy="true"]'), null, { timeout: 90_000 });
+  await expect(page.locator(".topbar .engine")).toContainText(/^live · /);
+  const label = new Date(m.storage.last_day + "T00:00:00Z").toLocaleDateString("en-AU",
+    { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).replace(",", "");
+  await expect(page.locator(".daypick .d")).toHaveText(label);
+  if (t && !t.complete && t.ready) {
+    await expect(page.locator(".ph .chip.live")).toHaveText(/^live · to \d{2}:\d{2}$/);
+    await page.getByRole("radio", { name: "Plan + what happened" }).click();
+    await expect(page.locator(".wf-h", { hasText: "so far" })).toBeVisible({ timeout: 90_000 });
+    const o = await (await page.request.get(`/api/v1/storage/days/${t.day}/outcome`)).json();
+    const k = o.live.known_halfhours;
+    expect(o.price_actual.slice(0, k).every((v: number | null) => v !== null)).toBe(true);
+    expect(o.price_actual.slice(k).every((v: number | null) => v === null)).toBe(true);
+  }
+  expect(await layoutDefects(page)).toEqual([]);
+  expect(await chartDefects(page)).toEqual([]);
+  await page.goto("/#/call");
+  await expect(page.locator(".state.err")).toContainText("covers trading days to", { timeout: 60_000 });
 });

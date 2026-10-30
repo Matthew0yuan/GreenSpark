@@ -1,0 +1,53 @@
+# The demo on a public address: the app and a Cloudflare quick tunnel, each in its own locked-down container.
+# Start, stop and the address: deploy/demo.py (deploy/README.md). GS_AUTH comes from deploy/.env, which demo.py writes.
+#
+# What an attacker who got into the app container could reach: its own code (read-only) and the volume below (the live
+# data and the operator decisions). Not this computer's files, not Docker, not root. The app's port is open on this
+# computer only (127.0.0.1); from outside, the only way in is the tunnel, and every route asks for the login.
+name: greenspark-demo
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: greenspark-app:demo
+    environment:
+      GS_AUTH: ${GS_AUTH:?GS_AUTH="user:password" must be set (deploy/.env, written by demo.py)}
+    volumes:
+      - var:/app/var
+    ports:
+      - "127.0.0.1:${GS_PORT:-8080}:8000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    # about 1 GB in use; the morning rebuild took the container to 3.6 GB with file cache (2 CPUs: 5.6 min; 2026-10-30)
+    mem_limit: 6g
+    cpus: 4
+    pids_limit: 512
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, base64, urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/api/v1/meta', headers={'Authorization': 'Basic ' + base64.b64encode(os.environ['GS_AUTH'].encode()).decode()}), timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.6
+    command: ["tunnel", "--no-autoupdate", "--url", "http://app:8000"]
+    depends_on:
+      app:
+        condition: service_healthy
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    pids_limit: 64
+    restart: unless-stopped
+
+volumes:
+  var:  # made and filled by demo.py (seed); external, so `docker compose down -v` cannot delete the live data
+    name: greenspark-var
+    external: true

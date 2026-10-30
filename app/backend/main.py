@@ -1,18 +1,26 @@
 """The GreenSpark VPP API (/api/v1) and the built frontend (app/frontend/dist) on one local port.
 
-Every result is a historical replay of the trading days with data (2025-04-01 to 2026-10-22): no live telemetry, no
-bidding, no device control. What was known at 09:00 (plan) and what happened (outcome) come from separate routes, so
-the frontend never holds an actual price before the operator asks for it."""
+Live mode (the default once `python -m app.live.run --init` has run; GS_LIVE=0 turns it off): the engines read AEMO's
+public data as it is published (app/live): every complete trading day, and the day in progress from its 09:00 plan on,
+its 5-minute prices filling in every minute. Otherwise a replay of the saved days (2025-04-01 to 2026-10-22). Either
+way: no bidding, no device control. What was known at 09:00 (plan) and what happened (outcome) come from separate
+routes, so the frontend never holds an actual price before the operator asks for it."""
 
+import base64
+import binascii
 import json
 import os
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+
+from app.live import fetch as live_fetch
+from app.live import run as live_run
 
 from . import engines, jobs
 from .db import Store
@@ -31,14 +39,52 @@ class StrictJSON(JSONResponse):
         return json.dumps(content, allow_nan=False, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
 
+LIVE = os.environ.get("GS_LIVE", "1") != "0" and live_run.initialised()
+
+
+def _refresh_today():
+    e = engines.ENGINES.get("storage")
+    if e is not None and e.state == "ready":
+        e.submit("refresh_today")
+
+
+SCHEDULE = live_run.Schedule(on_prices=_refresh_today, on_build=engines.reload) if LIVE else None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if LIVE:  # the engine processes inherit it: vpp reads the live copy of every input
+        os.environ["GS_DATA"] = str(live_fetch.DATA)
     engines.start()
+    if SCHEDULE:
+        SCHEDULE.start()
     yield
+    if SCHEDULE:
+        SCHEDULE.stop.set()
     engines.stop()
 
 
 app = FastAPI(title="GreenSpark VPP", version="1", lifespan=lifespan, default_response_class=StrictJSON)
+
+
+def _authorised(header: str, want: str) -> bool:
+    if not header.startswith("Basic "):
+        return False
+    try:
+        got = base64.b64decode(header[6:], validate=True)
+    except (binascii.Error, ValueError):
+        return False
+    return secrets.compare_digest(got, want.encode("utf-8"))
+
+
+@app.middleware("http")
+async def login(request: Request, call_next):
+    """GS_AUTH="user:password" puts every page and API route behind a browser login (the demo on a public address,
+    deploy/). Unset, as on this machine and in the tests, nothing changes."""
+    want = os.environ.get("GS_AUTH")
+    if want and not _authorised(request.headers.get("authorization", ""), want):
+        return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="GreenSpark", charset="UTF-8"'})
+    return await call_next(request)
 
 
 @app.exception_handler(KeyError)
@@ -87,9 +133,12 @@ def _offer(offer: str) -> str:
 async def meta():
     st = {k: {"state": e.state, "error": e.error} for k, e in engines.ENGINES.items()}
     out = {"api_version": "1", "engines": st, "decision_time": "09:00", "market_time": "AWST (UTC+08:00)",
-           "data": "historical replay, trading days 2025-04-01 to 2026-10-22", "storage": None}
+           "data": "live AEMO data" if LIVE else "historical replay, trading days 2025-04-01 to 2026-10-22",
+           "storage": None, "live": None}
     if engines.ENGINES.get("storage") and engines.ENGINES["storage"].state == "ready":
         out["storage"] = await engines.ENGINES["storage"].call("meta")
+    if SCHEDULE:
+        out["live"] = {**SCHEDULE.status, "reload": engines.RELOAD, "now": live_fetch.now().isoformat(timespec="seconds")}
     return out
 
 

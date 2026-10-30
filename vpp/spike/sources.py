@@ -31,10 +31,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from vpp.data import PROCESSED, RAW, ROOT
+from vpp.data import DATA, PROCESSED, RAW
 from vpp.spike.protocol import AVAILABILITY
 
-PIT = ROOT / "data" / "pit"
+PIT = DATA / "pit"
 COLUMNS = ["source", "source_file", "record_id", "version", "run_at", "evidence_at", "available_at", "fetched_at",
            "target_time", "scenario", "facility_or_service", "variable", "value", "unit"]
 

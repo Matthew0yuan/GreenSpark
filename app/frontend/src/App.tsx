@@ -1,23 +1,38 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "./api";
+import type { Meta } from "./api";
 import { NotePopover } from "./components/ui";
+import { dayLabel } from "./lib/format";
 import Call from "./pages/Call";
 import Evidence from "./pages/Evidence";
 import Plan from "./pages/Plan";
 import Settings from "./pages/Settings";
 import Value from "./pages/Value";
-import { ASSET_OF, isDefault, useApp, type Page } from "./state";
+import { ASSET_OF, isDefault, useApp, useMeta, type Page } from "./state";
 
 const PAGES: Record<"storage" | "fleet", [Page, string][]> = {
   storage: [["plan", "Plan"], ["evidence", "Evidence"]],
   fleet: [["call", "Call"], ["value", "Value"]],
 };
 
+/** The status chip on live data: today's prices so far, or the last complete day. */
+function liveLabel(m: Meta): string {
+  const t = m.storage?.live?.today;
+  if (t && !t.complete && t.as_of) return `live · prices to ${t.as_of}`;
+  return `live · to ${dayLabel(m.storage?.live?.complete_through ?? m.storage?.last_day ?? "", false)}`;
+}
+
+function statusNote(m?: Meta): string {
+  if (!m?.live) return "Every result is a replay of past trading days (to 22 Oct 2026) by the model; nothing is live and no device is controlled.";
+  const sl = m.storage?.live, t = sl?.today, b = m.live.build;
+  const today = t && !t.complete ? (t.ready ? `today's 5-minute prices to ${t.as_of}` : `today: ${t.reason ?? "waiting"}`) : "";
+  const build = b.state === "waiting" || b.state === "failed" ? ` Morning update ${b.state}: ${b.detail ?? ""}.` : "";
+  return `Live: AEMO's public data as published, checked every minute. Complete trading days to ${sl?.complete_through ?? "?"}${today ? "; " + today : ""}. ` +
+    `The model is frozen (trained to 30 Jun 2026); nothing is bid and no device is controlled.${build}`;
+}
+
 export default function App() {
   const { page, go, lastAsset, setAsset, settings } = useApp();
   const asset = ASSET_OF[page] ?? lastAsset;
-  const meta = useQuery({ queryKey: ["meta"], queryFn: api.meta,
-    refetchInterval: (q) => (q.state.data && Object.values(q.state.data.engines).every((e) => e.state === "ready") ? false : 2000) });
+  const meta = useMeta();
   const eng = meta.data?.engines ?? {};
   const states = Object.values(eng).map((e) => e.state);
   const ready = states.length > 0 && states.every((s) => s === "ready");
@@ -38,8 +53,9 @@ export default function App() {
             {PAGES[asset].map(([p, l]) => <button key={p} className={page === p ? "on" : ""} aria-current={page === p ? "page" : undefined} onClick={() => go(p)}>{l}</button>)}
           </nav>
           <span className="sp" />
-          <span className={"engine" + (failed ? " bad" : ready ? "" : " warm")} data-note="Every result is a replay of past trading days (to 22 Oct 2026) by the model; nothing is live and no device is controlled." tabIndex={0}>
-            <i />{failed ? "engine failed" : ready ? (isDefault(settings) ? "replay · up to date" : "replay · changed settings") : "engine warming up"}
+          <span className={"engine" + (failed ? " bad" : ready ? (meta.data?.live ? " live" : "") : " warm")} data-note={statusNote(meta.data)} tabIndex={0}>
+            <i />{failed ? "engine failed" : !ready ? "engine warming up" : !isDefault(settings) ? `${meta.data?.live ? "live" : "replay"} · changed settings`
+              : meta.data?.live ? liveLabel(meta.data) : "replay · up to date"}
           </span>
           <button className={"gear" + (page === "settings" ? " on" : "")} aria-label="Settings" onClick={() => go("settings")}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="3" />

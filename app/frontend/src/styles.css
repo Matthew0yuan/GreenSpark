@@ -95,6 +95,10 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;margin:0}
 .engine i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
 .engine.warm i{background:var(--warn)}
 .engine.bad i{background:var(--bad)}
+.engine.live{color:var(--text-2)}
+.engine.live i{box-shadow:0 0 0 0 var(--ok);animation:livepulse 2.4s ease-out infinite}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 55%,transparent)}70%,100%{box-shadow:0 0 0 6px transparent}}
+@media (prefers-reduced-motion:reduce){.engine.live i{animation:none}}
 .gear{width:var(--ctl);height:var(--ctl);border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--text-2)}
 .gear:hover,.gear.on{background:var(--surface-3)}
 
@@ -115,6 +119,8 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;margin:0}
 .chip.step{border-color:var(--ok-line);color:var(--accent);font-weight:600;background:var(--accent-soft)}
 .chip.hyp{border-style:dashed;border-color:var(--cond);color:var(--cond-text);background:var(--cond-soft)}
 .chip.unv{border-color:var(--warn-line);color:var(--warn);background:var(--warn-soft)}
+.chip.live{border-color:var(--ok);color:var(--text-2)}
+.chip.live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok)}
 
 [data-note]{cursor:help}
 .tipc{border-bottom:1px dotted var(--text-4)}
@@ -221,6 +227,64 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;margin:0}
 .kvs{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13px;align-content:start;margin:0;max-width:400px}
 .kvs dt{color:var(--text-3)}
 .kvs dd{margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+/* why: a decision's reasons (app/engine/explain.py). A reason is one line: a lead, a plain phrase, then the numbers it
+   compares, right-aligned like a table column; the whole sentence is a hover away. */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+.pts{display:grid;min-width:0}
+.pt{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:2px;padding:6px 0;border-top:1px solid var(--divider);font-size:13px;line-height:1.45}
+.pt:first-child{border-top:0}
+.pt-s{flex:0 0 108px;font-weight:600;color:var(--text)}
+.pt-w{flex:1 1 220px;min-width:0;color:var(--text-2)}
+.nums{margin-left:auto;display:inline-flex;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;column-gap:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nm b{font-weight:600;color:var(--text)}
+.nm i{font-style:normal;font-size:12px;color:var(--text-3);margin-left:4px}
+.nm.tipc{border-bottom:0}
+.nm.tipc i{border-bottom:1px dotted var(--text-4)}
+.op{font-weight:600;color:var(--text-4);padding:0 1px}
+
+/* the selected half-hour: Why / What happened, lined up with the panel's columns */
+.why-hh{grid-column:1/-1;display:grid;gap:var(--s2);border-top:1px dashed var(--divider);padding-top:var(--s3)}
+.wh{display:grid;grid-template-columns:220px minmax(0,1fr);column-gap:var(--s5);align-items:baseline}
+.wh .eyebrow{width:max-content}
+
+/* the panels opened from "Why this plan" and "Why?" */
+.why-panel{background:var(--surface-2);border-radius:var(--r);padding:var(--s3) var(--s4) var(--s2);margin:calc(-1 * var(--s3)) 0 var(--s5)}
+.wp-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:var(--s2)}
+.wp-h h3{margin:0;font-size:15px;font-weight:600}
+.wp-h .sp{flex:1}
+.wp-x{border:0;background:none;padding:0 2px;font-size:20px;line-height:1;color:var(--text-3);cursor:pointer}
+.wp-x:hover{color:var(--text)}
+.ys{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--s2) var(--s6);padding:var(--s2) 0 var(--s3);border-bottom:1px solid var(--rule)}
+.ys .eyebrow{flex:0 0 100%;margin-bottom:-2px}
+.y{display:flex;flex-direction:column;gap:1px}
+.y b{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
+.y span{font-size:12px;color:var(--text-3);border-bottom:1px dotted var(--text-4);width:max-content}
+.wl{list-style:none;margin:0;padding:0}
+.wl-h,.wr{display:grid;grid-template-columns:96px 128px 92px minmax(0,1fr);column-gap:14px;align-items:baseline}
+.wl-h{padding:var(--s2) 10px 4px 13px;font-size:11px;font-weight:600;color:var(--text-3)}
+.wr{padding:6px 10px 6px 10px;border-left:3px solid var(--c);border-top:1px solid var(--divider);cursor:pointer}
+.wr.cont{border-top-style:dotted}
+.wr:hover{background:color-mix(in srgb, var(--surface) 60%, transparent)}
+.wr.on{background:var(--surface);box-shadow:inset 0 0 0 1px var(--rule)}
+.wr-t{border:0;background:none;padding:0;text-align:left;font:inherit;font-size:13px;font-weight:600;color:var(--info);cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wr.on .wr-t{color:var(--text)}
+.act-pill{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.wr-p{font-size:12.5px;color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.wr .pt{padding:0 0 4px;border-top:0}
+.wr .pt + .pt{padding-top:4px;border-top:1px solid var(--divider)}
+.why-panel .foot{margin:var(--s2) 0 0}
+.wp-op{font-size:13px;font-weight:600;color:var(--text);background:var(--surface);border-left:3px solid var(--cust);padding:6px 10px;margin-bottom:var(--s2)}
+.pts.lg .pt{padding:8px 0}
+.pts.lg .pt-s{flex-basis:150px}
+.pts.lg.is-call .pt:first-child .pt-s{color:var(--cust-text)}
+.pts .hind{border-top:1px solid var(--rule);margin-top:4px}
+.pts .hind .pt{border-top:0}
+@media (max-width:1024px){
+  .wl-h{display:none}
+  .wr{grid-template-columns:96px auto 1fr;row-gap:4px}
+  .wr .pts{grid-column:1/-1}
+  .wh{grid-template-columns:1fr;row-gap:4px}
+}
 .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;padding:1px 6px;border-radius:4px;border:1px solid;line-height:1.5}
 .tag.plan{color:var(--info);border-color:var(--info-line);background:var(--info-soft)}
 .tag.out{color:var(--bg);background:var(--text);border-color:var(--text)}

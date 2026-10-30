@@ -33,6 +33,7 @@ export const GLOSS: Record<string, [string, string, string]> = {
   TRAIN: ["training period", "1 Apr 2025 – 30 Jun 2026, 456 days: the data used to build and choose the method.", "Results here cannot show how the method does on new data."],
   TREV: ["test · reviewed", "1 Jul – 15 Oct 2026, 107 days: not used to build the method, but looked at repeatedly while refining it.", "Weaker evidence than a blind test."],
   TBLIND: ["test · blind", "16–22 Oct 2026, 7 days: never looked at before the method was locked.", "The only fully blind test so far; too short to prove anything on its own."],
+  LIVE: ["live data", "From 23 Oct 2026: AEMO's public data, downloaded as published and never used to build the method. The model is frozen.", "Today fills in every 5 minutes; a day is final once AEMO's files hold it (about 08:20 the next morning)."],
   CONTRACTYEAR: ["contract year", "1 Jul – 30 Jun: the year the customer offer's call cap and payments are counted over.", "2025-26 lies inside the training period, so it is not a blind test."],
   HOTSEASON: ["Hot Season (Dec–Mar)", "1 Dec – 31 Mar in the WA market: when system demand peaks.", "The capacity charge for the following year is set by the 12 peak half-hours of this season."],
   IRCR: ["capacity charge (IRCR)", "Each retailer's share of the cost of keeping enough generation available, set by its customers' demand in the 12 peak half-hours of the Hot Season.", "Lowering demand in those 12 half-hours lowers the charge for a whole year; that is the main value of calling customer batteries."],

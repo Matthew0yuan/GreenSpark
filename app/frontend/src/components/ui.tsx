@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GLOSS, glNote } from "../lib/gloss";
 import { addDays, dayLabel } from "../lib/format";
-import { FIRST_DAY, LAST_DAY } from "../state";
+import { FIRST_DAY, useApp } from "../state";
 
 /** A term with its glossary note on hover (keyboard-focusable). */
 export function Gl({ k, children, cls = "tipc" }: { k: string; children?: ReactNode; cls?: string }) {
@@ -44,6 +44,7 @@ export function NotePopover() {
 
 /** Previous / next day, and the date itself opens the calendar (the native field stays hidden behind it). */
 export function DayPicker({ day, setDay }: { day: string; setDay: (d: string) => void }) {
+  const { lastDay: LAST_DAY } = useApp();
   const inp = useRef<HTMLInputElement>(null);
   const pick = () => { const el = inp.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); } };
   return (

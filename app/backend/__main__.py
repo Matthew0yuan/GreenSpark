@@ -1,9 +1,16 @@
-"""Run the app on this machine only:  .venv/Scripts/python.exe -m app.backend [--port 8000]"""
+"""Run the app:  .venv/Scripts/python.exe -m app.backend [--port 8000] [--host 127.0.0.1]
+
+The default host is this machine only; the Docker image (deploy/) listens on 0.0.0.0 inside its container."""
 
 import sys
 
 import uvicorn
 
+
+def _arg(name: str, default: str) -> str:
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+
+
 if __name__ == "__main__":
-    port = int(sys.argv[sys.argv.index("--port") + 1]) if "--port" in sys.argv else 8000
-    uvicorn.run("app.backend.main:app", host="127.0.0.1", port=port, log_level="info")
+    uvicorn.run("app.backend.main:app", host=_arg("--host", "127.0.0.1"), port=int(_arg("--port", "8000")),
+                log_level="info")

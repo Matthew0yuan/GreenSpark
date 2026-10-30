@@ -16,6 +16,7 @@ DAY, CALL_DAY = "2026-01-20", "2026-01-06"
 @pytest.fixture(scope="module")
 def client():
     os.environ["GS_DB"] = str(Path(tempfile.mkdtemp()) / "test.db")
+    os.environ["GS_LIVE"] = "0"  # the replay (to 2026-10-22); live data have their own tests (test_live.py)
     from fastapi.testclient import TestClient
 
     from app.backend.main import app
@@ -34,6 +35,21 @@ def test_meta(client):
     m = client.get("/api/v1/meta").json()["storage"]
     assert m["defaults"] == {"connection": "factory", "dispatcher": "e5"} and m["dispatcher"]["short"] == "e5"
     assert m["days"] == 570 and m["verdicts"]["factory"]["passed"] and not m["verdicts"]["standalone"]["passed"]
+
+
+def test_login(client, monkeypatch):
+    """GS_AUTH (the demo on a public address, deploy/): every page and API route asks for it; unset, nothing changes."""
+    import base64
+    monkeypatch.setenv("GS_AUTH", "demo:s3cret")
+    basic = lambda s: {"Authorization": "Basic " + base64.b64encode(s.encode()).decode()}  # noqa: E731
+    for path in ("/", "/api/v1/meta", f"/api/v1/storage/days/{DAY}/plan", "/docs"):
+        r = client.get(path)
+        assert r.status_code == 401 and r.headers["www-authenticate"].startswith("Basic"), path
+    for bad in (basic("demo:wrong"), basic("demo:s3cret2"), {"Authorization": "Basic !!"}, {"Authorization": "Bearer x"}):
+        assert client.get("/api/v1/meta", headers=bad).status_code == 401
+    assert client.get("/api/v1/meta", headers=basic("demo:s3cret")).status_code == 200
+    monkeypatch.delenv("GS_AUTH")
+    assert client.get("/api/v1/meta").status_code == 200
 
 
 def test_plan_then_outcome(client):

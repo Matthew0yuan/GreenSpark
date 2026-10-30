@@ -9,7 +9,7 @@ from vpp import backtest as bt
 from vpp import site_bill as sb
 from vpp.v2 import harness as hs
 
-from .common import (DEFAULT_CONNECTION, DEFAULT_DISPATCHER, PERIODS, STRATEGY, check_mode, num, period, period_key,
+from .common import (DEFAULT_CONNECTION, DEFAULT_DISPATCHER, SAVED_PERIODS, STRATEGY, check_mode, num, period, period_key,
                      saved_rel)
 from .evidence import saved_runs
 from .storage import config, scenario
@@ -42,7 +42,7 @@ def storage_backtest(params: dict, progress) -> dict:
     saved = saved_runs(connection)[1][STRATEGY[connection, dispatcher]]
     keys = pd.Series([period_key(d) for d in run.index], index=run.index)
     out = []
-    for k in PERIODS:
+    for k in SAVED_PERIODS:
         g = run[keys == k]
         s = saved.reindex(g.index)
         out.append({"period": period(k, len(g)), "per_day_aud": num(g["money"].mean(), 1),

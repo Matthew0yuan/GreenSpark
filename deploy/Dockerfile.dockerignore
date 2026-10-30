@@ -1,0 +1,20 @@
+# Everything is left out of the build except what deploy/Dockerfile copies (no data, var, .git, notes or credentials).
+*
+!pyproject.toml
+!uv.lock
+!vpp/
+!scripts/
+!reports/
+!app/
+!analysis/2026-10-28/app_hurdle50/
+!analysis/2026-10-28/app_factory_h50/
+!analysis/2026-10-28/spikev3/model/
+!data/raw/aemo_rtms/rtms_openapi.json
+app/tests/
+app/frontend/node_modules/
+app/frontend/dist/
+app/frontend/test-results/
+app/frontend/playwright-report/
+**/__pycache__/
+**/*.pyc
+**/.env
