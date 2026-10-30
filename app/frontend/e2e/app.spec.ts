@@ -139,7 +139,7 @@ test("plan: chart text is only names, axes, actions and number + word labels; no
   const texts = await page.locator(".chart svg text").evaluateAll((els) =>
     els.map((t) => Array.from(t.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join("")));
   const allowed = [
-    /^(Plan|Sell extra if|Grid services|Price, A\$\/MWh|Energy stored, MWh|Site import, MW|PLAN MADE 09:00|Minimum|Full · \d+ MWh)$/,
+    /^(Plan|Actual|Sell extra if|Grid services|Price, A\$\/MWh|Energy stored, MWh|Site import, MW|PLAN MADE 09:00|Minimum|Full · \d+ MWh)$/,
     /^-?[\d,]+$/, /^\d{2}:\d{2}$/, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d+ \w+$/,
     /^(Discharge|Charge|Shave) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/, /^CMD · \d+ MW$/,
     /^(peak|low|floor) A\$[\d,]+$/, /^earns A\$[\d,]+$/, /^[\d.]+ MWh$/, /^A\$[\d,]+$/,
@@ -189,11 +189,19 @@ test("plan: hover table ≤ 5 rows, labels ≤ 2 words; outcome only after askin
   for (const r of rows) expect(r.split(/\s+/).length, r).toBeLessThanOrEqual(2);
   expect(await tip.innerText()).not.toContain("Actual");
   expect(outcome).toEqual([]);
+  // the lane names drawn, without their <title> hover notes
+  const lanes = () => page.locator(".chart svg text.lt").evaluateAll((els) =>
+    els.map((t) => Array.from(t.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join("")));
+  expect(await lanes()).not.toContain("Actual");
+  await expect(page.locator(".detail .a2")).toHaveCount(0);
   await page.getByRole("radio", { name: "Plan + what happened" }).click();
   await expect(page.locator(".wf-h", { hasText: "What happened" })).toBeVisible({ timeout: 30_000 });
   expect(outcome.length).toBeGreaterThan(0);
   await hit.hover();
   await expect(page.locator(".ctip")).toContainText("Actual");
+  // with the outcome: what the battery actually did, as a lane under the plan and under the plan's action in the panel
+  expect(await lanes()).toContain("Actual");
+  await expect(page.locator(".detail .a2 .tag")).toHaveText("ACTUAL");
 });
 
 test("plan: each decision is explained; Why this plan lists the reasons by time, a click selects one; outcome reasons after asking", async ({ page }) => {

@@ -51,6 +51,7 @@ export const GLOSS: Record<string, [string, string, string]> = {
   CUSTOMOFFER: ["model-suggested offer", "The terms the policy study suggests, found by searching the training period.", "A suggestion to test in a pilot, not a contract."],
   UNVALIDATED: ["unvalidated scenario", "A setting differs from the one tested. The engine recomputed, but no backtest was chosen or checked on this setting.", "Use it to explore, not as evidence."],
   ASSUMED: ["assumption", "Set by us, not measured or taken from a contract.", "Change it in Settings to see how much it matters."],
+  ACTUAL: ["what the battery did", "What the battery actually did in each half-hour, replayed at the day's actual prices (today: the half-hours so far).", "Where it differs from the 09:00 plan, an extra offer sold into a price spike or the half-hourly re-plan used newer prices."],
 };
 
 export const glNote = (k: string) => (GLOSS[k] ? `${GLOSS[k][1]} ${GLOSS[k][2]}` : k);

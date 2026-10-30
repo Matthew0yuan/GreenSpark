@@ -31,6 +31,35 @@ const VERB: Record<string, string> = { discharge: "Discharge", charge: "Charge",
 const ACT: Record<string, [string, string]> = { discharge: ["var(--dis)", "var(--on-dis)"], shave: ["var(--shave)", "var(--shave-text)"],
   charge: ["var(--chg)", "var(--text)"], hold: ["var(--hold)", "var(--text-3)"] };
 const segName = (s: Seg_) => (VERB[s.m] ? `${VERB[s.m]} ${nf(s.mw, 1)} MW` : "Hold");
+const ING: Record<string, string> = { discharge: "Discharging", charge: "Charging", shave: "Shaving" };
+
+/** What the battery did in each half-hour (the outcome), in the plan's terms: hold below 0.05 MW (the smallest
+ *  departure the outcome's reasons count), shave where the plan shaved and the battery did about that; null where the
+ *  half-hour has not happened yet (today). */
+function actualActs(p: PlanT, o: Outcome): (string | null)[] {
+  return o.battery_mw.map((a, k) => {
+    if (!isNum(a)) return null;
+    if (Math.abs(a) < 0.05) return "hold";
+    if (a < 0) return "charge";
+    return p.plan.action[k] === "shave" && Math.abs(a - (p.plan.battery_mw[k] ?? 0)) < 0.1 ? "shave" : "discharge";
+  });
+}
+
+/** The outcome's half-hours merged into runs of the same action, as segments() does for the plan, split at 09:00. */
+function actualSegments(p: PlanT, o: Outcome): Seg_[] {
+  const act = actualActs(p, o);
+  const out: Seg_[] = [];
+  for (let k = 0; k < N;) {
+    const m = act[k];
+    if (m == null) { k++; continue; }
+    let e = k, mw = 0;
+    while (e + 1 < N && e + 1 !== FIRST && act[e + 1] === m) e++;  // break at 09:00, where the plan starts
+    for (let j = k; j <= e; j++) mw = Math.max(mw, Math.abs(o.battery_mw[j] ?? 0));
+    out.push({ m, a: k, b: e + 1, mw });
+    k = e + 1;
+  }
+  return out;
+}
 
 function mainAction(p: PlanT, segs: Seg_[]) {
   const dis = segs.filter((s) => s.m === "discharge" || s.m === "shave");
@@ -328,10 +357,13 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
   const floor = xo.floor;
   const pr = p.price;
 
-  // bands, top to bottom: 09:00 marker, three lanes, price title, price plot, time axis
-  const LN = [{ y: 20, h: 22 }, { y: 48, h: 20 }, { y: 74, h: 20 }];
-  const laneTop = 20, laneBot = 94;
-  const top = 130, bot = 264, H = bot + 22;
+  // bands, top to bottom: 09:00 marker, the lanes (the plan; with the outcome, what the battery actually did; sell
+  // extra; grid services), price title, price plot, time axis
+  const lPlan = { y: 20, h: 22 }, lAct = o ? { y: 48, h: 20 } : null, dy = o ? 26 : 0;
+  const lSell = { y: 48 + dy, h: 20 }, lGrid = { y: 74 + dy, h: 20 };
+  const laneTop = 20, laneBot = 94 + dy;
+  const top = 130 + dy, bot = 264 + dy, H = bot + 22;
+  const actSegs = useMemo(() => (o ? actualSegments(p, o) : []), [p, o]);
   const hi = Math.max(250, floor ?? 0, ...pr.forecast_p50.filter(isNum), ...(pr.forecast_p90 ?? []).filter(isNum),
     ...(o ? o.price_actual.filter(isNum).map((x) => Math.min(x, 500)) : []));
   const lo = Math.min(0, ...pr.forecast_p50.filter(isNum), ...(o ? o.price_actual.filter(isNum) : []).map((x) => Math.max(x, -100)));
@@ -392,7 +424,9 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
   const tipFor = (k: number, e: React.MouseEvent) => {
     const mw = p.plan.battery_mw[k] ?? 0;
     const rows: [string, string][] = [
-      ["Power", Math.abs(mw) < 0.01 ? "hold" : `${mw > 0 ? "out" : "in"} ${nf(Math.abs(mw), 1)} MW`],
+      // the plan's power; with the outcome, "plan → actual" (hold below 0.05 MW, as in the Actual lane)
+      ["Power", `${Math.abs(mw) < 0.01 ? "hold" : `${mw > 0 ? "out" : "in"} ${nf(Math.abs(mw), 1)} MW`}${o && isNum(o.battery_mw[k])
+        ? ` → ${Math.abs(o.battery_mw[k]!) < 0.05 ? "hold" : `${o.battery_mw[k]! > 0 ? "out" : "in"} ${nf(Math.abs(o.battery_mw[k]!), 1)} MW`}` : ""}`],
       meter ? ["Import", isNum(meter[k]) ? `${nf(meter[k]!, 1)} MW` : "–"] : ["Offer", k >= FIRST && isNum(xo.lowest[k]) ? `≥ A$${nf(xo.lowest[k]!)}` : "–"],
       ["Forecast", isNum(p50[k]) ? `A$${nf(p50[k]!)}` : "–"],
     ];
@@ -424,6 +458,18 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
   );
   const laneName = (txt: string, lane: { y: number; h: number }, note: string) => (
     <text className="lt" x={X0 - 10} y={lane.y + lane.h / 2 + 4} textAnchor="end"><title>{note}</title>{txt}</text>);
+  const laneSegs = (list: Seg_[], lane: { y: number; h: number }, key: string) => list.map((s) => {
+    const [bg, fg] = colours[s.m] ?? colours.hold;
+    const w = g.X(s.b) - g.X(s.a);
+    const label = segName(s), short = s.m === "hold" ? "" : nf(s.mw, 1);
+    const txt = tw(label, "act") + 12 < w ? label : short && tw(short, "act") + 8 < w ? short : "";
+    return (
+      <g key={key + s.a}>
+        <rect x={g.X(s.a) + 1} y={lane.y} width={w - 2} height={lane.h} rx={3} style={{ fill: bg }} />
+        {txt && <text className="act" x={g.X(s.a) + w / 2} y={lane.y + lane.h / 2 + 4} textAnchor="middle" style={{ fill: fg }}>{txt}</text>}
+      </g>
+    );
+  });
 
   return (
     <div className="blk chart" ref={ref} tabIndex={0} onKeyDown={onKey} aria-label="Trading day chart; arrow keys move the selected half-hour">
@@ -436,36 +482,27 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
         <line className="ref" x1={g.X(FIRST)} x2={g.X(FIRST)} y1={14} y2={bot} style={{ stroke: "var(--mark)" }} />
         <text className="mk9" x={g.X(FIRST)} y={10} textAnchor="middle">PLAN MADE 09:00</text>
 
-        {/* plan lane */}
-        {laneName("Plan", LN[0], glNote("DISPATCHER"))}
-        {segs.map((s) => {
-          const [bg, fg] = colours[s.m] ?? colours.hold;
-          const w = g.X(s.b) - g.X(s.a);
-          const label = segName(s), short = s.m === "hold" ? "" : nf(s.mw, 1);
-          const txt = tw(label, "act") + 12 < w ? label : short && tw(short, "act") + 8 < w ? short : "";
-          return (
-            <g key={s.a}>
-              <rect x={g.X(s.a) + 1} y={LN[0].y} width={w - 2} height={LN[0].h} rx={3} style={{ fill: bg }} />
-              {txt && <text className="act" x={g.X(s.a) + w / 2} y={LN[0].y + 15} textAnchor="middle" style={{ fill: fg }}>{txt}</text>}
-            </g>
-          );
-        })}
+        {/* plan lane, then (with the outcome) what the battery actually did */}
+        {laneName("Plan", lPlan, glNote("DISPATCHER"))}
+        {laneSegs(segs, lPlan, "p")}
+        {lAct && laneName("Actual", lAct, glNote("ACTUAL"))}
+        {lAct && laneSegs(actSegs, lAct, "a")}
         {p.blocked_halfhours.map((k) => <rect key={"b" + k} className="bad-box" x={g.X(k)} y={laneTop - 1} width={g.IW} height={bot - laneTop + 1} />)}
 
         {/* sell extra lane */}
-        {laneName("Sell extra if", LN[1], glNote(ladder ? "EXTRAE5" : "EXTRA"))}
-        <rect x={g.X(FIRST) + 1} y={LN[1].y} width={g.X(N) - g.X(FIRST) - 2} height={LN[1].h} rx={3} style={{ fill: "var(--cond-soft)", fillOpacity: 0.5, stroke: "var(--cond)", strokeDasharray: "3 2" }} />
-        {sold.map((s, k) => s && <rect key={"s" + k} x={g.X(k) + 0.5} y={LN[1].y + 2} width={g.IW - 1} height={LN[1].h - 4} rx={1} style={{ fill: "var(--cond)" }} />)}
-        {tag(sellTxt, LN[1], "var(--cond-text)")}
+        {laneName("Sell extra if", lSell, glNote(ladder ? "EXTRAE5" : "EXTRA"))}
+        <rect x={g.X(FIRST) + 1} y={lSell.y} width={g.X(N) - g.X(FIRST) - 2} height={lSell.h} rx={3} style={{ fill: "var(--cond-soft)", fillOpacity: 0.5, stroke: "var(--cond)", strokeDasharray: "3 2" }} />
+        {sold.map((s, k) => s && <rect key={"s" + k} x={g.X(k) + 0.5} y={lSell.y + 2} width={g.IW - 1} height={lSell.h - 4} rx={1} style={{ fill: "var(--cond)" }} />)}
+        {tag(sellTxt, lSell, "var(--cond-text)")}
 
         {/* grid services lane */}
-        {laneName("Grid services", LN[2], glNote("FCESS"))}
+        {laneName("Grid services", lGrid, glNote("FCESS"))}
         {Array.from({ length: N - FIRST }, (_, j) => {
           const k = j + FIRST, s = standby(p, k);
-          return s > 0.01 ? <rect key={"f" + k} x={g.X(k)} y={LN[2].y} width={g.IW} height={LN[2].h} shapeRendering="crispEdges"
+          return s > 0.01 ? <rect key={"f" + k} x={g.X(k)} y={lGrid.y} width={g.IW} height={lGrid.h} shapeRendering="crispEdges"
             style={{ fill: "color-mix(in srgb, var(--fcess) " + Math.round(35 + 65 * Math.min(1, s / P)) + "%, var(--surface))" }} /> : null;
         })}
-        {earnTxt && tag(earnTxt, LN[2], "var(--text-2)")}
+        {earnTxt && tag(earnTxt, lGrid, "var(--text-2)")}
 
         {/* price panel */}
         <text className="ttl" x={0} y={top - 12}>Price, A$/MWh</text>
@@ -572,6 +609,11 @@ function Detail({ p, o, k, segs, outLoading, reveal }: { p: PlanT; o?: Outcome; 
   const s = segs.find((x) => k >= x.a && k < x.b);
   const shave = p.plan.action[k] === "shave";
   const act = k < FIRST ? "Before the plan" : Math.abs(mw) < 0.01 ? "Holding" : mw > 0 ? `${shave ? "Shaving" : "Discharging"} ${nf(mw, 1)} MW` : `Charging ${nf(-mw, 1)} MW`;
+  // with the outcome: what the battery actually did in this half-hour, and whether the extra offer sold
+  const aKind = o ? actualActs(p, o)[k] : null;
+  const am = o?.battery_mw[k];
+  const aAct = aKind && isNum(am) ? (aKind === "hold" ? "Holding" : `${ING[aKind]} ${nf(Math.abs(am), 1)} MW`) : null;
+  const soldMw = o?.offer_cleared_mw[k] ?? 0;
   const xo = extraOffer(p);
   const soc = p.plan.soc_mwh;
   const s_ = p.site;
@@ -590,6 +632,12 @@ function Detail({ p, o, k, segs, outLoading, reveal }: { p: PlanT; o?: Outcome; 
         <div className="t">{hhmm(k)}–{hhmm(k + 1)} <span className={"tag " + (k < FIRST ? "out" : "plan")}>{k < FIRST ? "EXECUTED" : "SCHEDULED"}</span></div>
         <div className="a" style={{ color: mw > 0.01 ? "var(--dis)" : undefined }}>{act}</div>
         {s && k >= FIRST && <div className="sub">{segName(s)} · {hhmm(s.a)}–{hhmm(s.b)}</div>}
+        {aAct && (
+          <div className="a2"><span className="tag out">ACTUAL</span>
+            <span style={{ color: (am ?? 0) > 0.01 ? "var(--dis)" : undefined }}>{aAct}</span>
+            {soldMw > 0.01 && <Note note={`The price rose above the offer price, so the extra offer sold ${nf(soldMw, 1)} MW more than planned.`}>offer sold</Note>}
+          </div>
+        )}
       </div>
       <dl className="kvs">{rows.map(([a, b], i) => <FragmentKV key={i} a={a} b={b} />)}</dl>
       <div className="det-out">

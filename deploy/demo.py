@@ -39,7 +39,7 @@ def settings() -> dict:
 
 
 def meta(env: dict) -> dict:
-    auth = base64.b64encode(env["GS_AUTH"].encode()).decode()
+    auth = base64.b64encode(env.get("GS_AUTH", "").encode()).decode()
     req = urllib.request.Request(f"http://127.0.0.1:{env.get('GS_PORT', '8080')}/api/v1/meta",
                                  headers={"Authorization": f"Basic {auth}"})
     with urllib.request.urlopen(req, timeout=10) as r:
@@ -75,10 +75,11 @@ def address(wait: float = 0) -> str | None:
 
 
 def show(env: dict, url: str | None) -> None:
-    user, password = env["GS_AUTH"].split(":", 1)
+    user, _, password = env.get("GS_AUTH", "").partition(":")
     print(f"\n  public address  {url or '(the tunnel has not reported one yet: run demo.py url in a minute)'}")
     print(f"  this computer   http://127.0.0.1:{env.get('GS_PORT', '8080')}")
-    print(f"  login           user {user}   password {password}\n")
+    print(f"  login           user {user}   password {password}\n" if user else
+          "  login           off: anyone with the address can open it (GS_AUTH is empty in deploy/.env)\n")
 
 
 def up() -> None:
