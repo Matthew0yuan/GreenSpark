@@ -1,0 +1,6 @@
+name,value,unit,formula,period,source,status,check,note
+current_daily,2095.51819293061,A$/天,,测试期 2026-07-01 至 2026-10-22（114 天）,analysis/2026-10-28/app_factory_h50/money.csv,回测,,rw50+state t5+roll 日均；含网络电费节省；不含年度IRCR和资本成本
+baseline_daily,1634.96842585789,A$/天,,测试期 2026-07-01 至 2026-10-22（114 天）,analysis/2026-10-28/app_factory_h50/money.csv,回测,,v1 日均
+perfect_daily,2177.18535571854,A$/天,,测试期 2026-07-01 至 2026-10-22（114 天）,analysis/2026-10-28/app_factory_h50/money.csv,回测,,perfect 日均；参考而非严格上界
+current_market,582.38018828307,A$/天,,测试期 2026-07-01 至 2026-10-22（114 天）,analysis/2026-10-28/app_factory_h50/daily.csv,回测,,total 日均；仅电能和FCESS减损耗
+perfect_market,859.093435254244,A$/天,,测试期 2026-07-01 至 2026-10-22（114 天）,analysis/2026-10-28/app_factory_h50/refs_daily.csv,回测,,perfect total 日均；仅电能和FCESS减损耗

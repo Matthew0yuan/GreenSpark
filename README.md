@@ -37,7 +37,7 @@ Methods were developed and selected on **1 Apr 2025–30 Jun 2026 (456 days)**. 
 | Area | Main finding | Scope and limitation |
 |---|---|---|
 | Price forecast | Test mean absolute error (MAE) was **31% lower** than repeating yesterday's prices: A$19.2 vs A$28.0/MWh. | The 09:00 half-hourly price forecast; test period above. |
-| Battery dispatch | Factory-battery earnings were **28% higher** than v1 across the test period: +30% in the first 107 days and +4% in the final 7 days. | A modelled 10 MW / 40 MWh battery with synthetic factory load; includes network-bill savings, excludes annual capacity-charge savings. Seven unseen days are too few to establish performance. |
+| Battery dispatch | Captured **68%** of the market net revenue earned by a reference strategy given the day's prices in advance, compared with **7%** when following the 09:00 plan without further adjustment. | Same simulated 10 MW / 40 MWh factory battery and operating constraints; 1 Jul–22 Oct 2026 (114 test days). Market net revenue is energy trading plus grid services, less battery wear; excludes network-bill and annual capacity-charge savings. Factory load is synthetic; the perfect-price reference is not a proven theoretical optimum. |
 | Customer calls | Summer system peaks offered more value than energy-price spikes in the household-battery study. | Contract year 1 Jul 2025–30 Jun 2026, within training. Uses household batteries and an assumed 2027 rule where exports count; results do not establish returns for business customers. |
 
 Customer payment terms are model suggestions, not an approved tariff. The test period has **no summer**, so it does
