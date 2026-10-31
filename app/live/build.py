@@ -20,6 +20,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from app.engine.common import TABLES
 from app.live import fetch
 
 if Path(os.environ.get("GS_DATA") or ".").resolve() != fetch.DATA.resolve():
@@ -38,8 +39,6 @@ from vpp.v2 import value as vl  # noqa: E402
 STATE = fetch.LIVE / "state.json"
 P = vd.PROCESSED
 H = pd.Timedelta(hours=8)
-# the two tables the app's e5 runs read (app/engine/common.py HURDLE 50): behind the factory, and standalone
-TABLES = (["--hurdle", "50", "--state"], ["--standalone", "--hurdle", "50", "--state"])
 FRAMES = {  # model inputs kept by key: rows built before keep their values
     "forecast_dispatch_0900.parquet": ["issue_date", "ts"], "spike_risk_0900.parquet": ["issue_date", "ts"],
     rk.HISTORY.name: ["issue_date", "ts"], rk.HISTORY_D1.name: ["issue_date", "ts"],

@@ -28,6 +28,8 @@ SAVED_DIR = {"factory": FACTORY, "standalone": STANDALONE}
 STRATEGY = {("factory", "e5"): "rw50+state t5+roll", ("factory", "v1"): "v1",
             ("standalone", "e5"): "rw50+state t5+roll", ("standalone", "v1"): "forecast+offer(value)"}
 PLAN_ONLY, PERFECT = "forecast", "perfect"  # the reference runs in each saved folder's refs_daily.csv
+# the two value tables e5 reads (python -m vpp.v2.value <args>, HURDLE 50): behind the factory, and standalone
+TABLES = (["--hurdle", "50", "--state"], ["--standalone", "--hurdle", "50", "--state"])
 
 
 def saved_rel(connection: str) -> str:

@@ -17,8 +17,7 @@ import numpy as np
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
-ROOT = next((p for p in HERE.parents if (p / "pyproject.toml").exists()),
-            Path(r"C:\Users\user\Desktop\PlayGround\GreenSpark"))
+ROOT = next(p for p in HERE.parents if (p / "pyproject.toml").exists())
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 

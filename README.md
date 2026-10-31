@@ -1,7 +1,11 @@
 # GreenSpark: battery trading and customer-battery calls in the WA electricity market
 
+[![tests](https://github.com/Matthew0yuan/GreenSpark/actions/workflows/tests.yml/badge.svg)](https://github.com/Matthew0yuan/GreenSpark/actions/workflows/tests.yml)
+
 A personal project built for the GreenSpark Hackathon 2026 (Challenge 02, Western Australia's Wholesale Electricity
 Market).
+
+![The 09:00 plan for the factory battery on 20 Jan 2026, with what actually happened](docs/plan.png)
 
 ## The problem
 
@@ -116,6 +120,8 @@ contract year 1 Jul 2025 – 30 Jun 2026, inside training.
   the peak days arrived, covered none of the 4 (0%), and lost money.
 - **Test period:** no summer, so no calls; the only cost was running the programme.
 
+![The 09:00 call decision for customer batteries on 20 Jan 2026](docs/call.png)
+
 ### Tried and not adopted
 
 Research runs, compared with the current dispatcher on the training data:
@@ -143,7 +149,8 @@ Research runs, compared with the current dispatcher on the training data:
 - **Frontend:** React 19, TypeScript, Vite, TanStack Query, hand-drawn SVG charts
 - **Tests:** pytest, Playwright
 - **Deploy:** Docker, Cloudflare Tunnel
-- **Data:** AEMO's public WEM data (5-minute prices, pre-dispatch, demand, grid-service prices), Open-Meteo (ECMWF)
+- **Data:** AEMO's public WEM data (5-minute prices, pre-dispatch, demand, grid-service prices), Open-Meteo (ECMWF);
+  sources and terms under [Data](#data)
 
 ## Run it
 
@@ -155,8 +162,21 @@ cd app/frontend && npm ci && npm run build && cd ../..
 uv run python -m app.backend
 ```
 
-Then open http://127.0.0.1:8000. The models take about 30 seconds to load. On a fresh clone the first start also builds
-the storage-value tables, which are not in git, so it takes longer.
+Then open http://127.0.0.1:8000. The app replays the historical days, 1 Apr 2025 – 22 Oct 2026. The models take about
+30 seconds to load. On a fresh clone the first start also builds the two storage-value tables (about 90 MB each, not in
+git), which adds about a minute.
+
+Tests: `uv run pytest app/tests` (the live-data tests are skipped until live data exist).
+
+On Windows, a few paths under `analysis/` are up to 149 characters long. Clone into a short folder, or run
+`git config --global core.longpaths true` before cloning.
+
+**Live data.** `uv run python -m app.live.run --init` copies `data/` into `var/live/` and downloads AEMO's newest days
+(about 1 GB). From then on the app runs on live data and rebuilds its inputs each morning.
+
+**Docker.** The public demo runs the app in a locked-down container behind a Cloudflare quick tunnel:
+`uv run python deploy/demo.py up` builds and starts it (it needs the live data above), `url` prints the address and
+login, `down` stops it. The login is random and kept in `deploy/.env`, which is not in git.
 
 ## Limits
 
@@ -165,7 +185,30 @@ the storage-value tables, which are not in git, so it takes longer.
 - Customer exports reduce the capacity charge under an assumed 2027 rule.
 - The test period has no summer, so the capacity-charge value is checked on past summers only.
 
+## Data
+
+- **AEMO** (Australian Energy Market Operator): WEM market data from [data.wa.aemo.com.au](https://data.wa.aemo.com.au),
+  including prices, pre-dispatch, demand, grid-service prices and requirements, outages, ST PASA and facilities.
+  © Australian Energy Market Operator Limited, subject to AEMO's
+  [copyright permissions](https://www.aemo.com.au/privacy-and-legal-notices). `data/raw/` holds the files as
+  downloaded; `data/pit/` and `data/processed/` hold tables derived from them. AEMO's facility SCADA (1.1 GB) is not
+  included; `uv run python scripts/download_wem.py facility-scada` downloads it.
+- **Weather:** [Weather data by Open-Meteo.com](https://open-meteo.com/), ECMWF IFS forecasts, under
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Changes: hourly forecasts for three locations were put
+  on a half-hour grid (instantaneous values interpolated, hourly totals held) and matched to the time each forecast run
+  was public.
+- **ERA** (Economic Regulation Authority, WA): the energy and grid-service offer price ceilings,
+  from [erawa.com.au](https://www.erawa.com.au) (`data/raw/era/`).
+- **Calendars:** WA public holidays ([wa.gov.au](https://www.wa.gov.au)) and school terms
+  ([education.wa.edu.au](https://www.education.wa.edu.au)).
+
+## Licence
+
+The code is under the [MIT licence](LICENSE). The data keep their sources' terms above; they are not covered by the
+MIT licence.
+
 ## Layout
 
-`app/` the web app · `vpp/` the models · `scripts/` data downloads · `reports/` result tables · `analysis/` dated
-experiments: scripts and their outputs
+`app/` the web app · `vpp/` the models · `scripts/` data downloads · `data/` market and weather data · `reports/`
+result tables · `analysis/` dated experiments: scripts and their outputs (their write-ups are not published) ·
+`deploy/` Docker · `agents/` tools used to dispatch and check AI coding agents during development

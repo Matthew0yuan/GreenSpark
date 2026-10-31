@@ -20,3 +20,16 @@ __pycache__/
 !/README.md
 deliverables/
 output/
+# local AI-tool settings, attachments and installed skills: this computer's only
+.claude/
+.codex-remote-attachments/
+.agents/
+skills-lock.json
+# agents/launch.py: each run's transcript and records in its task folder
+*.jsonl
+RUN_SUMMARY.json
+RUN_REPORT.json
+# value tables an experiment rebuilds (89.6 MB each; analysis/2026-10-28/spikev3/run_p0.py)
+analysis/**/v2_value_*.npz
+# AEMO's facility SCADA (1.1 GB): the app never reads it; python scripts/download_wem.py facility-scada
+data/raw/facility-scada/

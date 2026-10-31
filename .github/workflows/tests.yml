@@ -1,0 +1,44 @@
+# The backend tests on the historical replay (app/tests; the live-data tests skip without var/live), and the frontend's
+# type check and build.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GS_LIVE: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen --extra app
+      # the two value tables the app reads are git-ignored (86-90 MB each); the app would build them on first start
+      - name: Build the value tables
+        run: |
+          uv run python -m vpp.v2.value --hurdle 50 --state
+          uv run python -m vpp.v2.value --standalone --hurdle 50 --state
+      - run: uv run pytest app/tests -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app/frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: app/frontend
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build

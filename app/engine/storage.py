@@ -24,14 +24,15 @@ from vpp.data import PROCESSED
 from vpp.v2 import backtest as vb
 from vpp.v2 import harness as hs
 from vpp.v2 import offers as of
+from vpp.v2 import value as vl
 from vpp.v2.config import V1
 
 from . import evidence as ev
 from . import explain as ex
 from . import live as lv
 from .common import (CONNECTIONS, DEFAULT_CONNECTION, DEFAULT_DISPATCHER, DISPATCHERS, FIRST, HURDLE, N, PERFECT,
-                     PERIODS, PLAN_ONLY, ROOT, SAVED_DIR, STRATEGY, arr, check_mode, clock, hot_season, num, other, pad,
-                     period, period_key, saved_rel, weekday_label)
+                     PERIODS, PLAN_ONLY, ROOT, SAVED_DIR, STRATEGY, TABLES, arr, check_mode, clock, hot_season, num,
+                     other, pad, period, period_key, saved_rel, weekday_label)
 
 # MW or MWh: the plan checks allow the MILP solver's feasibility tolerance (HiGHS: on 2026-01-20 behind the meter the room
 # behind FCESS lower is short by 1.5e-6 MWh, 1.5 Wh of 40 MWh)
@@ -56,6 +57,16 @@ def config(dispatcher: str, record: bool = False):
     return replace(vb.E5 if dispatcher == "e5" else V1, record=record)
 
 
+def value_tables() -> None:
+    """Builds the value tables that are missing (python -m vpp.v2.value, about 30 s each): they are 86-90 MB each and
+    git-ignored, so a fresh clone has none. The live data's are rebuilt each morning (app/live/build.py)."""
+    for argv in TABLES:
+        params = vl.standalone_params(vl.TableParams().asset()) if "--standalone" in argv else vl.TableParams()
+        if not vl.path("median", 40.0, HURDLE, True, False,
+                       **{k: v for k, v in params.kwargs().items() if k != "energy_mwh"}).exists():
+            vl.main(argv)
+
+
 class Storage:
     """Loads the market days and both connections' saved runs once (~10 s) and replays days on request (~1.5-4 s
     each, cached)."""
@@ -63,6 +74,7 @@ class Storage:
     def __init__(self):
         assert (STRATEGY["standalone", "v1"], STRATEGY["factory", "v1"], STRATEGY["factory", "e5"]) == \
             (bt.VALUE, V1.name, vb.E5.name), "common.STRATEGY no longer names the saved runs"
+        value_tables()
         # live data (app/live): the complete days up to the last one AEMO's yearly files hold, then the day in progress
         self.live = lv.state()
         self.days = bt.load_days("0900", last=None if self.live is None else self.live["complete_through"])
