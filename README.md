@@ -4,7 +4,7 @@
 
 A decision-support tool for Western Australia's Wholesale Electricity Market (WEM): forecast prices, plan battery
 operation, and evaluate when paying customers to use their batteries adds value. Built as a personal project for
-GreenSpark Hackathon 2026, Challenge 02.
+GreenSpark Hackathon 2026
 
 ![The 09:00 factory-battery plan on 20 Jan 2026, alongside the realised outcome](docs/plan.png)
 
