@@ -6,6 +6,8 @@ A decision-support tool for Western Australia's Wholesale Electricity Market (WE
 operation, and evaluate when paying customers to use their batteries adds value. Built as a personal project for
 GreenSpark Hackathon 2026
 
+It explain the decision in plain language and gives you why it making this dispatching decision
+
 ![The 09:00 factory-battery plan on 20 Jan 2026, alongside the realised outcome](docs/plan.png)
 
 ## What it does
