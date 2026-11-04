@@ -27,7 +27,7 @@ async function shoot(width, height, scheme, suffix, pages) {
     await page.reload();
     await settle(page);
     await page.screenshot({ path: `${out}/${p}_${width}${suffix}${own}.png`, fullPage: full });
-    const extra = p === "plan" ? ["Plan + what happened", "_out"] : p === "call" ? ["Whole season · hindsight", "_hind"] : null;
+    const extra = p === "plan" ? ["Plan + what happened", "_out"] : p === "call" ? ["Whole season, hindsight", "_hind"] : null;
     if (extra) {
       await page.getByRole("radio", { name: extra[0] }).click();
       await page.waitForTimeout(800);

@@ -12,9 +12,9 @@ export const CONN: Record<Connection, string> = { factory: "factory meter", stan
 
 /** The parties and the asset named under each storage page's title (Who). */
 export function whoItems(connection: Connection): [string, string][] {
-  return [["ZENITH", "Zenith · runs the network"], ["NETWORK", "storage network · 10 MW / 40 MWh"],
-    ...(connection === "factory" ? [["FACTORY", "factory · CMD 9 MW"] as [string, string]] : []),
-    ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]];
+  return [["ZENITH", "Zenith, runs the network"], ["NETWORK", "storage network, 10 MW / 40 MWh"],
+    ...(connection === "factory" ? [["FACTORY", "factory, CMD 9 MW"] as [string, string]] : []),
+    ["AEMO", "AEMO, market operator"], ["WEM", "WEM, WA wholesale market"]];
 }
 
 /** Saved settings from before the connection option keep working: missing or unknown fields take the defaults. */

@@ -16,8 +16,8 @@ const PAGES: Record<"storage" | "fleet", [Page, string][]> = {
 /** The status chip on live data: today's prices so far, or the last complete day. */
 function liveLabel(m: Meta): string {
   const t = m.storage?.live?.today;
-  if (t && !t.complete && t.as_of) return `live · prices to ${t.as_of}`;
-  return `live · to ${dayLabel(m.storage?.live?.complete_through ?? m.storage?.last_day ?? "", false)}`;
+  if (t && !t.complete && t.as_of) return `live, prices to ${t.as_of}`;
+  return `live, to ${dayLabel(m.storage?.live?.complete_through ?? m.storage?.last_day ?? "", false)}`;
 }
 
 function statusNote(m?: Meta): string {
@@ -54,8 +54,8 @@ export default function App() {
           </nav>
           <span className="sp" />
           <span className={"engine" + (failed ? " bad" : ready ? (meta.data?.live ? " live" : "") : " warm")} data-note={statusNote(meta.data)} tabIndex={0}>
-            <i />{failed ? "engine failed" : !ready ? "engine warming up" : !isDefault(settings) ? `${meta.data?.live ? "live" : "replay"} · changed settings`
-              : meta.data?.live ? liveLabel(meta.data) : "replay · up to date"}
+            <i />{failed ? "engine failed" : !ready ? "engine warming up" : !isDefault(settings) ? `${meta.data?.live ? "live" : "replay"}, changed settings`
+              : meta.data?.live ? liveLabel(meta.data) : "replay, up to date"}
           </span>
           <button className={"gear" + (page === "settings" ? " on" : "")} aria-label="Settings" onClick={() => go("settings")}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="3" />

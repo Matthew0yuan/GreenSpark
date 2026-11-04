@@ -12,9 +12,9 @@ export default function Value() {
   return (
     <section aria-label="Value by party">
       <PageHead title="Value by party"
-        chips={<><Chip cls="step">2 · Improve</Chip><Chip cls="hyp" note={glNote("S2a")}>today's rule (S2a): no business case</Chip></>}
-        ctx={<>Customer batteries · <Gl k="CUSTOMOFFER">suggested offer</Gl> vs <Gl k="REFTERMS">reference terms</Gl></>}
-        who={[["ZENITH", "Zenith · the retailer"], ["VPP", "customer batteries (VPP)"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]]} />
+        chips={<><Chip cls="step">2. Improve</Chip><Chip cls="hyp" note={glNote("S2a")}>today's rule (S2a): no business case</Chip></>}
+        ctx={<>Customer batteries: <Gl k="CUSTOMOFFER">suggested offer</Gl> vs <Gl k="REFTERMS">reference terms</Gl></>}
+        who={[["ZENITH", "Zenith, the retailer"], ["VPP", "customer batteries (VPP)"], ["AEMO", "AEMO, market operator"], ["WEM", "WEM, WA wholesale market"]]} />
       {q.isLoading && <Loading what="the accounts" />}
       {q.error && <Failed error={q.error} />}
       {q.data && <Body v={q.data} />}
@@ -47,7 +47,7 @@ function Body({ v }: { v: ValueSummary }) {
         <div className="dec-r">
           <div className="chips" style={{ justifyContent: "flex-end" }}>
             <Chip note={`${glNote("CONTRACTYEAR")} 1 Jul 2025 – 30 Jun 2026, 365 days.`}>contract year 2025-26</Chip>
-            <Chip cls="hyp" note={glNote("VPP")}>household-sized · magnitude</Chip>
+            <Chip cls="hyp" note={glNote("VPP")}>household-sized, magnitude</Chip>
           </div>
         </div>
       </div>
@@ -56,17 +56,17 @@ function Body({ v }: { v: ValueSummary }) {
         <div className="blk-h"><h2>Against the alternatives</h2></div>
         <Alternatives rows={[
           { name: "No calls", sub: "baseline", note: "Customers' batteries in normal self-use: the comparison for every row.", z: 0, worst: null, lines: ["0 calls"] },
-          { name: "Reference terms", sub: `${nf(ref.terms.pay_c_per_kwh ?? 0)} c/kWh · ${ref.terms.max_calls} calls`, note: `${glNote("REFTERMS")}`, z: ref.model_calls.parties_aud.zenith, worst: worst(ref),
+          { name: "Reference terms", sub: `${nf(ref.terms.pay_c_per_kwh ?? 0)} c/kWh, ${ref.terms.max_calls} calls`, note: `${glNote("REFTERMS")}`, z: ref.model_calls.parties_aud.zenith, worst: worst(ref),
             lines: [`${ref.model_calls.calls} of ${ref.terms.max_calls} calls`, `${ref.model_calls.peak_days_covered} of ${ref.model_calls.peak_days} peak days`, `customers ${signed(ref.model_calls.per_customer_aud.customers, 2)} /customer/yr`] },
-          { name: "Suggested offer", sub: `A$${nf(cus.terms.pay_aud_per_event ?? 0, 2)} a call · ${cus.terms.max_calls} calls`, note: glNote("CUSTOMOFFER"), z: cus.model_calls.parties_aud.zenith, worst: worst(cus), hl: true,
+          { name: "Suggested offer", sub: `A$${nf(cus.terms.pay_aud_per_event ?? 0, 2)} a call, ${cus.terms.max_calls} calls`, note: glNote("CUSTOMOFFER"), z: cus.model_calls.parties_aud.zenith, worst: worst(cus), hl: true,
             lines: [`${cus.model_calls.calls} of ${cus.terms.max_calls} calls`, `${cus.model_calls.peak_days_covered} of ${cus.model_calls.peak_days} peak days`, `customers ${signed(cus.model_calls.per_customer_aud.customers, 2)} /customer/yr`] },
           ...(cur.your_calls ? [{ name: "Your calls", sub: cur.name, note: glNote("YOURCALL"), z: cur.your_calls.parties_aud.zenith, worst: null, mine: true,
-            lines: [`${cur.your_calls.calls} calls · ${cur.your_calls.operator_days} days decided by you`, `${cur.your_calls.peak_days_covered} of ${cur.your_calls.peak_days} peak days`, `customers ${signed(cur.your_calls.per_customer_aud.customers, 2)} /customer/yr`] }] : []),
+            lines: [`${cur.your_calls.calls} calls, ${cur.your_calls.operator_days} days decided by you`, `${cur.your_calls.peak_days_covered} of ${cur.your_calls.peak_days} peak days`, `customers ${signed(cur.your_calls.per_customer_aud.customers, 2)} /customer/yr`] }] : []),
         ]} />
       </div>
 
       <div className="blk rule">
-        <div className="blk-h"><h2>Who gets what</h2><span className="sub">{cur.name}{cur.your_calls ? " · your calls" : ""}</span>
+        <div className="blk-h"><h2>Who gets what</h2><span className="sub">{cur.name}{cur.your_calls ? ", your calls" : ""}</span>
           <Chip note="Zenith's extra profit against having no customer batteries called.">Zenith vs no fleet</Chip>
           <Chip note="Customers' gain against their battery's normal self-use.">customers vs self-use</Chip>
           <Chip note={`${glNote("TRANSFER")} Zenith pays customers ${aud(shown.transfers_aud)} in this year; ${nf(shown.enrolled ?? 0)} enrolled, ${nf(shown.responding ?? 0)} respond to a call on average.`}>payments are transfers</Chip></div>
@@ -101,19 +101,19 @@ function Alternatives({ rows }: { rows: Alt[] }) {
     <div className="chart" ref={ref}>
       <svg viewBox={`0 0 ${W} ${axY + 22}`} role="group" aria-label="Extra Zenith profit of each way of calling, contract year 2025-26, with the worst season">
         <text className="ttl" x={L} y={12}>Extra Zenith profit, A$</text>
-        {rows.map((r, i) => (r.hl || r.mine) && <rect key={"bg" + r.name} x={0} y={ys[i]} width={W} height={hs[i] - 6} rx={6} style={{ fill: r.mine ? "var(--cust-soft)" : "var(--accent-soft)", opacity: 0.7 }} />)}
+        {rows.map((r, i) => (r.hl || r.mine) && <rect key={"bg" + r.name} x={0} y={ys[i]} width={W} height={hs[i] - 6} rx={6} style={{ fill: r.mine ? "var(--cust-soft)" : "var(--info-soft)", opacity: 0.7 }} />)}
         {ticks.map((t) => <line key={"g" + t} className="gl" x1={x(t)} x2={x(t)} y1={top} y2={axY} />)}
         <line className="ref" x1={x(0)} x2={x(0)} y1={top} y2={axY} style={{ stroke: "var(--axis)" }} />
         {rows.map((r, i) => {
           const y = ys[i];
           return (
             <g key={r.name}>
-              <text className="lt" x={12} y={y + 18} style={{ fontWeight: 600 }}><title>{r.note}</title>{r.name}</text>
+              <text className="lt" x={12} y={y + 18} style={{ fontWeight: 500 }}><title>{r.note}</title>{r.name}</text>
               <text x={12 + tw(r.name, "ltB") + 10} y={y + 18}>{r.sub}</text>
               {r.lines.map((l, j) => <text key={j} x={12} y={y + 34 + j * 14} style={{ fill: "var(--text-2)" }}>{l}</text>)}
               {isNum(r.z) && <>
                 {Math.abs(x(r.z) - x(0)) > 0.5 && <path d={hbar(x(0), x(r.z), y + 10, 16)} style={{ fill: (r.z ?? 0) >= 0 ? "var(--zen)" : "var(--bad)" }} />}
-                <text className="ann" x={Math.max(x(0), x(r.z)) + 6} y={y + 22} style={{ fontWeight: 600 }}>{valTxt(r)}</text>
+                <text className="ann" x={Math.max(x(0), x(r.z)) + 6} y={y + 22} style={{ fontWeight: 500 }}>{valTxt(r)}</text>
               </>}
               {isNum(r.worst) && <>
                 <path d={hbar(x(0), x(r.worst!), y + 32, 12, 2)} style={{ fill: r.worst! >= 0 ? "var(--zen)" : "var(--bad)", opacity: r.worst! >= 0 ? 0.4 : 0.85 }} />
@@ -138,7 +138,7 @@ function Parties({ r }: { r: ValueRow }) {
   ];
   const [ref, W] = useWidth<HTMLDivElement>(480);
   const max = Math.max(1, ...rows.map((x) => Math.abs(x[2] ?? 0)));
-  const per = (pc: number | null) => (isNum(pc) ? `· ${aud(pc, 2)} /customer/yr` : "");
+  const per = (pc: number | null) => (isNum(pc) ? `(${aud(pc, 2)} /customer/yr)` : "");
   const R = Math.max(...rows.map((x) => tw(aud(x[2]), "annB") + 10 + tw(per(x[3])))) + 16;
   const L = 180, w = (v: number | null) => Math.max(3, (Math.abs(v ?? 0) / max) * (W - L - R));
   return (
@@ -149,9 +149,9 @@ function Parties({ r }: { r: ValueRow }) {
           return (
             <g key={n}>
               <circle cx={6} cy={y + 9} r={4} style={{ fill: col }} />
-              <text className="lt" x={16} y={y + 13} style={{ fontWeight: 600 }}><title>{note}</title>{n}</text>
+              <text className="lt" x={16} y={y + 13} style={{ fontWeight: 500 }}><title>{note}</title>{n}</text>
               <path d={hbar(L, L + w(v), y + 1, 16)} style={{ fill: neg ? "var(--bad)" : col }} />
-              <text className="ann" x={end} y={y + 13} style={{ fontWeight: 600, fill: neg ? "var(--bad)" : undefined }}>{aud(v)}</text>
+              <text className="ann" x={end} y={y + 13} style={{ fontWeight: 500, fill: neg ? "var(--bad)" : undefined }}>{aud(v)}</text>
               {isNum(pc) && <text x={end + tw(aud(v), "annB") + 10} y={y + 13}>{per(pc)}</text>}
             </g>
           );
@@ -200,8 +200,8 @@ function Terms({ v }: { v: ValueSummary }) {
       {m.error && <div className="state err">{(m.error as Error).message}</div>}
       {m.data && (
         <div className="strip">
-          <b>{aud(m.data.parties_aud.zenith)}</b> Zenith ({signed((m.data.parties_aud.zenith ?? 0) - (base ?? 0))} vs saved terms) · customers {aud(m.data.parties_aud.customers)} ·
-          {" "}{m.data.calls} calls · {nf(m.data.enrolled ?? 0)} enrolled <Chip cls="unv" note={glNote("UNVALIDATED")}>unvalidated</Chip>
+          <b>{aud(m.data.parties_aud.zenith)}</b> Zenith ({signed((m.data.parties_aud.zenith ?? 0) - (base ?? 0))} vs saved terms), customers {aud(m.data.parties_aud.customers)},
+          {" "}{m.data.calls} calls, {nf(m.data.enrolled ?? 0)} enrolled <Chip cls="unv" note={glNote("UNVALIDATED")}>unvalidated</Chip>
         </div>
       )}
       <span className="sub">Contract year 2025-26 under S2b. The call rule is refitted on the training data; event length and reserve stay as the offer's.</span>

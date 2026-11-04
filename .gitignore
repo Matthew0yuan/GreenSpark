@@ -12,6 +12,8 @@ deploy/.env
 app/**/__pycache__/
 app/frontend/test-results/
 app/frontend/playwright-report/
+# Hallmark's lint records, screenshots and log (the design skill's own folder)
+.hallmark/
 # Python bytecode, everywhere
 __pycache__/
 *.pyc

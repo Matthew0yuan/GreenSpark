@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import { useQuery } from "@tanstack/react-query";
 import { api, type Check, type Outcome, type Plan as PlanT } from "../api";
 import { around, bandPath, DayAxis, geo, Hatch, linePath, linePts, N, Placer, segPts, stepPath, stepPts, tw, X0, YGrid } from "../components/chart";
-import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Note, PageHead, Seg, useWidth, type TipData } from "../components/ui";
+import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Measured, Note, PageHead, Seg, useWidth, type TipData } from "../components/ui";
 import { Point, WhyHead } from "../components/why";
 import { addDays, aud, dayLabel, hhmm, isNum, nf, PERIOD_CHIP, periodOf } from "../lib/format";
 import { glNote } from "../lib/gloss";
@@ -63,10 +63,10 @@ function actualSegments(p: PlanT, o: Outcome): Seg_[] {
 
 function mainAction(p: PlanT, segs: Seg_[]) {
   const dis = segs.filter((s) => s.m === "discharge" || s.m === "shave");
-  if (!dis.length) return "Hold · grid services standby";
+  if (!dis.length) return "Hold, grid services standby";
   const energy = (s: Seg_) => p.plan.battery_mw.slice(s.a, s.b).reduce<number>((t, v) => t + (v ?? 0), 0);
   const best = dis.reduce((a, b) => (energy(b) > energy(a) ? b : a));
-  return `${VERB[best.m]} ${nf(best.mw, 1)} MW · ${hhmm(best.a)}–${hhmm(best.b)}`;
+  return `${VERB[best.m]} ${nf(best.mw, 1)} MW, ${hhmm(best.a)}–${hhmm(best.b)}`;
 }
 
 /** The extra-sale offer of each half-hour: v1 a floor and spare MW; e5 its layered offers above the plan, the
@@ -121,13 +121,13 @@ export default function Plan() {
     <section aria-label="Today's plan">
       <PageHead title="Today's plan"
         chips={<>
-          <Chip cls="step">1 · Decide</Chip>
-          <Chip cls={live.isToday ? "live" : ""} note={glNote(periodOf(day))}>{live.isToday ? `live · to ${live.asOf}` : PERIOD_CHIP[periodOf(day)]}</Chip>
+          <Chip cls="step">1. Decide</Chip>
+          <Chip cls={live.isToday ? "live" : ""} note={glNote(periodOf(day))}>{live.isToday ? `live, to ${live.asOf}` : PERIOD_CHIP[periodOf(day)]}</Chip>
           {!isDefault(settings) && <Chip cls="unv" note={glNote("UNVALIDATED")}>changed settings</Chip>}
           {p?.site?.ircr_flag_0900 && <Chip cls="hyp" note={glNote("IRCRFLAG")}>IRCR peak flag</Chip>}
         </>}
-        ctx={<><Gl k="TRADINGDAY">trading day</Gl> 08:00–08:00 AWST · <Gl k="DECISION">plan 09:00</Gl> · <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>
-          {" · "}<DispatcherName p={p} short={settings.dispatcher} /></>}
+        ctx={<><Gl k="TRADINGDAY">trading day</Gl> 08:00–08:00 AWST, <Gl k="DECISION">plan 09:00</Gl>, <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>
+          {", "}<DispatcherName p={p} short={settings.dispatcher} /></>}
         who={whoItems(settings.connection)}
         right={<>
           <DayPicker day={day} setDay={setDay} />
@@ -142,12 +142,12 @@ export default function Plan() {
   );
 }
 
-/** "dispatcher v2", and on a connection where e5 did not pass the selection rule, "· not passed here". */
+/** "dispatcher v2", and on a connection where e5 did not pass the selection rule, ", not passed here". */
 export function DispatcherName({ p, short, passed }: { p?: PlanT; short: "e5" | "v1"; passed?: boolean }) {
   const ok = passed ?? p?.dispatcher.e5_passed;
   const v = p?.dispatcher.verdict;
   const note = `${glNote(short === "e5" ? "E5" : "V1")}${v ? ` Training period, this connection: v2 − v1 ${aud(v.e5_minus_v1_aud_per_day)}/day, 95% range ${aud(v.lo95)} to ${aud(v.hi95)}.` : ""}`;
-  return <Note note={`${glNote("DISPATCHER")} ${note}`}>dispatcher {DISP[short]}{short === "e5" && ok === false ? " · not passed here" : ""}</Note>;
+  return <Note note={`${glNote("DISPATCHER")} ${note}`}>dispatcher {DISP[short]}{short === "e5" && ok === false ? ", not passed here" : ""}</Note>;
 }
 
 function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?: Outcome; outLoading: boolean; sel: number;
@@ -176,10 +176,10 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
         <div className="dec-l">
           <div className="statusline">
             {blocked ? <span className="pill bad">! Blocked</span> : <span className="pill ok">✓ Plan executable</span>}
-            <span className="sub">{passed} of {p.checks.length} checks pass{notChecked ? ` · ${notChecked} not checked` : ""}</span>
+            <span className="sub">{passed} of {p.checks.length} checks pass{notChecked ? `, ${notChecked} not checked` : ""}</span>
             {p.explain && <button className="lnk" aria-expanded={why} aria-controls="why-plan" onClick={() => setWhy(!why)}>Why this plan</button>}
           </div>
-          <div className="title">{blocked ? `Resolve ${SHORT[failed[0].id]?.toLowerCase() ?? "the limit"} first` : mainAction(p, segs)}</div>
+          <div className="title"><Measured text={blocked ? `Resolve ${SHORT[failed[0].id]?.toLowerCase() ?? "the limit"} first` : mainAction(p, segs)} /></div>
         </div>
         <div className="dec-r">
           <div className="lbl">Expected profit today</div>
@@ -202,13 +202,13 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
       <div className="two">
         <div className="blk rule">
           <div className="blk-h"><h2>Value</h2><span className="sub">trading day, A$</span><span className="sp" />
-            <button className="lnk" onClick={() => go("evidence")}>vs simpler ways →</button></div>
+            <button className="lnk" onClick={() => go("evidence")}>Compare with simpler ways</button></div>
           <div className="wf-h">Plan at 09:00</div>
           <Waterfall parts={[["e", "Energy", (v.energy ?? 0) + (v.regulation_energy ?? 0)], ["f", "Grid services", v.fcess ?? 0], ["s", "Stored", v.stored_end ?? 0]]}
             wear={v.wear ?? 0} net={v.net ?? 0} dim={blocked} />
           {o ? (
             <>
-              <div className="wf-h">{o.live ? `What happened · so far, to ${o.live.through}` : "What happened · replayed"}</div>
+              <div className="wf-h">{o.live ? `What happened so far, to ${o.live.through}` : "What happened, replayed"}</div>
               <Waterfall parts={[["e", "Energy", o.money_aud.energy ?? 0], ["f", "Grid services", o.money_aud.fcess ?? 0],
                 ...(isNum(o.money_aud.network) ? [["b", "Network bill", o.money_aud.network] as [string, string, number]] : [])]}
                 wear={o.money_aud.wear ?? 0} net={o.money_aud.net ?? 0} />
@@ -221,7 +221,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
               </div>
             </>
           ) : (
-            <div className="sub" style={{ margin: "8px 0" }}>Outcome hidden · <button className="lnk" onClick={reveal}>Plan + what happened</button></div>
+            <div className="sub" style={{ margin: "8px 0" }}>Outcome hidden. <button className="lnk" onClick={reveal}>Plan + what happened</button></div>
           )}
           <details className="more">
             <summary>Breakdown</summary>
@@ -325,15 +325,15 @@ function Waterfall({ parts, wear, net, dim }: { parts: [string, string, number][
         {bars.map((b) => (
           <g key={b.l} tabIndex={0} data-note={`${b.l}: ${aud(b.v)}`}>
             <rect x={b.x} y={0} width={b.w} height={22} rx={3} style={{ fill: WF[b.c][0] }} />
-            {!hidden.includes(b) && <text className="ann" x={b.x + 7} y={15} style={{ fill: WF[b.c][1], fontWeight: 600 }}>{b.text}</text>}
+            {!hidden.includes(b) && <text className="ann" x={b.x + 7} y={15} style={{ fill: WF[b.c][1], fontWeight: 500 }}>{b.text}</text>}
           </g>
         ))}
         {showWear && <g tabIndex={0} data-note={`Wear: −${aud(wear)}`}>
           <rect x={wearX} y={yW} width={wearW} height={16} rx={2} style={{ fill: "var(--bad)", opacity: 0.85 }} />
-          <text className="ann" x={wearX - 6} y={yW + 12} textAnchor="end" style={{ fill: "var(--bad)", fontWeight: 600 }}>Wear −{nf(wear)}</text>
+          <text className="ann" x={wearX - 6} y={yW + 12} textAnchor="end" style={{ fill: "var(--bad)", fontWeight: 500 }}>Wear −{nf(wear)}</text>
         </g>}
         <rect x={0} y={yN} width={netW} height={22} rx={3} style={{ fill: net < 0 ? "var(--bad)" : "var(--zen)" }} />
-        <text className="ann" x={netIn ? 8 : netW + 8} y={yN + 15} style={{ fill: netIn ? "var(--on-zen)" : "var(--text)", fontWeight: 600 }}>{netText}</text>
+        <text className="ann" x={netIn ? 8 : netW + 8} y={yN + 15} style={{ fill: netIn ? "var(--on-zen)" : "var(--text)", fontWeight: 500 }}>{netText}</text>
         {hidden.map((b) => {
           const at = kx;
           kx += 14 + tw(b.text, "ann") + 16;
@@ -413,7 +413,7 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
   const ps = new Placer({ x0: g.X(FIRST) + 3, x1: W, y0: 0, y1: sBot - 2 });
   ps.line(linePts(g, soc, yS, 0, FIRST)).line(linePts(g, soc, yS, FIRST)).line(stepPts(g, floorS, yS, FIRST)).line(segPts(X0, yS(E), g.X(N), yS(E)));
   if (o) ps.line(linePts(g, o.soc_mwh, yS));
-  const fullAt = ps.place(`Full · ${nf(E)} MWh`, "tick", [[g.X(N) - 2, yS(E) - 5, "end"]]);
+  const fullAt = ps.place(`Full ${nf(E)} MWh`, "tick", [[g.X(N) - 2, yS(E) - 5, "end"]]);
   const minAt = ps.place("Minimum", "tick", [[g.X(N) - 2, yS(lastFloor) - 5, "end"], [g.X(N) - 2, yS(lastFloor) + 13, "end"]]);
   const endTxt = isNum(soc[N]) ? `${nf(soc[N]!, 1)} MWh` : "";
   const endAt = endTxt ? ps.place(endTxt, "ann", [[g.X(N) - 2, yS(soc[N]!) - 6, "end"], [g.X(N) - 2, yS(soc[N]!) + 15, "end"]]) : null;
@@ -448,7 +448,7 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
   };
 
   const colours = ACT;
-  const sellTxt = `${floor ? `price ≥ A$${nf(floor)}: +up to ${nf(spare, 0)} MW` : "no extra offer"}${o ? ` · sold ${soldN} · ${aud(soldAud)}` : ""}`;
+  const sellTxt = `${floor ? `price ≥ A$${nf(floor)}: +up to ${nf(spare, 0)} MW` : "no extra offer"}${o ? `, sold ${soldN} for ${aud(soldAud)}` : ""}`;
   const earnTxt = fcessAud > 0.5 ? `earns ${aud(fcessAud)}` : "";
   const tag = (txt: string, lane: { y: number; h: number }, fill: string) => (
     <g>
@@ -480,7 +480,7 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
         <rect x={X0} y={laneTop} width={g.X(FIRST) - X0} height={laneBot - laneTop} fill="url(#pre)" />
         <rect x={X0} y={top} width={g.X(FIRST) - X0} height={bot - top} fill="url(#pre)" />
         <line className="ref" x1={g.X(FIRST)} x2={g.X(FIRST)} y1={14} y2={bot} style={{ stroke: "var(--mark)" }} />
-        <text className="mk9" x={g.X(FIRST)} y={10} textAnchor="middle">PLAN MADE 09:00</text>
+        <text className="mk9" x={g.X(FIRST)} y={10} textAnchor="middle">Plan made 09:00</text>
 
         {/* plan lane, then (with the outcome) what the battery actually did */}
         {laneName("Plan", lPlan, glNote("DISPATCHER"))}
@@ -535,7 +535,7 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
         <path className="series" d={linePath(g, soc, yS, 0, FIRST)} style={{ fill: "none", stroke: "var(--soc)", strokeWidth: 2 }} />
         <path className="series" d={linePath(g, soc, yS, FIRST)} style={{ fill: "none", stroke: "var(--soc)", strokeWidth: 2, strokeDasharray: "5 3" }} />
         {o && <path className="series" d={linePath(g, o.soc_mwh, yS)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.8 }} />}
-        {fullAt && <text x={fullAt.x} y={fullAt.y} textAnchor={fullAt.a}>Full · {nf(E)} MWh</text>}
+        {fullAt && <text x={fullAt.x} y={fullAt.y} textAnchor={fullAt.a}>Full {nf(E)} MWh</text>}
         {minAt && <text x={minAt.x} y={minAt.y} textAnchor={minAt.a}><title>{glNote("RESERVE")}</title>Minimum</text>}
         {endAt && <text className="ann halo" x={endAt.x} y={endAt.y} textAnchor={endAt.a} style={{ fill: "var(--soc)" }}>{endTxt}</text>}
         {minLblAt && <text className="ann halo" x={minLblAt.x} y={minLblAt.y} textAnchor={minLblAt.a} style={{ fill: "var(--soc)" }}>{minTxt}</text>}
@@ -568,7 +568,7 @@ function MeterChart({ p, o, sel, setSel, hover, setHover, day, next }: { p: Plan
   pl.line(stepPts(g, s.meter_mw, y)).line(stepPts(g, s.load_fc_mw, y)).line(stepPts(g, cap, y));
   if (s.ircr_cap_mw) pl.line(stepPts(g, s.ircr_cap_mw, y));
   if (o?.site) pl.line(stepPts(g, o.site.meter_mw, y));
-  const cmdTxt = `CMD · ${nf(s.cmd_mw)} MW`;
+  const cmdTxt = `CMD ${nf(s.cmd_mw)} MW`;
   const cmdAt = pl.place(cmdTxt, "ann", [[g.X(N) - 4, y(capEnd) - 5, "end"], [g.X(N) - 4, y(capEnd) + 15, "end"], [g.X(FIRST) + 8, y(capEnd) - 5, "start"]]);
   const tipFor = (k: number, e: React.MouseEvent) => {
     const rows: [string, string][] = [["Import", isNum(s.meter_mw[k]) ? `${nf(s.meter_mw[k]!, 1)} MW` : "–"],
@@ -622,18 +622,18 @@ function Detail({ p, o, k, segs, outLoading, reveal }: { p: PlanT; o?: Outcome; 
   const rows: [ReactNode, ReactNode][] = [
     ["Stored", isNum(soc[k]) && isNum(soc[k + 1]) ? `${nf(soc[k]!, 1)} → ${nf(soc[k + 1]!, 1)} MWh` : "–"],
     [<Gl k="FCESS">Grid services</Gl>, `${nf(standby(p, k), 1)} MW standby`],
-    [<Gl k={p.offers_0900?.rule === "ladder" ? "EXTRAE5" : "EXTRA"}>Sell extra if</Gl>, k >= FIRST && isNum(xo.lowest[k]) ? `≥ A$${nf(xo.lowest[k]!)} · up to ${nf(xo.mw[k], 1)} MW` : "–"],
-    ["Forecast price", isNum(p.price.forecast_p50[k]) ? `A$${nf(p.price.forecast_p50[k]!)}/MWh${hh ? ` · ${hh.rank}` : ""}` : "not yet issued"],
-    ...(s_ ? [[<Gl k="METER">Site import</Gl>, isNum(s_.meter_mw[k]) ? `${nf(s_.meter_mw[k]!, 1)} MW${isNum(s_.cmd_cap_mw?.[k]) ? ` · cap ${nf(s_.cmd_cap_mw![k]!, 1)}` : ""}` : "–"] as [ReactNode, ReactNode]] : []),
+    [<Gl k={p.offers_0900?.rule === "ladder" ? "EXTRAE5" : "EXTRA"}>Sell extra if</Gl>, k >= FIRST && isNum(xo.lowest[k]) ? `≥ A$${nf(xo.lowest[k]!)}, up to ${nf(xo.mw[k], 1)} MW` : "–"],
+    ["Forecast price", isNum(p.price.forecast_p50[k]) ? `A$${nf(p.price.forecast_p50[k]!)}/MWh${hh ? `, ${hh.rank}` : ""}` : "not yet issued"],
+    ...(s_ ? [[<Gl k="METER">Site import</Gl>, isNum(s_.meter_mw[k]) ? `${nf(s_.meter_mw[k]!, 1)} MW${isNum(s_.cmd_cap_mw?.[k]) ? `, cap ${nf(s_.cmd_cap_mw![k]!, 1)}` : ""}` : "–"] as [ReactNode, ReactNode]] : []),
   ];
   return (
     <div className="detail" aria-live="polite">
       <div>
-        <div className="t">{hhmm(k)}–{hhmm(k + 1)} <span className={"tag " + (k < FIRST ? "out" : "plan")}>{k < FIRST ? "EXECUTED" : "SCHEDULED"}</span></div>
+        <div className="t">{hhmm(k)}–{hhmm(k + 1)} <span className={"tag " + (k < FIRST ? "out" : "plan")}>{k < FIRST ? "Executed" : "Scheduled"}</span></div>
         <div className="a" style={{ color: mw > 0.01 ? "var(--dis)" : undefined }}>{act}</div>
-        {s && k >= FIRST && <div className="sub">{segName(s)} · {hhmm(s.a)}–{hhmm(s.b)}</div>}
+        {s && k >= FIRST && <div className="sub">{segName(s)}, {hhmm(s.a)}–{hhmm(s.b)}</div>}
         {aAct && (
-          <div className="a2"><span className="tag out">ACTUAL</span>
+          <div className="a2"><span className="tag out">Actual</span>
             <span style={{ color: (am ?? 0) > 0.01 ? "var(--dis)" : undefined }}>{aAct}</span>
             {soldMw > 0.01 && <Note note={`The price rose above the offer price, so the extra offer sold ${nf(soldMw, 1)} MW more than planned.`}>offer sold</Note>}
           </div>
@@ -643,11 +643,11 @@ function Detail({ p, o, k, segs, outLoading, reveal }: { p: PlanT; o?: Outcome; 
       <div className="det-out">
         {o ? (
           <dl className="kvs">
-            <dt>Outcome</dt><dd><span className="tag out">{o.live ? (isNum(o.price_actual[k]) ? "SO FAR" : "NOT YET") : "REPLAYED"}</span></dd>
+            <dt>Outcome</dt><dd><span className="tag out">{o.live ? (isNum(o.price_actual[k]) ? "So far" : "Not yet") : "Replayed"}</span></dd>
             <dt>Actual price</dt><dd>{isNum(o.price_actual[k]) ? `A$${nf(o.price_actual[k]!)}/MWh` : "–"}</dd>
             <dt>Battery</dt><dd>{isNum(o.battery_mw[k]) ? `${nf(o.battery_mw[k]!, 1)} MW` : "–"}</dd>
             {o.site && <><dt>Site import</dt><dd>{isNum(o.site.meter_mw[k]) ? `${nf(o.site.meter_mw[k]!, 1)} MW` : "–"}</dd></>}
-            <dt>Sold extra</dt><dd>{(o.offer_cleared_mw[k] ?? 0) > 0.01 ? `${nf(o.offer_cleared_mw[k]!, o.offer_cleared_mw[k]! < 0.05 ? 2 : 1)} MW · ${aud(o.offer_sold_aud[k])}` : "none"}</dd>
+            <dt>Sold extra</dt><dd>{(o.offer_cleared_mw[k] ?? 0) > 0.01 ? `${nf(o.offer_cleared_mw[k]!, o.offer_cleared_mw[k]! < 0.05 ? 2 : 1)} MW for ${aud(o.offer_sold_aud[k])}` : "none"}</dd>
             <dt>Offer price</dt><dd>{isNum(o.offer_price_live[k]) ? `A$${nf(o.offer_price_live[k]!)}` : "not set"}</dd>
           </dl>
         ) : outLoading ? <Loading what="what happened" /> : (

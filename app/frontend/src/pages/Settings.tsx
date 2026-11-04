@@ -99,13 +99,13 @@ function Rerun() {
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button className="btn" onClick={() => start.mutate()} disabled={start.isPending || j?.state === "running"}>Run backtest</button>
         {j?.state === "running" && <button className="btn" onClick={() => api.cancelJob(j.id)}>Cancel</button>}
-        {j && <span className="sub">{j.state}{j.message ? ` · ${j.message}` : ""}</span>}
+        {j && <span className="sub">{j.state}{j.message ? `: ${j.message}` : ""}</span>}
       </div>
       {j && j.state === "running" && <div className="prog" aria-label="progress"><i style={{ width: `${Math.round(100 * j.progress)}%` }} /></div>}
       {j?.state === "done" && j.result && (
         <table className="t" style={{ marginTop: 10 }}>
           <thead><tr><th>Period</th><th className="r">These settings</th><th className="r">Tested</th><th className="r">Difference</th></tr></thead>
-          <tbody>{j.result.periods.map((p) => <tr key={p.period.kind}><td>{p.period.label} · {p.period.days} d</td>
+          <tbody>{j.result.periods.map((p) => <tr key={p.period.kind}><td>{p.period.label}, {p.period.days} d</td>
             <td className="r">{aud(p.per_day_aud)}</td><td className="r">{aud(p.default_per_day_aud)}</td><td className="r">{signed(p.difference_aud)}</td></tr>)}</tbody>
         </table>
       )}
@@ -119,6 +119,6 @@ function ResetDecisions({ offer }: { offer: string }) {
   const m = useMutation({ mutationFn: () => api.resetDecisions(offer), onSuccess: () => qc.invalidateQueries() });
   return (
     <div className="fld"><span>Your call decisions</span>
-      <span><button className="btn" onClick={() => m.mutate()}>Clear all · follow the model</button>{m.isSuccess && <span className="sub"> cleared</span>}</span></div>
+      <span><button className="btn" onClick={() => m.mutate()}>Clear all, follow the model</button>{m.isSuccess && <span className="sub"> cleared</span>}</span></div>
   );
 }

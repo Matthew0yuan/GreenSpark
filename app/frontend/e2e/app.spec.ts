@@ -139,11 +139,11 @@ test("plan: chart text is only names, axes, actions and number + word labels; no
   const texts = await page.locator(".chart svg text").evaluateAll((els) =>
     els.map((t) => Array.from(t.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join("")));
   const allowed = [
-    /^(Plan|Actual|Sell extra if|Grid services|Price, A\$\/MWh|Energy stored, MWh|Site import, MW|PLAN MADE 09:00|Minimum|Full · \d+ MWh)$/,
+    /^(Plan|Actual|Sell extra if|Grid services|Price, A\$\/MWh|Energy stored, MWh|Site import, MW|Plan made 09:00|Minimum|Full \d+ MWh)$/,
     /^-?[\d,]+$/, /^\d{2}:\d{2}$/, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d+ \w+$/,
-    /^(Discharge|Charge|Shave) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/, /^CMD · \d+ MW$/,
+    /^(Discharge|Charge|Shave) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/, /^CMD \d+ MW$/,
     /^(peak|low|floor) A\$[\d,]+$/, /^earns A\$[\d,]+$/, /^[\d.]+ MWh$/, /^A\$[\d,]+$/,
-    /^price ≥ A\$\d+: \+up to \d+ MW( · sold \d+ · A\$[\d,]+)?$/, /^no extra offer$/,
+    /^price ≥ A\$\d+: \+up to \d+ MW(, sold \d+ for A\$[\d,]+)?$/, /^no extra offer$/,
     /^(Energy|Grid services|Stored|Network bill) −?[\d,]+$/, /^Wear −[\d,]+$/, /^Net −?A\$[\d,]+$/,
   ];
   for (const t of texts) expect(allowed.some((r) => r.test(t.trim())), `chart text "${t}"`).toBe(true);
@@ -155,7 +155,7 @@ test("plan: chart text is only names, axes, actions and number + word labels; no
    the model calls (labels for the call window and the hold appear). */
 const VIEWS: [string, string, string | null][] = [
   ["plan", "plan only", null], ["plan", "plan + outcome", "Plan + what happened"], ["evidence", "", null],
-  ["call", "09:00", null], ["call", "hindsight", "Whole season · hindsight"], ["value", "", null], ["settings", "", null],
+  ["call", "09:00", null], ["call", "hindsight", "Whole season, hindsight"], ["value", "", null], ["settings", "", null],
 ];
 for (const width of [1440, 1024]) {
   for (const [p, label, radio] of VIEWS) {
@@ -201,7 +201,7 @@ test("plan: hover table ≤ 5 rows, labels ≤ 2 words; outcome only after askin
   await expect(page.locator(".ctip")).toContainText("Actual");
   // with the outcome: what the battery actually did, as a lane under the plan and under the plan's action in the panel
   expect(await lanes()).toContain("Actual");
-  await expect(page.locator(".detail .a2 .tag")).toHaveText("ACTUAL");
+  await expect(page.locator(".detail .a2 .tag")).toHaveText("Actual");
 });
 
 test("plan: each decision is explained; Why this plan lists the reasons by time, a click selects one; outcome reasons after asking", async ({ page }) => {
@@ -275,7 +275,7 @@ test("evidence: three periods; clicking one changes the headline", async ({ page
   await open(page, "evidence");
   const rows = page.locator(".chart svg g[role=button]");
   await expect(rows).toHaveCount(3);
-  await expect(page.locator(".dec")).toContainText("Test · reviewed");
+  await expect(page.locator(".dec")).toContainText("Test, reviewed");
   await rows.nth(0).click();
   await expect(page.locator(".dec")).toContainText("Training period");
   await expect(page.locator(".dec")).toContainText("v2 passed here");
@@ -304,9 +304,9 @@ test("call: the operator's decision changes the count, survives a reload, and un
   await page.waitForFunction(() => !document.querySelector('[aria-busy="true"]') && document.querySelector(".callbadge"));
   const was = (await page.locator(".callbadge").innerText()).trim();
   const used = await page.locator(".budget .n b").first().innerText();
-  await page.getByRole("radio", { name: was === "CALL" ? "No call" : /^Call/ }).click();
+  await page.getByRole("radio", { name: was === "Call" ? "No call" : /^Call/ }).click();
   await expect(page.locator(".callbadge")).toHaveClass(/mine/);
-  await expect(page.locator(".callbadge")).toHaveText(was === "CALL" ? "NO CALL" : "CALL");
+  await expect(page.locator(".callbadge")).toHaveText(was === "Call" ? "No call" : "Call");
   await expect(page.locator(".budget .n b").first()).not.toHaveText(used);
   await page.reload();
   await expect(page.locator(".callbadge")).toHaveClass(/mine/, { timeout: 30_000 });
@@ -354,12 +354,12 @@ test("live: opens on the newest day; today's outcome stops at the last published
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForFunction(() => document.querySelector("main section .dec") && !document.querySelector('[aria-busy="true"]'), null, { timeout: 90_000 });
-  await expect(page.locator(".topbar .engine")).toContainText(/^live · /);
+  await expect(page.locator(".topbar .engine")).toContainText(/^live, /);
   const label = new Date(m.storage.last_day + "T00:00:00Z").toLocaleDateString("en-AU",
     { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).replace(",", "");
   await expect(page.locator(".daypick .d")).toHaveText(label);
   if (t && !t.complete && t.ready) {
-    await expect(page.locator(".ph .chip.live")).toHaveText(/^live · to \d{2}:\d{2}$/);
+    await expect(page.locator(".ph .chip.live")).toHaveText(/^live, to \d{2}:\d{2}$/);
     await page.getByRole("radio", { name: "Plan + what happened" }).click();
     await expect(page.locator(".wf-h", { hasText: "so far" })).toBeVisible({ timeout: 90_000 });
     const o = await (await page.request.get(`/api/v1/storage/days/${t.day}/outcome`)).json();

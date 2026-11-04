@@ -25,16 +25,16 @@ export default function Call() {
     <section aria-label="Tonight's call">
       <PageHead title="Tonight's call"
         chips={<>
-          <Chip cls="step">1 · Decide</Chip>
+          <Chip cls="step">1. Decide</Chip>
           <Chip note={glNote(periodOf(day))}>{PERIOD_CHIP[periodOf(day)]}</Chip>
           <Chip cls={offer === "custom" ? "hyp" : ""} note={glNote(offer === "custom" ? "CUSTOMOFFER" : "REFTERMS")}>{offer === "custom" ? "model suggestion" : "reference terms"}</Chip>
         </>}
-        ctx={<>{c ? <>{c.terms.pay_aud_per_event ? `A$${nf(c.terms.pay_aud_per_event, 2)} a call` : `${nf(c.terms.pay_c_per_kwh ?? 0)} c/kWh`} · {c.terms.max_calls} calls a year · </> : null}
+        ctx={<>{c ? <>{c.terms.pay_aud_per_event ? `A$${nf(c.terms.pay_aud_per_event, 2)} a call` : `${nf(c.terms.pay_c_per_kwh ?? 0)} c/kWh`}, {c.terms.max_calls} calls a year, </> : null}
           <Gl k="DECISION">decided 09:00</Gl></>}
-        who={[["ZENITH", "Zenith · the retailer"], ["VPP", "customer batteries (VPP)"], ["AEMO", "AEMO · market operator"], ["WEM", "WEM · WA wholesale market"]]}
+        who={[["ZENITH", "Zenith, the retailer"], ["VPP", "customer batteries (VPP)"], ["AEMO", "AEMO, market operator"], ["WEM", "WEM, WA wholesale market"]]}
         right={<>
           <DayPicker day={day} setDay={setDay} />
-          <Seg label="View" value={view} onChange={setView} options={[["decision", "Known at 09:00"], ["hindsight", "Whole season · hindsight"]]} />
+          <Seg label="View" value={view} onChange={setView} options={[["decision", "Known at 09:00"], ["hindsight", "Whole season, hindsight"]]} />
         </>} />
       {call.isLoading && <Loading what="the 09:00 call" />}
       {call.error && <Failed error={call.error} />}
@@ -60,14 +60,14 @@ function CallBody({ c, hind }: { c: CallDay; hind: boolean }) {
   const left = c.calls.cap - c.calls.used_before;
   const err = (decide.error || undo.error) as Error | null;
 
-  const title = d.call ? <>Customer batteries discharge <span className="nw">{d.start}–{d.end}</span></>
-    : c.model.reason === "outside Hot Season" ? "No call · outside the Hot Season" : c.model.reason === "cap reached" ? "No call · no calls left" : "No call today";
+  const title = d.call ? <>Customer batteries discharge <span className="nw m">{d.start}–{d.end}</span></>
+    : c.model.reason === "outside Hot Season" ? "No call: outside the Hot Season" : c.model.reason === "cap reached" ? "No call: no calls left" : "No call today";
   return (
     <>
       <div className="dec">
         <div className="dec-l">
           <div className="title">
-            <span className={"callbadge" + (d.call ? "" : " no") + (mine ? " mine" : "")} data-note={mine ? glNote("YOURCALL") : glNote("CALL")} tabIndex={0}>{d.call ? "CALL" : "NO CALL"}</span>
+            <span className={"callbadge" + (d.call ? "" : " no") + (mine ? " mine" : "")} data-note={mine ? glNote("YOURCALL") : glNote("CALL")} tabIndex={0}>{d.call ? "Call" : "No call"}</span>
             {title}
           </div>
           <div className="chips dec-chips">
@@ -81,7 +81,7 @@ function CallBody({ c, hind }: { c: CallDay; hind: boolean }) {
           <div className={"big" + (d.call ? "" : " dim")} data-note={`${c.payment.basis}. ${nf(c.payment.billed_kwh_per_customer ?? 0, 1)} kWh billed per customer.`}>{d.call ? aud(c.payment.fleet_aud) : "A$0"}</div>
           <div className="chips dec-chips" style={{ justifyContent: "flex-end" }}>
             <Chip note={glNote("TRANSFER")}>transfer payment</Chip>
-            <Chip note={`${glNote("RESPONSE")} ${nf(c.responding ?? 0)} of ${nf(c.enrolled ?? 0)} enrolled customers.`}>{nf(c.responding ?? 0)} respond · average</Chip>
+            <Chip note={`${glNote("RESPONSE")} ${nf(c.responding ?? 0)} of ${nf(c.enrolled ?? 0)} enrolled customers.`}>{nf(c.responding ?? 0)} respond (average)</Chip>
           </div>
         </div>
       </div>
@@ -89,12 +89,12 @@ function CallBody({ c, hind }: { c: CallDay; hind: boolean }) {
       <div className="opctl" role="group" aria-label="Your decision for this day">
         <b>Your decision</b>
         <Seg label="Call or not" value={d.call ? "call" : "no"} onChange={(v) => decide.mutate(v === "call")}
-          options={[["call", left > 0 || d.call ? "Call" : "Call · none left"], ["no", "No call"]]} />
+          options={[["call", left > 0 || d.call ? "Call" : "Call (none left)"], ["no", "No call"]]} />
         <label><select className="sel" aria-label="Event start" value={d.call && d.start ? d.start : start} onChange={(e) => { setStart(e.target.value); if (d.call) api.decide(c.day, c.offer, true, e.target.value).then(done); }}>
           {c.start_options.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
-        <span className="who-dec">Model: {c.model.call ? `call ${c.model.start}–${c.model.end}` : `no call · ${c.model.reason}`}</span>
+        <span className="who-dec">Model: {c.model.call ? `call ${c.model.start}–${c.model.end}` : `no call: ${c.model.reason}`}</span>
         {c.explain && <button className="lnk" aria-expanded={why} aria-controls="why-call" onClick={() => setWhy(!why)}>Why?</button>}
-        {mine && <button className="lnk" onClick={() => undo.mutate()}>Undo · follow the model</button>}
+        {mine && <button className="lnk" onClick={() => undo.mutate()}>Undo, follow the model</button>}
         {err && <span style={{ color: "var(--bad)" }}>{err.message}</span>}
       </div>
       {why && c.explain && (
@@ -113,7 +113,7 @@ function CallBody({ c, hind }: { c: CallDay; hind: boolean }) {
           {Array.from({ length: c.calls.cap }, (_, i) => <i key={i} className={i < c.calls.used_before ? "u" : i < c.calls.used_with_today ? "t" : ""} />)}
         </div>
         <span className="n"><Note note={`Calls used in contract year ${c.contract_year} (1 Jul – 30 Jun) up to and including this day, of the cap.`}><b>{c.calls.used_with_today}</b> of {c.calls.cap} used</Note>
-          {c.hot_season && <> · <Note note={glNote("HOTSEASON")}><b>{c.calls.hot_season_days_left}</b> season days left</Note></>}</span>
+          {c.hot_season && <>, <Note note={glNote("HOTSEASON")}><b>{c.calls.hot_season_days_left}</b> season days left</Note></>}</span>
       </div>
 
       <DemandChart c={c} hind={hind} />
@@ -129,7 +129,7 @@ function DemandChart({ c, hind }: { c: CallDay; hind: boolean }) {
   const act = hind && c.hindsight ? c.hindsight.demand_actual_mw : [];
   const thr = c.forecast?.threshold_mw ?? null;
   const all = [...fc, ...act, thr].filter(isNum) as number[];
-  if (!all.length) return <div className="blk"><div className="blk-h"><h2>Demand forecast</h2></div><div className="state">Not available · no AEMO forecast at 09:00 for this day</div></div>;
+  if (!all.length) return <div className="blk"><div className="blk-h"><h2>Demand forecast</h2></div><div className="state">Not available: no AEMO forecast at 09:00 for this day</div></div>;
   const lo = Math.floor(Math.min(...all) / 500) * 500, hi = Math.ceil(Math.max(...all) / 250) * 250 + 100;
   const top = 30, bot = 200, H = bot + 34;
   const y = (v: number) => bot - ((v - lo) / (hi - lo)) * (bot - top);
@@ -170,13 +170,13 @@ function DemandChart({ c, hind }: { c: CallDay; hind: boolean }) {
         {isNum(thr) && <line className="ref" x1={X0} x2={g.X(N)} y1={y(thr!)} y2={y(thr!)} style={{ stroke: "var(--peak)", strokeDasharray: "2 3", strokeWidth: 1.2 }}>
           <title>{`threshold = 4th-highest daily peak so far this season (${nf(c.forecast?.fourth_highest_mw ?? 0)} MW) − ${nf(c.forecast?.margin_mw ?? 0)} MW margin`}</title></line>}
         <line className="ref" x1={g.X(2)} x2={g.X(2)} y1={top - 10} y2={bot} style={{ stroke: "var(--mark)" }} />
-        <text className="mk9" x={g.X(2)} y={top - 14} textAnchor="middle">09:00 DECISION</text>
+        <text className="mk9" x={g.X(2)} y={top - 14} textAnchor="middle">09:00 decision</text>
         <path className="series" d={line(fc)} style={{ fill: "none", stroke: "var(--peak)", strokeWidth: 2, strokeDasharray: "5 3" }} />
         {act.length > 0 && <path className="series" d={line(act)} style={{ fill: "none", stroke: "var(--actual)", strokeWidth: 1.8 }} />}
         {isNum(fc[kPeak]) && <circle cx={cx(kPeak)} cy={y(fc[kPeak]!)} r={4} style={{ fill: "var(--surface)", stroke: "var(--peak)", strokeWidth: 2 }} />}
         {thrAt && <text className="ann halo" x={thrAt.x} y={thrAt.y} textAnchor={thrAt.a} style={{ fill: "var(--peak)" }}>{thrTxt}</text>}
         {holdAt && <text className="ann" x={holdAt.x} y={holdAt.y} textAnchor="middle" style={{ fill: "var(--cust-text)" }}>Hold charge</text>}
-        {callAt && <text className="ann" x={callAt.x} y={callAt.y} textAnchor="middle" style={{ fill: "var(--cust-text)", fontWeight: 600 }}>{callTxt}</text>}
+        {callAt && <text className="ann" x={callAt.x} y={callAt.y} textAnchor="middle" style={{ fill: "var(--cust-text)", fontWeight: 500 }}>{callTxt}</text>}
         {peakAt && <text className="ann halo" x={peakAt.x} y={peakAt.y} textAnchor={peakAt.a} style={{ fill: "var(--peak)" }}>{peakTxt}</text>}
         <DayAxis g={g} y={bot} day={dayLabel(c.day, false)} next={dayLabel(addDays(c.day, 1), false)} />
         {Array.from({ length: N }, (_, k) => (
@@ -225,7 +225,7 @@ function SeasonChart({ s, c, hind, onPick }: { s: Season; c: CallDay; hind: bool
     ...(hind ? [["Peak day", (x: number) => <path d={star(x + 5, legY - 4, 5.5)} style={{ fill: "var(--peak)" }} />, glNote("PEAKDAY")] as [string, (x: number) => ReactNode, string]] : []),
   ];
   let lx = L;
-  const legendAt = legend.map(([t]) => { const at = lx; lx += 16 + tw(t) + 18; return at; });
+  const legendAt = legend.map(([t]) => { const at = lx; lx += 16 + tw(t, "lg") + 18; return at; });
   /* "Today" sits over its line; the threshold label goes where it covers neither bars nor the line */
   const tx = ti >= 0 ? L + (ti + 0.5) * bw : null;
   const pl = new Placer({ x0: L, x1: W, y0: 0, y1: bot - 2 });
@@ -252,7 +252,7 @@ function SeasonChart({ s, c, hind, onPick }: { s: Season; c: CallDay; hind: bool
             <g key={d.day} style={{ cursor: "pointer" }} onClick={() => onPick(d.day)}
               onMouseMove={(e) => setTip({ x: e.clientX, y: e.clientY, title: dayLabel(d.day), rows: [
                 ["Peak", isNum(v) ? `${nf(v!)} MW` : "not yet known"], ["Forecast", isNum(d.forecast_mw) ? `${nf(d.forecast_mw!)} MW` : "–"],
-                ["Flagged", d.flagged ? "yes" : "no"], ["Called", d.called ? (d.operator ? "yes · yours" : "yes") : d.operator ? "no · yours" : "no"],
+                ["Flagged", d.flagged ? "yes" : "no"], ["Called", d.called ? (d.operator ? "yes, yours" : "yes") : d.operator ? "no, yours" : "no"],
                 ...(hind ? [["Peak day", d.official_peak_day ? "yes" : "no"] as [string, string]] : [])] })}
               onMouseLeave={() => setTip(null)}>
               <rect x={x} y={top} width={bw} height={bot - top + 30} style={{ fill: "transparent" }} />
@@ -263,7 +263,7 @@ function SeasonChart({ s, c, hind, onPick }: { s: Season; c: CallDay; hind: bool
           );
         })}
         <line className="ax" x1={L} x2={W - R} y1={bot} y2={bot} />
-        <text x={L - 8} y={callY + 3.5} textAnchor="end">Calls</text>
+        <text className="lg" x={L - 8} y={callY + 3.5} textAnchor="end">Calls</text>
         {firstFuture > 0 && <rect x={L + firstFuture * bw} y={top} width={W - R - (L + firstFuture * bw)} height={bot - top} fill="url(#sfut)" clipPath="url(#splot)" style={{ pointerEvents: "none" }} />}
         {tx != null && <line className="ref" x1={tx} x2={tx} y1={top - 8} y2={bot + 22} style={{ stroke: "var(--mark)", strokeDasharray: "2 2" }} />}
         {todayAt && <text className="ann" x={todayAt.x} y={todayAt.y} textAnchor={todayAt.a}>Today</text>}
@@ -275,7 +275,7 @@ function SeasonChart({ s, c, hind, onPick }: { s: Season; c: CallDay; hind: bool
             <text x={L + i * bw} y={monthY}>{dayLabel(m).split(" ").slice(2).join(" ")}</text></g> : null;
         })}
         {legend.map(([t, mark, note], i) => (
-          <g key={t}>{mark(legendAt[i])}<text x={legendAt[i] + 16} y={legY}>{note && <title>{note}</title>}{t}</text></g>
+          <g key={t}>{mark(legendAt[i])}<text className="lg" x={legendAt[i] + 16} y={legY}>{note && <title>{note}</title>}{t}</text></g>
         ))}
       </svg>
       <ChartTip tip={tip} />

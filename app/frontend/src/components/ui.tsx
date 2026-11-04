@@ -13,6 +13,12 @@ export function Note({ note, children, cls = "tipc" }: { note: string; children:
   return <span className={cls} tabIndex={0} data-note={note}>{children}</span>;
 }
 
+/** A heading's figures (with their units) in the measured face, the words around them in the body face. */
+export function Measured({ text }: { text: string }) {
+  const parts = text.split(/((?:A\$)?[−-]?\d[\d.,:]*(?:–\d[\d.,:]*)?(?: ?(?:MWh|MW|kWh|c\/kWh|h|d))?)/);
+  return <>{parts.map((s, i) => (i % 2 ? <span key={i} className="m">{s}</span> : s))}</>;
+}
+
 export function Chip({ children, note, cls = "" }: { children: ReactNode; note?: string; cls?: string }) {
   return note ? <span className={"chip " + cls} tabIndex={0} data-note={note}>{children}</span> : <span className={"chip " + cls}>{children}</span>;
 }
@@ -49,7 +55,9 @@ export function DayPicker({ day, setDay }: { day: string; setDay: (d: string) =>
   const pick = () => { const el = inp.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); } };
   return (
     <span className="daypick">
-      <button className="arr" aria-label="Previous trading day" disabled={day <= FIRST_DAY} onClick={() => setDay(addDays(day, -1))}>‹</button>
+      <button className="arr" aria-label="Previous trading day" disabled={day <= FIRST_DAY} onClick={() => setDay(addDays(day, -1))}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5" /></svg>
+      </button>
       <span className="cal">
         <button className="d" onClick={pick} aria-label={`${dayLabel(day)}, pick a trading day`}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
@@ -57,7 +65,9 @@ export function DayPicker({ day, setDay }: { day: string; setDay: (d: string) =>
         </button>
         <input ref={inp} type="date" tabIndex={-1} aria-label="Pick a trading day" min={FIRST_DAY} max={LAST_DAY} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} />
       </span>
-      <button className="arr" aria-label="Next trading day" disabled={day >= LAST_DAY} onClick={() => setDay(addDays(day, 1))}>›</button>
+      <button className="arr" aria-label="Next trading day" disabled={day >= LAST_DAY} onClick={() => setDay(addDays(day, 1))}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5" /></svg>
+      </button>
     </span>
   );
 }
@@ -78,7 +88,7 @@ export function Loading({ what }: { what: string }) {
 
 export function Failed({ error }: { error: unknown }) {
   const msg = error instanceof Error ? error.message : String(error);
-  return <div className="state err" role="alert">Not available · {msg}</div>;
+  return <div className="state err" role="alert">Not available: {msg}</div>;
 }
 
 /** Width of a container, for SVG charts drawn in pixel units; drawn again once the web font has loaded, because labels
@@ -122,7 +132,7 @@ export function PageHead({ title, chips, ctx, who, right }: { title: string; chi
         {(ctx || who) && (
           <div className="ctx">
             {ctx}
-            {who && <>{ctx ? " · " : null}<button className="who-b" aria-expanded={open} onClick={() => setOpen(!open)}>Who is who</button></>}
+            {who && <>{ctx ? " " : null}<button className="who-b" aria-expanded={open} onClick={() => setOpen(!open)}>Who is who</button></>}
           </div>
         )}
         {who && open && <div className="chips who-chips">{who.map(([k, l]) => <Chip key={k} note={glNote(k)}>{l}</Chip>)}</div>}

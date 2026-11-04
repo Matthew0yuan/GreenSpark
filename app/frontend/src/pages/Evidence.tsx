@@ -8,7 +8,7 @@ import { glNote } from "../lib/gloss";
 import { CONN, DISP, useApp, whoItems } from "../state";
 
 const KEYS = ["TRAIN", "TREV", "TBLIND"];
-const NAME = ["Training period", "Test · reviewed", "Test · blind"];
+const NAME = ["Training period", "Test, reviewed", "Test, blind"];
 const RANGE = ["1 Apr 2025 – 30 Jun 2026", "1 Jul – 15 Oct 2026", "16–22 Oct 2026"];
 
 export default function Evidence() {
@@ -17,8 +17,8 @@ export default function Evidence() {
   const [per, setPer] = useState(1);
   return (
     <section aria-label="Evidence">
-      <PageHead title="Evidence · storage network" chips={<Chip cls="step">2 · Prove</Chip>}
-        ctx={<>1 Apr 2025 – 22 Oct 2026 · 570 days replayed · <Gl k="DECISION">decided 09:00</Gl> · <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl> · <Gl k="DISPATCHER">dispatcher {DISP[settings.dispatcher]}</Gl></>}
+      <PageHead title="Evidence: storage network" chips={<Chip cls="step">2. Prove</Chip>}
+        ctx={<>1 Apr 2025 – 22 Oct 2026, 570 days replayed, <Gl k="DECISION">decided 09:00</Gl>, <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>, <Gl k="DISPATCHER">dispatcher {DISP[settings.dispatcher]}</Gl></>}
         who={whoItems(settings.connection)} />
       {q.isLoading && <Loading what="the evidence" />}
       {q.error && <Failed error={q.error} />}
@@ -47,7 +47,7 @@ function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => v
             {" "}/day vs <Gl k="PLANONLY">09:00 plan alone</Gl>
           </div>
           <div className="chips dec-chips">
-            <Chip note={glNote(KEYS[per])}>{NAME[per]} · {P.period.days} d</Chip>
+            <Chip note={glNote(KEYS[per])}>{NAME[per]}, {P.period.days} d</Chip>
             <Chip cls={vd.passed ? undefined : "hyp"} note={`${glNote("E5")} Training period on this connection, v2 − v1: ${signed(vd.e5_minus_v1_aud_per_day)}/day, 95% range ${signed(vd.lo95)} to ${signed(vd.hi95)}. ${vd.rule}.`}>
               {DISP.e5} {vd.passed ? "passed here" : "not passed here"}</Chip>
           </div>
@@ -68,14 +68,14 @@ function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => v
         <Bars rows={[
           ["PLANONLY", "09:00 plan alone", P.per_day_aud["plan only"], "var(--base)"],
           ["DISPATCHER", `This dispatcher (${DISP[e.adopted]})`, P.per_day_aud[e.adopted], "var(--zen)"],
-          [key(e.candidate), `${DISP[e.candidate]} · the other`, P.per_day_aud[e.candidate], "var(--bar)"],
+          [key(e.candidate), `${DISP[e.candidate]}, the other`, P.per_day_aud[e.candidate], "var(--bar)"],
           ["PERFECT", "Prices known ahead", P.per_day_aud["prices known"], "hatch"],
         ]} parts={parts} />
       </div>
 
       <div className="two">
         <div className="blk rule">
-          <div className="blk-h"><h2>Price forecast</h2><span className="sub">{NAME[per]} · {e.forecast[per].period.days} d</span></div>
+          <div className="blk-h"><h2>Price forecast</h2><span className="sub">{NAME[per]}, {e.forecast[per].period.days} d</span></div>
           <Forecast f={e.forecast[per]} />
         </div>
         <div className="blk rule">
@@ -151,8 +151,8 @@ function DotPlot({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) =
               onKeyDown={(ev) => (ev.key === "Enter" || ev.key === " ") && setPer(i)}>
               <rect x={0} y={y - rowH / 2} width={W} height={rowH} style={{ fill: i === per ? "var(--surface-2)" : "transparent" }} />
               {i === per && <rect x={0} y={y - rowH / 2} width={3} height={rowH} style={{ fill: "var(--text)" }} />}
-              <text className="lt" x={14} y={y - 2} style={i === per ? { fontWeight: 600 } : undefined}>{NAME[i]}</text>
-              <text x={14} y={y + 13}>{RANGE[i]} · {p.period.days} d</text>
+              <text className="lt" x={14} y={y - 2} style={i === per ? { fontWeight: 500 } : undefined}>{NAME[i]}</text>
+              <text x={14} y={y + 13}>{RANGE[i]}, {p.period.days} d</text>
               {u && isNum(u.mean) && (
                 <>
                   {isNum(u.lo95) && isNum(u.hi95) && <>
@@ -163,7 +163,7 @@ function DotPlot({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) =
                   <circle cx={x(u.mean)} cy={y} r={6} style={{ fill: i === 0 ? "var(--surface)" : col, stroke: col, strokeWidth: 2 }} />
                   {labels.lo && <text x={labels.lo.x} y={labels.lo.y} textAnchor={labels.lo.a}>{signed(u.lo95)}</text>}
                   {labels.hi && <text x={labels.hi.x} y={labels.hi.y} textAnchor={labels.hi.a}>{signed(u.hi95)}</text>}
-                  {labels.mean && <text className="ann" x={labels.mean.x} y={labels.mean.y} textAnchor="middle" style={{ fill: col, fontWeight: 600 }}>{signed(u.mean)}</text>}
+                  {labels.mean && <text className="ann" x={labels.mean.x} y={labels.mean.y} textAnchor="middle" style={{ fill: col, fontWeight: 500 }}>{signed(u.mean)}</text>}
                   {labels.few && <text className="ann" x={labels.few.x} y={labels.few.y} textAnchor={labels.few.a} style={{ fill: "var(--text-3)" }}>too few days</text>}
                 </>
               )}
@@ -195,7 +195,7 @@ function Bars({ rows, parts }: { rows: [string, string, number | null | undefine
               <path d={hbar(L, L + w(v ?? 0), y, 16)} style={{ fill: col === "hatch" ? "url(#bh)" : col, stroke: col === "hatch" ? "var(--hatch-ln)" : "none" }}>
                 {k === "DISPATCHER" && <title>{`Energy ${aud(parts.energy)} + grid services ${aud(parts.fcess)} − wear ${aud(parts.wear)}${isNum(parts.network) ? ` + network bill ${aud(parts.network)}` : ""} a day`}</title>}
               </path>
-              <text className="ann" x={L + w(v ?? 0) + 8} y={y + 12} style={{ fontWeight: 600 }}>{aud(v)}</text>
+              <text className="ann" x={L + w(v ?? 0) + 8} y={y + 12} style={{ fontWeight: 500 }}>{aud(v)}</text>
             </g>
           );
         })}
@@ -215,7 +215,7 @@ function Forecast({ f }: { f: Ev["forecast"][number] }) {
   const gain = (m: number | null, y: number | null) => (isNum(m) && isNum(y) ? `${nf((100 * (y - m)) / y, 1)}% lower error` : "");
   const L = Math.max(...rows.map((r) => tw(r[0], "lt")), tw("error, A$/MWh")) + 20;
   const right = Math.max(...rows.map((r) => tw(gain(r[1], r[2]), "annB"))) + 16;
-  const endW = Math.max(...rows.flatMap((r) => [tw(`${isNum(r[2]) ? nf(r[2]) : "–"} · yesterday`), tw(`${isNum(r[1]) ? nf(r[1]) : "–"} · model`)])) + 10;
+  const endW = Math.max(...rows.flatMap((r) => [tw(`${isNum(r[2]) ? nf(r[2]) : "–"} (yesterday)`), tw(`${isNum(r[1]) ? nf(r[1]) : "–"} (model)`)])) + 10;
   const w = (v: number | null) => ((v ?? 0) / max) * Math.max(40, W - L - right - endW);
   return (
     <div className="chart" ref={ref}>
@@ -227,10 +227,10 @@ function Forecast({ f }: { f: Ev["forecast"][number] }) {
               <text className="lt" x={0} y={y0 + 12}>{name}</text>
               <text x={0} y={y0 + 28}><title>{glNote("MAE")}</title>error, A$/MWh</text>
               <path d={hbar(L, L + w(y), y0 + 2, 12)} style={{ fill: "var(--bar)" }} />
-              <text x={L + w(y) + 6} y={y0 + 12}>{isNum(y) ? nf(y) : "–"} · yesterday</text>
+              <text x={L + w(y) + 6} y={y0 + 12}>{isNum(y) ? nf(y) : "–"} (yesterday)</text>
               <path d={hbar(L, L + w(m), y0 + 18, 12)} style={{ fill: "var(--zen)" }} />
-              <text x={L + w(m) + 6} y={y0 + 28}>{isNum(m) ? nf(m) : "–"} · model</text>
-              {gain(m, y) && <text className="ann" x={W} y={y0 + 20} textAnchor="end" style={{ fill: "var(--zen)", fontWeight: 600 }}>{gain(m, y)}</text>}
+              <text x={L + w(m) + 6} y={y0 + 28}>{isNum(m) ? nf(m) : "–"} (model)</text>
+              {gain(m, y) && <text className="ann" x={W} y={y0 + 20} textAnchor="end" style={{ fill: "var(--zen)", fontWeight: 500 }}>{gain(m, y)}</text>}
             </g>
           );
         })}

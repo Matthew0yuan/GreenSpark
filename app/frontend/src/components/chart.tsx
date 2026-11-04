@@ -92,27 +92,40 @@ export function YGrid({ g, ticks, y, fmt = (v: number) => String(v) }: { g: Geo;
 }
 
 /* ------------------------------------------------------------------------- measured labels, placed clear of lines */
-/** Size and weight of each chart text style, as in styles.css (.chart text, .ann, .lt, .act, .mk9, .ttl). */
-export const FONT = { tick: [10.5, 400], ann: [11, 500], annB: [11, 600], lt: [12, 500], ltB: [12, 600], act: [11, 600], mk9: [10, 700], ttl: [11, 600] } as const;
+/** Size, weight and face of each chart text style, as in styles.css (.chart text, .ann, .lt, .act, .mk9, .ttl): figures
+ *  and readings in the measured face, names in the body face. */
+export const FONT = { tick: [11, 400, "mono"], ann: [11, 400, "mono"], annB: [11, 500, "mono"], lt: [12, 400, "body"], ltB: [12, 500, "body"],
+  act: [11, 500, "body"], mk9: [11, 500, "body"], ttl: [11, 500, "body"], lg: [11, 400, "body"] } as const;
 export type Font = keyof typeof FONT;
+const FACE = { mono: `"Atkinson Hyperlegible Mono", ui-monospace, monospace`, body: `"Host Grotesk", ui-sans-serif, system-ui, sans-serif` };
 let cv: CanvasRenderingContext2D | null | undefined;
+
+function measure(s: string, f: Font) {
+  const [size, weight, face] = FONT[f];
+  if (cv === undefined) cv = document.createElement("canvas").getContext("2d");
+  if (!cv) return null;
+  cv.font = `${weight} ${size}px ${FACE[face]}`;
+  return cv.measureText(s);
+}
 
 /** Rendered width of a label in px, measured in the chart font rather than guessed from its length. */
 export function tw(s: string, f: Font = "tick") {
-  const [size, weight] = FONT[f];
-  if (cv === undefined) cv = document.createElement("canvas").getContext("2d");
-  if (!cv) return s.length * size * 0.6;
-  cv.font = `${weight} ${size}px Inter, "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif`;
-  return cv.measureText(s).width + (f === "mk9" ? s.length * size * 0.04 : 0);
+  return measure(s, f)?.width ?? s.length * FONT[f][0] * 0.6;
+}
+
+/** The face's ascent and descent in px, as getBBox reports a text's height (about 1 em and 0.25 em when unmeasured). */
+function vmetrics(f: Font) {
+  const m = measure("0", f), size = FONT[f][0];
+  return m && m.fontBoundingBoxAscent ? { asc: m.fontBoundingBoxAscent, desc: m.fontBoundingBoxDescent } : { asc: size, desc: size * 0.25 };
 }
 
 export type Anchor = "start" | "middle" | "end";
 export type Box = { x0: number; y0: number; x1: number; y1: number };
-/** The box an SVG text takes at baseline y (Inter: ascent 0.97 em, descent 0.25 em, as getBBox reports it). */
+/** The box an SVG text takes at baseline y, as getBBox reports it. */
 export function textBox(s: string, f: Font, x: number, y: number, a: Anchor = "start"): Box {
-  const w = tw(s, f), size = FONT[f][0];
+  const w = tw(s, f), { asc, desc } = vmetrics(f);
   const x0 = a === "start" ? x : a === "middle" ? x - w / 2 : x - w;
-  return { x0, x1: x0 + w, y0: y - size * 0.97, y1: y + size * 0.25 };
+  return { x0, x1: x0 + w, y0: y - asc, y1: y + desc };
 }
 
 /** A drawn line as points; null breaks it. */
@@ -176,8 +189,8 @@ export class Placer {
 
 /** Candidate spots for a label on a point: above or below (centred, then to either side), then beside it. */
 export function around(x: number, y: number, f: Font = "ann", below = false, gap = 5): [number, number, Anchor][] {
-  const size = FONT[f][0];
-  const up = y - gap - size * 0.25, dn = y + gap + size * 0.97, mid = y + size * 0.36;
+  const { asc, desc } = vmetrics(f), size = FONT[f][0];
+  const up = y - gap - desc, dn = y + gap + asc, mid = y + size * 0.36;
   const a: [number, number, Anchor][] = [[x, up, "middle"], [x + 2, up, "start"], [x - 2, up, "end"]];
   const b: [number, number, Anchor][] = [[x, dn, "middle"], [x + 2, dn, "start"], [x - 2, dn, "end"]];
   return [...(below ? [...b, ...a] : [...a, ...b]), [x + gap + 3, mid, "start"], [x - gap - 3, mid, "end"]];
