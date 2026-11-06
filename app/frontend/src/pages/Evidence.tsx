@@ -5,7 +5,7 @@ import { hbar, Placer, segPts, tw } from "../components/chart";
 import { Chip, Failed, Gl, Loading, Note, PageHead, useWidth } from "../components/ui";
 import { aud, isNum, nf, signed } from "../lib/format";
 import { glNote } from "../lib/gloss";
-import { CONN, DISP, useApp, whoItems } from "../state";
+import { CONN, DISP, isTestedBattery, useApp, useWho } from "../state";
 
 const KEYS = ["TRAIN", "TREV", "TBLIND"];
 const NAME = ["Training period", "Test, reviewed", "Test, blind"];
@@ -13,13 +13,17 @@ const RANGE = ["1 Apr 2025 – 30 Jun 2026", "1 Jul – 15 Oct 2026", "16–22 O
 
 export default function Evidence() {
   const { settings } = useApp();
-  const q = useQuery({ queryKey: ["evidence", settings.connection, settings.dispatcher], queryFn: () => api.evidence(settings), staleTime: Infinity });
+  const who = useWho();
+  const q = useQuery({ queryKey: ["evidence", settings.connection, settings.dispatcher, settings.energyMwh, settings.cmdMw], queryFn: () => api.evidence(settings), staleTime: Infinity });
   const [per, setPer] = useState(1);
   return (
     <section aria-label="Evidence">
-      <PageHead title="Evidence: storage network" chips={<Chip cls="step">2. Prove</Chip>}
+      <PageHead title="Evidence: storage network" chips={<>
+          <Chip cls="step">2. Prove</Chip>
+          {!isTestedBattery(settings) && <Chip cls="unv" note={glNote("UNVALIDATED")}>changed settings</Chip>}
+        </>}
         ctx={<>1 Apr 2025 – 22 Oct 2026, 570 days replayed, <Gl k="DECISION">decided 09:00</Gl>, <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>, <Gl k="DISPATCHER">dispatcher {DISP[settings.dispatcher]}</Gl></>}
-        who={whoItems(settings.connection)} />
+        who={who} />
       {q.isLoading && <Loading what="the evidence" />}
       {q.error && <Failed error={q.error} />}
       {q.data && <Body e={q.data} per={per} setPer={setPer} />}
@@ -53,7 +57,7 @@ function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => v
           </div>
         </div>
         <div className="dec-r">
-          <div className="lbl"><Note note="Half-hours in the backtest where the battery's mean power went above 10 MW or its stored energy left 0–40 MWh.">Limits broken</Note></div>
+          <div className="lbl"><Note note={`Half-hours in the backtest where the battery's mean power went above ${e.asset.power_mw} MW or its stored energy left 0–${e.asset.energy_mwh} MWh.`}>Limits broken</Note></div>
           <div className="big pos">{broken} <span className="sub">of {nf(halfhours)} half-hours</span></div>
         </div>
       </div>
@@ -83,16 +87,16 @@ function Body({ e, per, setPer }: { e: Ev; per: number; setPer: (i: number) => v
           <table className="t" aria-label="Limits held, by period">
             <thead><tr><th></th>{NAME.map((n, i) => <th key={n} className={"r" + (i === per ? " selcol" : "")}>{n}</th>)}</tr></thead>
             <tbody>
-              <tr><td><Note note="Half-hour mean power within 10 MW, every half-hour of the backtest.">Within 10 MW</Note></td>
+              <tr><td><Note note={`Half-hour mean power within ${e.asset.power_mw} MW, every half-hour of the backtest.`}>Within {e.asset.power_mw} MW</Note></td>
                 {e.limits.map((l, i) => <td key={i} className={sc(i)}>{l.over_power === 0 ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--bad)" }}>{l.over_power}</b>}</td>)}</tr>
-              <tr><td><Note note="Stored energy stayed between 0 and 40 MWh.">Stored 0–40 MWh</Note></td>
+              <tr><td><Note note={`Stored energy stayed between 0 and ${e.asset.energy_mwh} MWh.`}>Stored 0–{e.asset.energy_mwh} MWh</Note></td>
                 {e.limits.map((l, i) => <td key={i} className={sc(i)}>{l.soc_outside === 0 ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--bad)" }}>{l.soc_outside}</b>}</td>)}</tr>
               {factory && <tr><td><Note note={`${glNote("CMD")} Half-hours whose metered import went above the month's cap (an economic limit, priced in the network bill, not blocked).`}>Meter ≤ CMD</Note></td>
                 {e.limits.map((l, i) => <td key={i} className={sc(i)}>{!l.over_cmd ? <span style={{ color: "var(--ok)" }}>✓</span> : <b style={{ color: "var(--warn)" }}>△ {l.over_cmd}</b>}</td>)}</tr>}
-              <tr><td><Note note="Each day's end energy equals start + charged × efficiency − discharged ÷ efficiency; largest error below 1e-12 MWh over all 570 days, checked for both connections.">Energy adds up</Note></td>
+              <tr><td><Note note={`Each day's end energy equals start + charged × efficiency − discharged ÷ efficiency; ${e.unvalidated ? "a new battery's backtest fails if any day is out by 1e-6 MWh or more." : "largest error below 1e-12 MWh over all 570 days, checked for both connections."}`}>Energy adds up</Note></td>
                 {e.limits.map((_, i) => <td key={i} className={sc(i)} style={{ color: "var(--ok)" }}>✓</td>)}</tr>
-              <tr><td><Note note="Replayed with every actual price after 09:00 multiplied by 3: the 09:00 plan did not change (3 days, both dispatchers). Every day on the Plan page repeats this check.">Only 09:00 data</Note></td>
-                {e.limits.map((_, i) => <td key={i} className={sc(i)} style={{ color: "var(--ok)" }}>✓</td>)}</tr>
+              <tr><td><Note note={e.unvalidated ? "Not run across this backtest. Each day opened on the Plan page replays with every actual price after 09:00 multiplied by 3 and checks the 09:00 plan did not change." : "Replayed with every actual price after 09:00 multiplied by 3: the 09:00 plan did not change (3 days, both dispatchers). Every day on the Plan page repeats this check."}>Only 09:00 data</Note></td>
+                {e.limits.map((_, i) => <td key={i} className={sc(i)} style={e.unvalidated ? undefined : { color: "var(--ok)" }}>{e.unvalidated ? "per day" : "✓"}</td>)}</tr>
             </tbody>
           </table>
           <div className="chips" style={{ marginTop: 10 }}>

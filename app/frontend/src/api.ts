@@ -13,7 +13,8 @@ export type Plan = {
   dispatcher: { name: string; short: DispatcherKey; connection: Connection; e5_passed: boolean; verdict: Verdict };
   asset: { power_mw: number; energy_mwh: number; round_trip: number; wear_aud_per_mwh: number; metering: string;
     site: { import_limit_mw: number; export_limit_mw: number; cmd_mw: number; load: string } | null };
-  settings: { connection: Connection; dispatcher: DispatcherKey; fcess: string[]; start_mwh: Num; export_mw: number; import_mw: number }; unvalidated: boolean;
+  settings: { connection: Connection; dispatcher: DispatcherKey; fcess: string[]; start_mwh: Num; export_mw: number; import_mw: number;
+    energy_mwh: Num; cmd_mw: Num }; unvalidated: boolean;
   start_state: { stored_mwh: Num; source: string };
   live?: { prices_to: string | null; predispatch_issued_at: string | null; built_at: string } | null;
   plan: {
@@ -62,7 +63,7 @@ export type XDecision = { at: string; kind: string; is_0900: boolean; changed: b
 
 export type Uplift = { mean: Num; lo95: Num; hi95: Num; pct?: Num; days_better: number };
 export type Evidence = {
-  connection: Connection; adopted: DispatcherKey; candidate: DispatcherKey; selection_rule: string; verdict: Verdict;
+  connection: Connection; asset: { power_mw: number; energy_mwh: number; cmd_mw: Num }; unvalidated: boolean; adopted: DispatcherKey; candidate: DispatcherKey; selection_rule: string; verdict: Verdict;
   periods: { period: Period; per_day_aud: Record<string, Num>; uplift_vs_plan_only?: Uplift; candidate_minus_adopted: Uplift;
     share_of_prices_known?: Num; adopted_parts_aud: { energy: Num; fcess: Num; wear: Num; network?: Num } }[];
   forecast: { period: Period; mae_all_day: Num; mae_all_day_yesterday: Num; mae_17_21: Num; mae_17_21_yesterday: Num; change_pct: Num }[];
@@ -105,15 +106,22 @@ export type ValueSummary = { scenario: string; difference_custom_minus_ref_aud: 
     model_calls: ValueRow; your_calls: ValueRow | null;
     expected_year: { zenith_aud: Num; customers_aud: Num; zenith_risk_adjusted_aud: Num; basis: string };
     holdouts: { held_out: string; chronological: boolean; held_out_profit: number; covered_held_out: number }[] }> };
+export type PeriodMoney = { period: Period; per_day_aud: Num; default_per_day_aud: Num; difference_aud: Num };
 export type Job = { id: number; state: "queued" | "running" | "done" | "failed" | "cancelled"; progress: number; message: string | null;
-  result: { periods: { period: Period; per_day_aud: Num; default_per_day_aud: Num; difference_aud: Num }[] } | null };
+  result: { periods: PeriodMoney[] } | null };
+/** Whether a battery and CMD have their own backtest yet (app/engine/configs.py). */
+export type ConfigState = { ready: boolean; reason: string | null; periods: PeriodMoney[] | null };
 /** Live data (app/live): the trading day in progress and how much of it AEMO has published. */
 export type LiveToday = { day: string; complete: boolean; ready?: boolean; reason?: string; known_5min?: number;
   known_halfhours?: number; as_of?: string | null };
 export type StorageLive = { live_day: string; complete_through: string; built_at: string; predispatch_issued_at: string | null;
   today: LiveToday | null; saved_backtests_end: string };
-export type Meta = { engines: Record<string, { state: string; error: string | null }>; data: string;
+/** The market data in use and the switch between them (POST /live). */
+export type DataMode = { live: boolean; switching: boolean; error: string | null; locked: string | null;
+  setup: { id: number; state: Job["state"]; progress: number; message: string | null } | null };
+export type Meta = { engines: Record<string, { state: string; error: string | null }>; data: string; data_mode: DataMode;
   storage: { first_day: string; last_day: string; days: number; dispatcher: { name: string; short: string };
+    asset: { power_mw: number; energy_mwh: number; site: { cmd_mw: number } | null };
     defaults: { connection: Connection; dispatcher: DispatcherKey }; verdicts: Record<Connection, Verdict>;
     live: StorageLive | null } | null;
   live: { mode: "live"; now: string; prices: { day?: string; last_interval?: string | null; polled_at: string; error?: string } | null;
@@ -135,7 +143,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export type StorageSettings = { connection: Connection; dispatcher: DispatcherKey; fcess: string[]; startMwh: number | null;
-  exportMw: number | null; importMw: number | null };
+  exportMw: number | null; importMw: number | null; /** Null: the tested battery and CMD. */ energyMwh: number | null; cmdMw: number | null };
 
 const qs = (o: Record<string, string | number | null | undefined>) => {
   const p = Object.entries(o).filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`);
@@ -143,15 +151,17 @@ const qs = (o: Record<string, string | number | null | undefined>) => {
 };
 const ALL = ["reg_raise", "cont_raise", "reg_lower", "cont_lower"];
 const fcessQ = (s: StorageSettings) => (s.fcess.length === ALL.length && ALL.every((x) => s.fcess.includes(x)) ? undefined : s.fcess.join(","));
+const setupQ = (s: StorageSettings) => ({ connection: s.connection, dispatcher: s.dispatcher, energy_mwh: s.energyMwh, cmd_mw: s.cmdMw });
 
 export const api = {
   meta: () => req<Meta>("/meta"),
   plan: (day: string, s: StorageSettings) =>
-    req<Plan>(`/storage/days/${day}/plan` + qs({ connection: s.connection, dispatcher: s.dispatcher, fcess: fcessQ(s),
+    req<Plan>(`/storage/days/${day}/plan` + qs({ ...setupQ(s), fcess: fcessQ(s),
       start_mwh: s.startMwh, export_mw: s.exportMw, import_mw: s.importMw })),
   outcome: (day: string, s: StorageSettings) =>
-    req<Outcome>(`/storage/days/${day}/outcome` + qs({ connection: s.connection, dispatcher: s.dispatcher, fcess: fcessQ(s), start_mwh: s.startMwh })),
-  evidence: (s: StorageSettings) => req<Evidence>("/storage/evidence" + qs({ connection: s.connection, dispatcher: s.dispatcher })),
+    req<Outcome>(`/storage/days/${day}/outcome` + qs({ ...setupQ(s), fcess: fcessQ(s), start_mwh: s.startMwh })),
+  evidence: (s: StorageSettings) => req<Evidence>("/storage/evidence" + qs(setupQ(s))),
+  config: (s: StorageSettings) => req<ConfigState>("/storage/config" + qs(setupQ(s))),
   call: (day: string, offer: string, hindsight: boolean) => req<CallDay>(`/fleet/days/${day}/call` + qs({ offer, hindsight: hindsight ? "true" : undefined })),
   decide: (day: string, offer: string, call: boolean, start: string | null) =>
     req<CallDay>(`/fleet/days/${day}/decision`, { method: "PUT", body: JSON.stringify({ offer, call, start }) }),
@@ -162,7 +172,10 @@ export const api = {
   evaluate: (body: Record<string, number | string | null>) => req<{ parties_aud: Record<string, Num>; calls: number; enrolled: Num; feasible: boolean;
     peak_days_covered: Record<string, number> }>("/fleet/offers/evaluate", { method: "POST", body: JSON.stringify(body) }),
   startBacktest: (s: StorageSettings) => req<{ id: number }>("/jobs/storage-backtest",
-    { method: "POST", body: JSON.stringify({ connection: s.connection, dispatcher: s.dispatcher, fcess: s.fcess }) }),
+    { method: "POST", body: JSON.stringify({ ...setupQ(s), fcess: s.fcess }) }),
+  startConfig: (s: StorageSettings) => req<{ ready: boolean; id: number | null }>("/jobs/storage-config",
+    { method: "POST", body: JSON.stringify(setupQ(s)) }),
+  setLive: (on: boolean) => req<DataMode>("/live", { method: "POST", body: JSON.stringify({ on }) }),
   job: (id: number) => req<Job>(`/jobs/${id}`),
   cancelJob: (id: number) => req<{ cancelled: boolean }>(`/jobs/${id}`, { method: "DELETE" }),
 };

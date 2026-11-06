@@ -6,7 +6,7 @@ import Evidence from "./pages/Evidence";
 import Plan from "./pages/Plan";
 import Settings from "./pages/Settings";
 import Value from "./pages/Value";
-import { ASSET_OF, isDefault, useApp, useMeta, type Page } from "./state";
+import { ASSET_OF, isDefault, useApp, useBattery, useMeta, type Page } from "./state";
 
 const PAGES: Record<"storage" | "fleet", [Page, string][]> = {
   storage: [["plan", "Plan"], ["evidence", "Evidence"]],
@@ -33,6 +33,7 @@ export default function App() {
   const { page, go, lastAsset, setAsset, settings } = useApp();
   const asset = ASSET_OF[page] ?? lastAsset;
   const meta = useMeta();
+  const battery = useBattery();
   const eng = meta.data?.engines ?? {};
   const states = Object.values(eng).map((e) => e.state);
   const ready = states.length > 0 && states.every((s) => s === "ready");
@@ -45,7 +46,7 @@ export default function App() {
           <div className="brand"><span className="mk" aria-hidden="true">GS</span>GreenSpark</div>
           <div className="assets" role="tablist" aria-label="Asset">
             <button role="tab" aria-selected={asset === "storage"} className={asset === "storage" ? "on" : ""} onClick={() => setAsset("storage")}>
-              <b>Storage network</b><small>10 MW / 40 MWh</small></button>
+              <b>Storage network</b><small>{battery.label}</small></button>
             <button role="tab" aria-selected={asset === "fleet"} className={asset === "fleet" ? "on" : ""} onClick={() => setAsset("fleet")}>
               <b>Customer batteries</b><small>VPP calls</small></button>
           </div>

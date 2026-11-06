@@ -66,6 +66,13 @@ class Store:
             self.con.execute(f"UPDATE jobs SET {sets}, updated_at = ? WHERE id = ?", (*kw.values(), now(), jid))
             self.con.commit()
 
+    def end_unfinished_jobs(self) -> None:
+        """On starting: a job that was running when the API last stopped is over, or will end on its next message."""
+        with _LOCK:
+            self.con.execute("UPDATE jobs SET state = 'failed', message = 'the server restarted', updated_at = ? "
+                             "WHERE state IN ('queued', 'running')", (now(),))
+            self.con.commit()
+
     def job(self, jid: int) -> dict | None:
         with _LOCK:
             r = self.con.execute("SELECT id, kind, params, state, progress, message, result, created_at, updated_at "

@@ -121,7 +121,7 @@ def test_day_in_progress(storage):
     log = r["log"]
     energy = float((log["rtp"].to_numpy()[:k] * log["energy_mwh"].to_numpy()[:k]).sum())
     assert abs(o["money_aud"]["energy"] - energy) < 1e-6
-    assert o["explain"]["unaccounted"] == [] and o["explain"]["points"][k]["why"] == "Not over yet"
+    assert o["explain"]["unaccounted"] == [] and o["explain"]["points"][k]["why"] == "not over yet"
     p = storage.plan(D)
     assert p["live"]["prices_to"] == info["as_of"] and p["state"] == "PASS"
     assert next(c for c in p["checks"] if c["id"] == "info_timing")["status"] == "pass"

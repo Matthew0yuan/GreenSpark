@@ -11,6 +11,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from . import configs as cg
+
 ROOT = Path(__file__).resolve().parents[2]
 STANDALONE = ROOT / "analysis" / "2026-10-28" / "app_hurdle50"  # the saved backtests the app replays (run.py there)
 FACTORY = ROOT / "analysis" / "2026-10-28" / "app_factory_h50"  # the same behind the factory meter (run.py there)
@@ -32,8 +34,16 @@ PLAN_ONLY, PERFECT = "forecast", "perfect"  # the reference runs in each saved f
 TABLES = (["--hurdle", "50", "--state"], ["--standalone", "--hurdle", "50", "--state"])
 
 
-def saved_rel(connection: str) -> str:
-    return SAVED_DIR[connection].relative_to(ROOT).as_posix()
+def saved_dir(connection: str, setup: cg.Config = cg.TESTED) -> Path:
+    """The saved backtest of this connection, battery and CMD (configs.NotBuilt if it has none)."""
+    if setup.tested:
+        return SAVED_DIR[connection]
+    cg.require(connection, setup)
+    return cg.folder(connection, setup)
+
+
+def saved_rel(connection: str, setup: cg.Config = cg.TESTED) -> str:
+    return SAVED_DIR[connection].relative_to(ROOT).as_posix() if setup.tested else f"var/configs/{cg.rel(connection, setup)}"
 
 
 def other(dispatcher: str) -> str:

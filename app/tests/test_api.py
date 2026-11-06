@@ -16,6 +16,7 @@ DAY, CALL_DAY = "2026-01-20", "2026-01-06"
 @pytest.fixture(scope="module")
 def client():
     os.environ["GS_DB"] = str(Path(tempfile.mkdtemp()) / "test.db")
+    os.environ["GS_CONFIGS"] = tempfile.mkdtemp()  # no battery and CMD of the user's own
     os.environ["GS_LIVE"] = "0"  # the replay (to 2026-10-22); live data have their own tests (test_live.py)
     from fastapi.testclient import TestClient
 
@@ -35,6 +36,13 @@ def test_meta(client):
     m = client.get("/api/v1/meta").json()["storage"]
     assert m["defaults"] == {"connection": "factory", "dispatcher": "e5"} and m["dispatcher"]["short"] == "e5"
     assert m["days"] == 570 and m["verdicts"]["factory"]["passed"] and not m["verdicts"]["standalone"]["passed"]
+
+
+def test_market_data_cannot_be_switched_here(client):
+    d = client.get("/api/v1/meta").json()["data_mode"]
+    assert d["locked"] and not d["live"] and not d["switching"] and d["setup"] is None
+    r = client.post("/api/v1/live", json={"on": True})
+    assert r.status_code == 409 and "GS_LIVE" in r.json()["detail"]
 
 
 def test_login(client, monkeypatch):
@@ -82,6 +90,53 @@ def test_fcess_off_recomputes(client):
     b = client.get(f"/api/v1/storage/days/{DAY}/plan?fcess=").json()
     assert b["unvalidated"] and b["settings"]["fcess"] == []
     assert b["plan"]["value_at_forecast_aud"]["fcess"] == 0 and a["plan"]["value_at_forecast_aud"]["fcess"] > 0
+
+
+def test_battery_and_cmd_are_refused_without_a_backtest(client):
+    """Nothing is computed from another configuration's backtest; the tested values are no change, however given."""
+    for q in ("energy_mwh=35", "cmd_mw=7", "energy_mwh=35&cmd_mw=7", "connection=standalone&energy_mwh=35"):
+        r = client.get(f"/api/v1/storage/days/{DAY}/plan?{q}")
+        assert r.status_code == 409 and "Settings" in r.json()["detail"], q
+        assert client.get(f"/api/v1/storage/days/{DAY}/outcome?{q}").status_code == 409, q
+    assert client.get("/api/v1/storage/evidence?cmd_mw=7").status_code == 409
+    state = client.get("/api/v1/storage/config?energy_mwh=35&cmd_mw=7").json()
+    assert not state["ready"] and state["periods"] is None and "35 MWh" in state["reason"]
+    assert client.post("/api/v1/jobs/storage-backtest", json={"energy_mwh": 35}).status_code == 409
+    for q in ("energy_mwh=9", "energy_mwh=81", "energy_mwh=35.5", "cmd_mw=4.5", "cmd_mw=12.5", "cmd_mw=7.3"):
+        assert client.get(f"/api/v1/storage/days/{DAY}/plan?{q}").status_code == 422, q
+    assert client.get(f"/api/v1/storage/days/{DAY}/plan?start_mwh=41").status_code == 422  # more than the battery holds
+    base = client.get(f"/api/v1/storage/days/{DAY}/plan").json()
+    same = client.get(f"/api/v1/storage/days/{DAY}/plan?energy_mwh=40&cmd_mw=9").json()
+    assert same["plan"] == base["plan"] and not same["unvalidated"]
+    own = client.get(f"/api/v1/storage/days/{DAY}/plan?connection=standalone&cmd_mw=7").json()  # no CMD on its own connection
+    assert own["connection"] == "standalone" and not own["unvalidated"]
+    assert client.post("/api/v1/jobs/storage-config", json={"energy_mwh": 40, "cmd_mw": 9}).json() == {"ready": True, "id": None}
+
+
+@pytest.mark.skipif(not hasattr(os, "killpg"), reason="process groups")
+def test_cancelled_build_leaves_no_process_and_nothing_usable(client):
+    from app.backend import jobs
+    body = {"energy_mwh": 33, "cmd_mw": 8}
+    r = client.post("/api/v1/jobs/storage-config", json=body).json()
+    assert not r["ready"] and r["id"] is not None
+    assert client.post("/api/v1/jobs/storage-config", json=body).json()["id"] == r["id"]  # not a second one
+    assert client.post("/api/v1/jobs/storage-config", json={"energy_mwh": 34}).status_code == 409  # one at a time
+    group = jobs.RUNNING[r["id"]].pid
+    time.sleep(8)  # into the value table's process pool
+    assert client.delete(f"/api/v1/jobs/{r['id']}").json()["cancelled"]
+    t = time.time()
+    while time.time() - t < 20:
+        try:
+            os.killpg(group, 0)
+        except ProcessLookupError:
+            break
+        time.sleep(0.5)
+    with pytest.raises(ProcessLookupError):
+        os.killpg(group, 0)
+    assert client.get(f"/api/v1/jobs/{r['id']}").json()["state"] == "cancelled"
+    assert not client.get("/api/v1/storage/config?energy_mwh=33&cmd_mw=8").json()["ready"]
+    for table in Path(__file__).resolve().parents[2].glob("data/processed/v2_value_median_33mwh_*"):
+        table.unlink()  # the value table, if it was finished before the cancel: nothing else removes it
 
 
 def test_operator_decision_round_trip(client):

@@ -1,9 +1,9 @@
 """The GreenSpark VPP API (/api/v1) and the built frontend (app/frontend/dist) on one local port.
 
-Live mode (the default once `python -m app.live.run --init` has run; GS_LIVE=0 turns it off): the engines read AEMO's
-public data as it is published (app/live): every complete trading day, and the day in progress from its 09:00 plan on,
-its 5-minute prices filling in every minute. Otherwise a replay of the saved days (2025-04-01 to 2026-10-22). Either
-way: no bidding, no device control. What was known at 09:00 (plan) and what happened (outcome) come from separate
+Live mode (the switch in Settings, POST /api/v1/live; GS_LIVE=0 keeps it off): the engines read AEMO's public data as it
+is published (app/live): every complete trading day, and the day in progress from its 09:00 plan on, its 5-minute prices
+filling in every minute. Otherwise a replay of the saved days (2025-04-01 to 2026-10-22). Either way: no bidding, no
+device control. What was known at 09:00 (plan) and what happened (outcome) come from separate
 routes, so the frontend never holds an actual price before the operator asks for it."""
 
 import base64
@@ -11,6 +11,7 @@ import binascii
 import json
 import os
 import secrets
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.engine import configs
 from app.live import fetch as live_fetch
 from app.live import run as live_run
 
@@ -39,7 +41,8 @@ class StrictJSON(JSONResponse):
         return json.dumps(content, allow_nan=False, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
 
-LIVE = os.environ.get("GS_LIVE", "1") != "0" and live_run.initialised()
+MODE = {"live": False, "switching": False, "error": None, "setup": None}  # setup: the job bringing the live data up to date
+SCHEDULE = None  # the live schedule, while on live data
 
 
 def _refresh_today():
@@ -48,19 +51,83 @@ def _refresh_today():
         e.submit("refresh_today")
 
 
-SCHEDULE = live_run.Schedule(on_prices=_refresh_today, on_build=engines.reload) if LIVE else None
+def _locked() -> str | None:
+    """Why this server's data cannot be switched: GS_LIVE=0 (the tests), or the demo on a public address, whose compose
+    file always sets GS_AUTH (deploy/), where a visitor must not change what everyone sees."""
+    if os.environ.get("GS_LIVE") == "0":
+        return "this server was started with GS_LIVE=0"
+    return "this is the public demo" if "GS_AUTH" in os.environ else None
+
+
+def _start_schedule() -> None:
+    global SCHEDULE
+    SCHEDULE = live_run.Schedule(on_prices=_refresh_today, on_build=engines.reload)
+    SCHEDULE.start()
+
+
+def _switch(on: bool) -> None:
+    """New engines on the other data, serving only when ready. Everything else changes after that, so a failure leaves
+    the server as it was, and jobs and fingerprints (configs.py) never see a mode not in force."""
+    global SCHEDULE
+    MODE.update(switching=True, error=None)
+
+    def done(error: str | None):
+        global SCHEDULE
+        if error:
+            print(f"the market data did not switch: {error}", file=sys.stderr, flush=True)
+            MODE.update(switching=False, error="Could not switch: the engines did not start on that data. Nothing has changed.")
+            return
+        if on:
+            os.environ["GS_DATA"] = str(live_fetch.DATA)
+            live_run.OFF.unlink(missing_ok=True)
+            _start_schedule()
+        else:
+            os.environ.pop("GS_DATA", None)
+            live_run.mark_off()
+            if SCHEDULE:
+                SCHEDULE.stop.set()
+                SCHEDULE = None
+        MODE.update(live=on, switching=False, setup=None)
+
+    engines.reload(done, str(live_fetch.DATA) if on else None)
+
+
+def _data_mode() -> dict:
+    job = STORE.job(MODE["setup"]) if MODE["setup"] else None
+    return {"live": MODE["live"], "switching": MODE["switching"], "error": MODE["error"], "locked": _locked(),
+            "setup": None if job is None else {k: job[k] for k in ("id", "state", "progress", "message")}}
+
+
+def _switch_refused() -> str | None:
+    if _locked():
+        return _locked()
+    if MODE["switching"] or engines.RELOAD["state"] == "starting":
+        return "the engines are restarting"
+    if SCHEDULE and SCHEDULE.status["build"]["state"] == "running":
+        return "this morning's rebuild is running"
+    return "a job is running" if jobs.RUNNING else None
+
+
+def _no_job_during_a_switch() -> None:
+    """A job would run on the data folder it started on, and its result would not fit the mode it ended in."""
+    if MODE["switching"] or jobs.running(STORE, "live-setup"):
+        raise HTTPException(409, "the market data are being switched: try again when that has finished")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if LIVE:  # the engine processes inherit it: vpp reads the live copy of every input
+    STORE.end_unfinished_jobs()
+    if os.environ.get("GS_LIVE", "1") != "0" and live_run.initialised() and not live_run.OFF.exists():
+        # the engine processes read the live copy of every input
         os.environ["GS_DATA"] = str(live_fetch.DATA)
+        MODE["live"] = True
     engines.start()
-    if SCHEDULE:
-        SCHEDULE.start()
+    if MODE["live"]:
+        _start_schedule()
     yield
     if SCHEDULE:
         SCHEDULE.stop.set()
+    jobs.stop(STORE)
     engines.stop()
 
 
@@ -97,6 +164,11 @@ async def bad_value(_: Request, e: ValueError):
     return StrictJSON({"detail": str(e)}, status_code=422)
 
 
+@app.exception_handler(configs.NotBuilt)
+async def not_built(_: Request, e: configs.NotBuilt):
+    return StrictJSON({"detail": str(e)}, status_code=409)
+
+
 def _engine(name: str) -> engines.Engine:
     e = engines.ENGINES.get(name)
     if e is None or e.state == "failed":
@@ -122,6 +194,13 @@ def _mode(connection: str, dispatcher: str) -> dict:
     return {"connection": connection, "dispatcher": dispatcher}
 
 
+def _setup(connection: str, dispatcher: str, energy_mwh: float | None, cmd_mw: float | None) -> dict:
+    """The mode and the battery and CMD as the engine takes them; out of range is 422 (configs.of)."""
+    mode = _mode(connection, dispatcher)
+    configs.of(connection, energy_mwh, cmd_mw)
+    return {**mode, "energy_mwh": energy_mwh, "cmd_mw": cmd_mw}
+
+
 def _offer(offer: str) -> str:
     if offer not in OFFERS:
         raise HTTPException(422, f"offer must be one of {OFFERS}")
@@ -133,8 +212,8 @@ def _offer(offer: str) -> str:
 async def meta():
     st = {k: {"state": e.state, "error": e.error} for k, e in engines.ENGINES.items()}
     out = {"api_version": "1", "engines": st, "decision_time": "09:00", "market_time": "AWST (UTC+08:00)",
-           "data": "live AEMO data" if LIVE else "historical replay, trading days 2025-04-01 to 2026-10-22",
-           "storage": None, "live": None}
+           "data": "live AEMO data" if MODE["live"] else "historical replay, trading days 2025-04-01 to 2026-10-22",
+           "data_mode": _data_mode(), "storage": None, "live": None}
     if engines.ENGINES.get("storage") and engines.ENGINES["storage"].state == "ready":
         out["storage"] = await engines.ENGINES["storage"].call("meta")
     if SCHEDULE:
@@ -142,37 +221,100 @@ async def meta():
     return out
 
 
+class LiveBody(BaseModel):
+    on: bool
+
+
+@app.post("/api/v1/live")
+async def live_switch(body: LiveBody):
+    """Turn live data on or off. Data behind today's go up to date first, so that an old day is not shown as in progress:
+    the first time this copies the research data and downloads what AEMO has published since. Until the switch is done
+    the marker says off, so a run that dies leaves the server starting on the replay."""
+    why = _switch_refused()
+    if why:
+        raise HTTPException(409, f"cannot switch now: {why}")
+    if body.on != MODE["live"]:
+        if not body.on or live_run.current():
+            _switch(body.on)
+        else:
+            live_run.mark_off()
+            MODE.update(error=None, setup=jobs.start(STORE, "live-setup", {}, on_done=lambda: _switch(True)))
+    return _data_mode()
+
+
 # ---------------------------------------------------------------------------------------------------- storage
 @app.get("/api/v1/storage/days/{day}/plan")
 async def storage_plan(day: str, connection: str = "factory", dispatcher: str = "e5", fcess: str | None = None,
-                       start_mwh: float | None = Query(None, ge=0, le=40), export_mw: float | None = Query(None, gt=0, le=20),
-                       import_mw: float | None = Query(None, gt=0, le=20)):
-    return await _engine("storage").call("plan", day=day, **_mode(connection, dispatcher), fcess=_fcess(fcess),
-                                          start_mwh=start_mwh, export_mw=export_mw, import_mw=import_mw)
+                       start_mwh: float | None = Query(None, ge=0), export_mw: float | None = Query(None, gt=0, le=20),
+                       import_mw: float | None = Query(None, gt=0, le=20), energy_mwh: float | None = None,
+                       cmd_mw: float | None = None):
+    return await _engine("storage").call("plan", day=day, **_setup(connection, dispatcher, energy_mwh, cmd_mw),
+                                          fcess=_fcess(fcess), start_mwh=start_mwh, export_mw=export_mw, import_mw=import_mw)
 
 
 @app.get("/api/v1/storage/days/{day}/outcome")
 async def storage_outcome(day: str, connection: str = "factory", dispatcher: str = "e5", fcess: str | None = None,
-                          start_mwh: float | None = Query(None, ge=0, le=40)):
-    return await _engine("storage").call("outcome", day=day, **_mode(connection, dispatcher), fcess=_fcess(fcess),
-                                          start_mwh=start_mwh)
+                          start_mwh: float | None = Query(None, ge=0), energy_mwh: float | None = None,
+                          cmd_mw: float | None = None):
+    return await _engine("storage").call("outcome", day=day, **_setup(connection, dispatcher, energy_mwh, cmd_mw),
+                                          fcess=_fcess(fcess), start_mwh=start_mwh)
 
 
 @app.get("/api/v1/storage/evidence")
-async def storage_evidence(connection: str = "factory", dispatcher: str = "e5"):
-    return await _engine("storage").call("evidence", **_mode(connection, dispatcher))
+async def storage_evidence(connection: str = "factory", dispatcher: str = "e5", energy_mwh: float | None = None,
+                           cmd_mw: float | None = None):
+    return await _engine("storage").call("evidence", **_setup(connection, dispatcher, energy_mwh, cmd_mw))
+
+
+@app.get("/api/v1/storage/config")
+async def storage_config_state(connection: str = "factory", dispatcher: str = "e5", energy_mwh: float | None = None,
+                               cmd_mw: float | None = None):
+    """Whether this battery and CMD can be used yet (why not, if not) and what its backtest showed."""
+    _mode(connection, dispatcher)
+    setup = configs.of(connection, energy_mwh, cmd_mw)
+    m = None if setup.tested else configs.manifest(connection, setup)
+    why = configs.problem(connection, setup, m)
+    return {"ready": why is None, "reason": why, "periods": None if why or m is None else m["periods"][dispatcher]}
 
 
 class BacktestBody(BaseModel):
     connection: str = "factory"
     dispatcher: str = "e5"
     fcess: list[str] = Field(default_factory=lambda: list(SERVICES))
+    energy_mwh: float | None = None
+    cmd_mw: float | None = None
 
 
 @app.post("/api/v1/jobs/storage-backtest")
 async def storage_backtest(body: BacktestBody):
-    return {"id": jobs.start(STORE, "storage-backtest", {**_mode(body.connection, body.dispatcher),
-                                                         "fcess": list(_fcess(",".join(body.fcess)))})}
+    _no_job_during_a_switch()
+    params = _setup(body.connection, body.dispatcher, body.energy_mwh, body.cmd_mw)
+    configs.require(body.connection, configs.of(body.connection, body.energy_mwh, body.cmd_mw))
+    return {"id": jobs.start(STORE, "storage-backtest", {**params, "fcess": list(_fcess(",".join(body.fcess)))})}
+
+
+class ConfigBody(BaseModel):
+    connection: str = "factory"
+    dispatcher: str = "e5"
+    energy_mwh: float | None = None
+    cmd_mw: float | None = None
+
+
+@app.post("/api/v1/jobs/storage-config")
+async def storage_config(body: ConfigBody):
+    """Start the value table and backtest of a battery and CMD (a few minutes), unless it has them or is getting them."""
+    params = _setup(body.connection, body.dispatcher, body.energy_mwh, body.cmd_mw)
+    setup = configs.of(body.connection, body.energy_mwh, body.cmd_mw)
+    if configs.problem(body.connection, setup) is None:
+        return {"ready": True, "id": None}
+    _no_job_during_a_switch()
+    other = jobs.running(STORE, "storage-config")
+    if other is not None:
+        q = other["params"]
+        if (q["connection"], configs.of(q["connection"], q["energy_mwh"], q["cmd_mw"])) == (body.connection, setup):
+            return {"ready": False, "id": other["id"]}
+        raise HTTPException(409, "another battery is being backtested: try again when it has finished")
+    return {"ready": False, "id": jobs.start(STORE, "storage-config", params)}
 
 
 @app.get("/api/v1/jobs/{jid}")

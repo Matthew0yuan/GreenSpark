@@ -511,7 +511,7 @@ WARNED: dict[str, list] = {}  # scenario -> what it commits to that the battery 
 
 
 def _sc(name: str, route: ct.Route, strategies=(VALUE,), site: st.Site | None = st.FACTORY,
-        prefs: cf.RiskPrefs = PREFS) -> Scenario | None:
+        prefs: cf.RiskPrefs = PREFS, asset: cf.Asset = Q2B_ASSET) -> Scenario | None:
     """The scenario, or None (recorded in REFUSED) if Route.check refuses its configuration. Without an
     export service the connection exports nothing (RT7 is import-only)."""
     route = replace(route, name=name)
@@ -519,13 +519,13 @@ def _sc(name: str, route: ct.Route, strategies=(VALUE,), site: st.Site | None = 
     if site is not None and not route.export_service:
         site = replace(site, export_limit_mw=0.0)
     try:
-        warnings = route.check(Q2B_ASSET.battery, site, prefs.load_margin)
+        warnings = route.check(asset.battery, site, prefs.load_margin)
     except ValueError as e:
         REFUSED[name] = str(e).split(": ", 1)[1]
         return None
     if warnings:
         WARNED[name] = warnings
-    return Scenario(name, Q2B_ASSET, site, False, tuple(strategies), route, prefs)
+    return Scenario(name, asset, site, False, tuple(strategies), route, prefs)
 
 
 def q2b_scenarios(stage: int, cmd_nb: float, cmd: float | None = None, hurdle: float = HURDLE) -> list[Scenario]:

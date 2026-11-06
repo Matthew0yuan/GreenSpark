@@ -6,7 +6,7 @@ import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Measured, Note, PageHea
 import { Point, WhyHead } from "../components/why";
 import { addDays, aud, dayLabel, hhmm, isNum, nf, PERIOD_CHIP, periodOf } from "../lib/format";
 import { glNote } from "../lib/gloss";
-import { CONN, DISP, isDefault, useApp, useLive, whoItems } from "../state";
+import { CONN, DISP, isDefault, useApp, useLive, useWho } from "../state";
 
 const FIRST = 2;
 type Seg_ = { m: string; a: number; b: number; mw: number };
@@ -96,19 +96,27 @@ const standby = (p: PlanT, k: number) => {
 };
 
 const SHORT: Record<string, string> = {
-  power: "Power ≤ 10 MW", soc_max: "Stored 0–40 MWh", soc_reserve: "Mandatory floor", fcess_cover: "Grid services covered",
+  soc_reserve: "Mandatory floor", fcess_cover: "Grid services covered",
   cycles: "≤ 1 cycle a day", connection_export: "Connection export", connection_import: "Connection import",
   site_reserve: "Factory reserve", cmd: "Import ≤ CMD", ircr_cap: "Import ≤ IRCR cap",
   info_timing: "Only 09:00 data", offer_format: "Offer format", contractual: "Contracts", market_eligibility: "Registration",
 };
+/** A check's short name; the battery's own limits are in the API's label ("Battery power ≤ 10 MW"). */
+const shortOf = (c: Check) => SHORT[c.id] ?? c.label.replace(/^Battery power/, "Power").replace(/^Stored energy/, "Stored");
+/** Round ticks up to the battery's energy (0, 10, 20, 30, 40 at 40 MWh). */
+const socTicks = (E: number) => {
+  const step = E <= 20 ? 5 : E <= 50 ? 10 : 20;
+  return Array.from({ length: Math.floor(E / step) + 1 }, (_, i) => i * step);
+};
 
 export default function Plan() {
   const { day, setDay, settings, revealed, setRevealed, go } = useApp();
+  const who = useWho();
   const live = useLive(day);
   // live data: a day's plan changes when the data are rebuilt, today's outcome with every new 5-minute price
   const plan = useQuery({ queryKey: ["plan", day, settings, live.after ? live.builtAt : null], queryFn: () => api.plan(day, settings) });
   const out = useQuery({ queryKey: ["outcome", day, settings.connection, settings.dispatcher, settings.fcess, settings.startMwh,
-    live.after ? live.builtAt : null, live.isToday ? live.asOf : null],
+    settings.energyMwh, settings.cmdMw, live.after ? live.builtAt : null, live.isToday ? live.asOf : null],
     enabled: revealed && !!plan.data,
     queryFn: () => api.outcome(day, settings) });
   const [sel, setSel] = useState<number>(20);
@@ -128,7 +136,7 @@ export default function Plan() {
         </>}
         ctx={<><Gl k="TRADINGDAY">trading day</Gl> 08:00–08:00 AWST, <Gl k="DECISION">plan 09:00</Gl>, <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>
           {", "}<DispatcherName p={p} short={settings.dispatcher} /></>}
-        who={whoItems(settings.connection)}
+        who={who}
         right={<>
           <DayPicker day={day} setDay={setDay} />
           <Seg label="Show" value={revealed ? "out" : "plan"} onChange={(v) => setRevealed(v === "out")}
@@ -166,7 +174,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
     <>
       {blocked && (
         <div className="blocked" role="alert">
-          <b>Blocked</b> {failed.map((c) => SHORT[c.id] ?? c.label).join(", ")} over the limit in {p.blocked_halfhours.length} half-hours
+          <b>Blocked</b> {failed.map(shortOf).join(", ")} over the limit in {p.blocked_halfhours.length} half-hours
           <span className="sp" />
           <button className="btn" onClick={() => setSel(p.blocked_halfhours[0])}>Inspect</button>
           <button className="btn" onClick={() => go("settings")}>Settings</button>
@@ -179,7 +187,7 @@ function PlanBody({ p, o, outLoading, sel, setSel, reveal, go }: { p: PlanT; o?:
             <span className="sub">{passed} of {p.checks.length} checks pass{notChecked ? `, ${notChecked} not checked` : ""}</span>
             {p.explain && <button className="lnk" aria-expanded={why} aria-controls="why-plan" onClick={() => setWhy(!why)}>Why this plan</button>}
           </div>
-          <div className="title"><Measured text={blocked ? `Resolve ${SHORT[failed[0].id]?.toLowerCase() ?? "the limit"} first` : mainAction(p, segs)} /></div>
+          <div className="title"><Measured text={blocked ? `Resolve ${shortOf(failed[0]).toLowerCase()} first` : mainAction(p, segs)} /></div>
         </div>
         <div className="dec-r">
           <div className="lbl">Expected profit today</div>
@@ -291,7 +299,7 @@ function WhyPlan({ p, sel, setSel, close }: { p: PlanT; sel: number; setSel: (k:
 function CheckCell({ c }: { c: Check }) {
   const icon = c.status === "pass" ? "✓" : c.status === "fail" ? "!" : c.status === "warn" ? "△" : "○";
   const note = `${c.label}. ${c.status === "not_checked" ? "Not checked: " : c.status === "warn" ? "Economic limit, priced not blocked: " : ""}${c.detail}${c.worst ? ` (worst: ${c.worst})` : ""}`;
-  return <div className={"ck " + c.status} tabIndex={0} data-note={note}><i>{icon}</i><span>{SHORT[c.id] ?? c.label}</span></div>;
+  return <div className={"ck " + c.status} tabIndex={0} data-note={note}><i>{icon}</i><span>{shortOf(c)}</span></div>;
 }
 
 /* ------------------------------------------------------------------------------------------------ money */
@@ -528,7 +536,7 @@ function DayChart({ p, o, segs, sel, setSel, hover, setHover, day, next }: { p: 
       <svg viewBox={`0 0 ${W} ${SH}`} role="img" aria-label="Energy stored through the day, planned at 09:00">
         <rect x={g.X(sel)} y={sTop} width={g.IW} height={sBot - sTop} className="selc" />
         <text className="ttl" x={0} y={14}><title>{glNote("SOC")}</title>Energy stored, MWh</text>
-        <YGrid g={g} ticks={[0, 10, 20, 30, 40]} y={yS} />
+        <YGrid g={g} ticks={socTicks(E)} y={yS} />
         <line className="ref" x1={X0} x2={g.X(N)} y1={yS(E)} y2={yS(E)} style={{ stroke: "var(--axis)", strokeDasharray: "2 3" }} />
         <path className="ref" d={stepPath(g, floorS, yS, FIRST)} style={{ fill: "none", stroke: "var(--text-4)", strokeDasharray: "1 3" }}><title>{glNote("RESERVE")}</title></path>
         <line className="ref" x1={g.X(FIRST)} x2={g.X(FIRST)} y1={sTop} y2={sBot} style={{ stroke: "var(--mark)" }} />
@@ -568,7 +576,8 @@ function MeterChart({ p, o, sel, setSel, hover, setHover, day, next }: { p: Plan
   pl.line(stepPts(g, s.meter_mw, y)).line(stepPts(g, s.load_fc_mw, y)).line(stepPts(g, cap, y));
   if (s.ircr_cap_mw) pl.line(stepPts(g, s.ircr_cap_mw, y));
   if (o?.site) pl.line(stepPts(g, o.site.meter_mw, y));
-  const cmdTxt = `CMD ${nf(s.cmd_mw)} MW`;
+  // the line is the month's cap: the CMD until a month's import goes higher, then that (the CMD's note says so)
+  const cmdTxt = capEnd > s.cmd_mw + 0.05 ? `Cap ${capEnd.toFixed(1)} MW` : `CMD ${nf(s.cmd_mw)} MW`;
   const cmdAt = pl.place(cmdTxt, "ann", [[g.X(N) - 4, y(capEnd) - 5, "end"], [g.X(N) - 4, y(capEnd) + 15, "end"], [g.X(FIRST) + 8, y(capEnd) - 5, "start"]]);
   const tipFor = (k: number, e: React.MouseEvent) => {
     const rows: [string, string][] = [["Import", isNum(s.meter_mw[k]) ? `${nf(s.meter_mw[k]!, 1)} MW` : "–"],

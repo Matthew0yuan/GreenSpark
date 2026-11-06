@@ -12,6 +12,7 @@ Writes var/live/state.json."""
 
 import json
 import os
+import shutil
 import sys
 import time
 from datetime import datetime
@@ -37,6 +38,7 @@ from vpp.v2 import risk as rk  # noqa: E402
 from vpp.v2 import value as vl  # noqa: E402
 
 STATE = fetch.LIVE / "state.json"
+BEFORE = fetch.LIVE / "before"  # the rows built before, until a build has finished
 P = vd.PROCESSED
 H = pd.Timedelta(hours=8)
 FRAMES = {  # model inputs kept by key: rows built before keep their values
@@ -46,8 +48,18 @@ FRAMES = {  # model inputs kept by key: rows built before keep their values
 }
 
 
+def _hold(names) -> None:
+    """Keep the files as they stand before a build rewrites them, unless a build that died has already kept them: its
+    half-way files hold rows computed afresh, and read as the rows built before they would change saved days for good."""
+    BEFORE.mkdir(exist_ok=True)
+    for n in names:
+        if (P / n).exists() and not (BEFORE / n).exists():
+            shutil.copy2(P / n, BEFORE / f"{n}.part")
+            os.replace(BEFORE / f"{n}.part", BEFORE / n)
+
+
 def _read(name: str):
-    p = P / name
+    p = BEFORE / name if (BEFORE / name).exists() else P / name
     return pd.read_parquet(p) if p.exists() else None
 
 
@@ -123,6 +135,7 @@ def main() -> dict:
     now = fetch.now()
     live_day = pd.Timestamp(fetch.trading_day(now))
     ac.UNLABELLED = True
+    _hold(("wem_5min.parquet", "wem_30min.parquet", *FRAMES))
     before = {n: _read(n) for n in ("wem_5min.parquet", "wem_30min.parquet", *FRAMES)}
 
     def step(name, fn):
@@ -159,6 +172,7 @@ def main() -> dict:
         "steps_s": steps, "total_s": round(time.time() - t0, 1), "kept": kept,
     }
     STATE.write_text(json.dumps(state, indent=1) + "\n")
+    shutil.rmtree(BEFORE)
     print(json.dumps({k: v for k, v in state.items() if k != "kept"}, indent=1))
     return state
 

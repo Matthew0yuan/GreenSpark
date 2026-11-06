@@ -26,11 +26,13 @@ from app.live import fetch, today
 
 ROOT = fetch.ROOT
 STATE = fetch.LIVE / "state.json"
+OFF = fetch.LIVE / "off"  # turned off in Settings: the app starts on the replay (without it, on live data once built)
 LOG = fetch.LIVE / "build.log"
 SKIP = {"facility-scada"}  # 1.1 GB the live builds never read
 READY_AT = dt.time(8, 25)  # the yearly files hold the day that ended at 08:00 from about 08:21
 LATEST = dt.time(10, 0)    # after this, build without the day's pre-dispatch run if it never came
 RETRY = dt.timedelta(minutes=5)
+SETUP_TRIES, SETUP_WAIT_S = 3, 30  # a dropped connection should not lose minutes of downloads (the schedule has RETRY)
 
 
 def initialised() -> bool:
@@ -40,6 +42,7 @@ def initialised() -> bool:
 def init() -> None:
     """A live copy of the research data (raw, processed, pit), which the live builds extend."""
     src = ROOT / "data"
+    fetch.RAW.mkdir(parents=True, exist_ok=True)
     for sub in ("processed", "pit"):
         if not (fetch.DATA / sub).exists():
             shutil.copytree(src / sub, fetch.DATA / sub)
@@ -50,6 +53,19 @@ def init() -> None:
 
 def state() -> dict | None:
     return json.loads(STATE.read_text()) if STATE.exists() else None
+
+
+def mark_off() -> None:
+    fetch.LIVE.mkdir(parents=True, exist_ok=True)
+    OFF.touch()
+
+
+def current() -> bool:
+    """Built for the trading day in progress."""
+    s = state()
+    day = fetch.trading_day(fetch.now())
+    return s is not None and dt.date.fromisoformat(s["live_day"]) >= day and \
+        dt.date.fromisoformat(s["complete_through"]) >= day - dt.timedelta(days=1)
 
 
 def market_through() -> dt.date | None:
@@ -75,13 +91,15 @@ def build() -> tuple[bool, str]:
     return p.returncode == 0, " | ".join(tail)
 
 
-def morning(day: dt.date) -> dict:
+def morning(day: dt.date, say=lambda share, message: None) -> dict:
     """Bring the live data to trading day `day`: {"ok": bool, "detail": str}."""
+    say(0.1, "downloading AEMO's market data")
     fetch.market()
     through = market_through()
     if through is None or through < day - dt.timedelta(days=1):
         return {"ok": False, "wait": True, "detail": f"AEMO's yearly files end on trading day {through}; "
                 f"waiting for {day - dt.timedelta(days=1)} (published about 08:21)"}
+    say(0.3, "downloading AEMO's pre-dispatch runs")
     fetch.predispatch(day - dt.timedelta(days=1))  # the days already over, from AEMO's archive
     note = ""
     try:
@@ -90,9 +108,45 @@ def morning(day: dt.date) -> dict:
         if fetch.now() < dt.datetime.combine(day, LATEST):
             return {"ok": False, "wait": True, "detail": f"AEMO's 08:00 pre-dispatch run of {day} is not listed yet"}
         note = f"; no 08:00 pre-dispatch run for {day} ({e!r}), so no 09:00 plan for it"
+    say(0.45, "downloading the weather")
     fetch.weather()
+    say(0.5, "rebuilding the forecasts and value tables, a few minutes")
     ok, tail = build()
     return {"ok": ok, "detail": tail + note}
+
+
+def setup(say=lambda share, message: None) -> dict:
+    """Bring the live data up to date, the first time with the copy of the research data; RuntimeError if they are not
+    usable after it. A first run that ended early starts again from the research data: its half-built rows would
+    otherwise be kept as the rows built before (build.py)."""
+    if not initialised() and fetch.DATA.exists():
+        shutil.rmtree(fetch.DATA)
+    say(0.02, "copying the data, about 1 GB")
+    init()
+    day = fetch.trading_day(fetch.now())
+    for attempt in range(SETUP_TRIES):
+        try:
+            r = morning(day, say)
+            break
+        except OSError as e:  # the network (urllib's errors are OSErrors): what has been downloaded stays
+            if attempt == SETUP_TRIES - 1:
+                raise RuntimeError(f"Could not download the data ({getattr(e, 'reason', e)}). Check the connection and try again.") from e
+            say(0.1, "connection lost, trying again")
+            time.sleep(SETUP_WAIT_S)
+    if r.get("wait") and not initialised():  # the first build: the days already over, without today's plan
+        say(0.3, "downloading AEMO's pre-dispatch runs")
+        fetch.predispatch(day - dt.timedelta(days=1))
+        say(0.45, "downloading the weather")
+        fetch.weather()
+        say(0.5, "rebuilding the forecasts and value tables, a few minutes")
+        ok, tail = build()
+        r = {"ok": ok, "detail": tail}
+    # waiting for today's first files, with yesterday's built: usable, and the schedule carries on
+    if not initialised() or not (r["ok"] or r.get("wait")):
+        raise RuntimeError(f"The live data could not be built: {r['detail']}")
+    say(0.97, "today's 5-minute prices")
+    today.update(day)
+    return {"detail": r["detail"], "state": {k: v for k, v in state().items() if k != "kept"}}
 
 
 class Schedule:
@@ -139,7 +193,7 @@ class Schedule:
         self.status["build"] = {"state": "done" if r["ok"] else "waiting" if r.get("wait") else "failed",
                                 "detail": r["detail"], "at": fetch.now().isoformat(timespec="seconds")}
         if r["ok"]:
-            if self.on_build:
+            if self.on_build and not self.stop.is_set():  # turned off while it built: the engines stay on the replay
                 self.on_build()
         else:
             self.next_build = fetch.now() + RETRY
@@ -152,16 +206,12 @@ class Schedule:
 
 def main(argv: list[str]) -> None:
     if "--init" in argv:
-        init()
-    if not (fetch.DATA / "processed").exists():
+        print(setup(lambda share, message: print(message, flush=True)))
+        return
+    if not initialised():
         raise SystemExit("no live data yet: run with --init first")
     day = fetch.trading_day(fetch.now())
-    r = morning(day)
-    print(r)
-    if r.get("wait") and not initialised():  # the first build: the days already over, without today's plan
-        fetch.predispatch(day - dt.timedelta(days=1))
-        fetch.weather()
-        print(build())
+    print(morning(day))
     print(today.update(day))
 
 

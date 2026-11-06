@@ -13,8 +13,9 @@ from vpp import dispatch as dp
 from vpp.data import PROCESSED
 from vpp.v2 import backtest as vb
 
-from .common import (DEFAULT_CONNECTION, DEFAULT_DISPATCHER, HURDLE, PERFECT, PLAN_ONLY, SAVED_DIR, SAVED_PERIODS,
-                     STRATEGY, check_mode, num, other, period, period_key, saved_rel)
+from . import configs as cg
+from .common import (DEFAULT_CONNECTION, DEFAULT_DISPATCHER, HURDLE, PERFECT, PLAN_ONLY, SAVED_PERIODS, STRATEGY, check_mode,
+                     num, other, period, period_key, saved_dir, saved_rel)
 
 
 def _ci(diff: pd.Series) -> tuple:
@@ -25,9 +26,12 @@ def _ci(diff: pd.Series) -> tuple:
     return num(lo, 1), num(hi, 1)
 
 
-def saved_runs(connection: str) -> tuple[pd.DataFrame, pd.DataFrame, list]:
+def saved_runs(connection: str, setup: cg.Config = cg.TESTED) -> tuple[pd.DataFrame, pd.DataFrame, list]:
     """(the daily rows of every saved run, money per day by strategy, gaps) of one connection's saved folder."""
-    folder = SAVED_DIR[connection]
+    return read_runs(saved_dir(connection, setup), connection)
+
+
+def read_runs(folder, connection: str) -> tuple[pd.DataFrame, pd.DataFrame, list]:
     daily = pd.read_csv(folder / "daily.csv", parse_dates=["day"])
     gaps = []
     refs = folder / "refs_daily.csv"
@@ -42,7 +46,7 @@ def saved_runs(connection: str) -> tuple[pd.DataFrame, pd.DataFrame, list]:
     return daily, money, gaps
 
 
-def verdict(money: pd.DataFrame, connection: str) -> dict:
+def verdict(money: pd.DataFrame, connection: str, setup: cg.Config = cg.TESTED) -> dict:
     """The selection rule on one connection's saved runs at the app's hurdle: e5 over v1 in the training period,
     month-block 95% interval above 0 (analysis/2026-10-27/standalone_v2/PLAN.md, reports/v2_plan.md)."""
     d = (money[STRATEGY[connection, "e5"]] - money[STRATEGY[connection, "v1"]]).dropna()
@@ -52,15 +56,18 @@ def verdict(money: pd.DataFrame, connection: str) -> dict:
             "hi95": num(hi, 1), "passed": bool(lo > 0),
             "rule": "e5 passes if its training-period gain over v1 has a month-block 95% interval above 0",
             "money": "energy + FCESS − wear" + (" + the month's network bill saving per day" if connection == "factory" else ""),
-            "source": f"{saved_rel(connection)} (hurdle {HURDLE:g} A$/MWh)"}
+            "source": f"{saved_rel(connection, setup)} (hurdle {HURDLE:g} A$/MWh)"}
 
 
-def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER) -> dict:
+def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
+             energy_mwh: float | None = None, cmd_mw: float | None = None) -> dict:
     check_mode(connection, dispatcher)
+    setup = cg.of(connection, energy_mwh, cmd_mw)
+    folder, rel = saved_dir(connection, setup), saved_rel(connection, setup)
     factory = connection == "factory"
     me, them = STRATEGY[connection, dispatcher], STRATEGY[connection, other(dispatcher)]
     short = {me: dispatcher, them: other(dispatcher), PLAN_ONLY: "plan only", PERFECT: "prices known"}
-    daily, v, gaps = saved_runs(connection)
+    daily, v, gaps = read_runs(folder, connection)
     v = v[[c for c in (me, them, PLAN_ONLY, PERFECT) if c in v.columns]]
     keys = pd.Series([period_key(d) for d in v.index], index=v.index)
     led = daily.pivot_table(index="day", columns="strategy", values="ledger_total") if factory else None
@@ -106,9 +113,9 @@ def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DIS
     # limits: every half-hour of this dispatcher's backtest log (behind the meter also the meter over its CMD cap,
     # an economic limit: the dispatcher may exceed it at the month's excess charge)
     cols = ["day", "strategy", "energy_mwh", "soc"] + (["meter_mw", "cap_mw"] if factory else [])
-    log = pd.read_parquet(SAVED_DIR[connection] / "log.parquet", columns=cols)
+    log = pd.read_parquet(folder / "log.parquet", columns=cols)
     log = log[log["strategy"] == me]
-    P, E = bt.Q2B_ASSET.battery.power_mw, bt.Q2B_ASSET.battery.energy_mwh
+    P, E = bt.Q2B_ASSET.battery.power_mw, setup.energy
     lk = pd.Series([period_key(d) for d in pd.to_datetime(log["day"])], index=log.index)
     limits = []
     for k in SAVED_PERIODS:
@@ -122,7 +129,7 @@ def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DIS
 
     site = None
     if factory:
-        ircr = pd.read_csv(SAVED_DIR[connection] / "ircr.csv").set_index("strategy")
+        ircr = pd.read_csv(folder / "ircr.csv").set_index("strategy")
         site = {"ircr_saving_aud_per_year": {short[s]: num(ircr.loc[s, "saving_per_year"], 0) for s in (me, them)
                                               if s in ircr.index},
                 "ircr_intervals_covered": {short[s]: int(ircr.loc[s, "intervals_covered"]) for s in (me, them)
@@ -130,12 +137,13 @@ def evidence(connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DIS
                 "ircr_mw_no_battery": num(ircr["ircr_no_battery_mw"].iloc[0], 2),
                 "ircr_season": "2025-26 Hot Season (1 Dec 2025 – 31 Mar 2026), in the training period",
                 "load": "synthetic factory load [assumed]: order of magnitude only",
-                "source": f"{saved_rel(connection)}/ircr.csv (vpp.backtest.q2b_bills)"}
-    v_all = verdict(v if them in v and me in v else saved_runs(connection)[1], connection)
-    return {"connection": connection, "adopted": dispatcher, "adopted_name": me, "candidate": other(dispatcher),
+                "source": f"{rel}/ircr.csv (vpp.backtest.q2b_bills)"}
+    v_all = verdict(v if them in v and me in v else saved_runs(connection, setup)[1], connection, setup)
+    return {"connection": connection, "asset": {"power_mw": P, "energy_mwh": E, "cmd_mw": setup.cmd if factory else None},
+            "unvalidated": not setup.tested, "adopted": dispatcher, "adopted_name": me, "candidate": other(dispatcher),
             "candidate_name": them, "verdict": v_all,
             "selection_rule": f"{v_all['rule']} (at hurdle {HURDLE:g} A$/MWh): "
                               f"{'passed' if v_all['passed'] else 'not passed'} on this connection",
             "periods": rows, "forecast": forecast, "limits": limits, "site": site, "gaps": gaps, "status": "backtest",
-            "source": f"{saved_rel(connection)} daily.csv, refs_daily.csv, log.parquet"
+            "source": f"{rel} daily.csv, refs_daily.csv, log.parquet"
                       + (", money.csv, ircr.csv" if factory else "") + "; data/processed/forecast_dispatch_0900.parquet"}

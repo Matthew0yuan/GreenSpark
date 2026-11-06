@@ -59,13 +59,17 @@ uv run python -m app.backend
 
 Open [localhost:8000](http://127.0.0.1:8000). By default, the app replays 1 Apr 2025–22 Oct 2026.
 Allow about 30 seconds for model loading; the first start also builds storage-value tables and takes about a minute longer.
+In Settings you can change the battery's energy (10–80 MWh) and the factory's CMD (5–12 MW). Each new pair first runs its
+own full backtest (3–15 minutes), which is kept in `var/configs/` until the code or data change. These are explorations:
+the dispatcher and its settings were chosen on the tested 40 MWh / 9 MW.
 On Windows, clone into a short path to avoid long-path issues.
 
 <details>
 <summary>Live data, tests and Docker</summary>
 
-- **Live data:** `uv run python -m app.live.run --init` initialises `var/live/` and downloads newer AEMO data
-  (about 1 GB). Battery planning then uses live inputs; customer-call analysis remains historical.
+- **Live data:** the **Turn on live data** button in Settings (or `uv run python -m app.live.run --init`) initialises
+  `var/live/` and downloads newer AEMO data (about 1 GB). Battery planning then uses live inputs and updates itself while
+  the app runs; customer-call analysis remains historical. **Back to replay** returns to the saved days.
 - **Tests:** `uv run pytest app/tests`. Live-data tests are skipped until live data exist.
 - **Docker demo:** after initialising live data, `uv run python deploy/demo.py up` starts the app and a Cloudflare
   quick tunnel; use `url` to show connection details and `down` to stop it. Requires Docker.

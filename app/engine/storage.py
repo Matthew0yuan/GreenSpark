@@ -2,7 +2,8 @@
 factory meter (route m1: CMD 9 MW, IRCR on flagged peak days, the synthetic factory load; the default since the user's
 2026-10-28 decision) or on its own connection (route sa). Either connection runs e5 (the default) or v1. Replays the
 chosen dispatcher from the day's saved start state and splits the result into what was known at 09:00 (plan, offers,
-forecasts, checks) and what happened (outcome), which the API serves separately.
+forecasts, checks) and what happened (outcome), which the API serves separately. Another energy or CMD (configs.py)
+replays from its own saved backtest.
 
 Ported from analysis/2026-10-26/ui_redesign/export/site_days_replay.py and site_days_export.py; the factory blocks
 (meter, CMD, IRCR, network bill) follow site_days_export.py."""
@@ -27,12 +28,13 @@ from vpp.v2 import offers as of
 from vpp.v2 import value as vl
 from vpp.v2.config import V1
 
+from . import configs as cg
 from . import evidence as ev
 from . import explain as ex
 from . import live as lv
 from .common import (CONNECTIONS, DEFAULT_CONNECTION, DEFAULT_DISPATCHER, DISPATCHERS, FIRST, HURDLE, N, PERFECT,
-                     PERIODS, PLAN_ONLY, ROOT, SAVED_DIR, STRATEGY, TABLES, arr, check_mode, clock, hot_season, num,
-                     other, pad, period, period_key, saved_rel, weekday_label)
+                     PERIODS, PLAN_ONLY, ROOT, STRATEGY, TABLES, arr, check_mode, clock, hot_season, num, other, pad,
+                     period, period_key, saved_dir, saved_rel, weekday_label)
 
 # MW or MWh: the plan checks allow the MILP solver's feasibility tolerance (HiGHS: on 2026-01-20 behind the meter the room
 # behind FCESS lower is short by 1.5e-6 MWh, 1.5 Wh of 40 MWh)
@@ -43,11 +45,14 @@ CACHE_DAYS = 24
 LOAD_BASIS = "synthetic: vpp.site.example_load x 10, the forecast is the profile itself [assumed]"
 
 
-def scenario(connection: str, fcess: tuple = SERVICES):
-    """The route the saved runs used: behind the factory meter m1 (CMD 9 MW, IRCR dynamic) or standalone sa."""
-    route = (ct.Route("m1", cmd_mw=vb.CMD, ircr="dynamic", fcess=fcess) if connection == "factory"
+def scenario(connection: str, fcess: tuple = SERVICES, setup: cg.Config = cg.TESTED):
+    """The route the saved runs used, with this battery and CMD: behind the factory meter m1 (CMD 9 MW, IRCR dynamic) or
+    standalone sa. The value table follows them (vpp.v2.harness.table_params)."""
+    base = bt.Q2B_ASSET
+    asset = replace(base, battery=replace(base.battery, energy_mwh=setup.energy)) if setup.energy_mwh is not None else base
+    route = (ct.Route("m1", cmd_mw=setup.cmd, ircr="dynamic", fcess=fcess) if connection == "factory"
              else ct.Route("sa", metering="standalone", fcess=fcess))
-    sc = bt._sc(route.name, route, (bt.VALUE,), prefs=replace(bt.PREFS, hurdle_per_mwh=HURDLE))
+    sc = bt._sc(route.name, route, (bt.VALUE,), prefs=replace(bt.PREFS, hurdle_per_mwh=HURDLE), asset=asset)
     if sc is None:
         raise ValueError(f"route refused: {bt.REFUSED}")
     return sc
@@ -74,6 +79,8 @@ class Storage:
     def __init__(self):
         assert (STRATEGY["standalone", "v1"], STRATEGY["factory", "v1"], STRATEGY["factory", "e5"]) == \
             (bt.VALUE, V1.name, vb.E5.name), "common.STRATEGY no longer names the saved runs"
+        assert (bt.Q2B_ASSET.battery.energy_mwh, vb.CMD, sv.CMD) == (cg.ENERGY_MWH, cg.CMD_MW, cg.CMD_MW), \
+            "configs.py no longer names the tested battery and CMD"
         value_tables()
         # live data (app/live): the complete days up to the last one AEMO's yearly files hold, then the day in progress
         self.live = lv.state()
@@ -81,14 +88,10 @@ class Storage:
         self.aux = bt.q2b_aux()
         self.index = {d["day"]: i for i, d in enumerate(self.days)}
         self.live_info = None
-        self.saved, self.money, self.bills, self.mtd = {}, {}, {}, {}
-        for conn, folder in SAVED_DIR.items():  # incl. the 09:00 plan alone ("forecast"), prices known ("perfect")
-            daily, self.money[conn], _ = ev.saved_runs(conn)
-            self.saved[conn] = {name: g.set_index("day").sort_index() for name, g in daily.groupby("strategy")}
-            if conn == "factory":  # money: the daily ledger plus the month's network bill saving per day
-                self.bills[conn] = pd.read_csv(folder / "bills.csv")
-                self.mtd = self._month_peaks(folder)
-        self.verdicts = {conn: ev.verdict(self.money[conn], conn) for conn in CONNECTIONS}
+        self.tested = {conn: self._read_runs(conn, cg.TESTED) for conn in CONNECTIONS}
+        self.custom = None  # the one other configuration in memory, with its value table
+        self.saved = {conn: r.saved for conn, r in self.tested.items()}
+        self.verdicts = {conn: r.verdict for conn, r in self.tested.items()}
         self.cache: OrderedDict = OrderedDict()
         self.schema = json.loads(SCHEMA.read_text())["components"]["schemas"] if SCHEMA.exists() else None
         sc = pd.read_parquet(PROCESSED / "scenarios_0900.parquet", columns=["day", "member", "slot", "energy"])
@@ -97,10 +100,45 @@ class Storage:
         risk = pd.read_parquet(PROCESSED / "spike_risk_0900.parquet", columns=["ts", "target_date", "days_ahead", "p_spike"])
         risk = risk[risk["days_ahead"] == 0]
         self.risk = {pd.Timestamp(d): g.sort_values("ts")["p_spike"].to_numpy() for d, g in risk.groupby("target_date")}
-        self.saved_last = {conn: min(g.index.max() for g in self.saved[conn].values()) for conn in CONNECTIONS}
+        self.saved_last = {conn: r.last for conn, r in self.tested.items()}
         if self.live is not None:
             self.inputs = lv.Inputs(pd.Timestamp(self.live["live_day"]))
             self.refresh_today()
+            # a live day's start state replays the days since the saved backtest, one after the other: done here, while
+            # the old engines still serve, it does not hold up the first request (and /meta behind it). A day that
+            # cannot run says why when it is asked for.
+            try:
+                self.start_mwh(self.days[-1]["day"])
+            except Exception:  # noqa: BLE001
+                pass
+
+    # ------------------------------------------------------------------------------------------------ saved backtests
+    def _read_runs(self, connection: str, setup: cg.Config) -> SimpleNamespace:
+        """A saved backtest, incl. the 09:00 plan alone ("forecast") and prices known ("perfect"). Behind the meter the
+        money is the daily ledger plus the month's network bill saving per day."""
+        folder = saved_dir(connection, setup)
+        daily, money, _ = ev.saved_runs(connection, setup)
+        saved = {name: g.set_index("day").sort_index() for name, g in daily.groupby("strategy")}
+        factory = connection == "factory"
+        return SimpleNamespace(saved=saved, money=money, bills=pd.read_csv(folder / "bills.csv") if factory else None,
+                               mtd=self._month_peaks(folder) if factory else {}, verdict=ev.verdict(money, connection, setup),
+                               last=min(g.index.max() for g in saved.values()), built=None)
+
+    def runs(self, connection: str, setup: cg.Config) -> SimpleNamespace:
+        """The saved backtest of a connection, battery and CMD (configs.NotBuilt if it has none). Only one other than the
+        tested is held, with its value table (about 100 MB) and replays: a new build of it replaces them."""
+        if setup.tested:
+            return self.tested[connection]
+        built = (connection, setup, cg.require(connection, setup)["built_at"])
+        if self.custom is None or self.custom.built != built:
+            tested = {hs.table_params(sc.asset, sc.site, sc.route.cmd_mw).key() for sc in map(scenario, CONNECTIONS)}
+            for k in [k for k in hs.VALUE_INPUTS if k[-1] not in tested]:
+                del hs.VALUE_INPUTS[k]
+            for k in [k for k in self.cache if not k[-1].tested]:
+                del self.cache[k]
+            self.custom = self._read_runs(connection, setup)
+            self.custom.built = built
+        return self.custom
 
     # ------------------------------------------------------------------------------------------------ live data
     def refresh_today(self) -> dict | None:
@@ -165,8 +203,8 @@ class Storage:
                 "baseline": self.baseline_info(DEFAULT_CONNECTION, DEFAULT_DISPATCHER),
                 "asset": self.asset_info(DEFAULT_CONNECTION), "verdicts": self.verdicts, "live": self.live_meta()}
 
-    def dispatcher(self, connection: str, dispatcher: str) -> dict:
-        v = self.verdicts[connection]
+    def dispatcher(self, connection: str, dispatcher: str, setup: cg.Config = cg.TESTED) -> dict:
+        v = self.runs(connection, setup).verdict
         return {"name": STRATEGY[connection, dispatcher], "short": dispatcher, "connection": connection,
                 "e5_passed": v["passed"], "verdict": v, "hurdle_aud_per_mwh": HURDLE}
 
@@ -174,73 +212,80 @@ class Storage:
         o = other(dispatcher)
         return {"name": STRATEGY[connection, o], "short": o}
 
-    def asset_info(self, connection: str) -> dict:
+    def asset_info(self, connection: str, setup: cg.Config = cg.TESTED) -> dict:
         bat = bt.Q2B_ASSET.battery
-        out = {"power_mw": bat.power_mw, "energy_mwh": bat.energy_mwh, "round_trip": bat.round_trip,
+        out = {"power_mw": bat.power_mw, "energy_mwh": setup.energy, "round_trip": bat.round_trip,
                "wear_aud_per_mwh": bt.Q2B_ASSET.wear_per_mwh, "registration": "scheduled",
                "metering": "behind_meter" if connection == "factory" else "standalone", "facilities": 1,
                "fcess": list(SERVICES), "status": "assumed", "site": None}
         if connection == "factory":
             s = vsite.FACTORY
-            out["site"] = {"import_limit_mw": s.import_limit_mw, "export_limit_mw": s.export_limit_mw, "cmd_mw": vb.CMD,
+            out["site"] = {"import_limit_mw": s.import_limit_mw, "export_limit_mw": s.export_limit_mw, "cmd_mw": setup.cmd,
                            "load": LOAD_BASIS, "ircr": "dynamic: peak days flagged at 09:00 (same day, day before)"}
         return out
 
     # ------------------------------------------------------------------------------------------------ replay
     @staticmethod
-    def _scenario(connection: str, fcess: tuple):
-        return scenario(connection, fcess)
+    def _scenario(connection: str, fcess: tuple, setup: cg.Config):
+        return scenario(connection, fcess, setup)
 
     @staticmethod
     def _cfg(dispatcher: str):
         return config(dispatcher, record=True)
 
-    def _before(self, day: pd.Timestamp, connection: str) -> pd.Timestamp | None:
+    def _before(self, day: pd.Timestamp, connection: str, setup: cg.Config) -> pd.Timestamp | None:
         """For a day after the saved backtest's last day but one (live data), the day before it, whose replay (with
         the default settings, as saved) gives the day's start state; None where the saved backtest gives it."""
         day = pd.Timestamp(day)
         i = self.index.get(day)
-        if i is None or i == 0 or self.days[i - 1]["day"] <= self.saved_last[connection]:
+        if i is None or i == 0 or self.days[i - 1]["day"] <= self.runs(connection, setup).last:
             return None
         return self.days[i - 1]["day"]
 
-    def start_mwh(self, day: pd.Timestamp, connection: str = DEFAULT_CONNECTION,
-                  dispatcher: str = DEFAULT_DISPATCHER) -> float:
-        prev = self._before(day, connection)
+    def start_mwh(self, day: pd.Timestamp, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
+                  setup: cg.Config = cg.TESTED) -> float:
+        prev = self._before(day, connection, setup)
         if prev is not None:  # the saved backtest carried on through the live days
-            return float(self.replay(prev, connection, dispatcher)["summary"]["soc_end"])
-        g = self.saved[connection][STRATEGY[connection, dispatcher]]
+            return float(self.replay(prev, connection, dispatcher, setup=setup)["summary"]["soc_end"])
+        g = self.runs(connection, setup).saved[STRATEGY[connection, dispatcher]]
         before = g[g.index < day]
         return float(before["soc_end"].iloc[-1]) if len(before) else 0.0
 
-    def month_peaks(self, day: pd.Timestamp, connection: str, dispatcher: str) -> dict:
+    def month_peaks(self, day: pd.Timestamp, connection: str, dispatcher: str, setup: cg.Config) -> dict:
         if connection != "factory":
             return {}
-        prev = self._before(day, connection)
+        prev = self._before(day, connection, setup)
         if prev is not None:  # the day before's month peaks, raised by its own meter
-            r = self.replay(prev, connection, dispatcher)
+            r = self.replay(prev, connection, dispatcher, setup=setup)
             run = dict(r["mtd0"])
             for m, v in zip(self.days[self.index[prev]]["slot_month"], r["log"]["meter_mw"].to_numpy()):
                 run[m] = max(run.get(m, 0.0), float(v))
             return run
-        saved = self.mtd[STRATEGY[connection, dispatcher]]
+        runs = self.runs(connection, setup)
+        saved = runs.mtd[STRATEGY[connection, dispatcher]]
         day = pd.Timestamp(day)
-        return dict(saved["after"] if day > self.saved_last[connection] else saved.get(day, {}))
+        return dict(saved["after"] if day > runs.last else saved.get(day, {}))
 
     def replay(self, day, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
-               fcess: tuple = SERVICES, start_mwh: float | None = None, perturb: bool = False) -> dict:
+               fcess: tuple = SERVICES, start_mwh: float | None = None, perturb: bool = False,
+               setup: cg.Config = cg.TESTED) -> dict:
         check_mode(connection, dispatcher)
         day = pd.Timestamp(day)
+        runs = self.runs(connection, setup)  # first: a new build of this configuration drops its replays
         key = (day, connection, dispatcher, tuple(fcess), None if start_mwh is None else round(float(start_mwh), 6),
-               perturb)
+               perturb, setup)
         if key in self.cache:
             self.cache.move_to_end(key)
             return self.cache[key]
         if day not in self.index:
             raise KeyError(f"no market data for trading day {day.date()}")
+        if not setup.tested and day > runs.last:
+            raise ValueError(f"the backtest of this battery ends on {runs.last.date()}: no live days")
+        if start_mwh is not None and float(start_mwh) > setup.energy:
+            raise ValueError(f"energy stored at 08:00 ({float(start_mwh):g} MWh) is more than the battery's {setup.energy:g} MWh")
         # first the start state: on live days it replays the day before, which sets vpp's shared days (_init_worker)
-        s0 = self.start_mwh(day, connection, dispatcher) if start_mwh is None else float(start_mwh)
-        mtd0 = self.month_peaks(day, connection, dispatcher)
+        s0 = self.start_mwh(day, connection, dispatcher, setup) if start_mwh is None else float(start_mwh)
+        mtd0 = self.month_peaks(day, connection, dispatcher, setup)
         i = self.index[day]
         sub = [dict(d) for d in self.days[i:i + 2]]
         if perturb:  # every actual price from 09:00 on x 3: the 09:00 plan must not move (check info_timing)
@@ -255,7 +300,7 @@ class Storage:
                 d["act_f"][k][FIRST:] *= 3.0
             d["prices"] = {**d["prices"], "actual": (d["rtp"], d["act_f"])}
         bt._init_worker(sub, self.aux)
-        sc, cfg = self._scenario(connection, tuple(fcess)), self._cfg(dispatcher)
+        sc, cfg = self._scenario(connection, tuple(fcess), setup), self._cfg(dispatcher)
         bat = hs.scenario(sc, cfg).asset.battery
         is_e5, factory = dispatcher == "e5", connection == "factory"
         col = of.Collector(bat)
@@ -285,7 +330,8 @@ class Storage:
         _, terms, summary, log, recs = next(hs.route_days(sc, cfg, s0, mtd0, until=day, on_day=on_day, on_step=on_step))
         out = {"day": day, "sc": sc, "bat": bat, "summary": summary, "log": log, "records": recs,
                "steps": pd.DataFrame(steps), "forward": col.forward.get(day, {}), "at9": col._at9, "day_input": sub[0],
-               "start_mwh": s0, "mtd0": mtd0, "fcess": tuple(fcess), "connection": connection, "dispatcher": dispatcher}
+               "start_mwh": s0, "mtd0": mtd0, "fcess": tuple(fcess), "connection": connection, "dispatcher": dispatcher,
+               "setup": setup}
         self.cache[key] = out
         while len(self.cache) > CACHE_DAYS:
             self.cache.popitem(last=False)
@@ -362,11 +408,12 @@ class Storage:
     # ------------------------------------------------------------------------------------------------ the 09:00 plan
     def plan(self, day, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
              fcess: tuple = SERVICES, start_mwh: float | None = None, export_mw: float | None = None,
-             import_mw: float | None = None) -> dict:
+             import_mw: float | None = None, energy_mwh: float | None = None, cmd_mw: float | None = None) -> dict:
         """What was known at 09:00: the plan, the offers, the forecasts and the checks. Settings that change the
         engine's inputs (connection, dispatcher, fcess, start_mwh) replay the day; the connection limits only
         re-check the plan."""
-        r = self.replay(day, connection, dispatcher, fcess, start_mwh)
+        setup = cg.of(connection, energy_mwh, cmd_mw)
+        r = self.replay(day, connection, dispatcher, fcess, start_mwh, setup=setup)
         D, bat, sc = r["day"], r["bat"], r["sc"]
         P, E, eta = bat.power_mw, bat.energy_mwh, bat.eta
         factory = connection == "factory"
@@ -404,23 +451,24 @@ class Storage:
         state = "BLOCKED" if hard_fail else "PASS"
         breaches = sorted({k for c in blocked for k in c.get("slots", [])})
 
-        default = tuple(r["fcess"]) == SERVICES and start_mwh is None
-        src = saved_rel(connection)
+        default = tuple(r["fcess"]) == SERVICES and start_mwh is None and setup.tested
+        src = saved_rel(connection, setup)
         site_block = self._site_block(r, rec, site, gaps) if factory else None
         out = {
             "day": str(D.date()), "weekday_label": weekday_label(D), "basis": "plan",
             "period": period(period_key(D), self._period_days(period_key(D))), "hot_season": hot_season(D),
-            "connection": connection, "dispatcher": self.dispatcher(connection, dispatcher),
-            "asset": self.asset_info(connection),
+            "connection": connection, "dispatcher": self.dispatcher(connection, dispatcher, setup),
+            "asset": self.asset_info(connection, setup),
             "settings": {"connection": connection, "dispatcher": dispatcher, "fcess": list(r["fcess"]),
-                         "start_mwh": start_mwh, "export_mw": export_mw, "import_mw": import_mw},
+                         "start_mwh": start_mwh, "export_mw": export_mw, "import_mw": import_mw,
+                         "energy_mwh": setup.energy_mwh, "cmd_mw": setup.cmd_mw},
             "unvalidated": not default or export_mw != exp0 or import_mw != imp0,
             "start_state": {"stored_mwh": num(r["start_mwh"]),
                             "source": "set in Settings" if start_mwh is not None else
                                       "the day before's stored energy at 08:00 in this dispatcher's saved backtest "
-                                      f"({src}/daily.csv soc_end)" if self._before(D, connection) is None else
+                                      f"({src}/daily.csv soc_end)" if self._before(D, connection, setup) is None else
                                       "the day before's stored energy at 08:00, replayed with this dispatcher from the "
-                                      f"saved backtest's end ({self.saved_last[connection].date()}) on AEMO's live data"},
+                                      f"saved backtest's end ({self.runs(connection, setup).last.date()}) on AEMO's live data"},
             "live": None if not self._live_day(D) else {
                 "prices_to": self.live_info["as_of"], "predispatch_issued_at": self.live["predispatch_issued_at"],
                 "built_at": self.live["built_at"]},
@@ -540,7 +588,7 @@ class Storage:
             f"planned charging plus enabled lower: {imp_.max():.3f} MW; limit {import_mw:g} MW",
             slots=np.flatnonzero(imp_ > import_mw + TOL))
         # only information public at 09:00: the same day with every actual price from 09:00 on x 3
-        p = self.replay(r["day"], r["connection"], r["dispatcher"], r["fcess"], r["start_mwh"], perturb=True)
+        p = self.replay(r["day"], r["connection"], r["dispatcher"], r["fcess"], r["start_mwh"], perturb=True, setup=r["setup"])
         rec2 = self.record_0900(p["records"])
         diff = max(float(np.max(np.abs(np.asarray(rec[k], float) - np.asarray(rec2[k], float)))) for k in ("net", "soc", *SERVICES))
         moved = float(np.max(np.abs(r["log"]["energy_mwh"].to_numpy() - p["log"]["energy_mwh"].to_numpy())))
@@ -665,8 +713,11 @@ class Storage:
 
     # ------------------------------------------------------------------------------------------------ what happened
     def outcome(self, day, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
-                fcess: tuple = SERVICES, start_mwh: float | None = None) -> dict:
-        r = self.replay(day, connection, dispatcher, fcess, start_mwh)
+                fcess: tuple = SERVICES, start_mwh: float | None = None, energy_mwh: float | None = None,
+                cmd_mw: float | None = None) -> dict:
+        setup = cg.of(connection, energy_mwh, cmd_mw)
+        runs = self.runs(connection, setup)
+        r = self.replay(day, connection, dispatcher, fcess, start_mwh, setup=setup)
         D, bat, log, st, summ = r["day"], r["bat"], r["log"], r["steps"], r["summary"]
         factory = connection == "factory"
         st = st.sort_values("step").reset_index(drop=True)
@@ -678,8 +729,8 @@ class Storage:
         sold_aud = cleared * dp.DT * log["rtp"].to_numpy()
         default = tuple(r["fcess"]) == SERVICES and start_mwh is None
         name = STRATEGY[connection, dispatcher]
-        saved = self.saved[connection][name]
-        money = self.money[connection]
+        saved = runs.saved[name]
+        money = runs.money
         gaps: list = []
         check = None
         if default and D in saved.index:
@@ -688,14 +739,14 @@ class Storage:
         network, site = None, None
         if factory:
             month = D.strftime("%Y-%m")
-            b = self.bills[connection]
+            b = runs.bills
             b = b[(b["strategy"] == name) & (b["month"].astype(str) == month)]
             if default and len(b) and D in saved.index:
                 network = float(b["saving"].iloc[0] / b["days"].iloc[0])
-            elif D > self.saved_last[connection]:
+            elif D > runs.last:
                 gaps.append({"field": "money_aud.network", "reason": "the network bill is settled per calendar month "
                              "on its highest import; the saved months end on "
-                             f"{self.saved_last[connection].date()}, and this month's bill is not settled yet"})
+                             f"{runs.last.date()}, and this month's bill is not settled yet"})
             else:
                 gaps.append({"field": "money_aud.network", "reason": "the network bill is settled per calendar month "
                              "on its highest import: with changed settings only this day is replayed, so the month's "
@@ -717,7 +768,7 @@ class Storage:
                 baselines.append({"name": short, "net_aud": num(money.loc[D, ref])})
         net = summ["total"] + (network or 0.0)
         out = {
-            "day": str(D.date()), "basis": "outcome", "unvalidated": not default, "connection": connection,
+            "day": str(D.date()), "basis": "outcome", "unvalidated": not default or not setup.tested, "connection": connection,
             "dispatcher": dispatcher,
             "battery_mw": arr(log["energy_mwh"].to_numpy() / dp.DT), "soc_mwh": arr(np.r_[log["soc_start"].iloc[0], log["soc"].to_numpy()]),
             "fcess_mw": {k: arr(log[f"{k}_mw"]) for k in SERVICES},
@@ -731,7 +782,7 @@ class Storage:
             "site": site,
             "discharged_mwh": num(summ["discharged_mwh"]), "replans": int(summ["replans"]),
             "baseline_same_day": baselines[0] if baselines else None, "baselines": baselines,
-            "baselines_source": f"{saved_rel(connection)} (same day, prices, battery; money as this connection counts it)",
+            "baselines_source": f"{saved_rel(connection, setup)} (same day, prices, battery; money as this connection counts it)",
             "replay_check": check, "status": "backtest", "gaps": gaps,
             "source": f"vpp.v2.harness.route_days on route {r['sc'].route.name} from the saved start state; money = "
                       "run_day summary (energy + FCESS − wear)" +

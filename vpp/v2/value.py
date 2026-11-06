@@ -604,7 +604,7 @@ def main(argv: list[str] | None = None) -> None:
         i = z["index"][pd.Timestamp(d)]
         c = z["curve"][i]
         print(f"  {d} (L ${z['level'][i]:.0f}): 08:00 value $/MWh at 0/5/10/20/30/{len(c) - 1} MWh: "
-              + " / ".join(f"{c[s]:.0f}" for s in (0, 5, 10, 20, 30, len(c) - 1)))
+              + " / ".join(f"{c[s]:.0f}" for s in (0, 5, 10, 20, 30, len(c) - 1) if s < len(c)))
 
 
 if __name__ == "__main__":

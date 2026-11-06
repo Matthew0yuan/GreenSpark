@@ -71,14 +71,21 @@ def month(day) -> str:
     return pd.Timestamp(day).strftime("%Y-%m")
 
 
+def _of_month(table: dict, name: str, day):
+    m = month(day)
+    if m not in table:
+        raise ValueError(f"no {name} for {m} in vpp/v2/offers.py: add ERA's published value")
+    return table[m]
+
+
 def ceiling(day) -> float:
     """$/MWh, the Energy Offer Price Ceiling of the trading day's month."""
-    return float(ENERGY_CEILING[month(day)])
+    return float(_of_month(ENERGY_CEILING, "Energy Offer Price Ceiling", day))
 
 
 def fcess_ceiling(day) -> dict:
     """$/MW/h by service, the FCESS Offer Price Ceilings of the trading day's month."""
-    return dict(zip(SERVICES, map(float, FCESS_CEILING[month(day)])))
+    return dict(zip(SERVICES, map(float, _of_month(FCESS_CEILING, "FCESS Offer Price Ceiling", day))))
 
 
 def cents_up(x: float) -> float:

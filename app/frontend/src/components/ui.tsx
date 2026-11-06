@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ApiError } from "../api";
 import { GLOSS, glNote } from "../lib/gloss";
 import { addDays, dayLabel } from "../lib/format";
 import { FIRST_DAY, useApp } from "../state";
@@ -87,7 +88,18 @@ export function Loading({ what }: { what: string }) {
 }
 
 export function Failed({ error }: { error: unknown }) {
+  const { go, settings, setSettings } = useApp();
   const msg = error instanceof Error ? error.message : String(error);
+  if (error instanceof ApiError && error.status === 409) {  // a battery and CMD without a backtest (now or any more)
+    return (
+      <div className="state err" role="alert">{msg}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 10 }}>
+          <button className="btn" onClick={() => go("settings")}>Open Settings</button>
+          <button className="btn" onClick={() => setSettings({ ...settings, energyMwh: null, cmdMw: null })}>Reset to tested</button>
+        </div>
+      </div>
+    );
+  }
   return <div className="state err" role="alert">Not available: {msg}</div>;
 }
 

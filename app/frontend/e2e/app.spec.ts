@@ -141,7 +141,7 @@ test("plan: chart text is only names, axes, actions and number + word labels; no
   const allowed = [
     /^(Plan|Actual|Sell extra if|Grid services|Price, A\$\/MWh|Energy stored, MWh|Site import, MW|Plan made 09:00|Minimum|Full \d+ MWh)$/,
     /^-?[\d,]+$/, /^\d{2}:\d{2}$/, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d+ \w+$/,
-    /^(Discharge|Charge|Shave) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/, /^CMD \d+ MW$/,
+    /^(Discharge|Charge|Shave) [\d.]+ MW$/, /^Hold$/, /^[\d.]+$/, /^(CMD|Cap) [\d.]+ MW$/,
     /^(peak|low|floor) A\$[\d,]+$/, /^earns A\$[\d,]+$/, /^[\d.]+ MWh$/, /^A\$[\d,]+$/,
     /^price ≥ A\$\d+: \+up to \d+ MW(, sold \d+ for A\$[\d,]+)?$/, /^no extra offer$/,
     /^(Energy|Grid services|Stored|Network bill) −?[\d,]+$/, /^Wear −[\d,]+$/, /^Net −?A\$[\d,]+$/,
@@ -342,6 +342,78 @@ test("settings: grid services off recomputes the plan and marks it changed", asy
   await page.goto("/#/plan");
   await expect(page.locator(".ph .chip.unv")).toContainText("changed settings", { timeout: 60_000 });
   await expect(page.locator(".topbar .engine")).toContainText("changed settings");
+});
+
+test("settings: energy and CMD out of range are refused; a new one needs its own backtest; the tested values are no change", async ({ page }) => {
+  await open(page, "settings");
+  const apply = page.getByRole("button", { name: /Apply/ });
+  await page.getByLabel("Energy, MWh").fill("81");
+  await expect(apply).toBeDisabled();
+  await expect(page.locator("aside")).toContainText("whole number");
+  await page.getByLabel("Energy, MWh").fill("33");
+  await expect(page.getByRole("button", { name: "Run backtest and apply" })).toBeEnabled();
+  await expect(page.locator("aside")).toContainText("needs its own backtest");
+  await page.getByLabel("CMD").fill("4");
+  await expect(apply).toBeDisabled();
+  await page.getByLabel("Energy, MWh").fill("40");
+  await page.getByLabel("CMD").fill("9");
+  await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();  // nothing to apply
+  await page.getByRole("radio", { name: "Own connection" }).click();
+  await expect(page.getByLabel("CMD")).toHaveCount(0);  // no CMD on a connection of its own
+});
+
+test("plan and evidence: a battery with no backtest is refused, with a way out", async ({ page }) => {
+  const settings = { connection: "factory", dispatcher: "e5", fcess: ["reg_raise", "cont_raise", "reg_lower", "cont_lower"], energyMwh: 33, cmdMw: 8 };
+  await open(page, "plan", DAY, settings);
+  await expect(page.locator(".state.err")).toContainText("No backtest for 33 MWh, CMD 8 MW", { timeout: 30_000 });
+  await page.goto("/#/evidence");
+  await expect(page.locator(".state.err")).toContainText("No backtest for 33 MWh, CMD 8 MW", { timeout: 30_000 });
+  await page.getByRole("button", { name: "Open Settings" }).click();
+  await expect(page.getByRole("button", { name: "Run backtest and apply" })).toBeEnabled();  // though nothing was edited: no dead end
+  await page.goto("/#/evidence");
+  await page.getByRole("button", { name: "Reset to tested" }).click();
+  await expect(page.locator(".state.err")).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.locator(".assets")).toContainText("10 MW / 40 MWh");
+});
+
+test("settings: an energy and CMD of one's own reach every page, and reset returns", async ({ page }) => {
+  test.setTimeout(1_200_000);  // 3-15 minutes the first time, moments once this battery has its backtest
+  await open(page, "settings");
+  await page.getByLabel("Energy, MWh").fill("35");
+  await page.getByLabel("CMD").fill("7");
+  await page.getByRole("button", { name: /Apply/ }).click();
+  await page.goto("/#/plan");  // it applies itself when done, on whichever page
+  await expect(page.locator(".ph .chip.unv")).toContainText("changed settings", { timeout: 1_100_000 });
+  await expect(page.locator(".topbar .engine")).toContainText("changed settings");
+  await expect(page.locator(".assets")).toContainText("10 MW / 35 MWh");
+  await page.getByText("Who is who").click();
+  await expect(page.locator("main")).toContainText("factory, CMD 7 MW");
+  await expect(page.locator("main")).toContainText("storage network, 10 MW / 35 MWh");
+  await expect(page.locator('svg[aria-label^="Energy stored"]')).toContainText(/35(\.0)? MWh/);
+  await expect(page.locator(".ck", { hasText: "Stored 0–35 MWh" })).toHaveCount(1);
+  await page.goto("/#/evidence");
+  await expect(page.locator("main")).toContainText("Stored 0–35 MWh", { timeout: 30_000 });
+  await expect(page.locator(".ph .chip.unv")).toContainText("changed settings");
+  await page.goto("/#/settings");
+  await expect(page.locator("table.t")).toContainText("These settings", { timeout: 30_000 });
+  await page.getByRole("button", { name: "Reset to tested" }).click();
+  await page.goto("/#/plan");
+  await expect(page.locator(".assets")).toContainText("10 MW / 40 MWh");
+  await expect(page.locator(".ck", { hasText: "Stored 0–40 MWh" })).toHaveCount(1, { timeout: 60_000 });
+  await expect(page.locator(".ph .chip.unv")).toHaveCount(0);
+});
+
+test("settings: market data show what is in use, and a switch only where it is allowed", async ({ page }) => {
+  const d = (await (await page.request.get("/api/v1/meta")).json()).data_mode;
+  await open(page, "settings");
+  const box = page.locator("fieldset", { hasText: "Market data" });
+  await expect(box).toContainText(d.live ? "Live, complete days to" : "Replay, to");
+  if (d.locked) {
+    await expect(box).toContainText("locked");
+    await expect(box.getByRole("button")).toHaveCount(0);
+  } else {
+    await expect(box.getByRole("button", { name: d.live ? "Back to replay" : "Turn on live data" })).toBeEnabled();
+  }
 });
 
 /* Live data (app/live). Runs only against a server on live data (after `python -m app.live.run --init`, without

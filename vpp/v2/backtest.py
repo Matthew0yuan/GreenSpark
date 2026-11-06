@@ -269,6 +269,15 @@ def sa() -> bt.Scenario:
     return bt._sc("sa", ct.Route("sa", metering="standalone"), (bt.VALUE,))
 
 
+COUNT = None  # in a worker: run's count, to which each v2 configuration adds its finished days
+
+
+def _init_worker(days: list[dict], aux: dict, count) -> None:
+    global COUNT
+    COUNT = count
+    bt._init_worker(days, aux)
+
+
 def _run(task: tuple) -> tuple:
     """One configuration (or, for a v1 strategy name, v1's own loop) through every day."""
     sc, cfg, keep_logs = task
@@ -281,15 +290,19 @@ def _run(task: tuple) -> tuple:
         if keep_logs:
             logs[day] = log
         records.extend(recs)
+        if COUNT is not None:
+            with COUNT.get_lock():
+                COUNT.value += 1
     return sc.name, cfg.name, rows, logs, np.vstack(meters), records
 
 
-def run(tasks: list[tuple], days: list[dict], aux: dict):
+def run(tasks: list[tuple], days: list[dict], aux: dict, count=None):
     """Run (scenario, config or v1 strategy name, keep logs) tasks in parallel. Returns the daily rows, the logs and
-    float32 meters by (scenario, name), and the decision records. Value curves load in the workers on first use."""
+    float32 meters by (scenario, name), and the decision records. Value curves load in the workers on first use.
+    count: a multiprocessing.Value that each v2 configuration adds its finished days to, for a progress bar."""
     daily, logs, meters, records = [], {}, {}, []
     workers = min(len(tasks), max(1, (os.cpu_count() or 2) - 1))
-    with ProcessPoolExecutor(max_workers=workers, initializer=bt._init_worker, initargs=(days, aux)) as pool:
+    with ProcessPoolExecutor(max_workers=workers, initializer=_init_worker, initargs=(days, aux, count)) as pool:
         for sc, name, rows, lg, meter, recs in pool.map(_run, tasks):
             daily.extend(rows)
             if lg:
