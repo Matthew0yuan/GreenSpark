@@ -148,3 +148,57 @@ def test_plan_of_day_in_progress_does_not_move_with_later_prices(storage):
         storage.cache.clear()
     for f in ("net", "soc", "reg_raise", "cont_raise", "reg_lower", "cont_lower"):
         assert np.array_equal(np.asarray(a[f], float), np.asarray(b[f], float)), f
+
+
+@live_only
+@pytest.mark.parametrize("connection", ["factory", "standalone"])
+def test_span_across_the_saved_end_and_to_today(storage, connection):
+    """Days after the saved backtest match their outcome pages, have no network bill yet, and the day in progress stops at
+    the last half-hour over: the replay runs the rest on the forecast, which must not appear as what happened."""
+    if storage.live_info.get("complete", True):
+        pytest.skip("no day in progress")
+    end = storage.days[-1]["day"]
+    s = storage.span(end, 21, connection)
+    rows = {r["day"]: r for r in s["rows"]}
+    assert s["end"] == str(end.date()) and s["days"] == 21 and s["network_to"] == ("2026-10-22" if connection == "factory" else None)
+    today = rows[s["end"]]
+    known = int(storage.live_info["known_halfhours"])
+    h = today["halfhours"]
+    assert not today["complete"] and s["live"]["as_of"] == storage.live_info["as_of"]
+    for f in ("price_actual", "battery_mw"):
+        assert all(v is not None for v in h[f][:known]) and all(v is None for v in h[f][known:]), f
+    assert all(v is not None for v in h["stored_mwh"][:known + 1]) and all(v is None for v in h["stored_mwh"][known + 1:])
+    assert all(v is not None for v in h["price_forecast"][2:])  # the 09:00 forecast of the whole day was known at 09:00
+    o = storage.outcome(end, connection)
+    assert [v for v in h["price_actual"] if v is not None] == pytest.approx([v for v in o["price_actual"] if v is not None], abs=0.006)
+    assert today["money_aud"]["net"] == pytest.approx(o["money_aud"]["net"], abs=0.01)
+    assert today["discharged_mwh"] == pytest.approx(o["discharged_mwh"], abs=0.001)
+    # a complete live day and a saved day. Not 2026-10-22: the saved backtest ended there with no next day, and on live data
+    # its day page replays it with one (factory: A$39 and 0.47 MWh apart); the live days carry on from what was saved
+    for day in ("2026-10-23", "2026-10-21"):
+        o = storage.outcome(day, connection)
+        r = rows[day]
+        assert r["complete"] and r["halfhours"]["price_actual"] == pytest.approx(o["price_actual"], abs=0.006)
+        assert r["halfhours"]["stored_mwh"] == pytest.approx(o["soc_mwh"], abs=0.001)
+        assert r["money_aud"]["net"] == pytest.approx(o["money_aud"]["net"], abs=0.01)
+    assert rows["2026-10-23"]["money_aud"]["network"] is None
+    assert (rows["2026-10-22"]["money_aud"]["network"] is not None) == (connection == "factory")
+    # the stored energy carries on across the saved backtest's end
+    assert rows["2026-10-23"]["halfhours"]["stored_mwh"][0] == pytest.approx(rows["2026-10-22"]["halfhours"]["stored_mwh"][48], abs=0.001)
+
+
+@live_only
+def test_span_of_live_days_survives_the_replay_cache(storage):
+    """The replays are limited to CACHE_DAYS; a long span must not depend on them still being held."""
+    end = storage.days[-1]["day"]
+    first = storage.span(end, 365)
+    before = end - pd.Timedelta(days=1)  # today's own replay starts from the day before's
+    for k in [k for k in storage.cache if k[0] < before]:
+        del storage.cache[k]
+    keep = storage.replay
+    storage.replay = lambda *a, **k: pytest.fail("a complete live day was replayed") if pd.Timestamp(a[0]) < before else keep(*a, **k)
+    try:
+        again = storage.span(end, 365)
+    finally:
+        storage.replay = keep
+    assert again["rows"] == first["rows"]

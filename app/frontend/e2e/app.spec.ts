@@ -403,6 +403,73 @@ test("settings: an energy and CMD of one's own reach every page, and reset retur
   await expect(page.locator(".ph .chip.unv")).toHaveCount(0);
 });
 
+for (const width of [1440, 1024]) {
+  for (const [range, label] of [["7d", "7 days"], ["30d", "30 days"], ["90d", "90 days"], ["1y", "365 days"]]) {
+    test(`several days ${width}: ${range}: no text on text or on a line, nothing clipped or overlapping`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await open(page, "plan", "2026-10-22");
+      await page.getByRole("radio", { name: range, exact: true }).click();
+      await expect(page.locator(".statusline .sub")).toContainText(label);
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForTimeout(300);
+      expect(await chartDefects(page)).toEqual([]);
+      expect(await layoutDefects(page)).toEqual([]);
+    });
+  }
+}
+
+test("several days: the window, paging, the hover table, and a click opens the day", async ({ page }) => {
+  await open(page, "plan", "2026-10-22");
+  await expect(page.getByRole("radio", { name: "1d", exact: true })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("radio", { name: "7d", exact: true }).click();
+  await expect(page.locator(".statusline .sub")).toHaveText("7 days, Fri 16 Oct 2026 to Thu 22 Oct 2026");
+  await expect(page.getByRole("heading", { name: "What happened" })).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "Show", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Previous 7 days" }).click();
+  await expect(page.locator(".statusline .sub")).toHaveText("7 days, Fri 9 Oct 2026 to Thu 15 Oct 2026");
+  await page.getByRole("button", { name: "Next 7 days" }).click();
+  await expect(page.locator(".statusline .sub")).toHaveText("7 days, Fri 16 Oct 2026 to Thu 22 Oct 2026");
+  await expect(page.getByRole("button", { name: "Next 7 days" })).toBeDisabled();
+
+  // the year is never more than a year, and starts no earlier than the data
+  await page.getByRole("radio", { name: "1y", exact: true }).click();
+  await expect(page.locator(".statusline .sub")).toHaveText("365 days, Thu 23 Oct 2025 to Thu 22 Oct 2026");
+  await page.getByRole("button", { name: "Previous 365 days" }).click();
+  await expect(page.locator(".statusline .sub")).toContainText("to Tue 31 Mar 2026");
+  await expect(page.locator(".statusline .sub")).toContainText("365 days, Tue 1 Apr 2025");
+  await expect(page.getByRole("button", { name: "Previous 365 days" })).toBeDisabled();
+
+  // hover: at most 5 rows, labels of at most 2 words, as on the day chart
+  const hit = page.locator('.chart svg[aria-label*="days to"] rect').last();
+  const box = (await hit.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await expect(page.locator(".ctip")).toBeVisible();
+  const labels = await page.locator(".ctip td:first-child").allTextContents();
+  expect(labels.length).toBeLessThanOrEqual(5);
+  for (const l of labels) expect(l.split(" ").length).toBeLessThanOrEqual(2);
+
+  // a click opens the day under the mouse with what happened showing
+  const title = (await page.locator(".ctip h4").textContent())!;
+  await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "1d", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("button", { name: new RegExp(`^${title}, pick a trading day`) })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Plan + what happened" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".wf-h", { hasText: "What happened" })).toBeVisible({ timeout: 30_000 });
+});
+
+test("several days: settings with no saved run keep to one day; several days do not ask for the day's plan", async ({ page }) => {
+  await open(page, "plan", DAY, { connection: "factory", dispatcher: "e5", fcess: ["reg_raise"], startMwh: null, exportMw: null, importMw: null, energyMwh: null, cmdMw: null });
+  await expect(page.getByRole("radio", { name: "7d", exact: true })).toBeDisabled();
+  await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
+  await open(page, "plan", DAY);
+  const asked: string[] = [];
+  page.on("request", (r) => { if (r.url().includes("/plan") || r.url().includes("/outcome")) asked.push(r.url()); });
+  await page.getByRole("radio", { name: "30d", exact: true }).click();
+  await expect(page.locator(".statusline .sub")).toContainText("30 days");
+  expect(asked).toEqual([]);
+});
+
 test("settings: market data show what is in use, and a switch only where it is allowed", async ({ page }) => {
   const d = (await (await page.request.get("/api/v1/meta")).json()).data_mode;
   await open(page, "settings");

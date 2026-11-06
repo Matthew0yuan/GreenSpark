@@ -62,6 +62,9 @@ Allow about 30 seconds for model loading; the first start also builds storage-va
 In Settings you can change the battery's energy (10–80 MWh) and the factory's CMD (5–12 MW). Each new pair first runs its
 own full backtest (3–15 minutes), which is kept in `var/configs/` until the code or data change. These are explorations:
 the dispatcher and its settings were chosen on the tested 40 MWh / 9 MW.
+On the Plan page, **7d / 30d / 90d / 1y** show the days up to the chosen day: what happened and the 09:00 price forecast,
+each half-hour up to 30 days and one column a day beyond that. Each day's 09:00 plan is not saved, so it appears only when a
+day is opened, by clicking on it.
 On Windows, clone into a short path to avoid long-path issues.
 
 <details>

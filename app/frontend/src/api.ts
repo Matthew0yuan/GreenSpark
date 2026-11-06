@@ -142,6 +142,25 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return r.json() as Promise<T>;
 }
 
+export type SpanRow = {
+  day: string; complete: boolean;
+  price: { actual_mean: Num; actual_lo: Num; actual_hi: Num; forecast_mean: Num };
+  discharged_mwh: number; charged_mwh: number;
+  stored_mwh: { lo: Num; hi: Num; end: Num };
+  site: { peak_mw: Num; load_peak_mw: Num; cap_mw: Num } | null;
+  money_aud: { energy: Num; fcess: Num; wear: Num; network: Num; market_net: Num; net: Num };
+  /** Each half-hour (48 entries; stored energy 49), up to a month; null beyond it. Null where not over yet. */
+  halfhours: { price_forecast: Num[]; price_p10: Num[] | null; price_p90: Num[] | null; price_actual: Num[]; battery_mw: Num[]; stored_mwh: Num[];
+    meter_mw: Num[] | null; load_mw: Num[] | null; cap_mw: Num[] | null } | null;
+};
+export type Span = {
+  start: string; end: string; days: number; asked_days: number; resolution: "halfhour" | "day";
+  asset: { power_mw: number; energy_mwh: number; site: { cmd_mw: number; import_limit_mw: number } | null };
+  rows: SpanRow[];
+  totals: { energy: Num; fcess: Num; wear: Num; network: Num; market_net: Num; net: Num; per_day: Num; discharged_mwh: number; charged_mwh: number };
+  network_to: string | null; live: { through: string; as_of: string } | null; gaps: Gap[];
+};
+
 export type StorageSettings = { connection: Connection; dispatcher: DispatcherKey; fcess: string[]; startMwh: number | null;
   exportMw: number | null; importMw: number | null; /** Null: the tested battery and CMD. */ energyMwh: number | null; cmdMw: number | null };
 
@@ -160,6 +179,7 @@ export const api = {
       start_mwh: s.startMwh, export_mw: s.exportMw, import_mw: s.importMw })),
   outcome: (day: string, s: StorageSettings) =>
     req<Outcome>(`/storage/days/${day}/outcome` + qs({ ...setupQ(s), fcess: fcessQ(s), start_mwh: s.startMwh })),
+  span: (end: string, days: number, s: StorageSettings) => req<Span>("/storage/span" + qs({ end, days, ...setupQ(s) })),
   evidence: (s: StorageSettings) => req<Evidence>("/storage/evidence" + qs(setupQ(s))),
   config: (s: StorageSettings) => req<ConfigState>("/storage/config" + qs(setupQ(s))),
   call: (day: string, offer: string, hindsight: boolean) => req<CallDay>(`/fleet/days/${day}/call` + qs({ offer, hindsight: hindsight ? "true" : undefined })),

@@ -66,6 +66,8 @@ type Ctx = {
   settings: StorageSettings; setSettings: (s: StorageSettings) => void;
   offer: "ref" | "custom"; setOffer: (o: "ref" | "custom") => void;
   revealed: boolean; setRevealed: (v: boolean) => void;
+  /** Days the Plan page shows, to the day picked: 1 is the day's plan. */
+  span: number; setSpan: (n: number) => void;
   /** A battery and CMD's backtest under way: its settings apply when it is done, on whichever page the viewer is. */
   build: { job: Job | undefined; settings: StorageSettings } | null;
   startBuild: (id: number, s: StorageSettings) => void; clearBuild: () => void;
@@ -100,6 +102,7 @@ export function AppState({ children }: { children: ReactNode }) {
   const picked = useRef(load<string | null>("day", null) != null);
   useEffect(() => { if (on && !picked.current) setDayS(lastDay); }, [on, lastDay]);
   const [revealed, setRevealed] = useState(false);
+  const [span, setSpan] = useState(1);
   const qc = useQueryClient();
   // the market data switched (Settings): every answer may differ. On to live, the newest day; a day past the data, the last
   const wasLive = useRef<boolean | null>(null);
@@ -147,7 +150,7 @@ export function AppState({ children }: { children: ReactNode }) {
     },
     settings, setSettings,
     offer, setOffer: (o) => { setOfferS(o); save("offer", o); },
-    revealed, setRevealed,
+    revealed, setRevealed, span, setSpan,
     build: building && { job: job.data?.id === building.id ? job.data : undefined, settings: building.settings },
     startBuild: (id, s) => keepBuild({ id, settings: s }), clearBuild: () => keepBuild(null),
   };

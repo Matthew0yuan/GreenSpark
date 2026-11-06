@@ -50,13 +50,15 @@ export function NotePopover() {
 }
 
 /** Previous / next day, and the date itself opens the calendar (the native field stays hidden behind it). */
-export function DayPicker({ day, setDay }: { day: string; setDay: (d: string) => void }) {
+export function DayPicker({ day, setDay, step = 1 }: { day: string; setDay: (d: string) => void; /** Days the arrows move: the days shown. */ step?: number }) {
   const { lastDay: LAST_DAY } = useApp();
+  const earliest = addDays(FIRST_DAY, step - 1);  // a whole window back, not past the start of the data
   const inp = useRef<HTMLInputElement>(null);
   const pick = () => { const el = inp.current; if (!el) return; try { el.showPicker(); } catch { el.focus(); } };
   return (
     <span className="daypick">
-      <button className="arr" aria-label="Previous trading day" disabled={day <= FIRST_DAY} onClick={() => setDay(addDays(day, -1))}>
+      <button className="arr" aria-label={step > 1 ? `Previous ${step} days` : "Previous trading day"} disabled={day <= earliest}
+        onClick={() => { const d = addDays(day, -step); setDay(d < earliest ? earliest : d); }}>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5" /></svg>
       </button>
       <span className="cal">
@@ -66,18 +68,18 @@ export function DayPicker({ day, setDay }: { day: string; setDay: (d: string) =>
         </button>
         <input ref={inp} type="date" tabIndex={-1} aria-label="Pick a trading day" min={FIRST_DAY} max={LAST_DAY} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} />
       </span>
-      <button className="arr" aria-label="Next trading day" disabled={day >= LAST_DAY} onClick={() => setDay(addDays(day, 1))}>
+      <button className="arr" aria-label={step > 1 ? `Next ${step} days` : "Next trading day"} disabled={day >= LAST_DAY} onClick={() => setDay(addDays(day, step))}>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5" /></svg>
       </button>
     </span>
   );
 }
 
-export function Seg<T extends string>({ value, options, onChange, label }: { value: T; options: [T, ReactNode][]; onChange: (v: T) => void; label: string }) {
+export function Seg<T extends string>({ value, options, onChange, label, disabled }: { value: T; options: [T, ReactNode][]; onChange: (v: T) => void; label: string; disabled?: boolean }) {
   return (
     <span className="seg" role="radiogroup" aria-label={label}>
       {options.map(([v, l]) => (
-        <button key={v} role="radio" aria-checked={v === value} className={v === value ? "on" : ""} onClick={() => onChange(v)}>{l}</button>
+        <button key={v} role="radio" aria-checked={v === value} className={v === value ? "on" : ""} disabled={disabled} onClick={() => onChange(v)}>{l}</button>
       ))}
     </span>
   );

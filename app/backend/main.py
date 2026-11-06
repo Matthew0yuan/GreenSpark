@@ -266,6 +266,13 @@ async def storage_evidence(connection: str = "factory", dispatcher: str = "e5", 
     return await _engine("storage").call("evidence", **_setup(connection, dispatcher, energy_mwh, cmd_mw))
 
 
+@app.get("/api/v1/storage/span")
+async def storage_span(end: str, days: int, connection: str = "factory", dispatcher: str = "e5",
+                       energy_mwh: float | None = None, cmd_mw: float | None = None):
+    """The days to `end` as saved, up to a year: what happened and the 09:00 price forecast (app.engine.span)."""
+    return await _engine("storage").call("span", end=end, days=days, **_setup(connection, dispatcher, energy_mwh, cmd_mw))
+
+
 @app.get("/api/v1/storage/config")
 async def storage_config_state(connection: str = "factory", dispatcher: str = "e5", energy_mwh: float | None = None,
                                cmd_mw: float | None = None):

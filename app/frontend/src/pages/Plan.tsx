@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Check, type Outcome, type Plan as PlanT } from "../api";
-import { around, bandPath, DayAxis, geo, Hatch, linePath, linePts, N, Placer, segPts, stepPath, stepPts, tw, X0, YGrid } from "../components/chart";
+import { around, bandPath, DayAxis, geo, Hatch, linePath, linePts, N, Placer, segPts, socTicks, stepPath, stepPts, tw, X0, YGrid } from "../components/chart";
+import { Waterfall } from "../components/money";
 import { ChartTip, Chip, DayPicker, Failed, Gl, Loading, Measured, Note, PageHead, Seg, useWidth, type TipData } from "../components/ui";
 import { Point, WhyHead } from "../components/why";
 import { addDays, aud, dayLabel, hhmm, isNum, nf, PERIOD_CHIP, periodOf } from "../lib/format";
+import { SpanBody, spanPeriods } from "./PlanSpan";
 import { glNote } from "../lib/gloss";
 import { CONN, DISP, isDefault, useApp, useLive, useWho } from "../state";
 
 const FIRST = 2;
+const SPANS: [string, string][] = [["1", "1d"], ["7", "7d"], ["30", "30d"], ["90", "90d"], ["365", "1y"]];
 type Seg_ = { m: string; a: number; b: number; mw: number };
 
 function segments(p: PlanT): Seg_[] {
@@ -103,21 +106,19 @@ const SHORT: Record<string, string> = {
 };
 /** A check's short name; the battery's own limits are in the API's label ("Battery power ≤ 10 MW"). */
 const shortOf = (c: Check) => SHORT[c.id] ?? c.label.replace(/^Battery power/, "Power").replace(/^Stored energy/, "Stored");
-/** Round ticks up to the battery's energy (0, 10, 20, 30, 40 at 40 MWh). */
-const socTicks = (E: number) => {
-  const step = E <= 20 ? 5 : E <= 50 ? 10 : 20;
-  return Array.from({ length: Math.floor(E / step) + 1 }, (_, i) => i * step);
-};
-
 export default function Plan() {
-  const { day, setDay, settings, revealed, setRevealed, go } = useApp();
+  const { day, setDay, settings, revealed, setRevealed, go, span, setSpan } = useApp();
   const who = useWho();
   const live = useLive(day);
+  // several days are as saved: settings that replay one day (grid services, start state, connection limits) have no saved run
+  const canSpan = settings.fcess.length === 4 && settings.startMwh == null && settings.exportMw == null && settings.importMw == null;
+  const days = canSpan ? span : 1;
+  const openDay = (d: string) => { setSpan(1); setDay(d); setRevealed(true); };
   // live data: a day's plan changes when the data are rebuilt, today's outcome with every new 5-minute price
-  const plan = useQuery({ queryKey: ["plan", day, settings, live.after ? live.builtAt : null], queryFn: () => api.plan(day, settings) });
+  const plan = useQuery({ queryKey: ["plan", day, settings, live.after ? live.builtAt : null], enabled: days === 1, queryFn: () => api.plan(day, settings) });
   const out = useQuery({ queryKey: ["outcome", day, settings.connection, settings.dispatcher, settings.fcess, settings.startMwh,
     settings.energyMwh, settings.cmdMw, live.after ? live.builtAt : null, live.isToday ? live.asOf : null],
-    enabled: revealed && !!plan.data,
+    enabled: days === 1 && revealed && !!plan.data,
     queryFn: () => api.outcome(day, settings) });
   const [sel, setSel] = useState<number>(20);
 
@@ -127,25 +128,31 @@ export default function Plan() {
 
   return (
     <section aria-label="Today's plan">
-      <PageHead title="Today's plan"
+      <PageHead title={days > 1 ? "What happened" : "Today's plan"}
         chips={<>
-          <Chip cls="step">1. Decide</Chip>
-          <Chip cls={live.isToday ? "live" : ""} note={glNote(periodOf(day))}>{live.isToday ? `live, to ${live.asOf}` : PERIOD_CHIP[periodOf(day)]}</Chip>
+          {days === 1 && <Chip cls="step">1. Decide</Chip>}
+          {days > 1
+            ? <Chip note={spanPeriods(day, days).map(([k]) => glNote(k)).join(" ")}>{spanPeriods(day, days).map(([, w]) => w).join(" + ")}</Chip>
+            : <Chip cls={live.isToday ? "live" : ""} note={glNote(periodOf(day))}>{live.isToday ? `live, to ${live.asOf}` : PERIOD_CHIP[periodOf(day)]}</Chip>}
           {!isDefault(settings) && <Chip cls="unv" note={glNote("UNVALIDATED")}>changed settings</Chip>}
-          {p?.site?.ircr_flag_0900 && <Chip cls="hyp" note={glNote("IRCRFLAG")}>IRCR peak flag</Chip>}
+          {days === 1 && p?.site?.ircr_flag_0900 && <Chip cls="hyp" note={glNote("IRCRFLAG")}>IRCR peak flag</Chip>}
         </>}
         ctx={<><Gl k="TRADINGDAY">trading day</Gl> 08:00–08:00 AWST, <Gl k="DECISION">plan 09:00</Gl>, <Gl k={settings.connection === "factory" ? "FACTORY" : "OWNCONN"}>{CONN[settings.connection]}</Gl>
           {", "}<DispatcherName p={p} short={settings.dispatcher} /></>}
         who={who}
         right={<>
-          <DayPicker day={day} setDay={setDay} />
-          <Seg label="Show" value={revealed ? "out" : "plan"} onChange={(v) => setRevealed(v === "out")}
-            options={[["plan", "Plan only"], ["out", "Plan + what happened"]]} />
+          <DayPicker day={day} setDay={setDay} step={days} />
+          <span data-note={canSpan ? undefined : "Several days are as saved. Reset grid services, start state and connection limits in Settings to see them."}>
+            <Seg label="Days shown" value={String(days)} onChange={(v) => setSpan(Number(v))} disabled={!canSpan} options={SPANS} />
+          </span>
+          {days === 1 && <Seg label="Show" value={revealed ? "out" : "plan"} onChange={(v) => setRevealed(v === "out")}
+            options={[["plan", "Plan only"], ["out", "Plan + what happened"]]} />}
         </>} />
 
-      {plan.isLoading && <Loading what="the 09:00 plan" />}
-      {plan.error && <Failed error={plan.error} />}
-      {p && <PlanBody p={p} o={o} outLoading={revealed && out.isLoading} sel={sel} setSel={setSel} reveal={() => setRevealed(true)} go={go} />}
+      {days > 1 && <SpanBody end={day} days={days} openDay={openDay} />}
+      {days === 1 && plan.isLoading && <Loading what="the 09:00 plan" />}
+      {days === 1 && plan.error && <Failed error={plan.error} />}
+      {days === 1 && p && <PlanBody p={p} o={o} outLoading={revealed && out.isLoading} sel={sel} setSel={setSel} reveal={() => setRevealed(true)} go={go} />}
     </section>
   );
 }
@@ -300,56 +307,6 @@ function CheckCell({ c }: { c: Check }) {
   const icon = c.status === "pass" ? "✓" : c.status === "fail" ? "!" : c.status === "warn" ? "△" : "○";
   const note = `${c.label}. ${c.status === "not_checked" ? "Not checked: " : c.status === "warn" ? "Economic limit, priced not blocked: " : ""}${c.detail}${c.worst ? ` (worst: ${c.worst})` : ""}`;
   return <div className={"ck " + c.status} tabIndex={0} data-note={note}><i>{icon}</i><span>{shortOf(c)}</span></div>;
-}
-
-/* ------------------------------------------------------------------------------------------------ money */
-const WF: Record<string, [string, string]> = { e: ["var(--dis)", "var(--on-dis)"], f: ["var(--fcess)", "var(--on-fcess)"],
-  s: ["var(--surface-3)", "var(--text-2)"], b: ["var(--meter)", "var(--on-meter)"] };
-
-/** Gross parts side by side (2 px gaps), wear hanging under the end of the gross, net below. A part whose label does not
- *  fit inside its bar is named in a line under the bars. */
-function Waterfall({ parts, wear, net, dim }: { parts: [string, string, number][]; wear: number; net: number; dim?: boolean }) {
-  const [ref, W] = useWidth<HTMLDivElement>(240);
-  const shown = parts.filter((x) => x[2] > 0.5);
-  const gross = shown.reduce((t, x) => t + x[2], 0);
-  const scale = Math.max(gross, Math.abs(net), 1);
-  const px = (v: number) => (Math.max(0, v) / scale) * W;
-  let x = 0;
-  const bars = shown.map(([c, l, v]) => {
-    const b = { c, l, v, x, w: Math.max(1, px(v) - 2), text: `${l} ${nf(v)}` };
-    x += px(v);
-    return b;
-  });
-  const hidden = bars.filter((b) => tw(b.text, "annB") + 12 > b.w);
-  const wearX = px(gross - wear), wearW = Math.max(2, px(wear));
-  const netW = Math.max(2, px(Math.abs(net))), netText = `Net ${aud(net)}`, netIn = tw(netText, "annB") + 16 < netW;
-  const showWear = wear > 0.5;
-  const yW = 28, yN = showWear ? 52 : 28, keyY = yN + 40;
-  const H = hidden.length ? keyY + 4 : yN + 22;
-  let kx = 0;
-  return (
-    <div className="wf chart" ref={ref} style={dim ? { opacity: 0.45 } : undefined}>
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${shown.map((b) => `${b[1]} ${aud(b[2])}`).join(", ")}${showWear ? `, wear −${aud(wear)}` : ""}, net ${aud(net)}`}>
-        {bars.map((b) => (
-          <g key={b.l} tabIndex={0} data-note={`${b.l}: ${aud(b.v)}`}>
-            <rect x={b.x} y={0} width={b.w} height={22} rx={3} style={{ fill: WF[b.c][0] }} />
-            {!hidden.includes(b) && <text className="ann" x={b.x + 7} y={15} style={{ fill: WF[b.c][1], fontWeight: 500 }}>{b.text}</text>}
-          </g>
-        ))}
-        {showWear && <g tabIndex={0} data-note={`Wear: −${aud(wear)}`}>
-          <rect x={wearX} y={yW} width={wearW} height={16} rx={2} style={{ fill: "var(--bad)", opacity: 0.85 }} />
-          <text className="ann" x={wearX - 6} y={yW + 12} textAnchor="end" style={{ fill: "var(--bad)", fontWeight: 500 }}>Wear −{nf(wear)}</text>
-        </g>}
-        <rect x={0} y={yN} width={netW} height={22} rx={3} style={{ fill: net < 0 ? "var(--bad)" : "var(--zen)" }} />
-        <text className="ann" x={netIn ? 8 : netW + 8} y={yN + 15} style={{ fill: netIn ? "var(--on-zen)" : "var(--text)", fontWeight: 500 }}>{netText}</text>
-        {hidden.map((b) => {
-          const at = kx;
-          kx += 14 + tw(b.text, "ann") + 16;
-          return <g key={"k" + b.l}><rect x={at} y={keyY - 9} width={10} height={10} rx={2} style={{ fill: WF[b.c][0] }} /><text className="ann" x={at + 14} y={keyY}>{b.text}</text></g>;
-        })}
-      </svg>
-    </div>
-  );
 }
 
 /* ------------------------------------------------------------------------------------------------ the day chart */

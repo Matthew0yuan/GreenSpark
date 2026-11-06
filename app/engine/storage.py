@@ -32,6 +32,7 @@ from . import configs as cg
 from . import evidence as ev
 from . import explain as ex
 from . import live as lv
+from . import span as sp
 from .common import (CONNECTIONS, DEFAULT_CONNECTION, DEFAULT_DISPATCHER, DISPATCHERS, FIRST, HURDLE, N, PERFECT,
                      PERIODS, PLAN_ONLY, ROOT, STRATEGY, TABLES, arr, check_mode, clock, hot_season, num, other, pad,
                      period, period_key, saved_dir, saved_rel, weekday_label)
@@ -93,6 +94,7 @@ class Storage:
         self.saved = {conn: r.saved for conn, r in self.tested.items()}
         self.verdicts = {conn: r.verdict for conn, r in self.tested.items()}
         self.cache: OrderedDict = OrderedDict()
+        self.live_logs: dict = {}  # the log and summary of each complete day after the saved backtest (span): small, and kept
         self.schema = json.loads(SCHEMA.read_text())["components"]["schemas"] if SCHEMA.exists() else None
         sc = pd.read_parquet(PROCESSED / "scenarios_0900.parquet", columns=["day", "member", "slot", "energy"])
         sc["day"] = pd.to_datetime(sc["day"])
@@ -158,8 +160,9 @@ class Storage:
         if d is not None:
             self.days.append(d)
             self.index[D] = len(self.days) - 1
-        for k in [k for k in self.cache if k[0] == D or (k[0] == D - pd.Timedelta(days=1) and had != (d is not None))]:
-            del self.cache[k]
+        for held in (self.cache, self.live_logs):
+            for k in [k for k in held if k[0] == D or (k[0] == D - pd.Timedelta(days=1) and had != (d is not None))]:
+                del held[k]
         self.live_info = {"day": str(D.date()), "complete": False, "ready": d is not None, **info}
         PERIODS["live"]["end"] = str(self.days[-1]["day"].date())
         return self.live_info
@@ -335,6 +338,8 @@ class Storage:
         self.cache[key] = out
         while len(self.cache) > CACHE_DAYS:
             self.cache.popitem(last=False)
+        if day > runs.last and tuple(fcess) == SERVICES and start_mwh is None and not perturb and not self._live_day(day):
+            self.live_logs[day, connection, dispatcher, setup] = (log, summary)
         return out
 
     @staticmethod
@@ -404,6 +409,75 @@ class Storage:
         factory = r["connection"] == "factory" and r["sc"].site is not None
         dec = ex.decisions(r, plans, pick, self._ircr_flagged(r), upto, plan_mw)
         return dec, load_exp if factory else None
+
+    # ------------------------------------------------------------------------------------------------ many days
+    def span(self, end, days: int, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
+             energy_mwh: float | None = None, cmd_mw: float | None = None) -> dict:
+        """The `days` trading days to `end` (fewer at the start of the data), as saved: settings that replay a single day
+        (FCESS, start state, connection limits) have no saved run, so they are not taken here."""
+        check_mode(connection, dispatcher)
+        setup = cg.of(connection, energy_mwh, cmd_mw)
+        runs = self.runs(connection, setup)
+        if not 2 <= int(days) <= sp.MAX_DAYS:
+            raise ValueError(f"days must be from 2 to {sp.MAX_DAYS}, not {days}")
+        days, end = int(days), pd.Timestamp(end)
+        if end not in self.index:
+            raise KeyError(f"no market data for trading day {end.date()}")
+        if not setup.tested and end > runs.last:
+            raise ValueError(f"the backtest of this battery ends on {runs.last.date()}: no live days")
+        wanted = [d["day"] for d in self.days if end - pd.Timedelta(days=days - 1) <= d["day"] <= end]
+        name, factory, fine = STRATEGY[connection, dispatcher], connection == "factory", days <= sp.HALFHOUR_DAYS
+        log = pd.read_parquet(saved_dir(connection, setup) / "log.parquet", columns=sp.COLUMNS, filters=[("strategy", "==", name)])
+        log["day"] = pd.to_datetime(log["day"])
+        log = log[log["day"].between(wanted[0], wanted[-1])].sort_values(["day", "slot"])
+        logs = {d: g for d, g in log.groupby("day")}
+        saved = runs.saved[name]
+        bills = {}
+        if factory:
+            b = runs.bills[runs.bills["strategy"] == name]
+            bills = dict(zip(b["month"].astype(str), b["saving"] / b["days"]))
+        rows = []
+        for D in wanted:
+            known = N
+            if D <= runs.last:
+                got, x = logs[D], saved.loc[D]
+                energy, fcess, wear = float(x["energy"]), float(x["fcess"]), float(x["wear"])
+                network = bills.get(D.strftime("%Y-%m"))
+            elif self._live_day(D):
+                r = self.replay(D, connection, dispatcher)
+                known = int(self.live_info["known_halfhours"])
+                got, network = r["log"], None
+                energy, fcess, wear = self._money_so_far(r, known)
+            else:
+                got, x = self._live_log(D, connection, dispatcher)
+                energy, fcess, wear, network = float(x["energy"]), float(x["fcess"]), float(x["wear"]), None
+            market = energy + fcess - wear
+            money = {"energy": num(energy, 2), "fcess": num(fcess, 2), "wear": num(wear, 2), "network": num(network, 2),
+                     "market_net": num(market, 2), "net": num(market + (network or 0.0), 2)}
+            rows.append(sp.day_row(D, got, money, factory, known, fine, self._price_band(D) if fine else (None, None)))
+        settled = [r["day"] for r in rows if r["money_aud"]["network"] is not None]
+        gaps = [{"field": "plan", "reason": "a saved backtest does not hold each day's 09:00 plan: only what happened"}]
+        if factory:
+            gaps.append({"field": "money_aud.ircr", "reason": "IRCR is settled once per Hot Season; it is not split into days "
+                                                              "(Evidence shows it per year)"})
+            if not settled or settled[-1] != rows[-1]["day"]:
+                gaps.append({"field": "money_aud.network", "reason": "the network bill is settled per calendar month; the "
+                                                                     f"saved months end on {runs.last.date()}"})
+        today = self.live_info if self._live_day(end) else None
+        return {"start": rows[0]["day"], "end": rows[-1]["day"], "days": len(rows), "asked_days": days,
+                "resolution": "halfhour" if fine else "day", "connection": connection, "dispatcher": dispatcher,
+                "asset": self.asset_info(connection, setup), "unvalidated": not setup.tested, "rows": rows,
+                "totals": sp.totals(rows), "network_to": settled[-1] if settled else None,
+                "live": None if today is None else {"through": clock(known) if known < N else "08:00", "as_of": today["as_of"]},
+                "gaps": gaps,
+                "source": f"{saved_rel(connection, setup)}/log.parquet and daily.csv; days after it replayed on AEMO's live data"}
+
+    def _live_log(self, D: pd.Timestamp, connection: str, dispatcher: str) -> tuple:
+        got = self.live_logs.get((D, connection, dispatcher, cg.TESTED))
+        if got is None:
+            r = self.replay(D, connection, dispatcher)
+            got = self.live_logs[D, connection, dispatcher, cg.TESTED] = (r["log"], r["summary"])
+        return got
 
     # ------------------------------------------------------------------------------------------------ the 09:00 plan
     def plan(self, day, connection: str = DEFAULT_CONNECTION, dispatcher: str = DEFAULT_DISPATCHER,
@@ -610,20 +684,25 @@ class Storage:
                     "no check exists", "slots": []})
         return out
 
+    def _price_band(self, D: pd.Timestamp) -> tuple:
+        """The 10% and 90% of the day's 09:00 price scenarios by half-hour, (None, None) on a day with none."""
+        g = self.scenarios.get(D)
+        if g is None or not len(g):
+            return None, None
+        piv = g.pivot_table(index="slot", columns="member", values="energy")
+        slots = piv.index.to_numpy().astype(int)
+        offset = 0 if slots.min() == FIRST else FIRST
+        q10, q90 = np.quantile(piv.to_numpy(), [0.1, 0.9], axis=1)
+        p10, p90 = [None] * N, [None] * N
+        for s_, a, b in zip(slots + offset, q10, q90):
+            p10[int(s_)], p90[int(s_)] = num(a, 3), num(b, 3)
+        return p10, p90
+
     def _price(self, r: dict, gaps: list) -> dict:
         D = r["day"]
         fc = np.asarray(r["day_input"]["fc0900"], float)
-        p10 = p90 = None
-        g = self.scenarios.get(D)
-        if g is not None and len(g):
-            piv = g.pivot_table(index="slot", columns="member", values="energy")
-            slots = piv.index.to_numpy().astype(int)
-            offset = 0 if slots.min() == FIRST else FIRST
-            q10, q90 = np.quantile(piv.to_numpy(), [0.1, 0.9], axis=1)
-            p10, p90 = [None] * N, [None] * N
-            for s_, a, b in zip(slots + offset, q10, q90):
-                p10[int(s_)], p90[int(s_)] = num(a, 3), num(b, 3)
-        else:
+        p10, p90 = self._price_band(D)
+        if p10 is None:
             gaps.append({"field": "price.forecast_p10, forecast_p90",
                          "reason": "the 09:00 price scenarios end on 2026-10-15; none for this day"})
         risk = self.risk.get(D)
@@ -812,6 +891,16 @@ class Storage:
         mwh = np.maximum(st["pw"].to_numpy(), 0.0) * dt5 + up
         return sc.asset.wear_per_mwh * mwh.reshape(N, dp.STEPS).sum(axis=1)
 
+    def _money_so_far(self, r: dict, known: int) -> tuple[float, float, float]:
+        """Energy, FCESS and wear of a day's half-hours already over."""
+        log = r["log"]
+        k = slice(0, known)
+        energy = float((log["rtp"].to_numpy()[k] * log["energy_mwh"].to_numpy()[k]).sum())
+        act_f = r["day_input"]["act_f"]
+        fcess = float(sum((np.asarray(act_f[s])[k] * log[f"{s}_mw"].to_numpy()[k] * dp.DT).sum() for s in SERVICES)) \
+            if r["fcess"] else 0.0
+        return energy, fcess, float(self.wear_by_halfhour(r)[k].sum())
+
     def _so_far(self, out: dict, r: dict, known: int) -> None:
         """The trading day in progress: only its half-hours already over are shown, and the money so far. The replay
         ran the rest on the 09:00 forecast (it needs a price everywhere); none of that is shown."""
@@ -830,18 +919,12 @@ class Storage:
             over = log["meter_mw"].to_numpy() - log["cap_mw"].to_numpy()
             out["site"]["cap_excess_halfhours"] = [clock(t) for t in np.flatnonzero(over > 1e-6) if t < known]
             out["site"]["network_basis"] = None
-        k = slice(0, known)
-        e = log["energy_mwh"].to_numpy()[k]
-        energy = float((log["rtp"].to_numpy()[k] * e).sum())
-        act_f = r["day_input"]["act_f"]
-        fcess = float(sum((np.asarray(act_f[s])[k] * log[f"{s}_mw"].to_numpy()[k] * dp.DT).sum() for s in SERVICES)) \
-            if r["fcess"] else 0.0
-        wear = float(self.wear_by_halfhour(r)[k].sum())
+        energy, fcess, wear = self._money_so_far(r, known)
         out["money_aud"] = {"energy": num(energy), "fcess": num(fcess), "wear": num(wear),
                             **({"network": None} if out["site"] is not None else {}),
                             "net": num(energy + fcess - wear), "market_net": num(energy + fcess - wear)}
-        out["discharged_mwh"] = num(np.clip(e, 0, None).sum())
-        out["replans"] = int(log["replanned"].to_numpy()[k].sum())
+        out["discharged_mwh"] = num(np.clip(log["energy_mwh"].to_numpy()[:known], 0, None).sum())
+        out["replans"] = int(log["replanned"].to_numpy()[:known].sum())
         out["baseline_same_day"], out["baselines"], out["replay_check"] = None, [], None
         out["status"] = "live"
         out["live"] = {"known_halfhours": known, "through": clock(known) if known < N else "08:00",

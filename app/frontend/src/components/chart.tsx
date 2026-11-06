@@ -8,10 +8,14 @@ export { N };
 export const X0 = 104;
 export const RM = 56;
 
-export type Geo = { W: number; X: (k: number) => number; IW: number };
+export type Geo = { W: number; X: (k: number) => number; IW: number; n: number };
 export function geo(W: number): Geo {
-  const IW = (W - RM - X0) / N;
-  return { W, IW, X: (k) => X0 + k * IW };
+  return spanGeo(W, N);
+}
+/** The same margins with n steps across: the half-hours or the days of a multi-day chart. */
+export function spanGeo(W: number, n: number): Geo {
+  const IW = (W - RM - X0) / n;
+  return { W, IW, n, X: (k) => X0 + k * IW };
 }
 
 /** Step line through half-hour values (each value spans its half-hour); gaps at nulls. */
@@ -41,6 +45,18 @@ export function bandPath(g: Geo, lo: (number | null)[], hi: (number | null)[], y
     d += "M" + top.slice(1) + bot + "Z";
     k = e;
   }
+  return d;
+}
+
+/** One column per value, from base(k) to the value, as one path (a multi-day chart has too many for an element each);
+ *  values within `min` of the base are not drawn. */
+export function columnsPath(g: Geo, vals: (number | null)[], y: (v: number) => number, base: (k: number) => number = () => 0, min = 0, gap = 0) {
+  let d = "";
+  vals.forEach((v, k) => {
+    if (!isNum(v) || Math.abs(v - base(k)) <= min) return;
+    const b = y(base(k)).toFixed(2);
+    d += `M${(g.X(k) + gap).toFixed(2)},${b}V${y(v).toFixed(2)}H${(g.X(k + 1) - gap).toFixed(2)}V${b}Z`;
+  });
   return d;
 }
 
@@ -83,13 +99,19 @@ export function YGrid({ g, ticks, y, fmt = (v: number) => String(v) }: { g: Geo;
     <g>
       {ticks.map((t) => (
         <g key={t}>
-          <line className="gl" x1={X0} x2={g.X(N)} y1={y(t)} y2={y(t)} />
+          <line className="gl" x1={X0} x2={g.X(g.n)} y1={y(t)} y2={y(t)} />
           <text x={X0 - 8} y={y(t) + 3.5} textAnchor="end">{fmt(t)}</text>
         </g>
       ))}
     </g>
   );
 }
+
+/** Round stored-energy ticks up to the battery's energy (0, 10, 20, 30, 40 at 40 MWh). */
+export const socTicks = (E: number) => {
+  const step = E <= 20 ? 5 : E <= 50 ? 10 : 20;
+  return Array.from({ length: Math.floor(E / step) + 1 }, (_, i) => i * step);
+};
 
 /* ------------------------------------------------------------------------- measured labels, placed clear of lines */
 /** Size, weight and face of each chart text style, as in styles.css (.chart text, .ann, .lt, .act, .mk9, .ttl): figures

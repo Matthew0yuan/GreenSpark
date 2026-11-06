@@ -139,6 +139,70 @@ def test_cancelled_build_leaves_no_process_and_nothing_usable(client):
         table.unlink()  # the value table, if it was finished before the cancel: nothing else removes it
 
 
+def _span(client, end, days, **kw):
+    r = client.get("/api/v1/storage/span", params={"end": end, "days": days, **kw})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+@pytest.mark.parametrize("connection,dispatcher", [("factory", "e5"), ("factory", "v1"), ("standalone", "e5"), ("standalone", "v1")])
+def test_span_shows_what_the_day_page_shows(client, connection, dispatcher):
+    """Each half-hour of several days against the same day's outcome and plan pages, which replay the day."""
+    mode = {"connection": connection, "dispatcher": dispatcher}
+    s = _span(client, "2026-01-22", 5, **mode)
+    assert s["resolution"] == "halfhour" and [r["day"] for r in s["rows"]] == [f"2026-01-{d}" for d in range(18, 23)]
+    for r in s["rows"][::2]:
+        o = client.get(f"/api/v1/storage/days/{r['day']}/outcome", params=mode).json()
+        p = client.get(f"/api/v1/storage/days/{r['day']}/plan", params=mode).json()
+        h = r["halfhours"]
+        assert h["price_actual"] == pytest.approx(o["price_actual"], abs=0.006)
+        assert h["battery_mw"] == pytest.approx(o["battery_mw"], abs=0.001)
+        assert h["stored_mwh"] == pytest.approx(o["soc_mwh"], abs=0.001)
+        assert h["price_forecast"][2:] == pytest.approx(p["price"]["forecast_p50"][2:], abs=0.006)
+        assert h["price_p10"] == p["price"]["forecast_p10"] and h["price_p90"] == p["price"]["forecast_p90"]
+        for f, got in (("energy", o["money_aud"]["energy"]), ("fcess", o["money_aud"]["fcess"]), ("wear", o["money_aud"]["wear"]), ("net", o["money_aud"]["net"])):
+            assert r["money_aud"][f] == pytest.approx(got, abs=0.01), f
+        assert r["discharged_mwh"] == pytest.approx(o["discharged_mwh"], abs=0.001)
+        if connection == "factory":
+            assert h["meter_mw"] == pytest.approx(o["site"]["meter_mw"], abs=0.001)
+            assert h["load_mw"] == pytest.approx(o["site"]["load_mw"], abs=0.001)
+            assert h["cap_mw"] == pytest.approx(o["site"]["cap_mw"], abs=0.001)
+            assert r["money_aud"]["network"] == pytest.approx(o["money_aud"]["network"], abs=0.01)
+        else:
+            assert h["meter_mw"] is None and r["site"] is None and r["money_aud"]["network"] is None
+
+
+def test_span_year_adds_up_to_the_saved_money(client):
+    """A year's profit against the saved money table (what Evidence averages), and each day's figures against its half-hours."""
+    import pandas as pd
+    s = _span(client, "2026-10-22", 365)
+    assert s["resolution"] == "day" and s["days"] == 365 and s["start"] == "2025-10-23" and s["network_to"] == "2026-10-22"
+    assert all(r["halfhours"] is None for r in s["rows"])
+    money = pd.read_csv(Path(__file__).resolve().parents[2] / "analysis/2026-10-28/app_factory_h50/money.csv", index_col=0, parse_dates=True)["rw50+state t5+roll"]
+    want = money["2025-10-23":"2026-10-22"]
+    assert s["totals"]["net"] == pytest.approx(want.sum(), abs=2.0) and s["totals"]["per_day"] == pytest.approx(want.mean(), abs=0.01)
+    assert [r["money_aud"]["net"] for r in s["rows"]] == pytest.approx(want.tolist(), abs=0.01)
+    week = _span(client, "2026-01-22", 7)["rows"]
+    days = {r["day"]: r for r in s["rows"]}
+    for r in week:
+        h, y = r["halfhours"], days[r["day"]]
+        assert y["price"]["actual_hi"] == pytest.approx(max(h["price_actual"]), abs=0.01)
+        assert y["price"]["actual_mean"] == pytest.approx(sum(h["price_actual"][2:]) / 46, abs=0.01)
+        assert y["stored_mwh"]["end"] == pytest.approx(h["stored_mwh"][48], abs=0.001) and y["site"]["peak_mw"] == pytest.approx(max(h["meter_mw"]), abs=0.001)
+        assert y["charged_mwh"] == pytest.approx(sum(-min(v, 0) for v in h["battery_mw"]) / 2, abs=0.01)
+
+
+def test_span_limits(client):
+    get = lambda **q: client.get("/api/v1/storage/span", params=q)  # noqa: E731
+    assert get(end=DAY, days=1).status_code == 422 and get(end=DAY, days=367).status_code == 422 and get(end=DAY, days="x").status_code == 422
+    assert get(end="2026-10-23", days=7).status_code == 404 and get(end="not a day", days=7).status_code == 422
+    assert get(end=DAY, days=7, connection="moon").status_code == 422
+    assert get(end=DAY, days=7, energy_mwh=35).status_code == 409 and get(end=DAY, days=7, cmd_mw=99).status_code == 422
+    s = _span(client, "2025-04-05", 365)  # the data start here: fewer days, and the same half-hour or day figures as asked
+    assert s["days"] == 5 and s["asked_days"] == 365 and s["start"] == "2025-04-01" and s["resolution"] == "day"
+    assert _span(client, "2026-10-22", 366)["days"] == 366
+
+
 def test_operator_decision_round_trip(client):
     base = client.get(f"/api/v1/fleet/days/{CALL_DAY}/call").json()
     flip = not base["decision"]["call"]
